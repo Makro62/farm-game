@@ -1,6 +1,6 @@
 import os
 
-game_path = '/Users/jeremyvalentinsiahaan/Documents/Game/farm-game/js/game.js'
+game_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'js', 'game.js')
 with open(game_path, 'r', encoding='utf-8') as f:
     game = f.read()
 

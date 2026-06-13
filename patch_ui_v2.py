@@ -1,6 +1,6 @@
 import os
 
-ui_path = '/Users/jeremyvalentinsiahaan/Documents/Game/farm-game/js/ui.js'
+ui_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'js', 'ui.js')
 with open(ui_path, 'r', encoding='utf-8') as f:
     ui = f.read()
 

@@ -1,7 +1,7 @@
 import os
 import re
 
-html_path = '/Users/jeremyvalentinsiahaan/Documents/Game/farm-game/index.html'
+html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')
 with open(html_path, 'r', encoding='utf-8') as f:
     html = f.read()
 

@@ -1,7 +1,7 @@
 import os
 import re
 
-config_path = '/Users/jeremyvalentinsiahaan/Documents/Game/farm-game/js/config.js'
+config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'js', 'config.js')
 
 with open(config_path, 'r', encoding='utf-8') as f:
     content = f.read()
