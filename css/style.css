@@ -36,7 +36,7 @@ body {
     box-sizing: border-box;
 }
 
-/* ============ GLASS PANEL ============ */
+/* ============ UTILITIES ============ */
 .glass-panel {
     background: var(--panel-bg);
     backdrop-filter: blur(20px);
@@ -44,6 +44,11 @@ body {
     border: 1px solid var(--panel-border);
     border-radius: 24px;
     box-shadow: var(--panel-shadow);
+}
+
+.text-muted-sm {
+    font-size: 12px;
+    color: var(--muted);
 }
 
 /* ============ TOP BAR ============ */
@@ -325,6 +330,54 @@ body.weather-rain .rain-overlay, body.weather-storm .rain-overlay { display: blo
 #farm-animals-area {
     position: absolute; inset: 0; pointer-events: none; z-index: 100;
 }
+
+#barn-container {
+    position: relative; height: 240px; overflow: hidden;
+    background-color: #4ade80;
+    background-image: radial-gradient(#854d0e 20%, transparent 20%), radial-gradient(#854d0e 20%, transparent 20%);
+    background-size: 60px 60px; background-position: 0 0, 30px 30px;
+    border: 12px solid #78350f; border-radius: 16px; box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
+}
+
+.barn-icon {
+    position: absolute; top: 10px; left: 10px; font-size: 60px;
+    filter: drop-shadow(0 8px 8px rgba(0,0,0,0.6));
+}
+
+.barn-feed-box {
+    position: absolute; top: 20px; right: 20px; width: 80px; height: 40px;
+    background: #a16207; border: 6px solid #451a03; border-radius: 20px; box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+}
+
+.barn-feed-item-1 {
+    position: absolute; top: 10px; right: 25px; font-size: 36px;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+}
+
+.barn-feed-item-2 {
+    position: absolute; top: 15px; right: 50px; font-size: 36px;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+}
+
+.barn-water-box {
+    position: absolute; bottom: 20px; right: 20px; width: 60px; height: 60px;
+    background: #3b82f6; border: 6px solid #94a3b8; border-radius: 50%; box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+}
+
+.barn-water-item {
+    position: absolute; bottom: 30px; right: 30px; font-size: 32px;
+}
+
+#btn-mute {
+    width: auto; padding: 4px 12px; margin: 0; min-width: 0; border-radius: 20px;
+    font-size: 13px; font-weight: 800; background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+#btn-mute:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.9);
+}
+
 .animal {
     position: absolute; font-size: 40px; transition: left 3s linear, top 3s linear, transform 0.3s;
     cursor: pointer; pointer-events: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));

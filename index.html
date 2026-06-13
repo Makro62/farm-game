@@ -18,9 +18,7 @@
             <div class="stat-chip">⭐ Lv <span id="level-val">1</span></div>
             <div class="stat-chip" id="weather-chip">☀️ Cerah</div>
             <div class="stat-chip" title="Bonus Harga Jual">✨ Prestige: <span id="prestige-val">0</span></div>
-            <button class="act-btn" id="btn-mute"
-                style="width:auto; padding: 4px 10px; margin: 0; min-width: 0; border-radius:20px;"
-                onclick="toggleAudio()">🔊 Sound</button>
+            <button id="btn-mute" onclick="toggleAudio()">🔊 Sound</button>
             <div id="xp-wrap">
                 <div id="xp-label">XP: <span id="xp-val">0</span>/<span id="xp-need">100</span></div>
                 <div id="xp-bar-outer">
@@ -55,14 +53,14 @@
                 <button class="shop-btn" id="btn-buy-gnome" onclick="buyGnome()">
                     <div style="text-align: left;">
                         <div>🧙‍♂️ Trio Kurcaci</div>
-                        <div style="font-size:11px; color:var(--muted)">Auto-Farm & Harvest</div>
+                        <div class="text-muted-sm">Auto-Farm & Harvest</div>
                     </div>
                     <span class="price">5000💰</span>
                 </button>
 
                 <!-- GUDANG (SILO) -->
                 <div class="section-title">📦 Silo (Kapasitas: <span id="silo-cap-display">50</span>)</div>
-                <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">Terisi: <span
+                <div class="text-muted-sm" style="margin-bottom:8px;">Terisi: <span
                         id="silo-used-display">0</span>/<span id="silo-max-display">50</span></div>
                 <button class="shop-btn" onclick="upgradeSilo()">
                     <div style="text-align: left;">
@@ -72,7 +70,7 @@
                 </button>
 
                 <div class="section-title" style="margin-top:20px;">🏆 Achievements</div>
-                <div id="achieve-count" style="font-size:12px;color:var(--muted)">0 / 12</div>
+                <div id="achieve-count" class="text-muted-sm">0 / 12</div>
             </div>
 
             <!-- FARM AREA -->
@@ -81,7 +79,7 @@
                     <div id="weather-bar" class="glass-panel">
                         <span id="weather-icon">☀️</span>
                         <span id="weather-name">Cerah</span>
-                        <span style="margin-left:10px;color:var(--muted);font-size:12px" id="weather-timer">Next:
+                        <span class="text-muted-sm" style="margin-left:10px;" id="weather-timer">Next:
                             5:00</span>
                     </div>
                     <div class="actions">
@@ -104,30 +102,19 @@
                 <div class="farm-header-wrap" style="margin-top: 24px;">
                     <div class="section-title">🛖 Area Peternakan</div>
                 </div>
-                <div id="barn-container"
-                    style="position: relative; height: 240px; overflow: hidden; background-color: #4ade80; background-image: radial-gradient(#854d0e 20%, transparent 20%), radial-gradient(#854d0e 20%, transparent 20%); background-size: 60px 60px; background-position: 0 0, 30px 30px; border: 12px solid #78350f; border-radius: 16px; box-shadow: inset 0 0 40px rgba(0,0,0,0.6);">
-                    <div
-                        style="position: absolute; top: 10px; left: 10px; font-size: 70px; filter: drop-shadow(0 8px 8px rgba(0,0,0,0.6));">
-                        🛖</div>
+                <div id="barn-container">
+                    <div class="barn-icon">🛖</div>
 
                     <!-- Tempat Makan -->
-                    <div
-                        style="position: absolute; top: 20px; right: 20px; width: 80px; height: 40px; background: #a16207; border: 6px solid #451a03; border-radius: 20px; box-shadow: 0 5px 10px rgba(0,0,0,0.5);">
-                    </div>
-                    <div
-                        style="position: absolute; top: 10px; right: 25px; font-size: 45px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));">
-                        🌾</div>
-                    <div
-                        style="position: absolute; top: 15px; right: 50px; font-size: 40px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));">
-                        🌾</div>
+                    <div class="barn-feed-box"></div>
+                    <div class="barn-feed-item-1">🌾</div>
+                    <div class="barn-feed-item-2">🌾</div>
 
                     <!-- Tempat Minum -->
-                    <div
-                        style="position: absolute; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #3b82f6; border: 6px solid #94a3b8; border-radius: 50%; box-shadow: 0 5px 10px rgba(0,0,0,0.5);">
-                    </div>
-                    <div style="position: absolute; bottom: 30px; right: 30px; font-size: 35px;">💧</div>
+                    <div class="barn-water-box"></div>
+                    <div class="barn-water-item">💧</div>
 
-                    <div id="farm-animals-area" style="position: absolute; inset: 0; z-index: 100;"></div>
+                    <div id="farm-animals-area"></div>
                 </div>
 
                 <!-- ORDER BOARD -->

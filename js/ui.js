@@ -87,7 +87,7 @@ function renderDecorations() {
     if (farmArea) farmArea.innerHTML = '';
 
     if (S.level < 5) {
-        el.innerHTML = '<div style="font-size:11px;color:var(--muted)">Terbuka di Level 5</div>';
+        el.innerHTML = '<div class="text-muted-sm">Terbuka di Level 5</div>';
         return;
     }
 
@@ -131,10 +131,10 @@ function renderAnimalsList() {
         btn.className = 'shop-btn' + (locked ? ' locked' : '');
         btn.innerHTML = `<span style="font-size:22px; vertical-align:middle; margin-right:4px;">${a.emoji}</span> ${a.name} <span class="price">${a.cost}💰</span>`;
         if (locked) {
-            btn.innerHTML += `<div style="font-size:11px; margin-top:4px; color:var(--secondary)">Lv ${a.minLv} Terbuka</div>`;
+            btn.innerHTML += `<div class="text-muted-sm" style="margin-top:4px; color:var(--secondary)">Lv ${a.minLv} Terbuka</div>`;
         }
         if (count > 0) {
-            btn.innerHTML += `<div style="font-size:11px; color:var(--primary)">Dimiliki: ${count}</div>`;
+            btn.innerHTML += `<div class="text-muted-sm" style="color:var(--primary)">Dimiliki: ${count}</div>`;
         }
         btn.onclick = () => buyAnimal(k);
         el.appendChild(btn);
@@ -337,13 +337,13 @@ function renderInventory() {
     const fillPercent = Math.min(100, (used / cap) * 100);
 
     if (!html) {
-        html = '<div style="font-size:11px;color:var(--muted);padding:8px">Kosong</div>';
+        html = '<div class="text-muted-sm" style="padding:8px">Kosong</div>';
     } else {
         html += `<div style="text-align:right;font-size:12px;font-weight:700;color:var(--primary);margin-top:6px">Total: ${total}💰</div>`;
     }
 
     // Silo meter
-    html += `<div style="margin-top:8px; font-size:11px; color:var(--muted);">📦 Silo: ${used}/${cap}</div>`;
+    html += `<div class="text-muted-sm" style="margin-top:8px;">📦 Silo: ${used}/${cap}</div>`;
     html += `<div class="silo-bar-outer"><div class="silo-bar-inner" style="width:${fillPercent}%"></div></div>`;
 
     el.innerHTML = html;
@@ -351,7 +351,7 @@ function renderInventory() {
 
 function renderQuests() {
     const el = document.getElementById('quest-list');
-    if (!S.quests || !S.quests.length) { el.innerHTML = '<div style="font-size:11px;color:var(--muted)">Memuat...</div>'; return; }
+    if (!S.quests || !S.quests.length) { el.innerHTML = '<div class="text-muted-sm">Memuat...</div>'; return; }
     el.innerHTML = S.quests.map(q =>
         `<div class="quest-item ${q.done ? 'done' : ''}">${q.done ? '✅' : '☐'} ${q.desc}<br><small>${q.progress}/${q.target} → ${q.reward}💰</small></div>`
     ).join('');
