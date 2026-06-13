@@ -32,3 +32,8 @@ document.addEventListener('keydown', e => {
     else if (e.key === 'd' || e.key === 'D') claimDaily();
     else if (e.key === 'Escape') closeModal();
 });
+
+// Audio init on first interaction
+document.body.addEventListener('click', () => {
+    if (typeof initAudio === 'function') initAudio();
+}, { once: true });

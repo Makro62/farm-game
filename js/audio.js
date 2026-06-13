@@ -2,8 +2,17 @@
 // AUDIO SYSTEM (WEB AUDIO API)
 // ============================================================
 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx = null;
 let audioMuted = false;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
 
 function toggleAudio() {
     audioMuted = !audioMuted;
@@ -13,6 +22,9 @@ function toggleAudio() {
 
 function playSound(type) {
     if (audioMuted) return;
+    if (!audioCtx) {
+        initAudio();
+    }
     if (audioCtx.state === 'suspended') audioCtx.resume();
     
     const osc = audioCtx.createOscillator();
