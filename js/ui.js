@@ -79,21 +79,28 @@ function renderGrid() {
         d.className = 'plot ' + p.state;
         d.dataset.idx = i;
         
-        if (p.state === 'grass') d.textContent = '🌿';
-        else if (p.state === 'empty') d.textContent = '🟫';
+        // Create emoji container for proper positioning
+        const emojiContainer = document.createElement('div');
+        emojiContainer.className = 'plot-emoji';
+        
+        if (p.state === 'grass') emojiContainer.textContent = '🌿';
+        else if (p.state === 'empty') emojiContainer.textContent = '🟫';
         else if (p.state === 'growing') {
             const c = CROPS[p.crop];
             const elapsed = Date.now() - p.plantedAt;
             const progress = Math.min(100, (elapsed / p.growTime) * 100);
-            d.textContent = progress < 50 ? '🌱' : '🌿';
+            emojiContainer.textContent = progress < 50 ? '🌱' : '🌿';
+            
             const bar = document.createElement('div');
             bar.className = 'plot-progress';
             bar.innerHTML = `<div class="plot-progress-bar" style="width:${progress}%"></div>`;
             d.appendChild(bar);
         }
         else if (p.state === 'ready') {
-            d.textContent = CROPS[p.crop]?.emoji || '🌽';
+            emojiContainer.textContent = CROPS[p.crop]?.emoji || '🌽';
         }
+        
+        d.appendChild(emojiContainer);
         d.onclick = () => clickPlot(i);
         grid.appendChild(d);
     });
