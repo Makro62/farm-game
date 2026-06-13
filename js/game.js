@@ -118,7 +118,7 @@ function buyAnimal(key) {
         id: S.lastAnimalId,
         type: key,
         x: Math.random() * 90,
-        y: Math.random() * 60,
+        y: 30 + Math.random() * 40,
         flip: Math.random() > 0.5,
         nextMoveAt: Date.now() + 2000,
         nextProduceAt: Date.now() + a.time,
@@ -140,6 +140,7 @@ function collectAnimalProduct(id) {
     
     playSound('coin');
     toast(`Mendapat ${conf.productEmoji} ${conf.product}! +${conf.reward}💰`, 'success');
+    spawnParticles(15, `+${conf.productEmoji}`, `+${conf.reward}💰`);
     render();
 }
 
@@ -175,7 +176,7 @@ function gameLoop() {
         }
     });
     
-    // Cek cuaca & cycle
+    // Cek cuaca
     if (Date.now() - S.weatherChangedAt >= WEATHER_INTERVAL) {
         S.weather = Math.floor(Math.random() * WEATHERS.length);
         S.weatherChangedAt = Date.now();
@@ -185,15 +186,6 @@ function gameLoop() {
         document.body.className = document.body.className.replace(/weather-\w+/g, '');
         if (WEATHERS[S.weather].name === 'Hujan') document.body.classList.add('weather-rain');
         if (WEATHERS[S.weather].name === 'Badai') document.body.classList.add('weather-storm');
-    }
-    
-    // Day/Night Cycle (Setiap 3 menit ganti siang/malam untuk demo)
-    const cycleMs = 3 * 60 * 1000; 
-    const timeInCycle = Date.now() % cycleMs;
-    if (timeInCycle > cycleMs / 2) {
-        document.body.classList.add('night-mode');
-    } else {
-        document.body.classList.remove('night-mode');
     }
 
     // Animal wandering
@@ -206,7 +198,7 @@ function gameLoop() {
             }
             if (Date.now() >= a.nextMoveAt) {
                 const nx = Math.max(0, Math.min(90, a.x + (Math.random() - 0.5) * 30));
-                const ny = Math.max(0, Math.min(60, a.y + (Math.random() - 0.5) * 30));
+                const ny = Math.max(30, Math.min(70, a.y + (Math.random() - 0.5) * 30));
                 a.flip = nx < a.x;
                 a.x = nx;
                 a.y = ny;
@@ -216,6 +208,8 @@ function gameLoop() {
         });
         if (animalChanged) renderWanderingAnimals();
     }
+    
+    processGnome();
     
     if (changed) renderGrid();
     updateTopbar();
@@ -357,3 +351,98 @@ function loadGame() {
     }
     return false;
 }
+
+// ============================================================
+// ORDERS
+// ============================================================
+
+function generateOrder() {
+    const crops = Object.keys(CROPS).filter(k => S.level >= CROPS[k].minLv);
+    const crop = crops[Math.floor(Math.random() * crops.length)] || 'carrot';
+    const qty = Math.floor(Math.random() * 5) + 3 + Math.floor(S.level / 2);
+    const rewardCoins = CROPS[crop].sell * qty * 2.5; 
+    const rewardXP = CROPS[crop].xp * qty * 1.5;
+    
+    return {
+        id: Date.now() + Math.random(),
+        crop: crop,
+        qty: qty,
+        rewardCoins: Math.floor(rewardCoins),
+        rewardXP: Math.floor(rewardXP)
+    };
+}
+
+function fulfillOrder(id) {
+    const idx = S.orders.findIndex(x => x.id === id);
+    if (idx === -1) return;
+    const o = S.orders[idx];
+    if ((S.inventory[o.crop] || 0) >= o.qty) {
+        S.inventory[o.crop] -= o.qty;
+        S.coins += o.rewardCoins;
+        addXP(o.rewardXP);
+        playSound('coin');
+        toast('Pesanan Selesai! 🎉', 'success');
+        
+        S.orders.splice(idx, 1);
+        S.orders.push(generateOrder());
+        render();
+    } else {
+        playSound('error');
+        toast('Bahan belum cukup!', 'warn');
+    }
+}
+
+// ============================================================
+// GNOME AUTO-FARMER
+// ============================================================
+
+function processGnome() {
+    if (!S.gnomeOwned || !S.gnomeActive) return;
+    
+    // 1. KURCACI PETANI (Farmer Gnome)
+    let farmed = false;
+    for (let i = 0; i < S.plots.length; i++) {
+        if (S.plots[i].state === 'ready') {
+            clickPlot(S.plots[i].id);
+            farmed = true;
+            break;
+        }
+    }
+    
+    if (!farmed) {
+        let availableSeeds = Object.keys(S.seeds).filter(k => S.seeds[k] > 0);
+        if (availableSeeds.length > 0) {
+            let randomCrop = availableSeeds[Math.floor(Math.random() * availableSeeds.length)];
+            let originalSelected = selectedCrop;
+            selectedCrop = randomCrop;
+            for (let i = 0; i < S.plots.length; i++) {
+                if (S.plots[i].state === 'empty') {
+                    clickPlot(S.plots[i].id);
+                    break;
+                }
+            }
+            selectedCrop = originalSelected;
+        }
+    }
+
+    // 2. KURCACI PETERNAK (Rancher Gnome)
+    if (S.animals) {
+        for (let a of S.animals) {
+            if (a.readyToCollect) {
+                collectAnimalProduct(a.id);
+                break;
+            }
+        }
+    }
+
+    // 3. KURCACI KURIR (Courier Gnome)
+    if (S.orders) {
+        for (let o of S.orders) {
+            if ((S.inventory[o.crop] || 0) >= o.qty) {
+                fulfillOrder(o.id);
+                break;
+            }
+        }
+    }
+}
+

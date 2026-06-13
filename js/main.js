@@ -19,6 +19,9 @@ if (!loadGame()) {
     toast('🌾 Selamat datang di Farm Tycoon!', 'success');
 }
 if (!S.quests || !S.quests.length) generateQuests();
+if (!S.orders || !S.orders.length) {
+    S.orders = [generateOrder(), generateOrder(), generateOrder()];
+}
 
 render();
 setInterval(gameLoop, 1000);         // Update tiap detik

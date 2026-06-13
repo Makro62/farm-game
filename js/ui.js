@@ -12,9 +12,29 @@ function render() {
     renderDecorations();
     renderAnimalsList();
     renderWanderingAnimals();
+    renderOrders();
     updateTopbar();
     updateBoosters();
-    document.getElementById('achieve-count').textContent = `${S.achievements.length} / ${ACHIEVEMENTS.length}`;
+    const achieveCount = document.getElementById('achieve-count');
+    if (achieveCount) {
+        achieveCount.textContent = `${S.achievements.length} / ${ACHIEVEMENTS.length}`;
+    }
+
+    const btnBuyGnome = document.getElementById('btn-buy-gnome');
+    if (btnBuyGnome) {
+        btnBuyGnome.style.display = S.gnomeOwned ? 'none' : 'block';
+    }
+
+    const btnToggleGnome = document.getElementById('btn-toggle-gnome');
+    if (btnToggleGnome) {
+        if (S.gnomeOwned) {
+            btnToggleGnome.style.display = 'inline-block';
+            btnToggleGnome.textContent = S.gnomeActive ? '🧙‍♂️ Auto: ON' : '🧙‍♂️ Auto: OFF';
+            btnToggleGnome.style.background = S.gnomeActive ? 'linear-gradient(135deg, #a855f7, #9333ea)' : 'var(--muted)';
+        } else {
+            btnToggleGnome.style.display = 'none';
+        }
+    }
 }
 
 function renderShop() {
@@ -97,17 +117,15 @@ function renderAnimalsList() {
     if (!el) return;
     el.innerHTML = '';
     
-    if (S.level < 3) {
-        el.innerHTML = '<div style="font-size:11px;color:var(--muted)">Terbuka di Level 3</div>';
-        return;
-    }
-
     for (const [k, a] of Object.entries(ANIMALS)) {
-        if (S.level < a.minLv) continue;
+        const locked = S.level < a.minLv;
         const count = S.animals ? S.animals.filter(x => x.type === k).length : 0;
         const btn = document.createElement('button');
-        btn.className = 'shop-btn';
+        btn.className = 'shop-btn' + (locked ? ' locked' : '');
         btn.innerHTML = `<span style="font-size:22px; vertical-align:middle; margin-right:4px;">${a.emoji}</span> ${a.name} <span class="price">${a.cost}💰</span>`;
+        if (locked) {
+            btn.innerHTML += `<div style="font-size:11px; margin-top:4px; color:var(--secondary)">Lv ${a.minLv} Terbuka</div>`;
+        }
         btn.onclick = () => buyAnimal(k);
         el.appendChild(btn);
     }
@@ -120,9 +138,27 @@ function renderWanderingAnimals() {
     if (!S.animals) return;
 
     S.animals.forEach(a => {
+        const conf = ANIMALS[a.type];
         const d = document.createElement('div');
         d.className = 'animal' + (a.flip ? ' flipped' : '');
-        d.textContent = ANIMALS[a.type].emoji;
+        
+        let progress = 100;
+        if (!a.readyToCollect) {
+            const elapsed = conf.time - (a.nextProduceAt - Date.now());
+            progress = Math.max(0, Math.min(100, (elapsed / conf.time) * 100));
+        }
+
+        let emojiHtml = `<div class="animal-emoji" style="font-size: 50px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.8)); transition: transform 0.3s;">${conf.emoji}</div>`;
+        if (a.type === 'chicken') emojiHtml = `<img src="img/chicken.png" style="width: 55px; height: 55px; object-fit: contain; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));" />`;
+        if (a.type === 'cow') emojiHtml = `<img src="img/cow.png" style="width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));" />`;
+
+        d.innerHTML = `
+            <div class="animal-progress">
+                <div class="animal-progress-bar" style="width: ${progress}%"></div>
+            </div>
+            ${emojiHtml}
+        `;
+        
         d.style.left = a.x + '%';
         d.style.top = a.y + '%';
         
@@ -131,15 +167,77 @@ function renderWanderingAnimals() {
         if (a.readyToCollect) {
             const prod = document.createElement('div');
             prod.className = 'animal-product';
-            prod.textContent = ANIMALS[a.type].productEmoji;
+            prod.textContent = conf.productEmoji;
             prod.style.left = (a.x + 2) + '%';
-            prod.style.top = (a.y - 20) + '%';
+            prod.style.top = (a.y - 15) + '%';
             prod.onclick = (e) => { e.stopPropagation(); collectAnimalProduct(a.id); };
             area.appendChild(prod);
         }
     });
+
+    if (S.gnomeActive) {
+        const gnome = document.createElement('div');
+        gnome.style.cssText = 'position: absolute; bottom: 10px; left: 10px; font-size: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: gnomeWalk 6s linear infinite; z-index: 50; pointer-events: none;';
+        gnome.innerHTML = '🧑‍🍳<div style="font-size:12px; font-weight:bold; color:white; background:rgba(0,0,0,0.5); border-radius:4px; padding:2px; text-align:center;">Peternak</div>';
+        area.appendChild(gnome);
+    }
 }
 
+function renderOrders() {
+    const el = document.getElementById('order-board');
+    if (!el) return;
+    el.innerHTML = '';
+    
+    if (!S.orders || S.orders.length === 0) return;
+    
+    S.orders.forEach(o => {
+        const c = CROPS[o.crop];
+        if (!c) return;
+        const has = S.inventory[o.crop] || 0;
+        const canFulfill = has >= o.qty;
+        
+        const card = document.createElement('div');
+        card.style.cssText = `
+            flex: 1; min-width: 180px; background: var(--panel-bg); 
+            border-radius: 16px; padding: 16px; text-align: center;
+            border: 2px solid ${canFulfill ? 'var(--primary)' : 'rgba(0,0,0,0.1)'};
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        `;
+        card.onmouseover = () => card.style.transform = 'translateY(-4px)';
+        card.onmouseout = () => card.style.transform = 'translateY(0)';
+        
+        card.innerHTML = `
+            <div style="font-size: 32px; margin-bottom: 8px;">${c.emoji}</div>
+            <div style="font-weight: 800; font-size: 16px; color: var(--text);">${c.name}</div>
+            <div style="font-weight: 600; color: ${canFulfill ? 'var(--primary)' : 'var(--accent)'}; margin-bottom: 12px;">
+                ${has} / ${o.qty}
+            </div>
+            <div style="display: flex; justify-content: center; gap: 8px; font-size: 14px; font-weight: 700; margin-bottom: 16px;">
+                <span style="color: var(--secondary)">+${o.rewardCoins} 💰</span>
+                <span style="color: #3b82f6">+${o.rewardXP} ✨</span>
+            </div>
+        `;
+        
+        const btn = document.createElement('button');
+        btn.className = 'act-btn ' + (canFulfill ? 'primary' : '');
+        btn.style.width = '100%';
+        btn.style.padding = '8px';
+        btn.textContent = canFulfill ? 'Kirim 🚚' : 'Belum Cukup';
+        if (!canFulfill) btn.style.opacity = '0.5';
+        btn.onclick = () => fulfillOrder(o.id);
+        
+        card.appendChild(btn);
+        el.appendChild(card);
+    });
+
+    if (S.gnomeActive) {
+        const gnome = document.createElement('div');
+        gnome.style.cssText = 'position: relative; flex: 0 0 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: bounceGlow 2s infinite; pointer-events: none;';
+        gnome.innerHTML = '🧑‍💼<div style="font-size:12px; font-weight:bold; color:white; background:rgba(0,0,0,0.5); border-radius:4px; padding:2px; text-align:center;">Kurir</div>';
+        el.appendChild(gnome);
+    }
+}
 
 function renderGrid() {
     const grid = document.getElementById('farm-grid');
@@ -149,7 +247,6 @@ function renderGrid() {
         d.className = 'plot ' + p.state;
         d.dataset.idx = i;
         
-        // Create emoji container for proper positioning
         const emojiContainer = document.createElement('div');
         emojiContainer.className = 'plot-emoji';
         
@@ -174,6 +271,14 @@ function renderGrid() {
         d.onclick = () => clickPlot(i);
         grid.appendChild(d);
     });
+
+    if (S.gnomeActive) {
+        const gnome = document.createElement('div');
+        gnome.style.cssText = 'position: absolute; bottom: -20px; right: 20px; font-size: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: gnomeWalk 5s linear infinite; z-index: 50; pointer-events: none;';
+        gnome.innerHTML = '🧑‍🌾<div style="font-size:12px; font-weight:bold; color:white; background:rgba(0,0,0,0.5); border-radius:4px; padding:2px; text-align:center;">Petani</div>';
+        grid.appendChild(gnome);
+        grid.style.position = 'relative';
+    }
 }
 
 function renderInventory() {
@@ -273,6 +378,35 @@ function showModal(title, msg, onOk) {
     document.getElementById('modal').classList.add('show');
     document.getElementById('modal-ok').onclick = () => { closeModal(); onOk(); };
 }
+
+// ============================================================
+// GNOME HELPER
+// ============================================================
+
+function buyGnome() {
+    if (S.gnomeOwned) {
+        toast('Anda sudah mempekerjakan kurcaci!', 'warn');
+        return;
+    }
+    if (S.coins >= 5000) {
+        S.coins -= 5000;
+        S.gnomeOwned = true;
+        S.gnomeActive = true;
+        playSound('levelup');
+        toast('🧙‍♂️ Kurcaci berhasil dipekerjakan!', 'success');
+        updateTopbar();
+        render();
+    } else {
+        playSound('error');
+        toast('Koin tidak cukup! Butuh 5000💰', 'warn');
+    }
+}
+
+function toggleGnome() {
+    S.gnomeActive = !S.gnomeActive;
+    updateTopbar();
+    toast(`🧙‍♂️ Kurcaci ${S.gnomeActive ? 'Aktif' : 'Beristirahat'}`, 'info');
+}
 function closeModal() { document.getElementById('modal').classList.remove('show'); }
 
 function confirmReset() {
@@ -280,6 +414,18 @@ function confirmReset() {
         localStorage.removeItem(SAVE_KEY);
         location.reload();
     });
+}
+
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
 }
 
 function updateBoosters() {

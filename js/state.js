@@ -15,6 +15,10 @@ let S = {
     quests: [],
     achievements: [],
     prestige: 0,
-    decorations: []
+    decorations: [],
+    animals: [],
+    orders: [],
+    gnomeOwned: false,
+    gnomeActive: false
 };
 let selectedCrop = 'carrot';
