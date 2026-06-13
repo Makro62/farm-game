@@ -19,6 +19,7 @@ let S = {
     animals: [],
     orders: [],
     gnomeOwned: false,
-    gnomeActive: false
+    gnomeActive: false,
+    inventoryCapacity: 50
 };
 let selectedCrop = 'carrot';

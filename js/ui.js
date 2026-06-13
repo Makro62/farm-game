@@ -14,6 +14,7 @@ function render() {
     renderOrders();
     updateTopbar();
     updateBoosters();
+
     const achieveCount = document.getElementById('achieve-count');
     if (achieveCount) {
         achieveCount.textContent = `${S.achievements.length} / ${ACHIEVEMENTS.length}`;
@@ -21,7 +22,7 @@ function render() {
 
     const btnBuyGnome = document.getElementById('btn-buy-gnome');
     if (btnBuyGnome) {
-        btnBuyGnome.style.display = S.gnomeOwned ? 'none' : 'block';
+        btnBuyGnome.style.display = S.gnomeOwned ? 'none' : 'flex';
     }
 
     const btnToggleGnome = document.getElementById('btn-toggle-gnome');
@@ -29,12 +30,18 @@ function render() {
         if (S.gnomeOwned) {
             btnToggleGnome.style.display = 'inline-block';
             btnToggleGnome.textContent = S.gnomeActive ? '🧙‍♂️ Auto: ON' : '🧙‍♂️ Auto: OFF';
-            btnToggleGnome.style.background = S.gnomeActive ? 'linear-gradient(135deg, #a855f7, #9333ea)' : 'var(--muted)';
+            btnToggleGnome.style.background = S.gnomeActive
+                ? 'linear-gradient(135deg, #a855f7, #9333ea)'
+                : 'var(--muted)';
         } else {
             btnToggleGnome.style.display = 'none';
         }
     }
 }
+
+// ============================================================
+// SHOP & CROP LIST
+// ============================================================
 
 function renderShop() {
     const el = document.getElementById('shop-list');
@@ -57,7 +64,7 @@ function renderCropList() {
         const locked = S.level < c.minLv;
         const btn = document.createElement('button');
         btn.className = 'crop-btn' + (locked ? ' locked' : '') + (selectedCrop === k ? ' selected' : '');
-        btn.innerHTML = `${c.emoji} ${c.name} <span class="price">×${S.seeds[k]||0}</span>`;
+        btn.innerHTML = `${c.emoji} ${c.name} <span class="price">×${S.seeds[k] || 0}</span>`;
         btn.onclick = () => {
             if (locked) { toast(`Butuh Level ${c.minLv}!`, 'warn'); return; }
             selectedCrop = k;
@@ -67,15 +74,18 @@ function renderCropList() {
     }
 }
 
+// ============================================================
+// DECORATIONS
+// ============================================================
 
 function renderDecorations() {
     const el = document.getElementById('deco-list');
     if (!el) return;
     el.innerHTML = '';
-    
+
     const farmArea = document.getElementById('farm-decorations-area');
     if (farmArea) farmArea.innerHTML = '';
-    
+
     if (S.level < 5) {
         el.innerHTML = '<div style="font-size:11px;color:var(--muted)">Terbuka di Level 5</div>';
         return;
@@ -85,37 +95,35 @@ function renderDecorations() {
         const owned = S.decorations && S.decorations.includes(k);
         const btn = document.createElement('button');
         btn.className = 'shop-btn' + (owned ? ' locked' : '');
-        btn.innerHTML = `<img src="img/${k}.png" alt="${k}" style="width:28px; height:28px; object-fit:cover; border-radius:8px; margin-right:4px; vertical-align:middle;"> ${d.name} (+${d.prestige}✨) <span class="price">${owned ? '✅ Dimiliki' : d.cost + '💰'}</span>`;
+        btn.innerHTML = `<img src="img/${k}.png" alt="${k}" style="width:28px; height:28px; object-fit:cover; border-radius:8px; margin-right:4px; vertical-align:middle;" onerror="this.style.display='none'; this.nextSibling.style.display='inline'"><span style="display:none; font-size:22px;">${d.emoji}</span> ${d.name} (+${d.prestige}✨) <span class="price">${owned ? '✅ Dimiliki' : d.cost + '💰'}</span>`;
         if (!owned) {
             btn.onclick = () => buyDecoration(k);
         } else {
             btn.style.borderColor = 'var(--primary)';
             btn.style.background = 'rgba(74, 222, 128, 0.2)';
-            
+
             if (farmArea) {
-                const decoImg = document.createElement('img');
-                decoImg.src = `img/${k}.png`;
-                decoImg.title = d.name;
-                decoImg.style.width = '70px';
-                decoImg.style.height = '70px';
-                decoImg.style.objectFit = 'contain';
-                decoImg.style.filter = 'drop-shadow(0 6px 8px rgba(0,0,0,0.3))';
-                decoImg.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                decoImg.style.cursor = 'pointer';
-                decoImg.onmouseover = () => decoImg.style.transform = 'scale(1.2) translateY(-5px)';
-                decoImg.onmouseout = () => decoImg.style.transform = 'scale(1) translateY(0)';
-                farmArea.appendChild(decoImg);
+                const decoEl = document.createElement('div');
+                decoEl.style.cssText = 'display: inline-block; transition: transform 0.3s; cursor: pointer;';
+                decoEl.innerHTML = `<img src="img/${k}.png" alt="${d.name}" style="width:70px; height:70px; object-fit:contain; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.3));" onerror="this.parentElement.textContent='${d.emoji}'; this.parentElement.style.fontSize='50px';">`;
+                decoEl.onmouseover = () => decoEl.style.transform = 'scale(1.2) translateY(-5px)';
+                decoEl.onmouseout = () => decoEl.style.transform = 'scale(1) translateY(0)';
+                farmArea.appendChild(decoEl);
             }
         }
         el.appendChild(btn);
     }
 }
 
+// ============================================================
+// ANIMALS LIST (Sidebar)
+// ============================================================
+
 function renderAnimalsList() {
     const el = document.getElementById('animal-list');
     if (!el) return;
     el.innerHTML = '';
-    
+
     for (const [k, a] of Object.entries(ANIMALS)) {
         const locked = S.level < a.minLv;
         const count = S.animals ? S.animals.filter(x => x.type === k).length : 0;
@@ -125,31 +133,47 @@ function renderAnimalsList() {
         if (locked) {
             btn.innerHTML += `<div style="font-size:11px; margin-top:4px; color:var(--secondary)">Lv ${a.minLv} Terbuka</div>`;
         }
+        if (count > 0) {
+            btn.innerHTML += `<div style="font-size:11px; color:var(--primary)">Dimiliki: ${count}</div>`;
+        }
         btn.onclick = () => buyAnimal(k);
         el.appendChild(btn);
     }
 }
 
+// ============================================================
+// WANDERING ANIMALS (Barn)
+// ============================================================
+
 function renderWanderingAnimals() {
     const area = document.getElementById('farm-animals-area');
     if (!area) return;
     area.innerHTML = '';
-    if (!S.animals) return;
+    if (!S.animals || S.animals.length === 0) return;
 
     S.animals.forEach(a => {
         const conf = ANIMALS[a.type];
+        if (!conf) return;
+
         const d = document.createElement('div');
-        d.className = 'animal' + (a.flip ? ' flipped' : '');
-        
+        d.className = 'animal' + (a.flip ? ' flipped' : '') + (a.readyToCollect ? ' ready-to-collect' : '');
+        d.id = `animal-${a.id}`;
+
         let progress = 100;
         if (!a.readyToCollect) {
             const elapsed = conf.time - (a.nextProduceAt - Date.now());
             progress = Math.max(0, Math.min(100, (elapsed / conf.time) * 100));
         }
 
-        let emojiHtml = `<div class="animal-emoji" style="font-size: 50px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.8)); transition: transform 0.3s;">${conf.emoji}</div>`;
-        if (a.type === 'chicken') emojiHtml = `<img src="img/chicken.png" style="width: 55px; height: 55px; object-fit: contain; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));" />`;
-        if (a.type === 'cow') emojiHtml = `<img src="img/cow.png" style="width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));" />`;
+        // Use img with fallback to emoji
+        const imgSrc = a.type === 'chicken' ? 'img/chicken.png' : (a.type === 'cow' ? 'img/cow.png' : '');
+        const imgSize = a.type === 'cow' ? '75px' : '55px';
+        let emojiHtml;
+        if (imgSrc) {
+            emojiHtml = `<img src="${imgSrc}" style="width:${imgSize}; height:${imgSize}; object-fit:contain; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));" onerror="this.style.display='none'; this.nextSibling.style.display='block'"><div class="animal-emoji" style="display:none; font-size:50px;">${conf.emoji}</div>`;
+        } else {
+            emojiHtml = `<div class="animal-emoji" style="font-size:50px;">${conf.emoji}</div>`;
+        }
 
         d.innerHTML = `
             <div class="animal-progress">
@@ -157,10 +181,10 @@ function renderWanderingAnimals() {
             </div>
             ${emojiHtml}
         `;
-        
+
         d.style.left = a.x + '%';
         d.style.top = a.y + '%';
-        
+
         area.appendChild(d);
 
         if (a.readyToCollect) {
@@ -174,6 +198,7 @@ function renderWanderingAnimals() {
         }
     });
 
+    // Gnome in barn
     if (S.gnomeActive) {
         const gnome = document.createElement('div');
         gnome.style.cssText = 'position: absolute; bottom: 10px; left: 10px; font-size: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: gnomeWalk 6s linear infinite; z-index: 50; pointer-events: none;';
@@ -182,22 +207,26 @@ function renderWanderingAnimals() {
     }
 }
 
+// ============================================================
+// ORDERS
+// ============================================================
+
 function renderOrders() {
     const el = document.getElementById('order-board');
     if (!el) return;
     el.innerHTML = '';
-    
+
     if (!S.orders || S.orders.length === 0) return;
-    
+
     S.orders.forEach(o => {
         const c = CROPS[o.crop];
         if (!c) return;
         const has = S.inventory[o.crop] || 0;
         const canFulfill = has >= o.qty;
-        
+
         const card = document.createElement('div');
         card.style.cssText = `
-            flex: 1; min-width: 180px; background: var(--panel-bg); 
+            flex: 1; min-width: 180px; background: var(--panel-bg);
             border-radius: 16px; padding: 16px; text-align: center;
             border: 2px solid ${canFulfill ? 'var(--primary)' : 'rgba(0,0,0,0.1)'};
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -205,7 +234,7 @@ function renderOrders() {
         `;
         card.onmouseover = () => card.style.transform = 'translateY(-4px)';
         card.onmouseout = () => card.style.transform = 'translateY(0)';
-        
+
         card.innerHTML = `
             <div style="font-size: 32px; margin-bottom: 8px;">${c.emoji}</div>
             <div style="font-weight: 800; font-size: 16px; color: var(--text);">${c.name}</div>
@@ -217,7 +246,7 @@ function renderOrders() {
                 <span style="color: #3b82f6">+${o.rewardXP} ✨</span>
             </div>
         `;
-        
+
         const btn = document.createElement('button');
         btn.className = 'act-btn ' + (canFulfill ? 'primary' : '');
         btn.style.width = '100%';
@@ -225,11 +254,12 @@ function renderOrders() {
         btn.textContent = canFulfill ? 'Kirim 🚚' : 'Belum Cukup';
         if (!canFulfill) btn.style.opacity = '0.5';
         btn.onclick = () => fulfillOrder(o.id);
-        
+
         card.appendChild(btn);
         el.appendChild(card);
     });
 
+    // Gnome courier
     if (S.gnomeActive) {
         const gnome = document.createElement('div');
         gnome.style.cssText = 'position: relative; flex: 0 0 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: bounceGlow 2s infinite; pointer-events: none;';
@@ -238,25 +268,29 @@ function renderOrders() {
     }
 }
 
+// ============================================================
+// FARM GRID
+// ============================================================
+
 function renderGrid() {
     const grid = document.getElementById('farm-grid');
     grid.innerHTML = '';
     S.plots.forEach((p, i) => {
         const d = document.createElement('div');
-        d.className = 'plot ' + p.state;
+        d.className = 'plot ' + p.state + (p.watered ? ' watered' : '');
         d.dataset.idx = i;
-        
+
         const emojiContainer = document.createElement('div');
         emojiContainer.className = 'plot-emoji';
-        
+
         if (p.state === 'grass') emojiContainer.textContent = '🌿';
         else if (p.state === 'empty') emojiContainer.textContent = '🟫';
         else if (p.state === 'growing') {
-            const c = CROPS[p.crop];
             const elapsed = Date.now() - p.plantedAt;
             const progress = Math.min(100, (elapsed / p.growTime) * 100);
             emojiContainer.textContent = progress < 50 ? '🌱' : '🌿';
-            
+            if (p.watered) emojiContainer.textContent += '💧';
+
             const bar = document.createElement('div');
             bar.className = 'plot-progress';
             bar.innerHTML = `<div class="plot-progress-bar" style="width:${progress}%"></div>`;
@@ -265,12 +299,13 @@ function renderGrid() {
         else if (p.state === 'ready') {
             emojiContainer.textContent = CROPS[p.crop]?.emoji || '🌽';
         }
-        
+
         d.appendChild(emojiContainer);
         d.onclick = () => clickPlot(i);
         grid.appendChild(d);
     });
 
+    // Gnome farmer
     if (S.gnomeActive) {
         const gnome = document.createElement('div');
         gnome.style.cssText = 'position: absolute; bottom: -20px; right: 20px; font-size: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: gnomeWalk 5s linear infinite; z-index: 50; pointer-events: none;';
@@ -280,29 +315,51 @@ function renderGrid() {
     }
 }
 
+// ============================================================
+// INVENTORY & QUESTS
+// ============================================================
+
 function renderInventory() {
     const el = document.getElementById('inv-list');
     let html = '', total = 0;
     for (const [k, qty] of Object.entries(S.inventory)) {
         if (qty > 0) {
             const c = CROPS[k];
+            if (!c) continue;
             const val = qty * c.reward;
             total += val;
             html += `<div class="inv-row"><span class="inv-ic">${c.emoji}</span>${c.name}<span class="inv-qty">×${qty}</span><span class="inv-val">${val}💰</span></div>`;
         }
     }
-    if (!html) html = '<div style="font-size:11px;color:var(--muted);padding:8px">Kosong</div>';
-    else html += `<div style="text-align:right;font-size:12px;font-weight:700;color:var(--primary);margin-top:6px">Total: ${total}💰</div>`;
+
+    const cap = S.inventoryCapacity || 50;
+    const used = getInventoryTotal();
+    const fillPercent = Math.min(100, (used / cap) * 100);
+
+    if (!html) {
+        html = '<div style="font-size:11px;color:var(--muted);padding:8px">Kosong</div>';
+    } else {
+        html += `<div style="text-align:right;font-size:12px;font-weight:700;color:var(--primary);margin-top:6px">Total: ${total}💰</div>`;
+    }
+
+    // Silo meter
+    html += `<div style="margin-top:8px; font-size:11px; color:var(--muted);">📦 Silo: ${used}/${cap}</div>`;
+    html += `<div class="silo-bar-outer"><div class="silo-bar-inner" style="width:${fillPercent}%"></div></div>`;
+
     el.innerHTML = html;
 }
 
 function renderQuests() {
     const el = document.getElementById('quest-list');
-    if (!S.quests.length) { el.innerHTML = '<div style="font-size:11px;color:var(--muted)">Memuat...</div>'; return; }
-    el.innerHTML = S.quests.map(q => 
-        `<div class="quest-item ${q.done?'done':''}">${q.done?'✅':'☐'} ${q.desc}<br><small>${q.progress}/${q.target} → ${q.reward}💰</small></div>`
+    if (!S.quests || !S.quests.length) { el.innerHTML = '<div style="font-size:11px;color:var(--muted)">Memuat...</div>'; return; }
+    el.innerHTML = S.quests.map(q =>
+        `<div class="quest-item ${q.done ? 'done' : ''}">${q.done ? '✅' : '☐'} ${q.desc}<br><small>${q.progress}/${q.target} → ${q.reward}💰</small></div>`
     ).join('');
 }
+
+// ============================================================
+// TOPBAR
+// ============================================================
 
 function updateTopbar() {
     document.getElementById('coin-val').textContent = S.coins.toLocaleString();
@@ -311,18 +368,30 @@ function updateTopbar() {
     document.getElementById('xp-val').textContent = S.xp;
     document.getElementById('xp-need').textContent = needed;
     document.getElementById('xp-bar').style.width = Math.min(100, (S.xp / needed) * 100) + '%';
-    
+
     const w = WEATHERS[S.weather];
-    document.getElementById('weather-chip').textContent = `${w.icon} ${w.name}`;
-    document.getElementById('weather-icon').textContent = w.icon;
-    document.getElementById('weather-name').textContent = w.name;
-    
+    if (w) {
+        document.getElementById('weather-chip').textContent = `${w.icon} ${w.name}`;
+        document.getElementById('weather-icon').textContent = w.icon;
+        document.getElementById('weather-name').textContent = w.name;
+    }
+
     const elapsed = Date.now() - S.weatherChangedAt;
-    const remaining = Math.max(0, WEATHER_INTERVAL - elapsed);
-    const min = Math.floor(remaining / 60000);
-    const sec = Math.floor((remaining % 60000) / 1000);
-    document.getElementById('weather-timer').textContent = `Next: ${min}:${sec.toString().padStart(2,'0')}`;
-    
+    const remain = Math.max(0, Math.ceil((WEATHER_INTERVAL - elapsed) / 1000));
+    document.getElementById('weather-timer').textContent = `Next: ${Math.floor(remain / 60)}:${(remain % 60).toString().padStart(2, '0')}`;
+
+    // Silo display
+    const cap = S.inventoryCapacity || 50;
+    const used = getInventoryTotal();
+    const siloCapDisplay = document.getElementById('silo-cap-display');
+    if (siloCapDisplay) {
+        siloCapDisplay.textContent = cap;
+        document.getElementById('silo-max-display').textContent = cap;
+        document.getElementById('silo-used-display').textContent = used;
+        document.getElementById('silo-price-display').textContent = (cap * 10) + '💰';
+        document.getElementById('silo-used-display').style.color = (used >= cap) ? '#ef4444' : 'var(--muted)';
+    }
+
     const pVal = document.getElementById('prestige-val');
     if (pVal) pVal.textContent = S.prestige || 0;
 }
@@ -332,38 +401,39 @@ function updateTopbar() {
 // ============================================================
 
 function spawnParticles(idx, ...texts) {
-    const cell = document.getElementById('farm-grid').children[idx];
+    const grid = document.getElementById('farm-grid');
+    if (!grid) return;
+    const cell = grid.children[idx];
     if (!cell) return;
-    
+
     texts.forEach((txt, index) => {
         const p = document.createElement('div');
         p.className = 'particle';
         p.textContent = txt;
-        
+
         const offsetX = (Math.random() - 0.5) * 40;
         p.style.left = `calc(50% + ${offsetX}px - 10px)`;
         p.style.top = '20%';
         p.style.animationDelay = (index * 0.15) + 's';
-        
+
         cell.appendChild(p);
         setTimeout(() => p.remove(), 1500);
     });
 }
 
-function toast(msg, type='info') {
+function toast(msg, type = 'info') {
     const container = document.getElementById('toast-container');
+    if (!container) return;
     const el = document.createElement('div');
     el.className = 'toast ' + type;
     el.textContent = msg;
     container.appendChild(el);
-    
-    // Jangan biarkan menumpuk lebih dari 3
-    if (container.children.length > 3) {
-        container.children[0].style.opacity = '0';
-        container.children[0].style.transform = 'translateY(-20px)';
-        setTimeout(() => { if(container.children[0]) container.children[0].remove(); }, 300);
+
+    // Don't stack more than 3
+    while (container.children.length > 3) {
+        container.removeChild(container.children[0]);
     }
-    
+
     setTimeout(() => {
         el.style.opacity = '0';
         el.style.transform = 'translateY(-20px)';
@@ -377,9 +447,10 @@ function showModal(title, msg, onOk) {
     document.getElementById('modal').classList.add('show');
     document.getElementById('modal-ok').onclick = () => { closeModal(); onOk(); };
 }
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
 
 // ============================================================
-// GNOME HELPER
+// GNOME UI
 // ============================================================
 
 function buyGnome() {
@@ -392,8 +463,7 @@ function buyGnome() {
         S.gnomeOwned = true;
         S.gnomeActive = true;
         playSound('levelup');
-        toast('🧙‍♂️ Kurcaci berhasil dipekerjakan!', 'success');
-        updateTopbar();
+        toast('🧙‍♂️ Trio Kurcaci berhasil dipekerjakan!', 'success');
         render();
     } else {
         playSound('error');
@@ -403,10 +473,9 @@ function buyGnome() {
 
 function toggleGnome() {
     S.gnomeActive = !S.gnomeActive;
-    updateTopbar();
     toast(`🧙‍♂️ Kurcaci ${S.gnomeActive ? 'Aktif' : 'Beristirahat'}`, 'info');
+    render();
 }
-function closeModal() { document.getElementById('modal').classList.remove('show'); }
 
 function confirmReset() {
     showModal('🔄 Reset Game', 'Semua progress akan hilang. Yakin?', () => {
@@ -418,12 +487,10 @@ function confirmReset() {
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-            console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            console.log(`Fullscreen error: ${err.message}`);
         });
     } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        }
+        if (document.exitFullscreen) document.exitFullscreen();
     }
 }
 
@@ -432,8 +499,8 @@ function updateBoosters() {
     const gBtn = document.getElementById('btn-boost-growth');
     if (gBtn) {
         if (S.boosters.growth > now) {
-            const rem = Math.ceil((S.boosters.growth - now)/1000);
-            gBtn.innerHTML = `⚡ Growth (${Math.floor(rem/60)}:${(rem%60).toString().padStart(2,'0')})`;
+            const rem = Math.ceil((S.boosters.growth - now) / 1000);
+            gBtn.innerHTML = `⚡ Growth (${Math.floor(rem / 60)}:${(rem % 60).toString().padStart(2, '0')})`;
             gBtn.style.background = 'rgba(76, 175, 80, 0.2)';
             gBtn.style.borderColor = 'var(--primary)';
         } else {
@@ -442,12 +509,12 @@ function updateBoosters() {
             gBtn.style.borderColor = '';
         }
     }
-    
+
     const cBtn = document.getElementById('btn-boost-coin');
     if (cBtn) {
         if (S.boosters.coin > now) {
-            const rem = Math.ceil((S.boosters.coin - now)/1000);
-            cBtn.innerHTML = `💰 Coin (${Math.floor(rem/60)}:${(rem%60).toString().padStart(2,'0')})`;
+            const rem = Math.ceil((S.boosters.coin - now) / 1000);
+            cBtn.innerHTML = `💰 Coin (${Math.floor(rem / 60)}:${(rem % 60).toString().padStart(2, '0')})`;
             cBtn.style.background = 'rgba(76, 175, 80, 0.2)';
             cBtn.style.borderColor = 'var(--primary)';
         } else {

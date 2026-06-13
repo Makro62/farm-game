@@ -45,6 +45,14 @@ function playSound(type) {
         osc.start(now);
         osc.stop(now + 0.1);
     } 
+    else if (type === 'water') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
     else if (type === 'coin') {
         // Suara koin (ping tinggi)
         osc.type = 'sine';
