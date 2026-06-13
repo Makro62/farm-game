@@ -9,7 +9,6 @@ function render() {
     renderGrid();
     renderInventory();
     renderQuests();
-    renderDecorations();
     renderAnimalsList();
     renderWanderingAnimals();
     renderOrders();
