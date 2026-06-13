@@ -2,6 +2,9 @@ import { S } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
 import { DAILY_REWARDS } from '../data/config.js';
 import { queueSave } from '../core/save-manager.js';
+import { AudioManager } from '../managers/audio-manager.js';
+import { NotificationManager } from '../managers/notification-manager.js';
+import { addXP } from '../utils/helpers.js';
 
 export function generateQuests() {
     const templates = [
@@ -32,8 +35,9 @@ export function updateQuest(type, amount) {
                 q.done = true;
                 S.coins += q.reward;
                 S.questsDone++;
-                window.playSound('coin'); window.toast(`📋 Quest selesai! +${q.reward}💰`, 'success');
-                window.checkAchievements();
+                AudioManager.playSound('coin'); 
+                NotificationManager.toast(`📋 Quest selesai! +${q.reward}💰`, 'success');
+                if (typeof window.checkAchievements === 'function') window.checkAchievements();
             }
         }
     });
@@ -47,7 +51,8 @@ export function claimDaily() {
         const remaining = dayMs - (now - S.lastDaily);
         const h = Math.floor(remaining / 3600000);
         const m = Math.floor((remaining % 3600000) / 60000);
-        window.playSound('error'); window.toast(`⏰ Tunggu ${h}j ${m}m lagi!`, 'warn');
+        AudioManager.playSound('error'); 
+        NotificationManager.toast(`⏰ Tunggu ${h}j ${m}m lagi!`, 'warn');
         return;
     }
     if (S.lastDaily && now - S.lastDaily < 2 * dayMs) {
@@ -59,27 +64,27 @@ export function claimDaily() {
     S.lastDaily = now;
 
     if (dayIdx === 6) {
-        window.playSound('levelup');
+        AudioManager.playSound('levelup');
         const rand = Math.random();
         if (rand < 0.4) {
             S.coins += 2500;
-            window.toast(`🎁 Mystery Box! Mendapat 2500💰!`, 'success');
+            NotificationManager.toast(`🎁 Mystery Box! Mendapat 2500💰!`, 'success');
         } else if (rand < 0.8) {
             S.seeds['pumpkin'] = (S.seeds['pumpkin'] || 0) + 3;
-            window.toast(`🎁 Mystery Box! Mendapat 3x 🎃 Pumpkin Seeds!`, 'success');
+            NotificationManager.toast(`🎁 Mystery Box! Mendapat 3x 🎃 Pumpkin Seeds!`, 'success');
         } else {
             S.boosters.coin = Date.now() + 15 * 60 * 1000;
-            window.toast(`🎁 Mystery Box! Coin Booster Aktif 15 Menit!`, 'success');
+            NotificationManager.toast(`🎁 Mystery Box! Coin Booster Aktif 15 Menit!`, 'success');
         }
     } else {
         const reward = DAILY_REWARDS[dayIdx];
         S.coins += reward;
-        window.playSound('coin');
-        window.toast(`🎁 Daily Day ${S.loginStreak}! +${reward}💰`, 'success');
+        AudioManager.playSound('coin');
+        NotificationManager.toast(`🎁 Daily Day ${S.loginStreak}! +${reward}💰`, 'success');
     }
 
-    window.checkAchievements();
-    window.render();
+    if (typeof window.checkAchievements === 'function') window.checkAchievements();
+    if (typeof window.render === 'function') window.render();
     queueSave();
 }
 
@@ -107,18 +112,18 @@ export function fulfillOrder(id) {
         S.inventory[o.crop] -= o.qty;
         S.coins += o.rewardCoins;
         S.totalEarned += o.rewardCoins;
-        window.addXP(o.rewardXP);
-        window.playSound('coin');
+        addXP(o.rewardXP);
+        AudioManager.playSound('coin');
 
         S.orders.splice(idx, 1);
         S.orders.push(generateOrder());
 
-        window.toast('✅ Pesanan selesai! 🎉', 'success');
-        window.render();
+        NotificationManager.toast('✅ Pesanan selesai! 🎉', 'success');
+        if (typeof window.render === 'function') window.render();
         queueSave();
     } else {
-        window.playSound('error');
-        window.toast('Bahan belum cukup!', 'warn');
+        AudioManager.playSound('error');
+        NotificationManager.toast('Bahan belum cukup!', 'warn');
     }
 }
 

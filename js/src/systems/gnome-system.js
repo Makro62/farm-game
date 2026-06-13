@@ -2,6 +2,8 @@ import { S } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
 import { ANIMALS } from '../data/animals.js';
 import { getInventoryTotal } from './crop-system.js';
+import { addXP } from '../utils/helpers.js';
+import { getBuildingEffect } from './building-system.js';
 
 export function processGnome() {
     if (!S.gnomeOwned || !S.gnomeActive) return;
@@ -10,16 +12,16 @@ export function processGnome() {
     for (let i = 0; i < S.plots.length; i++) {
         const p = S.plots[i];
         if (p.state === 'ready') {
-            const currentCap = S.inventoryCapacity || 50;
+            const currentCap = getBuildingEffect('silo') || 50;
             if (getInventoryTotal() >= currentCap) break;
 
             const c = CROPS[p.crop];
             S.inventory[p.crop] = (S.inventory[p.crop] || 0) + 1;
             if (p.crop === 'pumpkin') S.pumpkinHarvest = (S.pumpkinHarvest || 0) + 1;
             S.totalHarvest++;
-            window.addXP(c.xp);
+            addXP(c.xp);
             p.state = 'empty'; p.crop = null; p.watered = false;
-            window.updateQuest('harvest', 1);
+            if (typeof window.updateQuest === 'function') window.updateQuest('harvest', 1);
             break;
         }
     }
@@ -41,7 +43,7 @@ export function processGnome() {
                 p.growTime = growTime;
                 p.watered = false;
                 S.totalPlanted++;
-                window.addXP(2);
+                addXP(2);
                 break;
             }
         }
@@ -51,13 +53,13 @@ export function processGnome() {
     if (S.animals) {
         for (const a of S.animals) {
             if (a.readyToCollect) {
-                const currentCap = S.inventoryCapacity || 50;
+                const currentCap = getBuildingEffect('silo') || 50;
                 if (getInventoryTotal() >= currentCap) break;
 
                 const conf = ANIMALS[a.type];
                 S.coins += conf.reward;
                 S.totalEarned += conf.reward;
-                window.addXP(5);
+                addXP(5);
                 a.readyToCollect = false;
                 a.nextProduceAt = Date.now() + conf.time;
                 break;
@@ -69,7 +71,7 @@ export function processGnome() {
     if (S.orders) {
         for (const o of S.orders) {
             if ((S.inventory[o.crop] || 0) >= o.qty) {
-                window.fulfillOrder(o.id);
+                if (typeof window.fulfillOrder === 'function') window.fulfillOrder(o.id);
                 break;
             }
         }

@@ -1,6 +1,9 @@
 import { S } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
 import { getInventoryTotal } from '../systems/crop-system.js';
+import { fulfillOrder } from '../systems/quest-system.js';
+import { getBuildingEffect } from '../systems/building-system.js';
+import { CRAFTING_RECIPES } from '../data/crafting.js';
 
 export function renderInventory() {
     const el = document.getElementById('inv-list');
@@ -8,15 +11,15 @@ export function renderInventory() {
     let html = '', total = 0;
     for (const [k, qty] of Object.entries(S.inventory)) {
         if (qty > 0) {
-            const c = CROPS[k];
-            if (!c) continue;
+            // Check if it's a crop or crafted item
+            const c = CROPS[k] || CRAFTING_RECIPES[k] || { name: k, emoji: '📦', reward: 0 };
             const val = qty * c.reward;
             total += val;
             html += `<div class="inv-row"><span class="inv-ic">${c.emoji}</span>${c.name}<span class="inv-qty">×${qty}</span><span class="inv-val">${val}💰</span></div>`;
         }
     }
 
-    const cap = S.inventoryCapacity || 50;
+    const cap = getBuildingEffect('silo') || 50;
     const used = getInventoryTotal();
     const fillPercent = Math.min(100, (used / cap) * 100);
 
@@ -84,9 +87,7 @@ export function renderOrders() {
         btn.style.padding = '8px';
         btn.textContent = canFulfill ? 'Kirim 🚚' : 'Belum Cukup';
         if (!canFulfill) btn.style.opacity = '0.5';
-        if (typeof window.fulfillOrder === 'function') {
-            btn.onclick = () => window.fulfillOrder(o.id);
-        }
+        btn.onclick = () => fulfillOrder(o.id);
 
         card.appendChild(btn);
         el.appendChild(card);

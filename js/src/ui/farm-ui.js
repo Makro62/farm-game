@@ -1,6 +1,8 @@
 import { S, GameState } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
 import { ANIMALS } from '../data/animals.js';
+import { clickPlot } from '../systems/crop-system.js';
+import { collectAnimalProduct } from '../systems/animal-system.js';
 
 export function renderGrid() {
     const grid = document.getElementById('farm-grid');
@@ -32,9 +34,7 @@ export function renderGrid() {
         }
 
         d.appendChild(emojiContainer);
-        if (typeof window.clickPlot === 'function') {
-            d.onclick = () => window.clickPlot(i);
-        }
+        d.onclick = () => clickPlot(i);
         grid.appendChild(d);
     });
 
@@ -95,9 +95,7 @@ export function renderWanderingAnimals() {
             prod.textContent = conf.productEmoji;
             prod.style.left = (a.x + 2) + '%';
             prod.style.top = (a.y - 15) + '%';
-            if (typeof window.collectAnimalProduct === 'function') {
-                prod.onclick = (e) => { e.stopPropagation(); window.collectAnimalProduct(a.id); };
-            }
+            prod.onclick = (e) => { e.stopPropagation(); collectAnimalProduct(a.id); };
             area.appendChild(prod);
         }
     });

@@ -2,6 +2,10 @@ import { S, GameState } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
 import { ANIMALS } from '../data/animals.js';
 import { DECORATIONS } from '../data/items.js';
+import { buySeed } from '../systems/crop-system.js';
+import { buyAnimal } from '../systems/animal-system.js';
+import { buyDecoration } from '../systems/economy-system.js';
+import { NotificationManager } from '../managers/notification-manager.js';
 
 export function renderShop() {
     const el = document.getElementById('shop-list');
@@ -12,9 +16,7 @@ export function renderShop() {
         const btn = document.createElement('button');
         btn.className = 'shop-btn' + (locked ? ' locked' : '');
         btn.innerHTML = `${c.emoji} ${c.name} <span class="price">${c.cost}💰</span>`;
-        if (typeof window.buySeed === 'function') {
-            btn.onclick = () => window.buySeed(k);
-        }
+        btn.onclick = () => buySeed(k);
         if (locked) btn.title = `Butuh Level ${c.minLv}`;
         el.appendChild(btn);
     }
@@ -30,7 +32,7 @@ export function renderCropList() {
         btn.className = 'crop-btn' + (locked ? ' locked' : '') + (GameState.selectedCrop === k ? ' selected' : '');
         btn.innerHTML = `${c.emoji} ${c.name} <span class="price">×${S.seeds[k] || 0}</span>`;
         btn.onclick = () => {
-            if (locked) { window.toast(`Butuh Level ${c.minLv}!`, 'warn'); return; }
+            if (locked) { NotificationManager.toast(`Butuh Level ${c.minLv}!`, 'warn'); return; }
             GameState.selectedCrop = k;
             renderCropList();
         };
@@ -57,9 +59,7 @@ export function renderDecorations() {
         btn.className = 'shop-btn' + (owned ? ' locked' : '');
         btn.innerHTML = `<img src="img/${k}.png" alt="${k}" style="width:28px; height:28px; object-fit:cover; border-radius:8px; margin-right:4px; vertical-align:middle;" onerror="this.style.display='none'; this.nextSibling.style.display='inline'"><span style="display:none; font-size:22px;">${d.emoji}</span> ${d.name} (+${d.prestige}✨) <span class="price">${owned ? '✅ Dimiliki' : d.cost + '💰'}</span>`;
         if (!owned) {
-            if (typeof window.buyDecoration === 'function') {
-                btn.onclick = () => window.buyDecoration(k);
-            }
+            btn.onclick = () => buyDecoration(k);
         } else {
             btn.style.borderColor = 'var(--primary)';
             btn.style.background = 'rgba(74, 222, 128, 0.2)';
@@ -94,9 +94,7 @@ export function renderAnimalsList() {
         if (count > 0) {
             btn.innerHTML += `<div class="text-muted-sm" style="color:var(--primary)">Dimiliki: ${count}</div>`;
         }
-        if (typeof window.buyAnimal === 'function') {
-            btn.onclick = () => window.buyAnimal(k);
-        }
+        btn.onclick = () => buyAnimal(k);
         el.appendChild(btn);
     }
 }

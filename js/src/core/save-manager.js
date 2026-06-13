@@ -1,5 +1,6 @@
 import { S } from './state.js';
 import { CONFIG } from '../data/config.js';
+import { generateHash, verifyHash } from './security.js';
 
 let saveTimeout = null;
 
@@ -10,12 +11,11 @@ export function queueSave() {
     }, 5000); // Auto save after 5 seconds of inactivity
 }
 
-export function saveGame(isAuto = false) {
+export async function saveGame(isAuto = false) {
     try {
         S.lastSave = Date.now();
-        // Basic checksum to prevent simple tampering
         const dataStr = JSON.stringify(S);
-        const hash = btoa(encodeURIComponent(dataStr)).substring(0, 20); // Simple hash for now
+        const hash = await generateHash(dataStr);
         
         const payload = {
             data: dataStr,
@@ -23,29 +23,39 @@ export function saveGame(isAuto = false) {
         };
         
         localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(payload));
-        if (!isAuto) console.log('💾 Progress tersimpan secara manual!');
+        if (!isAuto && typeof window.NotificationManager !== 'undefined') {
+            window.NotificationManager.toast('💾 Progress tersimpan secara manual!', 'success');
+        } else if (!isAuto) {
+            console.log('💾 Progress tersimpan secara manual!');
+        }
     } catch (e) {
         console.error('⚠️ Gagal menyimpan!', e);
     }
 }
 
-export function loadGame() {
+export async function loadGame() {
     try {
         const saved = localStorage.getItem(CONFIG.SAVE_KEY);
         if (!saved) return false;
 
         let dataStr;
-        // Check if it's the new format with hash, or old format
         if (saved.startsWith('{"data"')) {
             const payload = JSON.parse(saved);
-            const expectedHash = btoa(encodeURIComponent(payload.data)).substring(0, 20);
-            if (payload.hash !== expectedHash) {
-                console.warn('⚠️ Data save corrupted or tampered!');
-                // Fallback to load anyway for now, but in strict mode we'd return false
+            const isValid = await verifyHash(payload.data, payload.hash);
+            
+            // Temporary backward compatibility check for old simple hash if SHA256 fails
+            const oldExpectedHash = btoa(encodeURIComponent(payload.data)).substring(0, 20);
+            
+            if (!isValid && payload.hash !== oldExpectedHash) {
+                console.error('⛔ KEAMANAN DILANGGAR: Data save telah dimanipulasi! Load dibatalkan.');
+                if (typeof window.NotificationManager !== 'undefined') {
+                    window.NotificationManager.toast('⛔ Save Data Corrupted / Tampered!', 'error');
+                }
+                return false; // REJECT LOAD!
             }
             dataStr = payload.data;
         } else {
-            // Old save format compatibility
+            // Very old save format
             dataStr = saved;
         }
 
@@ -64,15 +74,16 @@ export function loadGame() {
         if (!S.decorations) S.decorations = [];
         if (!S.achievements) S.achievements = [];
         if (S.inventoryCapacity === undefined) S.inventoryCapacity = 50;
+        if (!S.buildings) S.buildings = { silo: 0, barn: 0, watertower: 0, greenhouse: 0, windmill: 0 };
+        if (!S.craftingQueue) S.craftingQueue = [];
 
-        // Idle calculation: mature crops that should have finished
+        // Idle calculation
         S.plots.forEach(p => {
             if (p.state === 'growing' && Date.now() - p.plantedAt >= p.growTime) {
                 p.state = 'ready';
             }
         });
 
-        // Idle calculation: animals that should have produced
         if (S.animals) {
             S.animals.forEach(a => {
                 if (!a.readyToCollect && Date.now() >= a.nextProduceAt) {

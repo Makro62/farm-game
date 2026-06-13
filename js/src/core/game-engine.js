@@ -4,6 +4,7 @@ import { loadGame, saveGame } from './save-manager.js';
 import { processGnome } from '../systems/gnome-system.js';
 import { processWeather } from '../systems/weather-system.js';
 import { processAnimalLoop } from '../systems/animal-system.js';
+import { processCraftingQueue } from '../systems/crafting-system.js';
 
 export function gameLoop() {
     let changed = false;
@@ -59,24 +60,36 @@ export function gameLoop() {
     if (!S.orders || S.orders.length === 0) {
         if (typeof window.generateOrder === 'function') {
             S.orders = [window.generateOrder(), window.generateOrder(), window.generateOrder()];
-            window.renderOrders();
+            if (typeof window.renderOrders === 'function') window.renderOrders();
         }
     }
 
-    // 7. Render updates
+    // 7. Crafting Queue Processing
+    const craftingChanged = processCraftingQueue();
+    if (craftingChanged && typeof window.renderCrafting === 'function') {
+        window.renderCrafting();
+    }
+
+    // 8. Render updates
     if (changed && typeof window.renderGrid === 'function') window.renderGrid();
     if (typeof window.updateTopbar === 'function') window.updateTopbar();
     if (typeof window.updateBoosters === 'function') window.updateBoosters();
 }
 
-export function initGame() {
-    if (!loadGame()) {
+export async function initGame() {
+    const loaded = await loadGame();
+    if (!loaded) {
         S.plots = [];
         for (let i = 0; i < CONFIG.GRID_SIZE; i++) {
             S.plots.push({ id: i, state: 'grass', crop: null, plantedAt: 0, growTime: 0 });
         }
         if (typeof window.generateQuests === 'function') window.generateQuests();
-        window.toast('🌾 Selamat datang di Farm Tycoon!', 'success');
+        
+        if (typeof window.NotificationManager !== 'undefined') {
+            window.NotificationManager.toast('🌾 Selamat datang di Farm Tycoon!', 'success');
+        } else {
+            window.toast('🌾 Selamat datang di Farm Tycoon!', 'success');
+        }
     }
     
     if (!S.quests || !S.quests.length) {

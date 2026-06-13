@@ -2,18 +2,34 @@ import { S } from '../core/state.js';
 import { ANIMALS } from '../data/animals.js';
 import { getInventoryTotal } from './crop-system.js';
 import { queueSave } from '../core/save-manager.js';
+import { AudioManager } from '../managers/audio-manager.js';
+import { NotificationManager } from '../managers/notification-manager.js';
+import { addXP } from '../utils/helpers.js';
+import { getBuildingEffect } from './building-system.js';
 
 export function buyAnimal(key) {
     const a = ANIMALS[key];
     if (S.level < a.minLv) {
-        window.playSound('error');
-        window.toast(`⚠️ Level ${a.minLv} dibutuhkan!`);
+        AudioManager.playSound('error');
+        NotificationManager.toast(`⚠️ Level ${a.minLv} dibutuhkan!`);
         return;
     }
     if (a.cost >= 1000) {
         if (!confirm(`Beli ${a.name} seharga ${a.cost}💰?`)) return;
     }
-    if (S.coins < a.cost) { window.playSound('error'); window.toast('💰 Koin tidak cukup!', 'warn'); return; }
+    if (S.coins < a.cost) { 
+        AudioManager.playSound('error'); 
+        NotificationManager.toast('💰 Koin tidak cukup!', 'warn'); 
+        return; 
+    }
+
+    const maxAnimals = getBuildingEffect('barn') || 2;
+    const currentAnimals = S.animals ? S.animals.length : 0;
+    if (currentAnimals >= maxAnimals) {
+        AudioManager.playSound('error'); 
+        NotificationManager.toast('Kapasitas Kandang (Barn) Penuh!', 'warn'); 
+        return; 
+    }
 
     S.coins -= a.cost;
     S.lastAnimalId = (S.lastAnimalId || 0) + 1;
@@ -36,11 +52,11 @@ export function buyAnimal(key) {
         readyToCollect: false
     });
 
-    window.addXP(15);
-    window.playSound('levelup');
-    window.toast(`🎉 Membeli ${a.name}!`, 'success');
+    addXP(15);
+    AudioManager.playSound('levelup');
+    NotificationManager.toast(`🎉 Membeli ${a.name}!`, 'success');
     queueSave();
-    window.render();
+    if (typeof window.render === 'function') window.render();
 }
 
 function isPositionOccupied(x, y) {
@@ -58,22 +74,22 @@ export function collectAnimalProduct(id) {
 
     const currentCap = S.inventoryCapacity || 50;
     if (getInventoryTotal() >= currentCap) {
-        window.playSound('error');
-        window.toast('⚠️ Gudang Penuh! Tingkatkan kapasitas Silo Anda.');
+        AudioManager.playSound('error');
+        NotificationManager.toast('⚠️ Gudang Penuh! Tingkatkan kapasitas Silo Anda.', 'warn');
         return;
     }
 
     const conf = ANIMALS[a.type];
     S.coins += conf.reward;
     S.totalEarned += conf.reward;
-    window.addXP(10);
+    addXP(10);
     a.readyToCollect = false;
     a.nextProduceAt = Date.now() + conf.time;
 
-    window.playSound('coin');
-    window.toast(`Mendapat ${conf.productEmoji} ${conf.product}! +${conf.reward}💰`, 'success');
+    AudioManager.playSound('coin');
+    NotificationManager.toast(`Mendapat ${conf.productEmoji} ${conf.product}! +${conf.reward}💰`, 'success');
     queueSave();
-    window.render();
+    if (typeof window.render === 'function') window.render();
 }
 
 export function processAnimalLoop() {

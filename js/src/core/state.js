@@ -16,7 +16,9 @@ export const S = {
     orders: [],
     gnomeOwned: false,
     gnomeActive: false,
-    inventoryCapacity: 50
+    inventoryCapacity: 50,
+    buildings: { silo: 0, barn: 0, watertower: 0, greenhouse: 0, windmill: 0 },
+    craftingQueue: []
 };
 
 export const GameState = {

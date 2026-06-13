@@ -1,6 +1,9 @@
 import { S } from '../core/state.js';
 import { ACHIEVEMENTS, WEATHERS, CONFIG } from '../data/config.js';
 import { getInventoryTotal } from '../systems/crop-system.js';
+import { AudioManager } from '../managers/audio-manager.js';
+import { NotificationManager } from '../managers/notification-manager.js';
+import { getBuildingEffect } from '../systems/building-system.js';
 
 export function render() {
     if (typeof window.renderShop === 'function') window.renderShop();
@@ -12,6 +15,8 @@ export function render() {
     if (typeof window.renderAnimalsList === 'function') window.renderAnimalsList();
     if (typeof window.renderWanderingAnimals === 'function') window.renderWanderingAnimals();
     if (typeof window.renderOrders === 'function') window.renderOrders();
+    if (typeof window.renderBuildings === 'function') window.renderBuildings();
+    if (typeof window.renderCrafting === 'function') window.renderCrafting();
     updateTopbar();
     updateBoosters();
 
@@ -72,8 +77,9 @@ export function updateTopbar() {
     if(wTimer) wTimer.textContent = `Next: ${Math.floor(remain / 60)}:${(remain % 60).toString().padStart(2, '0')}`;
 
     // Silo display
-    const cap = S.inventoryCapacity || 50;
+    const cap = getBuildingEffect('silo') || 50;
     const used = getInventoryTotal();
+    // We removed silo-cap-display from index.html, but let's safely ignore if not found
     const siloCapDisplay = document.getElementById('silo-cap-display');
     if (siloCapDisplay) {
         siloCapDisplay.textContent = cap;
@@ -125,35 +131,33 @@ export function updateBoosters() {
 
 export function buyGnome() {
     if (S.gnomeOwned) {
-        window.toast('Anda sudah mempekerjakan kurcaci!', 'warn');
+        NotificationManager.toast('Anda sudah mempekerjakan kurcaci!', 'warn');
         return;
     }
     if (S.coins >= 5000) {
         S.coins -= 5000;
         S.gnomeOwned = true;
         S.gnomeActive = true;
-        window.playSound('levelup');
-        window.toast('🧙‍♂️ Trio Kurcaci berhasil dipekerjakan!', 'success');
+        AudioManager.playSound('levelup');
+        NotificationManager.toast('🧙‍♂️ Trio Kurcaci berhasil dipekerjakan!', 'success');
         render();
     } else {
-        window.playSound('error');
-        window.toast('Koin tidak cukup! Butuh 5000💰', 'warn');
+        AudioManager.playSound('error');
+        NotificationManager.toast('Koin tidak cukup! Butuh 5000💰', 'warn');
     }
 }
 
 export function toggleGnome() {
     S.gnomeActive = !S.gnomeActive;
-    window.toast(`🧙‍♂️ Kurcaci ${S.gnomeActive ? 'Aktif' : 'Beristirahat'}`, 'info');
+    NotificationManager.toast(`🧙‍♂️ Kurcaci ${S.gnomeActive ? 'Aktif' : 'Beristirahat'}`, 'info');
     render();
 }
 
 export function confirmReset() {
-    if (typeof window.showModal === 'function') {
-        window.showModal('🔄 Reset Game', 'Semua progress akan hilang. Yakin?', () => {
-            localStorage.removeItem(CONFIG.SAVE_KEY);
-            location.reload();
-        });
-    }
+    NotificationManager.showModal('🔄 Reset Game', 'Semua progress akan hilang. Yakin?', () => {
+        localStorage.removeItem(CONFIG.SAVE_KEY);
+        location.reload();
+    });
 }
 
 export function toggleFullScreen() {
@@ -170,7 +174,5 @@ export function toggleFullScreen() {
 window.render = render;
 window.updateTopbar = updateTopbar;
 window.updateBoosters = updateBoosters;
-window.buyGnome = buyGnome;
-window.toggleGnome = toggleGnome;
-window.confirmReset = confirmReset;
-window.toggleFullScreen = toggleFullScreen;
+
+
