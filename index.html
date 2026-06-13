@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌾 Farm Tycoon</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+    <!-- TOP BAR -->
+    <div id="topbar" class="glass-panel">
+        <div class="logo">🌾 Farm Tycoon</div>
+        <div class="stat-chip">💰 <span id="coin-val">100</span></div>
+        <div class="stat-chip">⭐ Lv <span id="level-val">1</span></div>
+        <div class="stat-chip" id="weather-chip">☀️ Cerah</div>
+        <div class="stat-chip" title="Bonus Harga Jual">✨ Prestige: <span id="prestige-val">0</span></div>
+        <button class="act-btn" id="btn-mute" style="width:auto; padding: 4px 10px; margin: 0; min-width: 0; border-radius:20px;" onclick="toggleAudio()">🔊 Sound</button>
+        <div id="xp-wrap">
+            <div id="xp-label">XP: <span id="xp-val">0</span>/<span id="xp-need">100</span></div>
+            <div id="xp-bar-outer"><div id="xp-bar" style="width:0%"></div></div>
+        </div>
+    </div>
+
+    <div id="main">
+        <!-- SIDEBAR KIRI -->
+        <div class="sidebar glass-panel">
+            <div class="section-title">🛒 Shop Bibit</div>
+            <div id="shop-list"></div>
+
+            <div class="section-title">🌱 Pilih Tanaman</div>
+            <div id="crop-list"></div>
+
+            <div class="section-title">🏡 Dekorasi (Lv 5+)</div>
+            <div id="deco-list"></div>
+
+            <div class="section-title">⚡ Booster</div>
+            <button class="shop-btn" id="btn-boost-growth" onclick="buyBooster('growth')">⚡ Growth ×1.5 <span class="price">50💰</span></button>
+            <button class="shop-btn" id="btn-boost-coin" onclick="buyBooster('coin')">💰 Coin ×2 <span class="price">100💰</span></button>
+
+            <div class="section-title">🏆 Achievements</div>
+            <div id="achieve-count" style="font-size:12px;color:var(--muted)">0 / 12</div>
+        </div>
+
+        <!-- FARM AREA -->
+        <div id="farm-area" class="glass-panel">
+            <div class="farm-header-wrap">
+                <div id="weather-bar" class="glass-panel">
+                    <span id="weather-icon">☀️</span>
+                    <span id="weather-name">Cerah</span>
+                    <span style="margin-left:10px;color:var(--muted);font-size:12px" id="weather-timer">Next: 5:00</span>
+                </div>
+                <div class="actions">
+                    <button class="act-btn primary" onclick="claimDaily()">🎁 Daily</button>
+                    <button class="act-btn" onclick="saveGame(true)">💾 Save</button>
+                    <button class="act-btn" onclick="confirmReset()">🔄 Reset</button>
+                </div>
+            </div>
+            <div id="farm-grid" class="glass-panel"></div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div id="right-panel" class="glass-panel">
+            <div class="section-title">📦 Inventory</div>
+            <div id="inv-list"></div>
+            <button class="sell-btn" onclick="sellAll()">💰 Jual Semua</button>
+
+            <div class="section-title">📋 Quest Harian</div>
+            <div id="quest-list"></div>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal">
+    <div class="modal">
+        <h2 id="modal-title">Konfirmasi</h2>
+        <p id="modal-msg">Apakah Anda yakin?</p>
+        <div class="modal-btns">
+            <button class="act-btn" onclick="closeModal()">Batal</button>
+            <button class="act-btn primary" id="modal-ok">OK</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/audio.js"></script>
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
