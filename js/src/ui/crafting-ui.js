@@ -68,7 +68,7 @@ export function renderCrafting() {
 
             const qCard = document.createElement('div');
             qCard.style.cssText = `
-                background: var(--panel-bg); border-radius: 12px; padding: 12px; margin-bottom: 8px;
+                background: var(--panel-bg); border-radius: 12px; padding: 12px;
                 display: flex; justify-content: space-between; align-items: center;
                 border: 2px solid ${task.ready ? 'var(--primary)' : 'rgba(0,0,0,0.1)'};
             `;

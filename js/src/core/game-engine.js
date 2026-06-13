@@ -5,6 +5,7 @@ import { processGnome } from '../systems/gnome-system.js';
 import { processWeather } from '../systems/weather-system.js';
 import { processAnimalLoop } from '../systems/animal-system.js';
 import { processCraftingQueue } from '../systems/crafting-system.js';
+import { NotificationManager } from '../managers/notification-manager.js';
 
 export function gameLoop() {
     let changed = false;
@@ -84,12 +85,7 @@ export async function initGame() {
             S.plots.push({ id: i, state: 'grass', crop: null, plantedAt: 0, growTime: 0 });
         }
         if (typeof window.generateQuests === 'function') window.generateQuests();
-        
-        if (typeof window.NotificationManager !== 'undefined') {
-            window.NotificationManager.toast('🌾 Selamat datang di Farm Tycoon!', 'success');
-        } else {
-            window.toast('🌾 Selamat datang di Farm Tycoon!', 'success');
-        }
+        NotificationManager.toast('🌾 Selamat datang di Farm Tycoon!', 'success');
     }
     
     if (!S.quests || !S.quests.length) {

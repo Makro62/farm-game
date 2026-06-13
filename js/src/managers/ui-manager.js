@@ -1,4 +1,4 @@
-import { buyBooster, sellAll, upgradeSilo, catchFish } from '../systems/economy-system.js';
+import { buyBooster, sellAll, catchFish } from '../systems/economy-system.js';
 import { claimDaily } from '../systems/quest-system.js';
 import { saveGame } from '../core/save-manager.js';
 import { buyGnome, toggleGnome, confirmReset, toggleFullScreen } from '../ui/core-ui.js';
@@ -9,7 +9,6 @@ export class UIManager {
         this.bindClick('btn-boost-growth', () => buyBooster('growth'));
         this.bindClick('btn-boost-coin', () => buyBooster('coin'));
         this.bindClick('btn-buy-gnome', () => buyGnome());
-        this.bindClick('btn-upgrade-silo', () => upgradeSilo());
         this.bindClick('btn-fullscreen', () => toggleFullScreen());
         this.bindClick('btn-toggle-gnome', () => toggleGnome());
         this.bindClick('btn-claim-daily', () => claimDaily());

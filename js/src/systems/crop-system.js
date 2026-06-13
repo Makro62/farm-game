@@ -1,6 +1,5 @@
 import { S, GameState } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
-import { BOOSTERS } from '../data/items.js';
 import { queueSave } from '../core/save-manager.js';
 import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';

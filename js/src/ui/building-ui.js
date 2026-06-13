@@ -15,7 +15,7 @@ export function renderBuildings() {
         const card = document.createElement('div');
         card.style.cssText = `
             background: var(--panel-bg);
-            border-radius: 12px; padding: 12px; margin-bottom: 12px;
+            border-radius: 12px; padding: 12px;
             display: flex; justify-content: space-between; align-items: center;
             border: 2px solid rgba(0,0,0,0.05);
         `;

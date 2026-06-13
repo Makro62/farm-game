@@ -1,11 +1,12 @@
-import { S } from '../core/state.js';
+import { S, GameState } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
 import { CRAFTING_RECIPES } from '../data/crafting.js';
-import { DECORATIONS, BOOSTERS } from '../data/items.js';
+import { DECORATIONS } from '../data/items.js';
 import { queueSave } from '../core/save-manager.js';
 import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
 import { addXP } from '../utils/helpers.js';
+import { getInventoryTotal } from './crop-system.js';
 
 export function buyBooster(type) {
     const cost = type === 'growth' ? 50 : 100;
@@ -72,15 +73,15 @@ export function buyDecoration(key) {
 }
 
 export function catchFish() {
-    if (window.GameState && window.GameState.fishActive) {
-        window.GameState.fishActive = false;
+    if (GameState.fishActive) {
+        GameState.fishActive = false;
         const splash = document.getElementById('fish-splash');
         if (splash) splash.style.display = 'none';
 
         const currentCap = S.inventoryCapacity || 50;
-        if (typeof window.getInventoryTotal === 'function' && window.getInventoryTotal() >= currentCap) {
+        if (getInventoryTotal() >= currentCap) {
             AudioManager.playSound('error');
-            NotificationManager.toast('⚠️ Gudang Penuh!');
+            NotificationManager.toast('⚠️ Gudang Penuh!', 'warn');
             return;
         }
 
@@ -96,7 +97,4 @@ export function catchFish() {
         NotificationManager.toast('🌊 Tidak ada ikan... tunggu cipratan air!', 'info');
     }
 }
-
-// Remove window globals
-// The below shouldn't be window globals anyway, we should export them properly
 
