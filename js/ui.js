@@ -51,6 +51,9 @@ function renderDecorations() {
     if (!el) return;
     el.innerHTML = '';
     
+    const farmArea = document.getElementById('farm-decorations-area');
+    if (farmArea) farmArea.innerHTML = '';
+    
     if (S.level < 5) {
         el.innerHTML = '<div style="font-size:11px;color:var(--muted)">Terbuka di Level 5</div>';
         return;
@@ -60,12 +63,26 @@ function renderDecorations() {
         const owned = S.decorations && S.decorations.includes(k);
         const btn = document.createElement('button');
         btn.className = 'shop-btn' + (owned ? ' locked' : '');
-        btn.innerHTML = `${d.emoji} ${d.name} (+${d.prestige}✨) <span class="price">${owned ? 'Dimiliki' : d.cost + '💰'}</span>`;
+        btn.innerHTML = `<span style="font-size:22px; vertical-align:middle; margin-right:4px;">${d.emoji}</span> ${d.name} (+${d.prestige}✨) <span class="price">${owned ? '✅ Dimiliki' : d.cost + '💰'}</span>`;
         if (!owned) {
             btn.onclick = () => buyDecoration(k);
         } else {
             btn.style.borderColor = 'var(--primary)';
-            btn.style.background = 'rgba(76, 175, 80, 0.1)';
+            btn.style.background = 'rgba(74, 222, 128, 0.2)';
+            
+            if (farmArea) {
+                const decoWrap = document.createElement('div');
+                decoWrap.title = d.name;
+                decoWrap.textContent = d.emoji;
+                decoWrap.style.fontSize = '55px';
+                decoWrap.style.lineHeight = '1';
+                decoWrap.style.filter = 'drop-shadow(0 6px 8px rgba(0,0,0,0.3))';
+                decoWrap.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                decoWrap.style.cursor = 'pointer';
+                decoWrap.onmouseover = () => decoWrap.style.transform = 'scale(1.2) translateY(-5px)';
+                decoWrap.onmouseout = () => decoWrap.style.transform = 'scale(1) translateY(0)';
+                farmArea.appendChild(decoWrap);
+            }
         }
         el.appendChild(btn);
     }
@@ -168,15 +185,24 @@ function pop(idx, txt) {
 }
 
 function toast(msg, type='info') {
+    const container = document.getElementById('toast-container');
     const el = document.createElement('div');
     el.className = 'toast ' + type;
     el.textContent = msg;
-    document.getElementById('toast-container').appendChild(el);
+    container.appendChild(el);
+    
+    // Jangan biarkan menumpuk lebih dari 3
+    if (container.children.length > 3) {
+        container.children[0].style.opacity = '0';
+        container.children[0].style.transform = 'translateY(-20px)';
+        setTimeout(() => { if(container.children[0]) container.children[0].remove(); }, 300);
+    }
+    
     setTimeout(() => {
         el.style.opacity = '0';
-        el.style.transform = 'translateX(20px)';
+        el.style.transform = 'translateY(-20px)';
         setTimeout(() => el.remove(), 300);
-    }, 3000);
+    }, 2500);
 }
 
 function showModal(title, msg, onOk) {
