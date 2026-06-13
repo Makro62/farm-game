@@ -8,7 +8,7 @@ function clickPlot(i) {
         p.state = 'empty';
         addXP(1);
         spawnParticles(i, '+1 XP');
-        toast('🌿 Rumput dibersihkan'); playSound('pop');
+        toast('🌿 Rumput dibersihkan', 'info'); playSound('pop');
     }
     else if (p.state === 'empty') {
         if ((S.seeds[selectedCrop] || 0) <= 0) { playSound('error'); toast(`Bibit ${CROPS[selectedCrop].name} habis! Beli di shop.`, 'warn'); return; }
@@ -24,7 +24,7 @@ function clickPlot(i) {
         addXP(5);
         updateQuest('plant', 1);
         spawnParticles(i, `+5 XP`);
-        toast(`🌱 ${c.name} ditanam!`); playSound('pop');
+        toast(`🌱 ${c.name} ditanam!`, 'success'); playSound('pop');
     }
     else if (p.state === 'ready') {
         const c = CROPS[p.crop];
@@ -37,7 +37,7 @@ function clickPlot(i) {
         p.state = 'empty'; p.crop = null;
         updateQuest('harvest', 1);
         spawnParticles(i, `+${c.emoji}`, `+${c.xp} XP`, '💰');
-        toast(`🧺 Panen ${c.name}! +${c.xp} XP`); playSound('coin');
+        toast(`🧺 Panen ${c.name}! +${c.xp} XP`, 'success'); playSound('coin');
         checkAchievements();
     }
     render();
@@ -360,7 +360,7 @@ function generateOrder() {
     const crops = Object.keys(CROPS).filter(k => S.level >= CROPS[k].minLv);
     const crop = crops[Math.floor(Math.random() * crops.length)] || 'carrot';
     const qty = Math.floor(Math.random() * 5) + 3 + Math.floor(S.level / 2);
-    const rewardCoins = CROPS[crop].sell * qty * 2.5; 
+    const rewardCoins = CROPS[crop].reward * qty * 2.5; 
     const rewardXP = CROPS[crop].xp * qty * 1.5;
     
     return {
