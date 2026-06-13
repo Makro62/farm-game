@@ -9,6 +9,9 @@ function render() {
     renderGrid();
     renderInventory();
     renderQuests();
+    renderDecorations();
+    renderAnimalsList();
+    renderWanderingAnimals();
     updateTopbar();
     updateBoosters();
     document.getElementById('achieve-count').textContent = `${S.achievements.length} / ${ACHIEVEMENTS.length}`;
@@ -63,7 +66,7 @@ function renderDecorations() {
         const owned = S.decorations && S.decorations.includes(k);
         const btn = document.createElement('button');
         btn.className = 'shop-btn' + (owned ? ' locked' : '');
-        btn.innerHTML = `<span style="font-size:22px; vertical-align:middle; margin-right:4px;">${d.emoji}</span> ${d.name} (+${d.prestige}✨) <span class="price">${owned ? '✅ Dimiliki' : d.cost + '💰'}</span>`;
+        btn.innerHTML = `<img src="img/${k}.png" alt="${k}" style="width:28px; height:28px; object-fit:cover; border-radius:8px; margin-right:4px; vertical-align:middle;"> ${d.name} (+${d.prestige}✨) <span class="price">${owned ? '✅ Dimiliki' : d.cost + '💰'}</span>`;
         if (!owned) {
             btn.onclick = () => buyDecoration(k);
         } else {
@@ -71,22 +74,72 @@ function renderDecorations() {
             btn.style.background = 'rgba(74, 222, 128, 0.2)';
             
             if (farmArea) {
-                const decoWrap = document.createElement('div');
-                decoWrap.title = d.name;
-                decoWrap.textContent = d.emoji;
-                decoWrap.style.fontSize = '55px';
-                decoWrap.style.lineHeight = '1';
-                decoWrap.style.filter = 'drop-shadow(0 6px 8px rgba(0,0,0,0.3))';
-                decoWrap.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                decoWrap.style.cursor = 'pointer';
-                decoWrap.onmouseover = () => decoWrap.style.transform = 'scale(1.2) translateY(-5px)';
-                decoWrap.onmouseout = () => decoWrap.style.transform = 'scale(1) translateY(0)';
-                farmArea.appendChild(decoWrap);
+                const decoImg = document.createElement('img');
+                decoImg.src = `img/${k}.png`;
+                decoImg.title = d.name;
+                decoImg.style.width = '70px';
+                decoImg.style.height = '70px';
+                decoImg.style.objectFit = 'contain';
+                decoImg.style.filter = 'drop-shadow(0 6px 8px rgba(0,0,0,0.3))';
+                decoImg.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                decoImg.style.cursor = 'pointer';
+                decoImg.onmouseover = () => decoImg.style.transform = 'scale(1.2) translateY(-5px)';
+                decoImg.onmouseout = () => decoImg.style.transform = 'scale(1) translateY(0)';
+                farmArea.appendChild(decoImg);
             }
         }
         el.appendChild(btn);
     }
 }
+
+function renderAnimalsList() {
+    const el = document.getElementById('animal-list');
+    if (!el) return;
+    el.innerHTML = '';
+    
+    if (S.level < 3) {
+        el.innerHTML = '<div style="font-size:11px;color:var(--muted)">Terbuka di Level 3</div>';
+        return;
+    }
+
+    for (const [k, a] of Object.entries(ANIMALS)) {
+        if (S.level < a.minLv) continue;
+        const count = S.animals ? S.animals.filter(x => x.type === k).length : 0;
+        const btn = document.createElement('button');
+        btn.className = 'shop-btn';
+        btn.innerHTML = `<span style="font-size:22px; vertical-align:middle; margin-right:4px;">${a.emoji}</span> ${a.name} <span class="price">${a.cost}💰</span>`;
+        btn.onclick = () => buyAnimal(k);
+        el.appendChild(btn);
+    }
+}
+
+function renderWanderingAnimals() {
+    const area = document.getElementById('farm-animals-area');
+    if (!area) return;
+    area.innerHTML = '';
+    if (!S.animals) return;
+
+    S.animals.forEach(a => {
+        const d = document.createElement('div');
+        d.className = 'animal' + (a.flip ? ' flipped' : '');
+        d.textContent = ANIMALS[a.type].emoji;
+        d.style.left = a.x + '%';
+        d.style.top = a.y + '%';
+        
+        area.appendChild(d);
+
+        if (a.readyToCollect) {
+            const prod = document.createElement('div');
+            prod.className = 'animal-product';
+            prod.textContent = ANIMALS[a.type].productEmoji;
+            prod.style.left = (a.x + 2) + '%';
+            prod.style.top = (a.y - 20) + '%';
+            prod.onclick = (e) => { e.stopPropagation(); collectAnimalProduct(a.id); };
+            area.appendChild(prod);
+        }
+    });
+}
+
 
 function renderGrid() {
     const grid = document.getElementById('farm-grid');
@@ -174,14 +227,23 @@ function updateTopbar() {
 // UI HELPERS
 // ============================================================
 
-function pop(idx, txt) {
+function spawnParticles(idx, ...texts) {
     const cell = document.getElementById('farm-grid').children[idx];
     if (!cell) return;
-    const el = document.createElement('div');
-    el.className = 'pop-float';
-    el.textContent = txt;
-    cell.appendChild(el);
-    setTimeout(() => el.remove(), 900);
+    
+    texts.forEach((txt, index) => {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.textContent = txt;
+        
+        const offsetX = (Math.random() - 0.5) * 40;
+        p.style.left = `calc(50% + ${offsetX}px - 10px)`;
+        p.style.top = '20%';
+        p.style.animationDelay = (index * 0.15) + 's';
+        
+        cell.appendChild(p);
+        setTimeout(() => p.remove(), 1500);
+    });
 }
 
 function toast(msg, type='info') {

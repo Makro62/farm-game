@@ -7,7 +7,7 @@ function clickPlot(i) {
     if (p.state === 'grass') {
         p.state = 'empty';
         addXP(1);
-        pop(i, '+1 XP');
+        spawnParticles(i, '+1 XP');
         toast('🌿 Rumput dibersihkan'); playSound('pop');
     }
     else if (p.state === 'empty') {
@@ -23,7 +23,7 @@ function clickPlot(i) {
         S.totalPlanted++;
         addXP(5);
         updateQuest('plant', 1);
-        pop(i, `+5 XP`);
+        spawnParticles(i, `+5 XP`);
         toast(`🌱 ${c.name} ditanam!`); playSound('pop');
     }
     else if (p.state === 'ready') {
@@ -36,7 +36,7 @@ function clickPlot(i) {
         addXP(c.xp);
         p.state = 'empty'; p.crop = null;
         updateQuest('harvest', 1);
-        pop(i, `+${c.emoji}`);
+        spawnParticles(i, `+${c.emoji}`, `+${c.xp} XP`, '💰');
         toast(`🧺 Panen ${c.name}! +${c.xp} XP`); playSound('coin');
         checkAchievements();
     }
@@ -106,6 +106,43 @@ function buyDecoration(key) {
     render();
 }
 
+function buyAnimal(key) {
+    if (!S.animals) S.animals = [];
+    const a = ANIMALS[key];
+    if (S.level < a.minLv) { playSound('error'); toast(`Butuh Level ${a.minLv}!`, 'warn'); return; }
+    if (S.coins < a.cost) { playSound('error'); toast('💰 Koin tidak cukup!', 'warn'); return; }
+    
+    S.coins -= a.cost;
+    S.lastAnimalId = (S.lastAnimalId || 0) + 1;
+    S.animals.push({
+        id: S.lastAnimalId,
+        type: key,
+        x: Math.random() * 90,
+        y: Math.random() * 60,
+        flip: Math.random() > 0.5,
+        nextMoveAt: Date.now() + 2000,
+        nextProduceAt: Date.now() + a.time,
+        readyToCollect: false
+    });
+    playSound('levelup'); toast(`Membeli ${a.name}!`, 'success');
+    render();
+}
+
+function collectAnimalProduct(id) {
+    const a = S.animals.find(x => x.id === id);
+    if (!a || !a.readyToCollect) return;
+    
+    const conf = ANIMALS[a.type];
+    S.coins += conf.reward;
+    addXP(10);
+    a.readyToCollect = false;
+    a.nextProduceAt = Date.now() + conf.time;
+    
+    playSound('coin');
+    toast(`Mendapat ${conf.productEmoji} ${conf.product}! +${conf.reward}💰`, 'success');
+    render();
+}
+
 // ============================================================
 // XP & LEVEL
 // ============================================================
@@ -138,14 +175,49 @@ function gameLoop() {
         }
     });
     
-    // Cek cuaca
+    // Cek cuaca & cycle
     if (Date.now() - S.weatherChangedAt >= WEATHER_INTERVAL) {
         S.weather = Math.floor(Math.random() * WEATHERS.length);
         S.weatherChangedAt = Date.now();
         toast(`${WEATHERS[S.weather].icon} Cuaca: ${WEATHERS[S.weather].name}`, 'info');
+        
+        // Update DOM weather class
+        document.body.className = document.body.className.replace(/weather-\w+/g, '');
+        if (WEATHERS[S.weather].name === 'Hujan') document.body.classList.add('weather-rain');
+        if (WEATHERS[S.weather].name === 'Badai') document.body.classList.add('weather-storm');
     }
     
-    renderGrid();
+    // Day/Night Cycle (Setiap 3 menit ganti siang/malam untuk demo)
+    const cycleMs = 3 * 60 * 1000; 
+    const timeInCycle = Date.now() % cycleMs;
+    if (timeInCycle > cycleMs / 2) {
+        document.body.classList.add('night-mode');
+    } else {
+        document.body.classList.remove('night-mode');
+    }
+
+    // Animal wandering
+    if (S.animals) {
+        let animalChanged = false;
+        S.animals.forEach(a => {
+            if (!a.readyToCollect && Date.now() >= a.nextProduceAt) {
+                a.readyToCollect = true;
+                animalChanged = true;
+            }
+            if (Date.now() >= a.nextMoveAt) {
+                const nx = Math.max(0, Math.min(90, a.x + (Math.random() - 0.5) * 30));
+                const ny = Math.max(0, Math.min(60, a.y + (Math.random() - 0.5) * 30));
+                a.flip = nx < a.x;
+                a.x = nx;
+                a.y = ny;
+                a.nextMoveAt = Date.now() + 2000 + Math.random() * 3000;
+                animalChanged = true;
+            }
+        });
+        if (animalChanged) renderWanderingAnimals();
+    }
+    
+    if (changed) renderGrid();
     updateTopbar();
     updateBoosters();
 }

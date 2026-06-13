@@ -233,34 +233,95 @@ body {
 .modal-bg {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);
     display: none; align-items: center; justify-content: center; z-index: 999;
+    opacity: 0; transition: opacity 0.3s;
 }
-.modal-bg.show { display: flex; }
+.modal-bg.show { display: flex; opacity: 1; }
 .modal {
-    background: rgba(255, 255, 255, 0.9); border-radius: 24px; padding: 40px;
-    max-width: 450px; width: 90%; text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3); border: 1px solid var(--panel-border);
-    animation: popIn .4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: var(--panel-bg); padding: 32px; border-radius: 24px; text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid var(--panel-border);
+    max-width: 400px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-@keyframes popIn { from { transform: scale(.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-.modal h2 { margin-bottom: 20px; color: var(--primary); font-size: 28px; font-weight: 800;}
-.modal p { margin-bottom: 30px; color: var(--muted); font-size: 18px; font-weight: 600; }
-.modal-btns { display: flex; gap: 16px; justify-content: center; }
+.modal-bg.show .modal { transform: scale(1); }
+.modal h2 { margin-bottom: 16px; font-size: 24px; color: var(--primary); font-weight: 800; }
+.modal p { color: var(--text); font-size: 16px; margin-bottom: 24px; font-weight: 500;}
+.modal-btns { display: flex; gap: 12px; justify-content: center; }
+
+/* PARTICLES */
+.particle {
+    position: absolute;
+    pointer-events: none;
+    z-index: 500;
+    font-size: 20px;
+    font-weight: 800;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    animation: floatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+@keyframes floatUp {
+    0% { transform: translateY(0) scale(0.8) rotate(0deg); opacity: 1; }
+    50% { transform: translateY(-40px) scale(1.2) rotate(15deg); opacity: 1; }
+    100% { transform: translateY(-80px) scale(1) rotate(-10deg); opacity: 0; }
+}
 .modal-btns .act-btn { padding: 12px 24px; font-size: 16px; }
 
-/* MOBILE */
-@media (max-width: 1000px) {
-    #main { flex-direction: column; overflow: visible; }
-    .sidebar, #right-panel { width: 100%; flex-direction: row; flex-wrap: wrap; }
-    .section-title { width: 100%; }
-    .shop-btn, .crop-btn, .act-btn, .inv-row, .quest-item { width: auto; flex: 1; min-width: 160px; }
-    #farm-grid { grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 16px; }
-    .farm-header-wrap { flex-direction: column; align-items: stretch; }
-    .actions { justify-content: center; flex-wrap: wrap; }
-    .plot { min-height: 50px; font-size: 24px; }
-    .plot-emoji { font-size: 28px; }
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+    #main { flex-direction: column; gap: 16px; }
+    .sidebar, #right-panel { width: 100%; }
+    .sidebar { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    #right-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .section-title { grid-column: 1 / -1; margin-bottom: 0; }
+    .topbar { flex-wrap: wrap; justify-content: center; padding: 12px; }
+    .topbar-left, .topbar-right { justify-content: center; width: 100%; }
+    #farm-grid { grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 12px; }
+    .plot { min-height: 60px; border-radius: 12px; }
+    .plot-emoji { font-size: 32px; }
+    .farm-header-wrap { flex-direction: column; gap: 12px; }
+    .actions { width: 100%; justify-content: center; }
 }
+
 @media (max-width: 600px) {
-    #farm-grid { grid-template-columns: repeat(4, 1fr); }
-    .plot { min-height: 45px; }
-    .plot-emoji { font-size: 24px; }
+    .topbar { flex-direction: column; gap: 8px; border-radius: 0 0 16px 16px; }
+    .stat-badge { font-size: 14px; padding: 6px 12px; }
+    #farm-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 8px; }
+    .plot { min-height: 55px; border-radius: 10px; }
+    .plot-emoji { font-size: 28px; }
+    .sidebar { grid-template-columns: 1fr; }
+    #right-panel { grid-template-columns: 1fr; }
+    .shop-btn { padding: 10px 16px; font-size: 14px; }
+    .crop-btn { padding: 10px 16px; font-size: 14px; }
 }
+
+/* WEATHER & TIME EFFECTS */
+body { transition: background 2s, color 2s; }
+body.night-mode { background: #0f172a; color: #e2e8f0; }
+body.night-mode .glass-panel { background: rgba(30, 41, 59, 0.7); border-color: rgba(255, 255, 255, 0.1); }
+body.night-mode .topbar { background: rgba(15, 23, 42, 0.8); }
+
+.rain-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    pointer-events: none; z-index: 900;
+    background: url('data:image/svg+xml;utf8,<svg width="10" height="20" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="0" x2="5" y2="10" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-linecap="round"/></svg>');
+    animation: rainFall 0.4s linear infinite; display: none; opacity: 0.6;
+}
+body.weather-rain .rain-overlay, body.weather-storm .rain-overlay { display: block; }
+@keyframes rainFall { 0% { background-position: 0 0; } 100% { background-position: 20px 100vh; } }
+
+/* ANIMALS */
+#farm-animals-area {
+    position: absolute; bottom: -20px; left: 0; right: 0; height: 120px;
+    pointer-events: none; z-index: 100;
+}
+.animal {
+    position: absolute; font-size: 40px; transition: left 3s linear, top 3s linear, transform 0.3s;
+    cursor: pointer; pointer-events: auto; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.3));
+}
+.animal:hover { transform: scale(1.2) translateY(-5px); }
+.animal.flipped { transform: scaleX(-1); }
+.animal.flipped:hover { transform: scaleX(-1) scale(1.2) translateY(-5px); }
+
+.animal-product {
+    position: absolute; font-size: 28px; cursor: pointer; pointer-events: auto;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+}
+.animal-product:hover { transform: scale(1.2); }
+

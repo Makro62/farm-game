@@ -34,6 +34,11 @@ const ACHIEVEMENTS = [
     { id:'A12', name:'Streak Master',  desc:'Login 7 hari streak',check:s=>s.loginStreak>=7,    reward:1000 }
 ];
 
+const ANIMALS = {
+    chicken: { name: 'Ayam', emoji: '🐔', cost: 1000, product: 'Telur', productEmoji: '🥚', time: 60000, reward: 50, minLv: 3 },
+    cow: { name: 'Sapi', emoji: '🐄', cost: 3000, product: 'Susu', productEmoji: '🥛', time: 120000, reward: 200, minLv: 5 }
+};
+
 const DAILY_REWARDS = [50, 100, 200, 300, 500, 800, 1500];
 const GRID_SIZE = 36;
 const SAVE_KEY = 'farmTycoonSave';
