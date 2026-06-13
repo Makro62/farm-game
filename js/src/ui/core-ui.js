@@ -1,0 +1,176 @@
+import { S } from '../core/state.js';
+import { ACHIEVEMENTS, WEATHERS, CONFIG } from '../data/config.js';
+import { getInventoryTotal } from '../systems/crop-system.js';
+
+export function render() {
+    if (typeof window.renderShop === 'function') window.renderShop();
+    if (typeof window.renderCropList === 'function') window.renderCropList();
+    if (typeof window.renderDecorations === 'function') window.renderDecorations();
+    if (typeof window.renderGrid === 'function') window.renderGrid();
+    if (typeof window.renderInventory === 'function') window.renderInventory();
+    if (typeof window.renderQuests === 'function') window.renderQuests();
+    if (typeof window.renderAnimalsList === 'function') window.renderAnimalsList();
+    if (typeof window.renderWanderingAnimals === 'function') window.renderWanderingAnimals();
+    if (typeof window.renderOrders === 'function') window.renderOrders();
+    updateTopbar();
+    updateBoosters();
+
+    const achieveCount = document.getElementById('achieve-count');
+    if (achieveCount) {
+        achieveCount.textContent = `${S.achievements.length} / ${ACHIEVEMENTS.length}`;
+    }
+
+    const btnBuyGnome = document.getElementById('btn-buy-gnome');
+    if (btnBuyGnome) {
+        btnBuyGnome.style.display = S.gnomeOwned ? 'none' : 'flex';
+    }
+
+    const btnToggleGnome = document.getElementById('btn-toggle-gnome');
+    if (btnToggleGnome) {
+        if (S.gnomeOwned) {
+            btnToggleGnome.style.display = 'inline-block';
+            btnToggleGnome.textContent = S.gnomeActive ? '🧙‍♂️ Auto: ON' : '🧙‍♂️ Auto: OFF';
+            btnToggleGnome.style.background = S.gnomeActive
+                ? 'linear-gradient(135deg, #a855f7, #9333ea)'
+                : 'var(--muted)';
+        } else {
+            btnToggleGnome.style.display = 'none';
+        }
+    }
+}
+
+export function updateTopbar() {
+    const elCoin = document.getElementById('coin-val');
+    if(elCoin) elCoin.textContent = S.coins.toLocaleString();
+    
+    const elLevel = document.getElementById('level-val');
+    if(elLevel) elLevel.textContent = S.level;
+    
+    const needed = S.level * 100;
+    const elXpVal = document.getElementById('xp-val');
+    if(elXpVal) elXpVal.textContent = S.xp;
+    
+    const elXpNeed = document.getElementById('xp-need');
+    if(elXpNeed) elXpNeed.textContent = needed;
+    
+    const elXpBar = document.getElementById('xp-bar');
+    if(elXpBar) elXpBar.style.width = Math.min(100, (S.xp / needed) * 100) + '%';
+
+    const w = WEATHERS[S.weather];
+    if (w) {
+        const chip = document.getElementById('weather-chip');
+        if(chip) chip.textContent = `${w.icon} ${w.name}`;
+        const wIcon = document.getElementById('weather-icon');
+        if(wIcon) wIcon.textContent = w.icon;
+        const wName = document.getElementById('weather-name');
+        if(wName) wName.textContent = w.name;
+    }
+
+    const elapsed = Date.now() - S.weatherChangedAt;
+    const remain = Math.max(0, Math.ceil((CONFIG.WEATHER_INTERVAL - elapsed) / 1000));
+    const wTimer = document.getElementById('weather-timer');
+    if(wTimer) wTimer.textContent = `Next: ${Math.floor(remain / 60)}:${(remain % 60).toString().padStart(2, '0')}`;
+
+    // Silo display
+    const cap = S.inventoryCapacity || 50;
+    const used = getInventoryTotal();
+    const siloCapDisplay = document.getElementById('silo-cap-display');
+    if (siloCapDisplay) {
+        siloCapDisplay.textContent = cap;
+        const maxDisp = document.getElementById('silo-max-display');
+        if(maxDisp) maxDisp.textContent = cap;
+        const usedDisp = document.getElementById('silo-used-display');
+        if(usedDisp) {
+            usedDisp.textContent = used;
+            usedDisp.style.color = (used >= cap) ? '#ef4444' : 'var(--muted)';
+        }
+        const priceDisp = document.getElementById('silo-price-display');
+        if(priceDisp) priceDisp.textContent = (cap * 10) + '💰';
+    }
+
+    const pVal = document.getElementById('prestige-val');
+    if (pVal) pVal.textContent = S.prestige || 0;
+}
+
+export function updateBoosters() {
+    const now = Date.now();
+    const gBtn = document.getElementById('btn-boost-growth');
+    if (gBtn) {
+        if (S.boosters.growth > now) {
+            const rem = Math.ceil((S.boosters.growth - now) / 1000);
+            gBtn.innerHTML = `⚡ Growth (${Math.floor(rem / 60)}:${(rem % 60).toString().padStart(2, '0')})`;
+            gBtn.style.background = 'rgba(76, 175, 80, 0.2)';
+            gBtn.style.borderColor = 'var(--primary)';
+        } else {
+            gBtn.innerHTML = `⚡ Growth ×1.5 <span class="price">50💰</span>`;
+            gBtn.style.background = '';
+            gBtn.style.borderColor = '';
+        }
+    }
+
+    const cBtn = document.getElementById('btn-boost-coin');
+    if (cBtn) {
+        if (S.boosters.coin > now) {
+            const rem = Math.ceil((S.boosters.coin - now) / 1000);
+            cBtn.innerHTML = `💰 Coin (${Math.floor(rem / 60)}:${(rem % 60).toString().padStart(2, '0')})`;
+            cBtn.style.background = 'rgba(76, 175, 80, 0.2)';
+            cBtn.style.borderColor = 'var(--primary)';
+        } else {
+            cBtn.innerHTML = `💰 Coin ×2 <span class="price">100💰</span>`;
+            cBtn.style.background = '';
+            cBtn.style.borderColor = '';
+        }
+    }
+}
+
+export function buyGnome() {
+    if (S.gnomeOwned) {
+        window.toast('Anda sudah mempekerjakan kurcaci!', 'warn');
+        return;
+    }
+    if (S.coins >= 5000) {
+        S.coins -= 5000;
+        S.gnomeOwned = true;
+        S.gnomeActive = true;
+        window.playSound('levelup');
+        window.toast('🧙‍♂️ Trio Kurcaci berhasil dipekerjakan!', 'success');
+        render();
+    } else {
+        window.playSound('error');
+        window.toast('Koin tidak cukup! Butuh 5000💰', 'warn');
+    }
+}
+
+export function toggleGnome() {
+    S.gnomeActive = !S.gnomeActive;
+    window.toast(`🧙‍♂️ Kurcaci ${S.gnomeActive ? 'Aktif' : 'Beristirahat'}`, 'info');
+    render();
+}
+
+export function confirmReset() {
+    if (typeof window.showModal === 'function') {
+        window.showModal('🔄 Reset Game', 'Semua progress akan hilang. Yakin?', () => {
+            localStorage.removeItem(CONFIG.SAVE_KEY);
+            location.reload();
+        });
+    }
+}
+
+export function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.log(`Fullscreen error: ${err.message}`);
+        });
+    } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+    }
+}
+
+// Map bindings
+window.render = render;
+window.updateTopbar = updateTopbar;
+window.updateBoosters = updateBoosters;
+window.buyGnome = buyGnome;
+window.toggleGnome = toggleGnome;
+window.confirmReset = confirmReset;
+window.toggleFullScreen = toggleFullScreen;
