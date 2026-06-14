@@ -21,10 +21,10 @@ export const ACHIEVEMENTS = [
     { id:'A12', name:'Streak Master',  desc:'Login 7 hari streak',check:s=>s.loginStreak>=7,    reward:1000 }
 ];
 
-export const DAILY_REWARDS = [50, 100, 200, 300, 500, 800, 1500];
+export const DAILY_REWARDS = [100, 200, 300, 400, 500, 750, 1500];
 
 export const CONFIG = {
-    GRID_SIZE: 36,
+    GRID_SIZE: 42,
     SAVE_KEY: 'farmTycoonSave',
     WEATHER_INTERVAL: 5 * 60 * 1000, // 5 menit
     DEFAULT_INVENTORY_CAPACITY: 50,

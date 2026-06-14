@@ -133,7 +133,7 @@
 .modal {
     background: var(--panel-bg); padding: 32px; border-radius: 24px; text-align: center;
     box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid var(--panel-border);
-    max-width: 400px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: 90%; max-width: 400px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .modal-bg.show .modal { transform: scale(1); }
 .modal h2 { margin-bottom: 16px; font-size: 24px; color: var(--primary); font-weight: 800; }
@@ -156,4 +156,8 @@
     .stat-chip { font-size: 14px; padding: 6px 12px; width: 100%; justify-content: center; }
     .shop-btn { padding: 10px 16px; font-size: 14px; }
     .crop-btn { padding: 10px 16px; font-size: 14px; }
+    .modal { padding: 24px; }
+    .modal h2 { font-size: 20px; }
+    .modal p { font-size: 14px; }
+    #wheel-display { font-size: 60px !important; margin: 20px 0 !important; }
 }

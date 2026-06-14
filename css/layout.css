@@ -75,7 +75,8 @@
 /* ============ RESPONSIVE ============ */
 @media (max-width: 1024px) {
     #main { flex-direction: column; gap: 16px; }
-    .sidebar, .right-panel { width: 100%; max-height: none; }
+    .tab-pane { flex-direction: column; }
+    .sidebar, .right-panel, .town-panel, .animal-panel, #farm-area { width: 100%; max-height: none; }
     .sidebar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
     .right-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
     .section-title { grid-column: 1 / -1; margin-bottom: 0; }
@@ -83,7 +84,8 @@
 }
 
 @media (max-width: 600px) {
-    #topbar { flex-direction: column; gap: 8px; border-radius: 0 0 16px 16px; }
-    .sidebar { grid-template-columns: 1fr; }
-    .right-panel { grid-template-columns: 1fr; }
+    #app { padding: 8px; gap: 8px; }
+    #topbar { flex-direction: column; gap: 8px; border-radius: 0 0 16px 16px; padding: 12px; }
+    .sidebar { grid-template-columns: 1fr; padding: 12px; }
+    .right-panel { grid-template-columns: 1fr; padding: 12px; }
 }

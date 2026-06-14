@@ -8,6 +8,9 @@ import { processFishLoop } from '../systems/fish-system.js';
 import { processCraftingQueue } from '../systems/crafting-system.js';
 import { processMerchant } from '../systems/economy-system.js';
 import { NotificationManager } from '../managers/notification-manager.js';
+import { MarketSystem } from '../systems/market-system.js';
+
+let lastDayUpdate = Date.now();
 
 export function gameLoop() {
     let changed = false;
@@ -62,6 +65,15 @@ export function gameLoop() {
         const craftingChanged = processCraftingQueue();
         if (craftingChanged && typeof window.renderCrafting === 'function') {
             window.renderCrafting();
+        }
+
+        // 7b. Day Engine (Every 5 minutes = 1 in-game day)
+        if (Date.now() - lastDayUpdate > 5 * 60 * 1000) {
+            lastDayUpdate = Date.now();
+            S.day = (S.day || 0) + 1;
+            MarketSystem.updateDailyMarket(S);
+            NotificationManager.toast(`🌅 Hari Baru! Harga pasar telah diperbarui.`, 'info');
+            saveGame();
         }
 
         // 8. Render updates

@@ -5,6 +5,7 @@ import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
 import { addXP, isInventoryFull, renderIfNeeded } from '../utils/helpers.js';
 import { getBuildingEffect } from './building-system.js';
+import { showFloatText } from '../utils/effects.js';
 
 /**
  * Check if player can buy animal (level and coins)
@@ -129,6 +130,13 @@ export function collectAnimalProduct(id) {
     animal.nextProduceAt = Date.now() + config.time;
 
     if (typeof window.updateQuest === 'function') window.updateQuest('collect', 1);
+
+    const animalSlots = document.querySelectorAll('.animal-slot');
+    const slotEl = animalSlots[S.animals.findIndex(a => a.id === id)];
+    if (slotEl) {
+        showFloatText(slotEl, `+10 XP`, 'xp');
+        setTimeout(() => showFloatText(slotEl, `+1 ${config.productEmoji}`, 'normal'), 200);
+    }
 
     AudioManager.playSound('coin');
     NotificationManager.toast(`Mendapat ${config.productEmoji} ${config.product}! (masuk gudang)`, 'success');

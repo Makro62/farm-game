@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/animal.css">
     <link rel="stylesheet" href="css/town.css">
     <link rel="stylesheet" href="css/effects.css">
+    <link rel="stylesheet" href="css/visual-upgrades.css">
 </head>
 
 <body>
@@ -153,6 +154,14 @@
                     <div class="section-title mt-20">⚡ Booster</div>
                     <button class="shop-btn" id="btn-boost-coin">💰 Coin ×2 <span class="price">100💰</span></button>
 
+                    <div class="section-title mt-20">🎡 Roda Harian</div>
+                    <button class="shop-btn" id="btn-open-wheel" style="background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.2)); border-color: gold;">
+                        <div class="text-left">
+                            <div style="font-weight:800; color:#d97706;">🎰 Putar Roda</div>
+                            <div class="text-muted-sm">1x Putaran Gratis/Hari</div>
+                        </div>
+                    </button>
+
                     <div class="section-title mt-20">🧑‍🌾 Pekerja Kota (Auto)</div>
                     <button class="shop-btn" id="btn-buy-merchant">
                         <div class="text-left">
@@ -203,11 +212,13 @@
             <h2 id="modal-title">Konfirmasi</h2>
             <p id="modal-msg">Apakah Anda yakin?</p>
             <div class="modal-btns">
-                <button class="act-btn" id="btn-modal-cancel">Batal</button>
-                <button class="act-btn primary" id="modal-ok">OK</button>
+                <button class="act-btn" id="modal-cancel">Batal</button>
+                <button class="act-btn primary" id="modal-ok">Ya</button>
             </div>
         </div>
     </div>
+
+
 
     <!-- INPUT / QUANTITY MODAL -->
     <div class="modal-bg" id="prompt-modal">

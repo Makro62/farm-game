@@ -19,7 +19,7 @@ export const BUILDINGS = {
         desc: 'Meningkatkan batas maksimal hewan ternak di peternakan.',
         maxLevel: 3,
         levels: [
-            { cost: 0, effect: 50 },           // Base (level 0) capacity 50 animals
+            { cost: 0, effect: 42 },           // Base (level 0) capacity 42 animals
             { cost: 300, effect: 80 },        // Lv1: 80 animals
             { cost: 1500, effect: 150 },       // Lv2: 150 animals
             { cost: 5000, effect: 300 }       // Lv3: 300 animals

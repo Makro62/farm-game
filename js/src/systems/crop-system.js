@@ -5,6 +5,8 @@ import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
 import { addXP, checkAchievements, isInventoryFull, getInventoryTotal, renderIfNeeded } from '../utils/helpers.js';
 import { getBuildingEffect } from './building-system.js';
+import { showFloatText } from '../utils/effects.js';
+import { ComboSystem } from './combo-system.js';
 
 /**
  * Handle plot click actions
@@ -160,7 +162,20 @@ function harvestCrop(plot, index) {
         window.updateQuest('harvest', 1);
     }
     
-    NotificationManager.spawnParticles(index, `+${cropConfig.emoji}`, `+${cropConfig.xp} XP`, '💰');
+    NotificationManager.spawnParticles(index, `+${cropConfig.emoji}`, `+${cropConfig.xp} XP`);
+    
+    const plotEl = document.querySelector(`.plot[data-idx="${index}"]`);
+    if (plotEl) {
+        showFloatText(plotEl, `+${cropConfig.xp} XP`, 'xp');
+        setTimeout(() => showFloatText(plotEl, `+1 ${cropConfig.emoji}`, 'normal'), 200);
+        
+        // COMBO SYSTEM
+        const comboResult = ComboSystem.registerComboAction(S, 'harvest', reward, plotEl);
+        if (comboResult.bonus > 0) {
+            S.coins += comboResult.bonus;
+        }
+    }
+
     NotificationManager.toast(`🧺 Panen ${cropConfig.name}! +${cropConfig.xp} XP`, 'success');
     AudioManager.playSound('coin');
     checkAchievements();

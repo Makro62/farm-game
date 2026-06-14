@@ -19,6 +19,8 @@ import './systems/animal-system.js';
 import './systems/fish-system.js';
 import './systems/economy-system.js';
 import { claimDaily } from './systems/quest-system.js';
+import { WheelSystem } from './systems/wheel-system.js';
+import { StreakSystem } from './systems/streak-system.js';
 import './systems/gnome-system.js';
 import './systems/weather-system.js';
 
@@ -54,7 +56,15 @@ document.addEventListener('DOMContentLoaded', () => {
     AudioManager.init();
     UIManager.initEvents();
     setupTabs();
-    initGame();
+    initGame().then(() => {
+        setTimeout(() => {
+            StreakSystem.claimDailyStreak(S);
+            StreakSystem.renderStreakIndicator(S);
+        }, 1000);
+    });
+
+    const btnWheel = document.getElementById('btn-open-wheel');
+    if(btnWheel) btnWheel.addEventListener('click', () => WheelSystem.renderWheelModal(S));
 });
 
 // Keyboard shortcuts
