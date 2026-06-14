@@ -135,4 +135,4 @@ Bantuan Anda sangat dihargai! Silakan baca [Panduan Kontribusi (CONTRIBUTING.md)
 - `config.js` menambahkan `DEFAULT_INVENTORY_CAPACITY` untuk menghindari magic number.
 - Prinsip yang diterapkan: **SRP**, **DRY**, **KISS**, **Clean Code**, dan **Separation of Concerns**.
 
-Selamat bersenang-senang dan jadilah petani terkaya ya ! 🌻💰
+Selamat bersenang-senang dan jadilah petani terkaya testing ! 🌻💰
