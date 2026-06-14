@@ -55,7 +55,7 @@ export function renderOrders() {
     if (!S.orders || S.orders.length === 0) return;
 
     S.orders.forEach(o => {
-        const c = CROPS[o.crop];
+        const c = getItemData(o.crop);
         if (!c) return;
         const has = S.inventory[o.crop] || 0;
         const canFulfill = has >= o.qty;
@@ -66,12 +66,17 @@ export function renderOrders() {
             border-radius: 16px; padding: 16px; text-align: center;
             border: 2px solid ${canFulfill ? 'var(--primary)' : 'rgba(0,0,0,0.1)'};
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
+            transition: transform 0.2s; position: relative;
         `;
         card.onmouseover = () => card.style.transform = 'translateY(-4px)';
         card.onmouseout = () => card.style.transform = 'translateY(0)';
 
+        const custEmoji = o.customerEmoji || '👨‍🌾';
+        const custName = o.customerName || 'Pelanggan';
+
         card.innerHTML = `
+            <div style="position:absolute; top:-12px; left:-12px; font-size:32px; background:white; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.1);" title="${custName}">${custEmoji}</div>
+            <div style="font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 8px;">Pesanan ${custName}</div>
             <div style="font-size: 32px; margin-bottom: 8px;">${c.emoji}</div>
             <div class="ui-card-title" style="justify-content:center;">${c.name}</div>
             <div style="font-weight: 700; font-size: var(--fs-sm); color: ${canFulfill ? 'var(--primary)' : 'var(--accent)'}; margin: 6px 0 12px;">

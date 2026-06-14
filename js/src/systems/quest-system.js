@@ -1,5 +1,6 @@
 import { S } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
+import { getItemData } from '../data/items.js';
 import { DAILY_REWARDS } from '../data/config.js';
 import { queueSave } from '../core/save-manager.js';
 import { AudioManager } from '../managers/audio-manager.js';
@@ -107,16 +108,47 @@ export function claimDaily() {
 }
 
 export function generateOrder() {
-    const crops = Object.keys(CROPS).filter(k => S.level >= CROPS[k].minLv);
-    const crop = crops[Math.floor(Math.random() * crops.length)] || 'carrot';
+    const customers = [
+        { name: 'Chef Budi', emoji: '👨‍🍳' },
+        { name: 'Nenek Sari', emoji: '👵' },
+        { name: 'Pak Kades', emoji: '👨‍💼' },
+        { name: 'Tante Rina', emoji: '👩' },
+        { name: 'Juragan Ikan', emoji: '🎣' },
+        { name: 'Gadis Desa', emoji: '👧' }
+    ];
+    const customer = customers[Math.floor(Math.random() * customers.length)];
+
+    // Find items in inventory that have qty > 0
+    let availableItems = Object.keys(S.inventory || {}).filter(k => S.inventory[k] > 0);
+    
+    // If inventory is empty, fallback to unlocked crops
+    if (availableItems.length === 0) {
+        availableItems = Object.keys(CROPS).filter(k => S.level >= CROPS[k].minLv);
+    }
+
+    // Pick 70% from inventory, 30% random unlocked crop
+    let itemKey = 'carrot';
+    if (Math.random() < 0.7 && availableItems.length > 0) {
+        itemKey = availableItems[Math.floor(Math.random() * availableItems.length)];
+    } else {
+        const unlockedCrops = Object.keys(CROPS).filter(k => S.level >= CROPS[k].minLv);
+        if (unlockedCrops.length > 0) itemKey = unlockedCrops[Math.floor(Math.random() * unlockedCrops.length)];
+    }
+
+    const itemData = getItemData(itemKey);
     const qty = Math.floor(Math.random() * 5) + 3 + Math.floor(S.level / 2);
-    const rewardCoins = CROPS[crop].reward * qty * 2.5;
-    const rewardXP = CROPS[crop].xp * qty * 1.5;
+    
+    // Calculate reward based on base item value
+    const baseReward = itemData.reward || 10;
+    const rewardCoins = baseReward * qty * 1.5; // Customers pay 50% extra
+    const rewardXP = (itemData.xp || 5) * qty * 1.5;
 
     return {
         id: Date.now() + Math.random(),
-        crop: crop,
+        crop: itemKey,
         qty: qty,
+        customerName: customer.name,
+        customerEmoji: customer.emoji,
         rewardCoins: Math.floor(rewardCoins),
         rewardXP: Math.floor(rewardXP)
     };

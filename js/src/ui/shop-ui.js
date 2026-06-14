@@ -15,18 +15,43 @@ export function renderShop() {
     el.innerHTML = '';
     for (const [k, c] of Object.entries(CROPS)) {
         const locked = S.level < c.minLv;
+        
+        const wrap = document.createElement('div');
+        wrap.style.display = 'flex';
+        wrap.style.gap = '8px';
+        wrap.style.marginBottom = '8px';
+
         const btn = document.createElement('button');
         btn.className = 'shop-btn' + (locked ? ' locked' : '');
+        btn.style.flex = '1';
+        btn.style.margin = '0';
         btn.innerHTML = `${c.emoji} ${c.name} <span class="price">${c.cost}💰</span>`;
         btn.onclick = () => {
             if (locked) {
                 NotificationManager.toast(`Butuh Level ${c.minLv}!`, 'warn');
                 return;
             }
-            promptBuySeed(k, c);
+            buySeed(k, 1);
         };
         if (locked) btn.title = `Butuh Level ${c.minLv}`;
-        el.appendChild(btn);
+        wrap.appendChild(btn);
+
+        if (!locked) {
+            const moreBtn = document.createElement('button');
+            moreBtn.className = 'act-btn';
+            moreBtn.style.flex = '0 0 auto';
+            moreBtn.style.margin = '0';
+            moreBtn.style.width = 'auto';
+            moreBtn.style.padding = '0 15px';
+            moreBtn.innerHTML = '➕';
+            moreBtn.title = 'Beli Banyak';
+            moreBtn.onclick = () => {
+                promptBuySeed(k, c);
+            };
+            wrap.appendChild(moreBtn);
+        }
+
+        el.appendChild(wrap);
     }
 }
 
@@ -150,5 +175,47 @@ export function renderFishShopList() {
         }
         btn.onclick = () => buyFish(k);
         el.appendChild(btn);
+    }
+}
+
+export function renderFishMarket() {
+    const el = document.getElementById('fish-market-list');
+    if (!el) return;
+    el.innerHTML = '';
+    
+    let hasFish = false;
+    for (const [k, f] of Object.entries(FISHES)) {
+        const qty = S.inventory[k] || 0;
+        if (qty > 0) {
+            hasFish = true;
+            const btn = document.createElement('button');
+            btn.className = 'shop-btn';
+            btn.style.flex = '1';
+            btn.style.minWidth = '200px';
+            const value = f.reward * qty;
+            
+            btn.innerHTML = `
+                <div class="text-left">
+                    <div style="font-size:15px; font-weight:800;">${f.productEmoji} ${f.product} <span class="text-muted-sm" style="font-weight:700;">×${qty}</span></div>
+                    <div class="text-muted-sm" style="color:var(--secondary); font-weight:800; margin-top:4px;">Total Harga: ${value}💰</div>
+                </div>
+                <div class="act-btn primary" style="width:auto; padding:8px 16px; margin:0;">Jual</div>
+            `;
+            
+            btn.onclick = () => {
+                import('../managers/audio-manager.js').then(({ AudioManager }) => AudioManager.playSound('coin'));
+                S.coins += value;
+                S.totalEarned = (S.totalEarned || 0) + value;
+                S.inventory[k] = 0;
+                NotificationManager.toast(`Berhasil menjual ${f.product}! (+${value}💰)`, 'success');
+                if (typeof window.render === 'function') window.render();
+                import('../core/save-manager.js').then(({ queueSave }) => queueSave());
+            };
+            el.appendChild(btn);
+        }
+    }
+    
+    if (!hasFish) {
+        el.innerHTML = '<div class="text-muted-sm" style="padding:16px; text-align:center; width:100%; background:rgba(255,255,255,0.4); border-radius:12px;">Belum ada hasil tangkapan di gudang.</div>';
     }
 }

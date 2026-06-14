@@ -1,7 +1,7 @@
 import { S, GameState } from './state.js';
 import { CONFIG, WEATHERS } from '../data/config.js';
 import { loadGame, saveGame } from './save-manager.js';
-import { processGnome } from '../systems/gnome-system.js';
+import { processGnome, processTownWorker } from '../systems/gnome-system.js';
 import { processWeather } from '../systems/weather-system.js';
 import { processAnimalLoop } from '../systems/animal-system.js';
 import { processFishLoop } from '../systems/fish-system.js';
@@ -38,8 +38,9 @@ export function gameLoop() {
         // 4. Gnome auto-farmer
         processGnome();
 
-        // 4b. Town merchant auto-seller
+        // 4b. Town merchant auto-seller & auto-fisher
         processMerchant();
+        processTownWorker();
 
         // 5. Fish farming loop
         const fishChanged = processFishLoop();

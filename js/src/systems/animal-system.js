@@ -137,6 +137,54 @@ export function collectAnimalProduct(id) {
     queueSave();
 }
 
+/** Fraction of the purchase price returned when selling an animal. */
+const ANIMAL_SELL_RATE = 0.6;
+
+/**
+ * Get the coin value returned when selling an animal of a given type.
+ * @param {string} type - Animal type key
+ * @returns {number} Sell value in coins
+ */
+export function getAnimalSellValue(type) {
+    const conf = ANIMALS[type];
+    if (!conf) return 0;
+    return Math.floor(conf.cost * ANIMAL_SELL_RATE);
+}
+
+/**
+ * Sell (remove) an animal and refund part of its purchase price.
+ * @param {number} id - Animal ID
+ */
+export function sellAnimal(id) {
+    const animal = S.animals && S.animals.find(a => a.id === id);
+    if (!animal) return;
+
+    const conf = ANIMALS[animal.type];
+    if (!conf) return;
+
+    const value = getAnimalSellValue(animal.type);
+
+    NotificationManager.showModal(
+        `💰 Jual ${conf.name}?`,
+        `Anda akan menjual 1 ${conf.name} dan menerima ${value}💰. Lanjutkan?`,
+        () => {
+            const idx = S.animals.findIndex(a => a.id === id);
+            if (idx === -1) return;
+
+            S.animals.splice(idx, 1);
+            S.coins += value;
+            S.totalEarned = (S.totalEarned || 0) + value;
+
+            AudioManager.playSound('coin');
+            NotificationManager.toast(`💰 ${conf.name} terjual! +${value} koin`, 'success');
+
+            if (typeof window.checkAchievements === 'function') window.checkAchievements();
+            renderIfNeeded();
+            queueSave();
+        }
+    );
+}
+
 /**
  * Process animal loop (production and movement)
  * @returns {boolean} true if animals changed
@@ -151,19 +199,6 @@ export function processAnimalLoop() {
                 animal.readyToCollect = true;
                 animalChanged = true;
             }
-            
-            // Movement — keep animals within the grassy play band (below the
-            // barn at the top and above the fence at the bottom).
-            if (!animal.nextMoveAt) animal.nextMoveAt = Date.now() + 2000;
-            
-            if (Date.now() >= animal.nextMoveAt) {
-                const newX = Math.max(8, Math.min(85, animal.x + (Math.random() - 0.5) * 20));
-                animal.flip = newX < animal.x;
-                animal.x = newX;
-                animal.y = Math.max(35, Math.min(78, animal.y + (Math.random() - 0.5) * 20));
-                animal.nextMoveAt = Date.now() + 2000 + Math.random() * 3000;
-                animalChanged = true;
-            }
         });
     }
     
@@ -173,3 +208,4 @@ export function processAnimalLoop() {
 // Export to window for backward compatibility
 window.buyAnimal = buyAnimal;
 window.collectAnimalProduct = collectAnimalProduct;
+window.sellAnimal = sellAnimal;

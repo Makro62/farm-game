@@ -5,23 +5,83 @@ export const CRAFTING_RECIPES = {
         emoji: '🍲',
         desc: 'Sup hangat bergizi.',
         ingredients: { carrot: 5 },
-        time: 15000,      // 15 seconds
-        reward: 120,      // Total sell value > raw ingredients
+        time: 15000,
+        reward: 120,
         xp: 30,
         minLv: 5,
         tab: 'farm'
     },
     flour: {
         id: 'flour',
-        name: 'Tepung Jagung',
-        emoji: '🌽',
+        name: 'Tepung Gandum',
+        emoji: '🍞',
         desc: 'Bahan dasar pembuat kue.',
-        ingredients: { corn: 5 },
+        ingredients: { wheat: 2 },
         time: 20000,
-        reward: 200,
-        xp: 40,
-        minLv: 6,
+        reward: 100,
+        xp: 5,
+        minLv: 1,
         tab: 'farm'
+    },
+    boiledcorn: {
+        id: 'boiledcorn',
+        name: 'Jagung Rebus',
+        emoji: '🌽',
+        desc: 'Jagung rebus hangat.',
+        ingredients: { corn: 1 },
+        time: 30000,
+        reward: 250,
+        xp: 8,
+        minLv: 2,
+        tab: 'farm'
+    },
+    carrotjuice: {
+        id: 'carrotjuice',
+        name: 'Jus Wortel',
+        emoji: '🥤',
+        desc: 'Jus wortel segar.',
+        ingredients: { carrot: 2 },
+        time: 45000,
+        reward: 500,
+        xp: 12,
+        minLv: 4,
+        tab: 'farm'
+    },
+    friedegg: {
+        id: 'friedegg',
+        name: 'Telur Goreng',
+        emoji: '🍳',
+        desc: 'Telur goreng sederhana.',
+        ingredients: { chicken: 1 },
+        time: 15000,
+        reward: 25,
+        xp: 5,
+        minLv: 1,
+        tab: 'animal'
+    },
+    freshmilk: {
+        id: 'freshmilk',
+        name: 'Susu Segar',
+        emoji: '🥛',
+        desc: 'Susu sapi perah segar.',
+        ingredients: { cow: 1 },
+        time: 20000,
+        reward: 50,
+        xp: 8,
+        minLv: 2,
+        tab: 'animal'
+    },
+    purehoney: {
+        id: 'purehoney',
+        name: 'Madu Murni',
+        emoji: '🍯',
+        desc: 'Madu alami lebah.',
+        ingredients: { bee: 1 },
+        time: 30000,
+        reward: 100,
+        xp: 15,
+        minLv: 5,
+        tab: 'animal'
     },
     cheese: {
         id: 'cheese',
@@ -59,6 +119,42 @@ export const CRAFTING_RECIPES = {
         minLv: 15,
         tab: 'animal'
     },
+    friedfish: {
+        id: 'friedfish',
+        name: 'Ikan Goreng',
+        emoji: '🐟',
+        desc: 'Resep ikan goreng sederhana.',
+        ingredients: { ikankecil: 1 },
+        time: 20000,
+        reward: 35,
+        xp: 5,
+        minLv: 1,
+        tab: 'fish'
+    },
+    fishsoup: {
+        id: 'fishsoup',
+        name: 'Sup Ikan',
+        emoji: '🍲',
+        desc: 'Sup ikan hangat bergizi.',
+        ingredients: { ikankecil: 2 },
+        time: 30000,
+        reward: 60,
+        xp: 8,
+        minLv: 2,
+        tab: 'fish'
+    },
+    pepesfish: {
+        id: 'pepesfish',
+        name: 'Pepes Ikan',
+        emoji: '🍃',
+        desc: 'Pepes ikan lezat beraroma.',
+        ingredients: { nila: 1 },
+        time: 40000,
+        reward: 150,
+        xp: 12,
+        minLv: 4,
+        tab: 'fish'
+    },
     sushi: {
         id: 'sushi',
         name: 'Sushi',
@@ -68,7 +164,7 @@ export const CRAFTING_RECIPES = {
         time: 30000,
         reward: 800,
         xp: 60,
-        minLv: 6,
+        minLv: 5,
         tab: 'fish'
     },
     grilledfish: {
@@ -80,7 +176,7 @@ export const CRAFTING_RECIPES = {
         time: 45000,
         reward: 1500,
         xp: 120,
-        minLv: 9,
+        minLv: 7,
         tab: 'fish'
     },
     sashimi: {
@@ -92,7 +188,7 @@ export const CRAFTING_RECIPES = {
         time: 60000,
         reward: 3000,
         xp: 250,
-        minLv: 13,
+        minLv: 10,
         tab: 'fish'
     }
 };

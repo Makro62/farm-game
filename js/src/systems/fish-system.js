@@ -20,9 +20,9 @@ export function buyFish(key) {
     }
 
     const currentFishes = S.fishes ? S.fishes.length : 0;
-    if (currentFishes >= 10) { // arbitrary limit to prevent overcrowding
+    if (currentFishes >= 50) { // arbitrary limit to prevent overcrowding
         AudioManager.playSound('error'); 
-        NotificationManager.toast('Danau Penuh! Maksimal 10 ekor.', 'warn'); 
+        NotificationManager.toast('Danau Penuh! Maksimal 50 ekor.', 'warn'); 
         return; 
     }
 

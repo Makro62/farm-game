@@ -1,6 +1,7 @@
 export class AudioManager {
     static ctx = null;
     static isMuted = false;
+    static bgmAudio = null;
 
     static init() {
         if (this.ctx) return;
@@ -8,8 +9,25 @@ export class AudioManager {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             this.ctx = new AudioContext();
             this.setupUI();
+            this.initBGM();
         } catch(e) {
             console.error("Audio initialization failed", e);
+        }
+    }
+
+    static initBGM() {
+        this.bgmAudio = document.getElementById('bgm-audio');
+        if (!this.bgmAudio) {
+            this.bgmAudio = new Audio('https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=country-rock-113254.mp3'); 
+            this.bgmAudio.id = 'bgm-audio';
+            this.bgmAudio.loop = true;
+            this.bgmAudio.volume = 0.15;
+            document.body.appendChild(this.bgmAudio);
+        }
+        
+        // Try to play immediately if not muted
+        if (!this.isMuted) {
+            this.bgmAudio.play().catch(e => console.log('Autoplay prevented by browser', e));
         }
     }
 
@@ -24,6 +42,14 @@ export class AudioManager {
             this.isMuted = !this.isMuted;
             btn.innerHTML = this.isMuted ? '🔇' : '🔊';
             btn.style.opacity = this.isMuted ? '0.5' : '1';
+            
+            if (this.bgmAudio) {
+                if (this.isMuted) {
+                    this.bgmAudio.pause();
+                } else {
+                    this.bgmAudio.play().catch(e => console.log('Autoplay prevented', e));
+                }
+            }
         });
     }
 

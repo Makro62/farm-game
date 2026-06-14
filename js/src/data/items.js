@@ -12,7 +12,7 @@ export const DECORATIONS = {
 
 export const BOOSTERS = {
     growth: { name: 'Growth', emoji: '⚡', cost: 50, duration: 5 * 60 * 1000, multiplier: 1.5 },
-    coin: { name: 'Coin', emoji: '💰', cost: 100, duration: 5 * 60 * 1000, multiplier: 2.0 }
+    coin: { name: 'Coin', emoji: '💰', cost: 50, duration: 5 * 60 * 1000, multiplier: 2.0 }
 };
 
 /**
@@ -21,12 +21,19 @@ export const BOOSTERS = {
  * reference them directly (e.g. recipe uses { cow: 3 } for 3 milk).
  */
 export const PRODUCTS = {
-    chicken: { name: 'Telur', emoji: '🥚', reward: 50 },
+    chicken: { name: 'Telur', emoji: '🥚', reward: 10 },
+    duck:    { name: 'Telur Bebek', emoji: '🥚', reward: 30 },
     cow:     { name: 'Susu', emoji: '🥛', reward: 200 },
+    sheep:   { name: 'Bulu Domba', emoji: '🧶', reward: 350 },
     bee:     { name: 'Madu', emoji: '🍯', reward: 500 },
-    nila:    { name: 'Ikan Nila', emoji: '🐟', reward: 150 },
-    lele:    { name: 'Ikan Lele', emoji: '🐡', reward: 350 },
-    mas:     { name: 'Ikan Mas', emoji: '🐠', reward: 800 }
+    pig:     { name: 'Truffle', emoji: '🍄', reward: 1200 },
+    ikankecil: { name: 'Ikan Segar', emoji: '🐟', reward: 15 },
+    nila:    { name: 'Nila Segar', emoji: '🐟', reward: 150 },
+    lele:    { name: 'Lele Jumbo', emoji: '🐡', reward: 350 },
+    gurame:  { name: 'Gurame Besar', emoji: '🐠', reward: 600 },
+    mas:     { name: 'Mas Super', emoji: '🐠', reward: 800 },
+    salmon:  { name: 'Daging Salmon', emoji: '🍣', reward: 2000 },
+    hiu:     { name: 'Sirip Hiu', emoji: '🦈', reward: 5000 }
 };
 
 /**

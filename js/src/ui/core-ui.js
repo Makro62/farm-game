@@ -32,6 +32,7 @@ export function render() {
     if (typeof window.renderFishShopList === 'function') window.renderFishShopList();
     if (typeof window.renderAnimals === 'function') window.renderAnimals();
     if (typeof window.renderFishes === 'function') window.renderFishes();
+    if (typeof window.renderTownWorker === 'function') window.renderTownWorker();
     if (typeof window.renderOrders === 'function') window.renderOrders();
     if (typeof window.renderBuildings === 'function') window.renderBuildings();
     if (typeof window.renderCrafting === 'function') window.renderCrafting();
@@ -49,7 +50,7 @@ export function render() {
     updateWorkerStatus('btn-buy-gnome-animal', 'btn-toggle-gnome-animal', S.gnomeAnimalOwned, S.gnomeAnimalActive,
         '🧑‍🍳 Kurcaci Peternak', 'Auto-Collect Products', '🧑‍🍳 Auto');
     updateWorkerStatus('btn-buy-merchant', 'btn-toggle-merchant', S.merchantOwned, S.merchantActive,
-        '🧑‍💼 Pedagang Kota', 'Auto-Jual hasil panen', '🧑‍💼 Auto-Jual');
+        '🧑‍🌾 Pemancing Kota', 'Auto-mancing & jual hasil', '🧑‍🌾 Auto');
 }
 
 /**
@@ -73,7 +74,7 @@ function updateWorkerStatus(buyId, toggleId, owned, active, title, subtitle, tog
     const toggleBtn = document.getElementById(toggleId);
     if (toggleBtn) {
         if (owned) {
-            toggleBtn.style.display = 'inline-block';
+            toggleBtn.style.display = 'flex';
             toggleBtn.textContent = `${toggleLabel}: ${active ? 'ON' : 'OFF'}`;
             toggleBtn.style.background = active
                 ? 'linear-gradient(135deg, #a855f7, #9333ea)'
@@ -199,8 +200,8 @@ export function buyGnomeAnimal() {
         NotificationManager.toast('Anda sudah mempekerjakan Kurcaci Peternak!', 'warn');
         return;
     }
-    if (S.coins >= 8000) {
-        S.coins -= 8000;
+    if (S.coins >= 500) {
+        S.coins -= 500;
         S.gnomeAnimalOwned = true;
         S.gnomeAnimalActive = true;
         AudioManager.playSound('levelup');
@@ -208,7 +209,7 @@ export function buyGnomeAnimal() {
         render();
     } else {
         AudioManager.playSound('error');
-        NotificationManager.toast('Koin tidak cukup! Butuh 8000💰', 'warn');
+        NotificationManager.toast('Koin tidak cukup! Butuh 500💰', 'warn');
     }
 }
 
@@ -222,7 +223,7 @@ const MERCHANT_COST = 12000;
 
 export function buyMerchant() {
     if (S.merchantOwned) {
-        NotificationManager.toast('Anda sudah mempekerjakan Pedagang Kota!', 'warn');
+        NotificationManager.toast('Anda sudah mempekerjakan Pemancing Kota!', 'warn');
         return;
     }
     if (S.coins >= MERCHANT_COST) {
@@ -230,7 +231,7 @@ export function buyMerchant() {
         S.merchantOwned = true;
         S.merchantActive = true;
         AudioManager.playSound('levelup');
-        NotificationManager.toast('🧑‍💼 Pedagang Kota berhasil dipekerjakan!', 'success');
+        NotificationManager.toast('🧑‍🌾 Pemancing Kota berhasil dipekerjakan!', 'success');
         render();
     } else {
         AudioManager.playSound('error');
@@ -240,7 +241,7 @@ export function buyMerchant() {
 
 export function toggleMerchant() {
     S.merchantActive = !S.merchantActive;
-    NotificationManager.toast(`🧑‍💼 Pedagang Kota ${S.merchantActive ? 'Aktif' : 'Beristirahat'}`, 'info');
+    NotificationManager.toast(`🧑‍🌾 Pemancing Kota ${S.merchantActive ? 'Aktif' : 'Beristirahat'}`, 'info');
     render();
 }
 

@@ -1,0 +1,159 @@
+/* ============ CHIPS & PROGRESS ============ */
+.stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: 30px; padding: 8px 16px;
+    font-size: 15px; font-weight: 800;
+    transition: transform 0.2s;
+}
+.stat-chip:hover { transform: translateY(-2px); }
+
+#xp-wrap { flex: 1; min-width: 200px; max-width: 300px; margin-left: auto; }
+#xp-label { font-size: 13px; color: var(--text); margin-bottom: 6px; font-weight: 800; display: flex; justify-content: space-between; }
+#xp-bar-outer { height: 12px; background: rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+#xp-bar { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); transition: width .4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Silo Bar */
+.silo-bar-outer { height: 8px; background: rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+.silo-bar-inner { height: 100%; background: linear-gradient(90deg, #22c55e, #facc15); border-radius: 4px; transition: width 0.4s ease; }
+
+/* ============ BUTTONS ============ */
+.tab-btn {
+    padding: 12px 24px; font-size: 16px; font-weight: 800;
+    background: rgba(255, 255, 255, 0.5); border: 2px solid transparent;
+    border-radius: 16px; cursor: pointer; color: var(--text);
+    transition: all 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.tab-btn:hover { background: rgba(255, 255, 255, 0.9); transform: translateY(-2px); }
+.tab-btn.active { background: white; border-color: var(--primary); color: var(--primary); box-shadow: 0 6px 16px rgba(34, 197, 94, 0.2); }
+
+.shop-btn {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    width: 100%; padding: 12px; background: rgba(255,255,255,0.7);
+    border: 2px solid transparent; border-radius: 12px; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 700; color: var(--text);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    position: relative; overflow: hidden;
+}
+.shop-btn:hover {
+    background: #fff; border-color: var(--primary);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 12px rgba(34, 197, 94, 0.2);
+}
+.shop-btn.locked { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+.shop-btn.owned { border-color: var(--primary); background: rgba(74, 222, 128, 0.18); cursor: default; }
+.shop-btn.owned:hover { transform: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+.owned-badge { color: var(--primary); white-space: nowrap; flex-shrink: 0; }
+
+.crop-btn, .act-btn, .sell-btn {
+    width: 100%; padding: 10px 16px; border: 1px solid var(--panel-border);
+    background: rgba(255, 255, 255, 0.5); border-radius: 12px; cursor: pointer;
+    font-size: 14px; display: flex; align-items: center; gap: 10px;
+    transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: inherit; font-weight: 800; color: var(--text);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    position: relative; overflow: hidden;
+}
+.shop-btn::before, .crop-btn::before, .act-btn::before, .sell-btn::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.5s;
+}
+.shop-btn:hover::before, .crop-btn:hover::before, .act-btn:hover::before, .sell-btn:hover::before { left: 100%; }
+.crop-btn:hover:not(.locked), .act-btn:hover, .sell-btn:hover {
+    background: rgba(255, 255, 255, 0.9); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+.crop-btn:active:not(.locked), .act-btn:active, .sell-btn:active { transform: translateY(0); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.crop-btn.selected { border-color: var(--primary); background: rgba(74, 222, 128, 0.3); color: var(--primary); border-width: 2px; }
+.crop-btn.locked { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+.price { margin-left: auto; color: var(--secondary); font-size: 13px; font-weight: 800; }
+
+.act-btn.primary { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; text-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.act-btn.primary:hover { background: linear-gradient(135deg, #16a34a, #15803d); }
+.sell-btn { background: linear-gradient(135deg, #fef08a, #facc15); border: none; color: #713f12; margin-top: 16px; }
+
+#btn-mute {
+    width: auto; padding: 4px 12px; margin: 0; min-width: 0; border-radius: 20px;
+    font-size: 13px; font-weight: 800; background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+#btn-mute:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.9); }
+
+/* ============ INVENTORY & QUESTS ============ */
+.inv-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; font-size: 14px;
+    background: rgba(255,255,255,0.4); border-radius: 12px;
+    transition: all 0.2s;
+}
+.inv-row:hover { transform: translateX(4px); background: rgba(255,255,255,0.7); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.inv-ic { font-size: 24px; width: 32px; text-align: center; }
+.inv-qty { margin-left: auto; font-weight: 800; font-size: 15px; }
+.inv-val { color: var(--secondary); font-size: 13px; margin-left: 8px; font-weight: 800; }
+
+.quest-item {
+    padding: 12px 14px; background: rgba(255,255,255,0.6); border-radius: 12px;
+    font-size: 13px; border-left: 6px solid var(--secondary);
+    font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s;
+}
+.quest-item.done { border-left-color: var(--primary); background: rgba(220,252,231,0.8); opacity: .9; }
+.quest-item:not(.done):hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.quest-place {
+    font-size: var(--fs-xs); font-weight: 800; color: var(--primary);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
+}
+
+/* ============ TOAST ============ */
+#toast-container {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; gap: 10px; pointer-events: none; z-index: 1000; align-items: center;
+}
+.toast {
+    background: var(--panel-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--panel-border); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    padding: 12px 24px; font-size: 15px; font-weight: 800; color: var(--text);
+    animation: slideIn .4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 400px; text-align: center;
+    transition: all 0.3s ease;
+}
+.toast.success { border-bottom: 4px solid var(--primary); }
+.toast.warn { border-bottom: 4px solid var(--secondary); }
+.toast.info { border-bottom: 4px solid #3b82f6; }
+
+/* ============ MODAL ============ */
+.modal-bg {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center; z-index: 999; opacity: 0; transition: opacity 0.3s;
+}
+.modal-bg.show { display: flex; opacity: 1; }
+.modal {
+    background: var(--panel-bg); padding: 32px; border-radius: 24px; text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid var(--panel-border);
+    max-width: 400px; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.modal-bg.show .modal { transform: scale(1); }
+.modal h2 { margin-bottom: 16px; font-size: 24px; color: var(--primary); font-weight: 800; }
+.modal p { color: var(--text); font-size: 16px; margin-bottom: 24px; font-weight: 500; }
+.modal-btns { display: flex; gap: 12px; justify-content: center; }
+.modal-btns .act-btn { padding: 12px 24px; font-size: var(--fs-lg); }
+
+.prompt-input {
+    width: 100%; padding: 12px 16px; margin-bottom: 24px; font-family: inherit; font-size: var(--fs-lg);
+    font-weight: 800; text-align: center; color: var(--text); background: rgba(255, 255, 255, 0.7);
+    border: 2px solid var(--panel-border); border-radius: 12px; outline: none; transition: border-color 0.2s;
+}
+.prompt-input:focus { border-color: var(--primary); }
+
+@media (max-width: 1024px) {
+    #xp-wrap { margin-left: 0; width: 100%; max-width: none; }
+}
+
+@media (max-width: 600px) {
+    .stat-chip { font-size: 14px; padding: 6px 12px; width: 100%; justify-content: center; }
+    .shop-btn { padding: 10px 16px; font-size: 14px; }
+    .crop-btn { padding: 10px 16px; font-size: 14px; }
+}

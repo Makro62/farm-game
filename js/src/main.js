@@ -8,8 +8,8 @@ import { NotificationManager } from './managers/notification-manager.js';
 
 // Import all to ensure they attach
 import './utils/helpers.js';
-import { renderShop, renderCropList, renderDecorations, renderAnimalsList, renderFishShopList } from './ui/shop-ui.js';
-import { renderGrid, renderAnimals, renderFishes } from './ui/farm-ui.js';
+import { renderShop, renderCropList, renderDecorations, renderAnimalsList, renderFishShopList, renderFishMarket } from './ui/shop-ui.js';
+import { renderGrid, renderAnimals, renderFishes, renderTownWorker } from './ui/farm-ui.js';
 import { renderInventory, renderQuests, renderOrders } from './ui/inventory-ui.js';
 import { renderBuildings } from './ui/building-ui.js';
 import { renderCrafting } from './ui/crafting-ui.js';
@@ -28,14 +28,26 @@ window.renderCropList = renderCropList;
 window.renderDecorations = renderDecorations;
 window.renderAnimalsList = renderAnimalsList;
 window.renderFishShopList = renderFishShopList;
+window.renderFishMarket = renderFishMarket;
 window.renderGrid = renderGrid;
 window.renderAnimals = renderAnimals;
 window.renderFishes = renderFishes;
+window.renderTownWorker = renderTownWorker;
 window.renderInventory = renderInventory;
 window.renderQuests = renderQuests;
 window.renderOrders = renderOrders;
 window.renderBuildings = renderBuildings;
 window.renderCrafting = renderCrafting;
+
+window.cheatCoin = function() {
+    S.coins += 10000;
+    AudioManager.playSound('coin');
+    NotificationManager.toast('💰 Cheat: +10,000 Coin!', 'success');
+    
+    // Update coin UI manually since game loop might not update it immediately
+    const elCoin = document.getElementById('coin-val');
+    if (elCoin) elCoin.textContent = S.coins.toLocaleString();
+};
 
 // Entry Point
 document.addEventListener('DOMContentLoaded', () => {
@@ -47,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
-    const cropKeys = { '1':'carrot', '2':'corn', '3':'tomato', '4':'strawberry', '5':'pineapple', '6':'pumpkin' };
+    const cropKeys = { '1':'potato', '2':'wheat', '3':'corn', '4':'carrot', '5':'tomato' };
     if (cropKeys[e.key]) { 
         GameState.selectedCrop = cropKeys[e.key]; 
         renderCropList(); 
@@ -55,6 +67,9 @@ document.addEventListener('keydown', e => {
     else if (e.key === 's' || e.key === 'S') saveGame(true);
     else if (e.key === 'd' || e.key === 'D') {
         claimDaily();
+    }
+    else if (e.key === 'c' || e.key === 'C') {
+        window.cheatCoin();
     }
     else if (e.key === 'Escape') {
         NotificationManager.closeModal();
