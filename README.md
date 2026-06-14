@@ -1,6 +1,15 @@
 # 🚜 Farm Tycoon Web Game
 
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)
+
 Selamat datang di **Farm Tycoon**, sebuah web-game interaktif dan responsif di mana Anda dapat membangun dan mengelola perkebunan impian Anda langsung dari browser! Dibangun sepenuhnya dengan HTML, CSS, dan JavaScript murni (Vanilla ES Modules) — tanpa framework atau proses build.
+
+## 📸 Screenshots
+*(Tambahkan screenshot gameplay di sini, misalnya `![Gameplay](img/screenshot-farm.png)`)*
+
+## 🌐 Live Demo
+Coba mainkan langsung: [▶️ Main Sekarang](https://makro62.github.io/farm-game)
 
 ## 🌟 Fitur Utama
 - **Sistem Pertanian Real-Time**: Tanam berbagai bibit (Wortel, Jagung, Tomat, Stroberi, Nanas, Labu Emas), siram untuk mempercepat tumbuh, lalu panen saat siap.
@@ -22,6 +31,25 @@ Karena game menggunakan **ES Modules**, file harus disajikan lewat HTTP (bukan d
 2. Jalankan server statis sederhana dari folder proyek, contoh:
    ```bash
    python3 -m http.server 8000
+   ```
+   *Atau gunakan ekstensi Live Server di VSCode, atau `npx serve`.*
+
+## 🌐 Kompatibilitas Browser
+| Browser | Versi Minimum | Status |
+|---------|:------------:|--------|
+| Chrome  | 90+          | ✅ Full Support |
+| Firefox | 88+          | ✅ Full Support |
+| Safari  | 14+          | ✅ Full Support |
+| Edge    | 90+          | ✅ Full Support |
+| IE      | Semua        | ❌ Tidak didukung |
+> **Catatan:** Harus dijalankan via HTTP server, bukan `file://`
+
+## 🐛 Laporkan Bug
+Menemukan bug atau memiliki saran fitur? 
+[Silakan buka Issue baru](https://github.com/Makro62/farm-game/issues/new).
+
+## 🤝 Kontribusi
+Bantuan Anda sangat dihargai! Silakan baca [Panduan Kontribusi (CONTRIBUTING.md)](CONTRIBUTING.md) sebelum memulai.
    ```
    atau
    ```bash

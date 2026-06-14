@@ -2,6 +2,8 @@ import { S } from './state.js';
 import { CONFIG } from '../data/config.js';
 import { generateHash, verifyHash } from './security.js';
 
+const SAVE_VERSION = 3;
+
 let saveTimeout = null;
 
 export function queueSave() {
@@ -18,6 +20,7 @@ export async function saveGame(isAuto = false) {
         const hash = await generateHash(dataStr);
         
         const payload = {
+            version: SAVE_VERSION,
             data: dataStr,
             hash: hash
         };
@@ -39,7 +42,8 @@ export async function loadGame() {
         if (!saved) return false;
 
         let dataStr;
-        if (saved.startsWith('{"data"')) {
+        let saveVersion = 1;
+        if (saved.startsWith('{"data"') || saved.startsWith('{"version"')) {
             const payload = JSON.parse(saved);
             const isValid = await verifyHash(payload.data, payload.hash);
             
@@ -54,12 +58,14 @@ export async function loadGame() {
                 return false; // REJECT LOAD!
             }
             dataStr = payload.data;
+            saveVersion = payload.version || 1;
         } else {
             // Very old save format
             dataStr = saved;
         }
 
-        const data = JSON.parse(dataStr);
+        let data = JSON.parse(dataStr);
+        data = migrateSave(data, saveVersion);
 
         // Basic validation
         if (typeof data.coins !== 'number' || data.coins < 0) return false;
@@ -107,4 +113,18 @@ export async function loadGame() {
         console.error('Load failed:', e);
     }
     return false;
+}
+
+function migrateSave(data, oldVersion) {
+    // Migration logic
+    if (oldVersion < 2) {
+        data.prestige = data.prestige ?? 0;
+        if (!data.buildings) data.buildings = { silo: 0, barn: 0, watertower: 0, greenhouse: 0, windmill: 0 };
+    }
+    if (oldVersion < 3) {
+        if (!data.fishes) data.fishes = [];
+        if (!data.craftingQueue) data.craftingQueue = [];
+        if (data.inventoryCapacity === undefined) data.inventoryCapacity = 50;
+    }
+    return data;
 }

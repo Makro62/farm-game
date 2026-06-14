@@ -2,9 +2,11 @@ import { S, GameState } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
 import { ANIMALS } from '../data/animals.js';
 import { DECORATIONS } from '../data/items.js';
+import { FISHES } from '../data/fishes.js';
 import { buySeed } from '../systems/crop-system.js';
 import { buyAnimal } from '../systems/animal-system.js';
 import { buyDecoration } from '../systems/economy-system.js';
+import { buyFish } from '../systems/fish-system.js';
 import { NotificationManager } from '../managers/notification-manager.js';
 
 export function renderShop() {
@@ -101,6 +103,34 @@ export function renderAnimalsList() {
             btn.innerHTML += `<div class="text-muted-sm" style="color:var(--primary)">Dimiliki: ${count}</div>`;
         }
         btn.onclick = () => buyAnimal(k);
+        el.appendChild(btn);
+    }
+}
+
+export function renderFishShopList() {
+    const el = document.getElementById('fish-shop-list');
+    if (!el) return;
+    el.innerHTML = '';
+    
+    for (const [k, f] of Object.entries(FISHES)) {
+        const locked = S.level < f.minLv;
+        const count = S.fishes ? S.fishes.filter(x => x.type === k).length : 0;
+        const btn = document.createElement('button');
+        btn.className = 'shop-btn' + (locked ? ' locked' : '');
+        
+        let iconHtml = `<span style="font-size:22px; vertical-align:middle; margin-right:4px;">${f.emoji}</span>`;
+        if (f.img) {
+            iconHtml = `<img src="${f.img}" alt="${f.name}" style="width:28px; height:28px; object-fit:contain; vertical-align:middle; margin-right:4px;" onerror="this.style.display='none'; this.nextSibling.style.display='inline'"><span style="display:none; font-size:22px; vertical-align:middle; margin-right:4px;">${f.emoji}</span>`;
+        }
+        
+        btn.innerHTML = `${iconHtml} ${f.name} <span class="price">${f.cost}💰</span>`;
+        if (locked) {
+            btn.innerHTML += `<div class="text-muted-sm" style="margin-top:4px; color:var(--secondary)">Lv ${f.minLv} Terbuka</div>`;
+        }
+        if (count > 0) {
+            btn.innerHTML += `<div class="text-muted-sm" style="color:var(--primary)">Dimiliki: ${count}</div>`;
+        }
+        btn.onclick = () => buyFish(k);
         el.appendChild(btn);
     }
 }

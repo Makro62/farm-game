@@ -18,24 +18,6 @@ export class UIManager {
         this.bindClick('btn-reset-game', () => confirmReset());
         this.bindClick('btn-sell-all', () => sellAll());
         this.bindClick('btn-modal-cancel', () => NotificationManager.closeModal());
-        
-        this.bindClick('btn-cheat-money', () => {
-            const input = document.getElementById('cheat-money-input');
-            if (input && input.value) {
-                let amount = parseInt(input.value, 10);
-                if (isNaN(amount) || amount <= 0) return;
-                if (amount > 1000000000) amount = 1000000000;
-                
-                import('../core/state.js').then(module => {
-                    const { S } = module;
-                    S.coins += amount;
-                    S.totalEarned += amount; // Just in case to track
-                    input.value = '';
-                    NotificationManager.toast(`Berhasil menambahkan ${amount}💰!`, 'success');
-                    if (typeof window.renderTopBar === 'function') window.renderTopBar();
-                });
-            }
-        });
     }
 
     static bindClick(id, callback) {

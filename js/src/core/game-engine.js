@@ -11,57 +11,62 @@ import { NotificationManager } from '../managers/notification-manager.js';
 export function gameLoop() {
     let changed = false;
 
-    // 1. Cek tanaman matang
-    S.plots.forEach(p => {
-        if (p.state === 'growing') {
-            const elapsed = Date.now() - p.plantedAt;
-            if (elapsed >= p.growTime) {
-                p.state = 'ready';
-                changed = true;
+    try {
+        // 1. Cek tanaman matang
+        S.plots.forEach(p => {
+            if (p.state === 'growing') {
+                const elapsed = Date.now() - p.plantedAt;
+                if (elapsed >= p.growTime) {
+                    p.state = 'ready';
+                    changed = true;
+                }
+            }
+        });
+
+        // 2. Cek cuaca
+        processWeather();
+
+        // 3. Animal wandering & production
+        const animalChanged = processAnimalLoop();
+        if (animalChanged) {
+            if (typeof window.renderAnimals === 'function') {
+                window.renderAnimals();
             }
         }
-    });
 
-    // 2. Cek cuaca
-    processWeather();
+        // 4. Gnome auto-farmer
+        processGnome();
 
-    // 3. Animal wandering & production
-    const animalChanged = processAnimalLoop();
-    if (animalChanged) {
-        if (typeof window.renderAnimals === 'function') {
-            window.renderAnimals();
+        // 5. Fish farming loop
+        const fishChanged = processFishLoop();
+        if (fishChanged) {
+            if (typeof window.renderFishes === 'function') {
+                window.renderFishes();
+            }
         }
-    }
 
-    // 4. Gnome auto-farmer
-    processGnome();
-
-    // 5. Fish farming loop
-    const fishChanged = processFishLoop();
-    if (fishChanged) {
-        if (typeof window.renderFishes === 'function') {
-            window.renderFishes();
+        // 6. Order regeneration
+        if (!S.orders || S.orders.length === 0) {
+            if (typeof window.generateOrder === 'function') {
+                S.orders = [window.generateOrder(), window.generateOrder(), window.generateOrder()];
+                if (typeof window.renderOrders === 'function') window.renderOrders();
+            }
         }
-    }
 
-    // 6. Order regeneration
-    if (!S.orders || S.orders.length === 0) {
-        if (typeof window.generateOrder === 'function') {
-            S.orders = [window.generateOrder(), window.generateOrder(), window.generateOrder()];
-            if (typeof window.renderOrders === 'function') window.renderOrders();
+        // 7. Crafting Queue Processing
+        const craftingChanged = processCraftingQueue();
+        if (craftingChanged && typeof window.renderCrafting === 'function') {
+            window.renderCrafting();
         }
-    }
 
-    // 7. Crafting Queue Processing
-    const craftingChanged = processCraftingQueue();
-    if (craftingChanged && typeof window.renderCrafting === 'function') {
-        window.renderCrafting();
+        // 8. Render updates
+        if (changed && typeof window.renderGrid === 'function') window.renderGrid();
+        if (typeof window.updateTopbar === 'function') window.updateTopbar();
+        if (typeof window.updateBoosters === 'function') window.updateBoosters();
+    } catch (err) {
+        console.error('[GameLoop Error]', err);
+        // We do not stop the loop, we catch it so it doesn't break the setInterval
     }
-
-    // 8. Render updates
-    if (changed && typeof window.renderGrid === 'function') window.renderGrid();
-    if (typeof window.updateTopbar === 'function') window.updateTopbar();
-    if (typeof window.updateBoosters === 'function') window.updateBoosters();
 }
 
 export async function initGame() {
