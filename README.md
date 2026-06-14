@@ -60,4 +60,96 @@ farm-game/
 - **Web Audio API** — efek suara prosedural.
 - **Web Crypto API (SHA-256)** — keamanan data save.
 
+## 📝 Perubahan Terbaru (Refactoring)
+
+### Refactoring Code - [Juni 2024]
+
+#### 1. **crop-system.js** - Refaktor Total
+Perubahan utama pada sistem pertanian untuk meningkatkan maintainability dan readability:
+
+**Sebelum:**
+- Fungsi `clickPlot()` besar dengan nested if-else kompleks (~80 baris)
+- Logic bercampur antara validasi, bisnis logic, dan rendering
+- Tidak ada pemisahan concern yang jelas
+- Duplikasi kode dalam pengecekan inventory
+
+**Sesudah:**
+- ✅ **Modular Function Design**: Memecah fungsi besar menjadi fungsi-fungsi kecil dengan single responsibility
+  - `clearGrass()` - Membersihkan rumput dari plot
+  - `plantSeed()` - Menanam bibit di plot kosong
+  - `waterPlant()` - Menyiram tanaman yang sedang tumbuh
+  - `harvestCrop()` - Memanen tanaman yang sudah siap
+  - `calculateGrowTime()` - Menghitung waktu tumbuh dengan semua modifier
+
+- ✅ **Helper Functions**: Fungsi utilitas untuk validasi dan reusable logic
+  - `isInventoryFull()` - Cek apakah gudang penuh
+  - `renderIfNeeded()` - Render UI jika fungsi tersedia
+
+- ✅ **Better Error Handling**: Penambahan null check untuk plot yang tidak ditemukan
+
+- ✅ **JSDoc Documentation**: Setiap fungsi memiliki dokumentasi JSDoc yang jelas
+
+- ✅ **Improved Readability**: Menggunakan switch-case untuk state handling alih-alih nested if-else
+
+- ✅ **DRY Principle**: Menghindari duplikasi kode dengan extracting common logic
+
+**Benefits:**
+- Lebih mudah untuk testing unit
+- Lebih mudah untuk maintenance dan debugging
+- Code lebih readable dan self-documenting
+- Mengurangi technical debt
+
+#### 2. **animal-system.js** - Refaktor Total
+Perubahan pada sistem hewan untuk konsistensi dengan crop-system:
+
+**Sebelum:**
+- Validasi tercampur dengan business logic
+- Nama variabel singkat (`a`, `conf`) yang kurang deskriptif
+- Movement logic dengan temporary variables yang berlebihan
+- Tidak ada separation of concerns
+
+**Sesudah:**
+- ✅ **Validation Functions**: Memisahkan validasi ke fungsi khusus
+  - `canBuyAnimal()` - Validasi level dan coins untuk membeli hewan
+  - `isBarnFull()` - Cek kapasitas kandang
+  - `isInventoryFull()` - Cek kapasitas inventory
+
+- ✅ **Descriptive Variable Names**: Mengganti nama variabel singkat dengan yang lebih deskriptif
+  - `a` → `animal`
+  - `conf` → `config`
+
+- ✅ **Simplified Movement Logic**: Refactor movement calculation tanpa temporary variables
+
+- ✅ **Consistent Pattern**: Menggunakan pattern yang sama dengan crop-system untuk konsistensi
+
+- ✅ **JSDoc Documentation**: Dokumentasi lengkap untuk setiap fungsi
+
+**Benefits:**
+- Konsistensi codebase across systems
+- Lebih mudah dipahami oleh developer baru
+- Reduces cognitive load saat membaca code
+- Easier untuk menambahkan fitur baru
+
+#### 3. **config.js** - Penambahan Konstanta
+- ✅ Menambahkan `DEFAULT_INVENTORY_CAPACITY` sebagai constant untuk menghindari magic numbers
+
+---
+
+### Prinsip Refactoring yang Diterapkan:
+
+1. **Single Responsibility Principle (SRP)**: Setiap fungsi memiliki satu tanggung jawab
+2. **Don't Repeat Yourself (DRY)**: Mengeliminasi duplikasi kode
+3. **Keep It Simple, Stupid (KISS)**: Menjaga solusi tetap sederhana
+4. **Clean Code**: Memberi nama yang deskriptif, dokumentasi yang jelas
+5. **Separation of Concerns**: Memisahkan validation, business logic, dan UI rendering
+
+### Impact:
+- **Lines of Code**: 
+  - `crop-system.js`: 107 → 229 lines (lebih banyak tapi lebih terstruktur)
+  - `animal-system.js`: 118 → 189 lines (lebih readable)
+  
+- **Maintainability Score**: Significantly improved
+- **Testability**: Much easier to write unit tests
+- **Onboarding**: Developer baru lebih cepat memahami code
+
 Selamat bersenang-senang dan jadilah petani terkaya! 🌻💰
