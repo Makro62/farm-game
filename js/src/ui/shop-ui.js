@@ -87,7 +87,13 @@ export function renderAnimalsList() {
         const count = S.animals ? S.animals.filter(x => x.type === k).length : 0;
         const btn = document.createElement('button');
         btn.className = 'shop-btn' + (locked ? ' locked' : '');
-        btn.innerHTML = `<span style="font-size:22px; vertical-align:middle; margin-right:4px;">${a.emoji}</span> ${a.name} <span class="price">${a.cost}💰</span>`;
+        
+        let iconHtml = `<span style="font-size:22px; vertical-align:middle; margin-right:4px;">${a.emoji}</span>`;
+        if (a.img) {
+            iconHtml = `<img src="${a.img}" alt="${a.name}" style="width:28px; height:28px; object-fit:contain; vertical-align:middle; margin-right:4px;" onerror="this.style.display='none'; this.nextSibling.style.display='inline'"><span style="display:none; font-size:22px; vertical-align:middle; margin-right:4px;">${a.emoji}</span>`;
+        }
+        
+        btn.innerHTML = `${iconHtml} ${a.name} <span class="price">${a.cost}💰</span>`;
         if (locked) {
             btn.innerHTML += `<div class="text-muted-sm" style="margin-top:4px; color:var(--secondary)">Lv ${a.minLv} Terbuka</div>`;
         }

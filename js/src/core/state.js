@@ -14,8 +14,10 @@ export const S = {
     decorations: [],
     animals: [],
     orders: [],
-    gnomeOwned: false,
-    gnomeActive: false,
+    gnomeFarmOwned: false,
+    gnomeFarmActive: false,
+    gnomeAnimalOwned: false,
+    gnomeAnimalActive: false,
     inventoryCapacity: 50,
     buildings: { silo: 0, barn: 0, watertower: 0, greenhouse: 0, windmill: 0 },
     craftingQueue: []

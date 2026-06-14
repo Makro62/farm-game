@@ -4,6 +4,7 @@ import { loadGame, saveGame } from './save-manager.js';
 import { processGnome } from '../systems/gnome-system.js';
 import { processWeather } from '../systems/weather-system.js';
 import { processAnimalLoop } from '../systems/animal-system.js';
+import { processFishLoop } from '../systems/fish-system.js';
 import { processCraftingQueue } from '../systems/crafting-system.js';
 import { NotificationManager } from '../managers/notification-manager.js';
 
@@ -27,33 +28,19 @@ export function gameLoop() {
     // 3. Animal wandering & production
     const animalChanged = processAnimalLoop();
     if (animalChanged) {
-        if (typeof window.renderWanderingAnimals === 'function') {
-            window.renderWanderingAnimals();
+        if (typeof window.renderAnimals === 'function') {
+            window.renderAnimals();
         }
     }
 
     // 4. Gnome auto-farmer
     processGnome();
 
-    // 5. Fishing (Moved directly into engine for now)
-    GameState.fishTimer++;
-    if (GameState.fishTimer >= 10) {
-        GameState.fishTimer = 0;
-        if (!GameState.fishActive && Math.random() < 0.1) {
-            GameState.fishActive = true;
-            const splash = document.getElementById('fish-splash');
-            if (splash) {
-                splash.textContent = Math.random() > 0.5 ? '🐟' : '💦';
-                splash.style.display = 'block';
-                splash.style.left = (20 + Math.random() * 60) + '%';
-                splash.style.top = (20 + Math.random() * 60) + '%';
-                setTimeout(() => {
-                    if (GameState.fishActive) {
-                        GameState.fishActive = false;
-                        splash.style.display = 'none';
-                    }
-                }, 3000);
-            }
+    // 5. Fish farming loop
+    const fishChanged = processFishLoop();
+    if (fishChanged) {
+        if (typeof window.renderFishes === 'function') {
+            window.renderFishes();
         }
     }
 

@@ -8,14 +8,15 @@ import { NotificationManager } from './managers/notification-manager.js';
 
 // Import all to ensure they attach
 import './utils/helpers.js';
-import { renderShop, renderCropList, renderDecorations, renderAnimalsList } from './ui/shop-ui.js';
-import { renderGrid, renderWanderingAnimals } from './ui/farm-ui.js';
+import { renderShop, renderCropList, renderDecorations, renderAnimalsList, renderFishShopList } from './ui/shop-ui.js';
+import { renderGrid, renderAnimals, renderFishes } from './ui/farm-ui.js';
 import { renderInventory, renderQuests, renderOrders } from './ui/inventory-ui.js';
 import { renderBuildings } from './ui/building-ui.js';
 import { renderCrafting } from './ui/crafting-ui.js';
-import './ui/core-ui.js';
+import { setupTabs } from './ui/core-ui.js';
 import './systems/crop-system.js';
 import './systems/animal-system.js';
+import './systems/fish-system.js';
 import './systems/economy-system.js';
 import { claimDaily } from './systems/quest-system.js';
 import './systems/gnome-system.js';
@@ -26,8 +27,10 @@ window.renderShop = renderShop;
 window.renderCropList = renderCropList;
 window.renderDecorations = renderDecorations;
 window.renderAnimalsList = renderAnimalsList;
+window.renderFishShopList = renderFishShopList;
 window.renderGrid = renderGrid;
-window.renderWanderingAnimals = renderWanderingAnimals;
+window.renderAnimals = renderAnimals;
+window.renderFishes = renderFishes;
 window.renderInventory = renderInventory;
 window.renderQuests = renderQuests;
 window.renderOrders = renderOrders;
@@ -43,6 +46,7 @@ window.NotificationManager = NotificationManager;
 document.addEventListener('DOMContentLoaded', () => {
     AudioManager.init();
     UIManager.initEvents();
+    setupTabs();
     initGame();
 });
 

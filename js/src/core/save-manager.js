@@ -73,9 +73,18 @@ export async function loadGame() {
         if (!S.orders) S.orders = [];
         if (!S.decorations) S.decorations = [];
         if (!S.achievements) S.achievements = [];
+        if (!S.fishes) S.fishes = [];
         if (S.inventoryCapacity === undefined) S.inventoryCapacity = 50;
         if (!S.buildings) S.buildings = { silo: 0, barn: 0, watertower: 0, greenhouse: 0, windmill: 0 };
         if (!S.craftingQueue) S.craftingQueue = [];
+        
+        // Gnome transition
+        if (S.gnomeOwned !== undefined) {
+            if (S.gnomeFarmOwned === undefined) S.gnomeFarmOwned = S.gnomeOwned;
+            if (S.gnomeFarmActive === undefined) S.gnomeFarmActive = S.gnomeActive;
+            delete S.gnomeOwned;
+            delete S.gnomeActive;
+        }
 
         // Idle calculation
         S.plots.forEach(p => {

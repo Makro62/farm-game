@@ -14,9 +14,6 @@ export function buyAnimal(key) {
         NotificationManager.toast(`⚠️ Level ${a.minLv} dibutuhkan!`);
         return;
     }
-    if (a.cost >= 1000) {
-        if (!confirm(`Beli ${a.name} seharga ${a.cost}💰?`)) return;
-    }
     if (S.coins < a.cost) { 
         AudioManager.playSound('error'); 
         NotificationManager.toast('💰 Koin tidak cukup!', 'warn'); 

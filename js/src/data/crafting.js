@@ -8,7 +8,8 @@ export const CRAFTING_RECIPES = {
         time: 15000,      // 15 seconds
         reward: 120,      // Total sell value > raw ingredients
         xp: 30,
-        minLv: 5
+        minLv: 5,
+        tab: 'farm'
     },
     flour: {
         id: 'flour',
@@ -19,7 +20,8 @@ export const CRAFTING_RECIPES = {
         time: 20000,
         reward: 200,
         xp: 40,
-        minLv: 6
+        minLv: 6,
+        tab: 'farm'
     },
     cheese: {
         id: 'cheese',
@@ -30,7 +32,8 @@ export const CRAFTING_RECIPES = {
         time: 45000,
         reward: 800,
         xp: 100,
-        minLv: 8
+        minLv: 8,
+        tab: 'animal'
     },
     cake: {
         id: 'cake',
@@ -41,7 +44,8 @@ export const CRAFTING_RECIPES = {
         time: 60000,
         reward: 1000,
         xp: 150,
-        minLv: 10
+        minLv: 10,
+        tab: 'animal'
     },
     pie: {
         id: 'pie',
@@ -52,6 +56,7 @@ export const CRAFTING_RECIPES = {
         time: 120000,
         reward: 3500,
         xp: 300,
-        minLv: 15
+        minLv: 15,
+        tab: 'animal'
     }
 };

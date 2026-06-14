@@ -5,6 +5,22 @@ import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
 import { getBuildingEffect } from '../systems/building-system.js';
 
+export function setupTabs() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panes = document.querySelectorAll('.tab-pane');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            panes.forEach(p => p.classList.remove('active'));
+            
+            tab.classList.add('active');
+            const target = document.getElementById(tab.dataset.tab);
+            if (target) target.classList.add('active');
+        });
+    });
+}
+
 export function render() {
     if (typeof window.renderShop === 'function') window.renderShop();
     if (typeof window.renderCropList === 'function') window.renderCropList();
@@ -13,7 +29,9 @@ export function render() {
     if (typeof window.renderInventory === 'function') window.renderInventory();
     if (typeof window.renderQuests === 'function') window.renderQuests();
     if (typeof window.renderAnimalsList === 'function') window.renderAnimalsList();
-    if (typeof window.renderWanderingAnimals === 'function') window.renderWanderingAnimals();
+    if (typeof window.renderFishShopList === 'function') window.renderFishShopList();
+    if (typeof window.renderAnimals === 'function') window.renderAnimals();
+    if (typeof window.renderFishes === 'function') window.renderFishes();
     if (typeof window.renderOrders === 'function') window.renderOrders();
     if (typeof window.renderBuildings === 'function') window.renderBuildings();
     if (typeof window.renderCrafting === 'function') window.renderCrafting();
@@ -25,21 +43,39 @@ export function render() {
         achieveCount.textContent = `${S.achievements.length} / ${ACHIEVEMENTS.length}`;
     }
 
-    const btnBuyGnome = document.getElementById('btn-buy-gnome');
-    if (btnBuyGnome) {
-        btnBuyGnome.style.display = S.gnomeOwned ? 'none' : 'flex';
+    const btnBuyGnomeFarm = document.getElementById('btn-buy-gnome');
+    if (btnBuyGnomeFarm) {
+        btnBuyGnomeFarm.style.display = S.gnomeFarmOwned ? 'none' : 'flex';
     }
 
-    const btnToggleGnome = document.getElementById('btn-toggle-gnome');
-    if (btnToggleGnome) {
-        if (S.gnomeOwned) {
-            btnToggleGnome.style.display = 'inline-block';
-            btnToggleGnome.textContent = S.gnomeActive ? '🧙‍♂️ Auto: ON' : '🧙‍♂️ Auto: OFF';
-            btnToggleGnome.style.background = S.gnomeActive
+    const btnToggleGnomeFarm = document.getElementById('btn-toggle-gnome');
+    if (btnToggleGnomeFarm) {
+        if (S.gnomeFarmOwned) {
+            btnToggleGnomeFarm.style.display = 'inline-block';
+            btnToggleGnomeFarm.textContent = S.gnomeFarmActive ? '🧙‍♂️ Auto: ON' : '🧙‍♂️ Auto: OFF';
+            btnToggleGnomeFarm.style.background = S.gnomeFarmActive
                 ? 'linear-gradient(135deg, #a855f7, #9333ea)'
                 : 'var(--muted)';
         } else {
-            btnToggleGnome.style.display = 'none';
+            btnToggleGnomeFarm.style.display = 'none';
+        }
+    }
+
+    const btnBuyGnomeAnimal = document.getElementById('btn-buy-gnome-animal');
+    if (btnBuyGnomeAnimal) {
+        btnBuyGnomeAnimal.style.display = S.gnomeAnimalOwned ? 'none' : 'flex';
+    }
+
+    const btnToggleGnomeAnimal = document.getElementById('btn-toggle-gnome-animal');
+    if (btnToggleGnomeAnimal) {
+        if (S.gnomeAnimalOwned) {
+            btnToggleGnomeAnimal.style.display = 'inline-block';
+            btnToggleGnomeAnimal.textContent = S.gnomeAnimalActive ? '🧑‍🍳 Auto: ON' : '🧑‍🍳 Auto: OFF';
+            btnToggleGnomeAnimal.style.background = S.gnomeAnimalActive
+                ? 'linear-gradient(135deg, #a855f7, #9333ea)'
+                : 'var(--muted)';
+        } else {
+            btnToggleGnomeAnimal.style.display = 'none';
         }
     }
 }
@@ -129,17 +165,17 @@ export function updateBoosters() {
     }
 }
 
-export function buyGnome() {
-    if (S.gnomeOwned) {
-        NotificationManager.toast('Anda sudah mempekerjakan kurcaci!', 'warn');
+export function buyGnomeFarm() {
+    if (S.gnomeFarmOwned) {
+        NotificationManager.toast('Anda sudah mempekerjakan Kurcaci Petani!', 'warn');
         return;
     }
     if (S.coins >= 5000) {
         S.coins -= 5000;
-        S.gnomeOwned = true;
-        S.gnomeActive = true;
+        S.gnomeFarmOwned = true;
+        S.gnomeFarmActive = true;
         AudioManager.playSound('levelup');
-        NotificationManager.toast('🧙‍♂️ Trio Kurcaci berhasil dipekerjakan!', 'success');
+        NotificationManager.toast('🧙‍♂️ Kurcaci Petani berhasil dipekerjakan!', 'success');
         render();
     } else {
         AudioManager.playSound('error');
@@ -147,9 +183,33 @@ export function buyGnome() {
     }
 }
 
-export function toggleGnome() {
-    S.gnomeActive = !S.gnomeActive;
-    NotificationManager.toast(`🧙‍♂️ Kurcaci ${S.gnomeActive ? 'Aktif' : 'Beristirahat'}`, 'info');
+export function toggleGnomeFarm() {
+    S.gnomeFarmActive = !S.gnomeFarmActive;
+    NotificationManager.toast(`🧙‍♂️ Kurcaci Petani ${S.gnomeFarmActive ? 'Aktif' : 'Beristirahat'}`, 'info');
+    render();
+}
+
+export function buyGnomeAnimal() {
+    if (S.gnomeAnimalOwned) {
+        NotificationManager.toast('Anda sudah mempekerjakan Kurcaci Peternak!', 'warn');
+        return;
+    }
+    if (S.coins >= 8000) {
+        S.coins -= 8000;
+        S.gnomeAnimalOwned = true;
+        S.gnomeAnimalActive = true;
+        AudioManager.playSound('levelup');
+        NotificationManager.toast('🧑‍🍳 Kurcaci Peternak berhasil dipekerjakan!', 'success');
+        render();
+    } else {
+        AudioManager.playSound('error');
+        NotificationManager.toast('Koin tidak cukup! Butuh 8000💰', 'warn');
+    }
+}
+
+export function toggleGnomeAnimal() {
+    S.gnomeAnimalActive = !S.gnomeAnimalActive;
+    NotificationManager.toast(`🧑‍🍳 Kurcaci Peternak ${S.gnomeAnimalActive ? 'Aktif' : 'Beristirahat'}`, 'info');
     render();
 }
 
@@ -170,9 +230,12 @@ export function toggleFullScreen() {
     }
 }
 
-// Map bindings
 window.render = render;
 window.updateTopbar = updateTopbar;
 window.updateBoosters = updateBoosters;
+window.buyGnomeFarm = buyGnomeFarm;
+window.toggleGnomeFarm = toggleGnomeFarm;
+window.buyGnomeAnimal = buyGnomeAnimal;
+window.toggleGnomeAnimal = toggleGnomeAnimal;
 
 
