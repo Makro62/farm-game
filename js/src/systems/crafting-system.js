@@ -83,6 +83,8 @@ export function claimCraftedItem(taskId) {
     // Remove from queue
     S.craftingQueue.splice(idx, 1);
 
+    if (typeof window.updateQuest === 'function') window.updateQuest('craft', 1);
+
     AudioManager.playSound('levelup');
     NotificationManager.toast(`Telah mendapatkan 1x ${recipe.name}!`, 'success');
     

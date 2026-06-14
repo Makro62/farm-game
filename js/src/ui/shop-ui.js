@@ -18,10 +18,28 @@ export function renderShop() {
         const btn = document.createElement('button');
         btn.className = 'shop-btn' + (locked ? ' locked' : '');
         btn.innerHTML = `${c.emoji} ${c.name} <span class="price">${c.cost}💰</span>`;
-        btn.onclick = () => buySeed(k);
+        btn.onclick = () => {
+            if (locked) {
+                NotificationManager.toast(`Butuh Level ${c.minLv}!`, 'warn');
+                return;
+            }
+            promptBuySeed(k, c);
+        };
         if (locked) btn.title = `Butuh Level ${c.minLv}`;
         el.appendChild(btn);
     }
+}
+
+/**
+ * Open a quantity input box, then buy that many seeds.
+ */
+function promptBuySeed(key, cropConfig) {
+    NotificationManager.showPrompt(
+        `Beli Bibit ${cropConfig.emoji} ${cropConfig.name}`,
+        `Harga ${cropConfig.cost}💰 / bibit. Masukkan jumlah yang ingin dibeli:`,
+        { defaultValue: 1, min: 1, max: 999 },
+        (qty) => buySeed(key, qty)
+    );
 }
 
 export function renderCropList() {

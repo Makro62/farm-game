@@ -59,15 +59,18 @@ export function collectFish(id) {
     }
 
     const conf = FISHES[fData.type];
-    S.coins += conf.reward;
-    S.totalEarned += conf.reward;
+    // Harvested fish goes into the inventory (under the fish type key) so it can
+    // be sold or cooked into dishes in the kitchen.
+    S.inventory[fData.type] = (S.inventory[fData.type] || 0) + 1;
     addXP(15);
     
     // Fish is collected completely (harvested)
     S.fishes = S.fishes.filter(x => x.id !== id);
 
+    if (typeof window.updateQuest === 'function') window.updateQuest('fish', 1);
+
     AudioManager.playSound('coin');
-    NotificationManager.toast(`Panen ${conf.productEmoji} ${conf.product}! +${conf.reward}💰`, 'success');
+    NotificationManager.toast(`Panen ${conf.productEmoji} ${conf.product}! (masuk gudang)`, 'success');
     queueSave();
     if (typeof window.render === 'function') window.render();
 }

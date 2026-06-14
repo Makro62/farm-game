@@ -65,8 +65,8 @@ export function buyAnimal(key) {
     // Find non-overlapping position
     let x, y, attempts = 0;
     do {
-        x = 10 + Math.random() * 80;
-        y = 30 + Math.random() * 40;
+        x = 12 + Math.random() * 70;
+        y = 38 + Math.random() * 38;
         attempts++;
     } while (isPositionOccupied(x, y) && attempts < 10);
 
@@ -120,15 +120,18 @@ export function collectAnimalProduct(id) {
     }
 
     const config = ANIMALS[animal.type];
-    S.coins += config.reward;
-    S.totalEarned += config.reward;
+    // Product goes into the inventory (under the animal type key) so it can be
+    // sold or used as a crafting ingredient in the kitchen.
+    S.inventory[animal.type] = (S.inventory[animal.type] || 0) + 1;
     addXP(10);
     
     animal.readyToCollect = false;
     animal.nextProduceAt = Date.now() + config.time;
 
+    if (typeof window.updateQuest === 'function') window.updateQuest('collect', 1);
+
     AudioManager.playSound('coin');
-    NotificationManager.toast(`Mendapat ${config.productEmoji} ${config.product}! +${config.reward}💰`, 'success');
+    NotificationManager.toast(`Mendapat ${config.productEmoji} ${config.product}! (masuk gudang)`, 'success');
     
     renderIfNeeded();
     queueSave();
@@ -149,13 +152,15 @@ export function processAnimalLoop() {
                 animalChanged = true;
             }
             
-            // Movement
+            // Movement — keep animals within the grassy play band (below the
+            // barn at the top and above the fence at the bottom).
             if (!animal.nextMoveAt) animal.nextMoveAt = Date.now() + 2000;
             
             if (Date.now() >= animal.nextMoveAt) {
-                animal.x = Math.max(5, Math.min(90, animal.x + (Math.random() - 0.5) * 20));
-                animal.y = Math.max(25, Math.min(75, animal.y + (Math.random() - 0.5) * 20));
-                animal.flip = animal.x < (animal.x - (Math.random() - 0.5) * 20);
+                const newX = Math.max(8, Math.min(85, animal.x + (Math.random() - 0.5) * 20));
+                animal.flip = newX < animal.x;
+                animal.x = newX;
+                animal.y = Math.max(35, Math.min(78, animal.y + (Math.random() - 0.5) * 20));
                 animal.nextMoveAt = Date.now() + 2000 + Math.random() * 3000;
                 animalChanged = true;
             }

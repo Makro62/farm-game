@@ -14,16 +14,32 @@
     --accent: #b91c1c;
     --plot-soil: #78350f;
     --plot-grass: #4ade80;
+
+    /* ===== Consistent type scale ===== */
+    --fs-xs: 12px;   /* small/muted captions */
+    --fs-sm: 13px;   /* secondary text, prices */
+    --fs-base: 14px; /* default body & buttons */
+    --fs-md: 15px;   /* card titles */
+    --fs-lg: 18px;   /* panel headings */
+    --fs-xl: 22px;   /* inline emoji icons */
+    --fs-2xl: 24px;  /* logo */
 }
 
 body {
     font-family: 'Outfit', sans-serif;
+    font-size: var(--fs-base);
     background: var(--bg-gradient);
     background-attachment: fixed;
     color: var(--text);
     min-height: 100vh;
     transition: background 2s, color 2s;
 }
+
+/* ===== Reusable card text classes for consistent sizing ===== */
+.ui-card-title { font-weight: 800; font-size: var(--fs-md); color: var(--text); display: flex; align-items: center; gap: 6px; }
+.ui-card-emoji { font-size: var(--fs-xl); vertical-align: middle; line-height: 1; }
+.ui-card-reqs { font-size: var(--fs-xs); font-weight: 700; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 6px; }
+.ui-card-value { color: var(--secondary); font-weight: 800; font-size: var(--fs-sm); }
 
 #app {
     display: flex;
@@ -162,8 +178,10 @@ body {
 .section-title:first-child { margin-top: 0; }
 
 /* List containers: spacing handled here via gap (no per-button margins) */
-#shop-list, #crop-list, #animal-list, #deco-list,
-#building-list, #crafting-recipes, #crafting-queue, #quest-list {
+#shop-list, #crop-list, #animal-list, #deco-list, #fish-shop-list,
+#building-list, #quest-list,
+#crafting-recipes-farm, #crafting-recipes-animal, #crafting-recipes-fish,
+#crafting-queue-farm, #crafting-queue-animal, #crafting-queue-fish {
     display: flex; flex-direction: column; gap: 8px;
 }
 #inv-list { display: flex; flex-direction: column; gap: 6px; }
@@ -185,6 +203,13 @@ body {
     box-shadow: 0 6px 12px rgba(34, 197, 94, 0.2);
 }
 .shop-btn.locked { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+.shop-btn.owned {
+    border-color: var(--primary);
+    background: rgba(74, 222, 128, 0.18);
+    cursor: default;
+}
+.shop-btn.owned:hover { transform: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.owned-badge { color: var(--primary); }
 
 .crop-btn, .act-btn, .sell-btn {
     width: 100%; padding: 10px 16px; border: 1px solid var(--panel-border);
@@ -344,6 +369,10 @@ body {
 }
 .quest-item.done { border-left-color: var(--primary); background: rgba(220,252,231,0.8); opacity: .9; }
 .quest-item:not(.done):hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.quest-place {
+    font-size: var(--fs-xs); font-weight: 800; color: var(--primary);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
+}
 
 /* ============ TOAST ============ */
 #toast-container {
@@ -380,7 +409,24 @@ body {
 .modal h2 { margin-bottom: 16px; font-size: 24px; color: var(--primary); font-weight: 800; }
 .modal p { color: var(--text); font-size: 16px; margin-bottom: 24px; font-weight: 500; }
 .modal-btns { display: flex; gap: 12px; justify-content: center; }
-.modal-btns .act-btn { padding: 12px 24px; font-size: 16px; }
+.modal-btns .act-btn { padding: 12px 24px; font-size: var(--fs-lg); }
+
+.prompt-input {
+    width: 100%;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-family: inherit;
+    font-size: var(--fs-lg);
+    font-weight: 800;
+    text-align: center;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.7);
+    border: 2px solid var(--panel-border);
+    border-radius: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.prompt-input:focus { border-color: var(--primary); }
 
 /* ============ PARTICLES ============ */
 .particle {
@@ -467,11 +513,36 @@ body.weather-rain .rain-overlay, body.weather-storm .rain-overlay { display: blo
     50% { transform: translateY(-10px) scale(1.1); filter: drop-shadow(0 0 15px rgba(250, 204, 21, 1)); }
 }
 
-@keyframes gnomeWalk {
-    0% { transform: translateX(0px) scaleX(-1); }
-    49% { transform: translateX(-300px) scaleX(-1); }
-    50% { transform: translateX(-300px) scaleX(1); }
-    100% { transform: translateX(0px) scaleX(1); }
+/* ============ WORKER (GNOME) PATROL ============ */
+.gnome-worker {
+    position: absolute;
+    left: 8%;
+    top: 12%;
+    z-index: 50;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+    animation: gnomePatrol 14s linear infinite;
+}
+.gnome-face { font-size: 46px; line-height: 1; }
+.gnome-label {
+    font-size: 11px; font-weight: 800; color: #fff;
+    background: rgba(0, 0, 0, 0.5); border-radius: 6px;
+    padding: 1px 6px; text-align: center; margin-top: 2px;
+}
+
+/* Patrol around the perimeter of the area (rectangular loop) */
+@keyframes gnomePatrol {
+    0%   { left: 8%;  top: 12%; transform: scaleX(1); }
+    24%  { left: 80%; top: 12%; transform: scaleX(1); }
+    26%  { left: 80%; top: 12%; transform: scaleX(1); }
+    49%  { left: 80%; top: 72%; transform: scaleX(1); }
+    51%  { left: 80%; top: 72%; transform: scaleX(-1); }
+    74%  { left: 8%;  top: 72%; transform: scaleX(-1); }
+    76%  { left: 8%;  top: 72%; transform: scaleX(-1); }
+    100% { left: 8%;  top: 12%; transform: scaleX(-1); }
 }
 
 /* ============ LAKE / FISHING ============ */

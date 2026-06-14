@@ -59,7 +59,7 @@ export function processGnome() {
     }
 
     if (S.gnomeAnimalOwned && S.gnomeAnimalActive) {
-        // 3. KURCACI PETERNAK — Collect animal products
+        // 3. KURCACI PETERNAK — Collect animal products into the inventory
         if (S.animals) {
             for (const a of S.animals) {
                 if (a.readyToCollect) {
@@ -67,11 +67,11 @@ export function processGnome() {
                     if (getInventoryTotal() >= currentCap) break;
 
                     const conf = ANIMALS[a.type];
-                    S.coins += conf.reward;
-                    S.totalEarned += conf.reward;
+                    S.inventory[a.type] = (S.inventory[a.type] || 0) + 1;
                     addXP(5);
                     a.readyToCollect = false;
                     a.nextProduceAt = Date.now() + conf.time;
+                    if (typeof window.updateQuest === 'function') window.updateQuest('collect', 1);
                     break;
                 }
             }

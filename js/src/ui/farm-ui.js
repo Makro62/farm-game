@@ -38,11 +38,11 @@ export function renderGrid() {
         grid.appendChild(d);
     });
 
-    // Gnome farmer
+    // Gnome farmer — patrols around the field
     if (S.gnomeFarmActive) {
         const gnome = document.createElement('div');
-        gnome.style.cssText = 'position: absolute; bottom: -20px; right: 20px; font-size: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: gnomeWalk 5s linear infinite; z-index: 50; pointer-events: none;';
-        gnome.innerHTML = '🧙‍♂️<div class="text-muted-sm" style="font-weight:bold; color:white; background:rgba(0,0,0,0.5); border-radius:4px; padding:2px; text-align:center;">Petani</div>';
+        gnome.className = 'gnome-worker';
+        gnome.innerHTML = '<span class="gnome-face">🧙‍♂️</span><div class="gnome-label">Petani</div>';
         grid.appendChild(gnome);
         grid.style.position = 'relative';
     }
@@ -111,9 +111,8 @@ export function renderAnimals() {
 
     if (S.gnomeAnimalActive) {
         const gnome = document.createElement('div');
-        gnome.className = 'gnome-el';
-        gnome.style.cssText = 'position: absolute; bottom: 10px; left: 10px; font-size: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: gnomeWalk 6s linear infinite; z-index: 50; pointer-events: none;';
-        gnome.innerHTML = '🧑‍🍳<div class="text-muted-sm" style="font-weight:bold; color:white; background:rgba(0,0,0,0.5); border-radius:4px; padding:2px; text-align:center;">Peternak</div>';
+        gnome.className = 'gnome-el gnome-worker';
+        gnome.innerHTML = '<span class="gnome-face">🧑‍🍳</span><div class="gnome-label">Peternak</div>';
         area.appendChild(gnome);
     }
 }

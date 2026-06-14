@@ -1,7 +1,7 @@
 import { buyBooster, sellAll, catchFish } from '../systems/economy-system.js';
 import { claimDaily } from '../systems/quest-system.js';
 import { saveGame } from '../core/save-manager.js';
-import { buyGnomeFarm, toggleGnomeFarm, buyGnomeAnimal, toggleGnomeAnimal, confirmReset, toggleFullScreen } from '../ui/core-ui.js';
+import { buyGnomeFarm, toggleGnomeFarm, buyGnomeAnimal, toggleGnomeAnimal, buyMerchant, toggleMerchant, confirmReset, toggleFullScreen } from '../ui/core-ui.js';
 import { NotificationManager } from './notification-manager.js';
 
 export class UIManager {
@@ -13,11 +13,14 @@ export class UIManager {
         this.bindClick('btn-toggle-gnome', () => toggleGnomeFarm());
         this.bindClick('btn-buy-gnome-animal', () => buyGnomeAnimal());
         this.bindClick('btn-toggle-gnome-animal', () => toggleGnomeAnimal());
+        this.bindClick('btn-buy-merchant', () => buyMerchant());
+        this.bindClick('btn-toggle-merchant', () => toggleMerchant());
         this.bindClick('btn-claim-daily', () => claimDaily());
         this.bindClick('btn-save-game', () => saveGame(true));
         this.bindClick('btn-reset-game', () => confirmReset());
         this.bindClick('btn-sell-all', () => sellAll());
         this.bindClick('btn-modal-cancel', () => NotificationManager.closeModal());
+        this.bindClick('btn-prompt-cancel', () => NotificationManager.closePrompt());
     }
 
     static bindClick(id, callback) {

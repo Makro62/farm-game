@@ -6,6 +6,7 @@ import { processWeather } from '../systems/weather-system.js';
 import { processAnimalLoop } from '../systems/animal-system.js';
 import { processFishLoop } from '../systems/fish-system.js';
 import { processCraftingQueue } from '../systems/crafting-system.js';
+import { processMerchant } from '../systems/economy-system.js';
 import { NotificationManager } from '../managers/notification-manager.js';
 
 export function gameLoop() {
@@ -36,6 +37,9 @@ export function gameLoop() {
 
         // 4. Gnome auto-farmer
         processGnome();
+
+        // 4b. Town merchant auto-seller
+        processMerchant();
 
         // 5. Fish farming loop
         const fishChanged = processFishLoop();

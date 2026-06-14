@@ -58,5 +58,41 @@ export const CRAFTING_RECIPES = {
         xp: 300,
         minLv: 15,
         tab: 'animal'
+    },
+    sushi: {
+        id: 'sushi',
+        name: 'Sushi',
+        emoji: '🍣',
+        desc: 'Sushi ikan nila segar.',
+        ingredients: { nila: 4 },
+        time: 30000,
+        reward: 800,
+        xp: 60,
+        minLv: 6,
+        tab: 'fish'
+    },
+    grilledfish: {
+        id: 'grilledfish',
+        name: 'Ikan Bakar',
+        emoji: '🔥',
+        desc: 'Lele bakar bumbu kecap.',
+        ingredients: { lele: 3 },
+        time: 45000,
+        reward: 1500,
+        xp: 120,
+        minLv: 9,
+        tab: 'fish'
+    },
+    sashimi: {
+        id: 'sashimi',
+        name: 'Sashimi Mas',
+        emoji: '🍱',
+        desc: 'Sashimi ikan mas premium.',
+        ingredients: { mas: 2, nila: 2 },
+        time: 60000,
+        reward: 3000,
+        xp: 250,
+        minLv: 13,
+        tab: 'fish'
     }
 };

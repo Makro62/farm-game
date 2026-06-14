@@ -61,4 +61,52 @@ export class NotificationManager {
         const modal = document.getElementById('modal');
         if (modal) modal.classList.remove('show'); 
     }
+
+    /**
+     * Show an input dialog (chat box) to enter a numeric amount.
+     * @param {string} title
+     * @param {string} msg
+     * @param {{defaultValue?:number, min?:number, max?:number}} opts
+     * @param {(value:number)=>void} onOk - called with the validated number
+     */
+    static showPrompt(title, msg, opts = {}, onOk) {
+        const modal = document.getElementById('prompt-modal');
+        const titleEl = document.getElementById('prompt-title');
+        const msgEl = document.getElementById('prompt-msg');
+        const input = document.getElementById('prompt-input');
+        const okBtn = document.getElementById('prompt-ok');
+        if (!modal || !input || !okBtn) return;
+
+        const min = opts.min ?? 1;
+        const max = opts.max ?? 9999;
+        const def = Math.max(min, Math.min(max, opts.defaultValue ?? 1));
+
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.textContent = msg;
+        input.min = min;
+        input.max = max;
+        input.value = def;
+
+        modal.classList.add('show');
+        setTimeout(() => { input.focus(); input.select(); }, 50);
+
+        const submit = () => {
+            let val = parseInt(input.value, 10);
+            if (isNaN(val)) val = min;
+            val = Math.max(min, Math.min(max, val));
+            this.closePrompt();
+            if (onOk) onOk(val);
+        };
+
+        okBtn.onclick = submit;
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); submit(); }
+            else if (e.key === 'Escape') { e.preventDefault(); this.closePrompt(); }
+        };
+    }
+
+    static closePrompt() {
+        const modal = document.getElementById('prompt-modal');
+        if (modal) modal.classList.remove('show');
+    }
 }

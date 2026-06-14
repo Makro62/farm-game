@@ -6,17 +6,35 @@ import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
 import { addXP } from '../utils/helpers.js';
 
+/**
+ * Generate one daily quest for each place/area of the game.
+ */
 export function generateQuests() {
-    const templates = [
-        { type: 'harvest', desc: 'Panen {n} tanaman', targets: [10, 25, 50], rewards: [100, 250, 500] },
-        { type: 'plant', desc: 'Tanam {n} bibit', targets: [20, 40, 80], rewards: [150, 300, 600] },
-        { type: 'earn', desc: 'Kumpulkan {n}💰', targets: [500, 1500, 5000], rewards: [250, 500, 1500] }
+    const templatesByPlace = [
+        { place: '🌾 Kebun', options: [
+            { type: 'harvest', desc: 'Panen {n} tanaman', targets: [10, 25, 50], rewards: [100, 250, 500] },
+            { type: 'plant', desc: 'Tanam {n} bibit', targets: [20, 40, 80], rewards: [150, 300, 600] }
+        ]},
+        { place: '🐔 Peternakan', options: [
+            { type: 'collect', desc: 'Kumpulkan {n} hasil ternak', targets: [3, 8, 15], rewards: [150, 400, 800] }
+        ]},
+        { place: '🍳 Dapur', options: [
+            { type: 'craft', desc: 'Produksi {n} olahan', targets: [2, 5, 10], rewards: [200, 500, 1000] }
+        ]},
+        { place: '🎣 Danau', options: [
+            { type: 'fish', desc: 'Panen {n} ikan', targets: [3, 6, 12], rewards: [150, 350, 700] }
+        ]},
+        { place: '🏪 Kota', options: [
+            { type: 'earn', desc: 'Hasilkan {n}💰 dari penjualan', targets: [500, 1500, 5000], rewards: [250, 500, 1500] }
+        ]}
     ];
+
     S.quests = [];
-    for (let i = 0; i < 3; i++) {
-        const t = templates[Math.floor(Math.random() * templates.length)];
+    templatesByPlace.forEach(({ place, options }) => {
+        const t = options[Math.floor(Math.random() * options.length)];
         const diff = Math.floor(Math.random() * t.targets.length);
         S.quests.push({
+            place,
             type: t.type,
             desc: t.desc.replace('{n}', t.targets[diff]),
             target: t.targets[diff],
@@ -24,7 +42,7 @@ export function generateQuests() {
             progress: 0,
             done: false
         });
-    }
+    });
 }
 
 export function updateQuest(type, amount) {

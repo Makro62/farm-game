@@ -167,10 +167,11 @@ function harvestCrop(plot, index) {
 }
 
 /**
- * Buy seeds from shop
+ * Buy seeds from shop (supports buying multiple at once)
  * @param {string} key - Crop key
+ * @param {number} qty - How many seeds to buy
  */
-export function buySeed(key) {
+export function buySeed(key, qty = 1) {
     const cropConfig = CROPS[key];
     
     if (!cropConfig) {
@@ -183,18 +184,21 @@ export function buySeed(key) {
         NotificationManager.toast(`Butuh Level ${cropConfig.minLv}!`, 'warn');
         return;
     }
+
+    qty = Math.max(1, Math.floor(qty));
+    const totalCost = cropConfig.cost * qty;
     
-    if (S.coins < cropConfig.cost) {
+    if (S.coins < totalCost) {
         AudioManager.playSound('error');
-        NotificationManager.toast('💰 Koin tidak cukup!', 'warn');
+        NotificationManager.toast(`💰 Koin tidak cukup! Butuh ${totalCost}💰`, 'warn');
         return;
     }
     
-    S.coins -= cropConfig.cost;
-    S.seeds[key] = (S.seeds[key] || 0) + 1;
+    S.coins -= totalCost;
+    S.seeds[key] = (S.seeds[key] || 0) + qty;
     
     AudioManager.playSound('pop');
-    NotificationManager.toast(`🌱 Beli ${cropConfig.name}!`);
+    NotificationManager.toast(`🌱 Beli ${qty}x ${cropConfig.name}! (-${totalCost}💰)`);
     
     renderIfNeeded();
     queueSave();

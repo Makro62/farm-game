@@ -1,11 +1,11 @@
 import { S, GameState } from '../core/state.js';
-import { CROPS } from '../data/crops.js';
-import { CRAFTING_RECIPES } from '../data/crafting.js';
-import { DECORATIONS } from '../data/items.js';
+import { DECORATIONS, getItemData } from '../data/items.js';
+import { CONFIG } from '../data/config.js';
 import { queueSave } from '../core/save-manager.js';
 import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
 import { addXP, getInventoryTotal } from '../utils/helpers.js';
+import { getBuildingEffect } from './building-system.js';
 
 export function buyBooster(type) {
     const cost = type === 'growth' ? 50 : 100;
@@ -22,19 +22,20 @@ export function buyBooster(type) {
     queueSave();
 }
 
-export function sellAll() {
+export function sellAll(silent = false) {
     let baseTotal = 0;
     for (const [k, qty] of Object.entries(S.inventory)) {
         if (qty > 0) {
-            const itemData = CROPS[k] || CRAFTING_RECIPES[k] || { reward: 0 };
+            const itemData = getItemData(k);
             baseTotal += qty * itemData.reward;
             if (typeof window.updateQuest === 'function') window.updateQuest('earn', qty * itemData.reward);
             S.inventory[k] = 0;
         }
     }
-    if (baseTotal === 0) { 
-        AudioManager.playSound('error'); 
-        NotificationManager.toast('Tidak ada yang dijual.', 'warn'); 
+    if (baseTotal === 0) {
+        if (silent) return;
+        AudioManager.playSound('error');
+        NotificationManager.toast('Tidak ada yang dijual.', 'warn');
         return; 
     }
 
@@ -94,6 +95,22 @@ export function catchFish() {
         if (typeof window.render === 'function') window.render();
     } else {
         NotificationManager.toast('🌊 Tidak ada ikan... tunggu cipratan air!', 'info');
+    }
+}
+
+/**
+ * Town Merchant worker — automatically sells the whole inventory once it is
+ * nearly full (>= 90% of silo capacity) so harvests are never wasted.
+ * Called every game loop tick.
+ */
+export function processMerchant() {
+    if (!S.merchantOwned || !S.merchantActive) return;
+
+    const cap = getBuildingEffect('silo') || CONFIG.DEFAULT_INVENTORY_CAPACITY;
+    const total = getInventoryTotal();
+
+    if (total > 0 && total >= cap * 0.9) {
+        sellAll(true);
     }
 }
 

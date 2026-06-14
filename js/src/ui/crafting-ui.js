@@ -1,21 +1,24 @@
 import { S } from '../core/state.js';
 import { CRAFTING_RECIPES } from '../data/crafting.js';
+import { getItemData } from '../data/items.js';
 import { startCrafting, claimCraftedItem } from '../systems/crafting-system.js';
 
 export function renderCrafting() {
-    const rFarm = document.getElementById('crafting-recipes-farm');
-    const qFarm = document.getElementById('crafting-queue-farm');
-    const rAnim = document.getElementById('crafting-recipes-animal');
-    const qAnim = document.getElementById('crafting-queue-animal');
+    const recipeEls = {
+        farm: document.getElementById('crafting-recipes-farm'),
+        animal: document.getElementById('crafting-recipes-animal'),
+        fish: document.getElementById('crafting-recipes-fish')
+    };
+    const queueEls = {
+        farm: document.getElementById('crafting-queue-farm'),
+        animal: document.getElementById('crafting-queue-animal'),
+        fish: document.getElementById('crafting-queue-fish')
+    };
 
-    if (rFarm) rFarm.innerHTML = '';
-    if (qFarm) qFarm.innerHTML = '';
-    if (rAnim) rAnim.innerHTML = '';
-    if (qAnim) qAnim.innerHTML = '';
+    Object.values(recipeEls).forEach(el => { if (el) el.innerHTML = ''; });
+    Object.values(queueEls).forEach(el => { if (el) el.innerHTML = ''; });
 
-    // Track if queues are empty
-    let hasFarmQueue = false;
-    let hasAnimQueue = false;
+    const queueCount = { farm: 0, animal: 0, fish: 0 };
 
     // Helper to render recipe card
     const createRecipeCard = (id, recipe) => {
@@ -32,21 +35,22 @@ export function renderCrafting() {
         for (const [item, qty] of Object.entries(recipe.ingredients)) {
             const has = S.inventory[item] || 0;
             const color = has >= qty ? 'var(--primary)' : 'var(--accent)';
-            reqs.push(`<span style="color: ${color}">${has}/${qty} ${item}</span>`);
+            const itemInfo = getItemData(item);
+            reqs.push(`<span style="color: ${color}">${itemInfo.emoji} ${has}/${qty} ${itemInfo.name}</span>`);
         }
 
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="font-weight: 800; font-size: 16px;">
-                    <span style="font-size: 24px; vertical-align: middle;">${recipe.emoji}</span> ${recipe.name}
+                <div class="ui-card-title">
+                    <span class="ui-card-emoji">${recipe.emoji}</span> ${recipe.name}
                 </div>
                 <div class="text-muted-sm">⏱️ ${recipe.time / 1000}s</div>
             </div>
             <div class="text-muted-sm">${recipe.desc}</div>
-            <div style="font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 6px;">
+            <div class="ui-card-reqs">
                 Bahan: ${reqs.join(', ')}
             </div>
-            <div style="color: var(--secondary); font-weight: bold; font-size: 14px;">
+            <div class="ui-card-value">
                 Nilai Jual: ${recipe.reward}💰 (+${recipe.xp}✨)
             </div>
         `;
@@ -75,7 +79,7 @@ export function renderCrafting() {
         `;
 
         const info = document.createElement('div');
-        info.innerHTML = `<div style="font-weight: 800; font-size: 16px;"><span style="font-size: 24px; vertical-align: middle;">${recipe.emoji}</span> ${recipe.name}</div>`;
+        info.innerHTML = `<div class="ui-card-title"><span class="ui-card-emoji">${recipe.emoji}</span> ${recipe.name}</div>`;
 
         const action = document.createElement('div');
         if (task.ready) {
@@ -97,34 +101,30 @@ export function renderCrafting() {
         return qCard;
     };
 
-    // Render Recipes
+    // Render Recipes by tab
     for (const [id, recipe] of Object.entries(CRAFTING_RECIPES)) {
-        const card = createRecipeCard(id, recipe);
-        if (recipe.tab === 'farm' && rFarm) rFarm.appendChild(card);
-        else if (recipe.tab === 'animal' && rAnim) rAnim.appendChild(card);
+        const target = recipeEls[recipe.tab];
+        if (target) target.appendChild(createRecipeCard(id, recipe));
     }
 
-    // Render Queue
+    // Render Queue by tab
     if (S.craftingQueue && S.craftingQueue.length > 0) {
         S.craftingQueue.forEach(task => {
             const recipe = CRAFTING_RECIPES[task.recipeId];
             if (!recipe) return;
-            const card = createQueueCard(task, recipe);
-            
-            if (recipe.tab === 'farm' && qFarm) {
-                qFarm.appendChild(card);
-                hasFarmQueue = true;
-            } else if (recipe.tab === 'animal' && qAnim) {
-                qAnim.appendChild(card);
-                hasAnimQueue = true;
+            const target = queueEls[recipe.tab];
+            if (target) {
+                target.appendChild(createQueueCard(task, recipe));
+                queueCount[recipe.tab]++;
             }
         });
     }
 
-    if (!hasFarmQueue && qFarm) {
-        qFarm.innerHTML = '<div class="text-muted-sm" style="text-align:center; padding: 10px;">Dapur sedang kosong.</div>';
-    }
-    if (!hasAnimQueue && qAnim) {
-        qAnim.innerHTML = '<div class="text-muted-sm" style="text-align:center; padding: 10px;">Dapur sedang kosong.</div>';
-    }
+    // Empty-state message per kitchen
+    Object.keys(queueEls).forEach(tab => {
+        const el = queueEls[tab];
+        if (el && queueCount[tab] === 0) {
+            el.innerHTML = '<div class="text-muted-sm" style="text-align:center; padding: 10px;">Dapur sedang kosong.</div>';
+        }
+    });
 }

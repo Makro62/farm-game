@@ -43,39 +43,44 @@ export function render() {
         achieveCount.textContent = `${S.achievements.length} / ${ACHIEVEMENTS.length}`;
     }
 
-    const btnBuyGnomeFarm = document.getElementById('btn-buy-gnome');
-    if (btnBuyGnomeFarm) {
-        btnBuyGnomeFarm.style.display = S.gnomeFarmOwned ? 'none' : 'flex';
-    }
+    // Worker buy buttons keep showing a "purchased" status instead of disappearing.
+    updateWorkerStatus('btn-buy-gnome', 'btn-toggle-gnome', S.gnomeFarmOwned, S.gnomeFarmActive,
+        '🧙‍♂️ Kurcaci Petani', 'Auto-Farm & Harvest', '🧙‍♂️ Auto');
+    updateWorkerStatus('btn-buy-gnome-animal', 'btn-toggle-gnome-animal', S.gnomeAnimalOwned, S.gnomeAnimalActive,
+        '🧑‍🍳 Kurcaci Peternak', 'Auto-Collect Products', '🧑‍🍳 Auto');
+    updateWorkerStatus('btn-buy-merchant', 'btn-toggle-merchant', S.merchantOwned, S.merchantActive,
+        '🧑‍💼 Pedagang Kota', 'Auto-Jual hasil panen', '🧑‍💼 Auto-Jual');
+}
 
-    const btnToggleGnomeFarm = document.getElementById('btn-toggle-gnome');
-    if (btnToggleGnomeFarm) {
-        if (S.gnomeFarmOwned) {
-            btnToggleGnomeFarm.style.display = 'inline-block';
-            btnToggleGnomeFarm.textContent = S.gnomeFarmActive ? '🧙‍♂️ Auto: ON' : '🧙‍♂️ Auto: OFF';
-            btnToggleGnomeFarm.style.background = S.gnomeFarmActive
-                ? 'linear-gradient(135deg, #a855f7, #9333ea)'
-                : 'var(--muted)';
+/**
+ * Reflect a worker's purchased/active status on its buy + toggle buttons.
+ */
+function updateWorkerStatus(buyId, toggleId, owned, active, title, subtitle, toggleLabel) {
+    const buyBtn = document.getElementById(buyId);
+    if (buyBtn) {
+        if (owned) {
+            buyBtn.classList.add('owned');
+            buyBtn.disabled = true;
+            buyBtn.innerHTML = `<div class="text-left"><div>${title}</div>` +
+                `<div class="text-muted-sm">${subtitle}</div></div>` +
+                `<span class="price owned-badge">✅ Dimiliki</span>`;
         } else {
-            btnToggleGnomeFarm.style.display = 'none';
+            buyBtn.classList.remove('owned');
+            buyBtn.disabled = false;
         }
     }
 
-    const btnBuyGnomeAnimal = document.getElementById('btn-buy-gnome-animal');
-    if (btnBuyGnomeAnimal) {
-        btnBuyGnomeAnimal.style.display = S.gnomeAnimalOwned ? 'none' : 'flex';
-    }
-
-    const btnToggleGnomeAnimal = document.getElementById('btn-toggle-gnome-animal');
-    if (btnToggleGnomeAnimal) {
-        if (S.gnomeAnimalOwned) {
-            btnToggleGnomeAnimal.style.display = 'inline-block';
-            btnToggleGnomeAnimal.textContent = S.gnomeAnimalActive ? '🧑‍🍳 Auto: ON' : '🧑‍🍳 Auto: OFF';
-            btnToggleGnomeAnimal.style.background = S.gnomeAnimalActive
+    const toggleBtn = document.getElementById(toggleId);
+    if (toggleBtn) {
+        if (owned) {
+            toggleBtn.style.display = 'inline-block';
+            toggleBtn.textContent = `${toggleLabel}: ${active ? 'ON' : 'OFF'}`;
+            toggleBtn.style.background = active
                 ? 'linear-gradient(135deg, #a855f7, #9333ea)'
                 : 'var(--muted)';
+            toggleBtn.style.color = active ? '#fff' : '';
         } else {
-            btnToggleGnomeAnimal.style.display = 'none';
+            toggleBtn.style.display = 'none';
         }
     }
 }
@@ -213,6 +218,32 @@ export function toggleGnomeAnimal() {
     render();
 }
 
+const MERCHANT_COST = 12000;
+
+export function buyMerchant() {
+    if (S.merchantOwned) {
+        NotificationManager.toast('Anda sudah mempekerjakan Pedagang Kota!', 'warn');
+        return;
+    }
+    if (S.coins >= MERCHANT_COST) {
+        S.coins -= MERCHANT_COST;
+        S.merchantOwned = true;
+        S.merchantActive = true;
+        AudioManager.playSound('levelup');
+        NotificationManager.toast('🧑‍💼 Pedagang Kota berhasil dipekerjakan!', 'success');
+        render();
+    } else {
+        AudioManager.playSound('error');
+        NotificationManager.toast(`Koin tidak cukup! Butuh ${MERCHANT_COST}💰`, 'warn');
+    }
+}
+
+export function toggleMerchant() {
+    S.merchantActive = !S.merchantActive;
+    NotificationManager.toast(`🧑‍💼 Pedagang Kota ${S.merchantActive ? 'Aktif' : 'Beristirahat'}`, 'info');
+    render();
+}
+
 export function confirmReset() {
     NotificationManager.showModal('🔄 Reset Game', 'Semua progress akan hilang. Yakin?', () => {
         localStorage.removeItem(CONFIG.SAVE_KEY);
@@ -237,3 +268,5 @@ window.buyGnomeFarm = buyGnomeFarm;
 window.toggleGnomeFarm = toggleGnomeFarm;
 window.buyGnomeAnimal = buyGnomeAnimal;
 window.toggleGnomeAnimal = toggleGnomeAnimal;
+window.buyMerchant = buyMerchant;
+window.toggleMerchant = toggleMerchant;

@@ -22,8 +22,8 @@ export function renderBuildings() {
 
         const info = document.createElement('div');
         info.innerHTML = `
-            <div style="font-weight: 800; font-size: 16px; color: var(--text);">
-                <span style="font-size: 24px; vertical-align: middle;">${b.emoji}</span> ${b.name} <span class="text-muted-sm">(Lv ${currentLevel}/${b.maxLevel})</span>
+            <div class="ui-card-title">
+                <span class="ui-card-emoji">${b.emoji}</span> ${b.name} <span class="text-muted-sm">(Lv ${currentLevel}/${b.maxLevel})</span>
             </div>
             <div class="text-muted-sm" style="margin-top: 4px;">${b.desc}</div>
         `;
