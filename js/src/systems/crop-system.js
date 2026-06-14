@@ -1,107 +1,229 @@
 import { S, GameState } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
+import { CONFIG } from '../data/config.js';
 import { queueSave } from '../core/save-manager.js';
 import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
-import { addXP } from '../utils/helpers.js';
+import { addXP, checkAchievements } from '../utils/helpers.js';
 import { getBuildingEffect } from './building-system.js';
 
+/**
+ * Check if inventory is at capacity
+ * @returns {boolean} true if inventory is full
+ */
+function isInventoryFull() {
+    const currentCap = getBuildingEffect('silo') || CONFIG.DEFAULT_INVENTORY_CAPACITY;
+    return getInventoryTotal() >= currentCap;
+}
+
+/**
+ * Handle plot click actions
+ * @param {number} i - Plot index
+ */
 export function clickPlot(i) {
     const p = S.plots[i];
-    if (p.state === 'grass') {
-        p.state = 'empty';
-        addXP(1);
-        NotificationManager.spawnParticles(i, '+1 XP');
-        NotificationManager.toast('🌿 Rumput dibersihkan', 'info'); 
-        AudioManager.playSound('pop');
+    
+    if (!p) {
+        console.warn(`Plot ${i} tidak ditemukan`);
+        return;
     }
-    else if (p.state === 'empty') {
-        if ((S.seeds[GameState.selectedCrop] || 0) <= 0) { 
-            AudioManager.playSound('error'); 
-            NotificationManager.toast(`Bibit ${CROPS[GameState.selectedCrop].name} habis! Beli di shop.`, 'warn'); 
-            return; 
-        }
-        const c = CROPS[GameState.selectedCrop];
-        S.seeds[GameState.selectedCrop]--;
-        p.state = 'growing';
-        p.crop = GameState.selectedCrop;
-        p.plantedAt = Date.now();
-        let growTime = c.time;
-        if (S.boosters.growth > Date.now()) growTime *= 0.67;
-        
-        // Water Tower & Greenhouse passive effects
-        const waterTowerBonus = getBuildingEffect('watertower') || 0;
-        const greenhouseBonus = getBuildingEffect('greenhouse') ? 0.1 : 0;
-        const totalBonus = waterTowerBonus + greenhouseBonus;
-        growTime *= (1 - totalBonus);
-        
-        p.growTime = growTime;
-        p.watered = false;
-        S.totalPlanted++;
-        addXP(5);
-        if (typeof window.updateQuest === 'function') window.updateQuest('plant', 1);
-        NotificationManager.spawnParticles(i, `+5 XP`);
-        NotificationManager.toast(`🌱 ${c.name} ditanam!`); 
-        AudioManager.playSound('pop');
-    }
-    else if (p.state === 'growing' && !p.watered) {
-        // WATERING: Percepat waktu tumbuh 50%
-        p.watered = true;
-        const elapsed = Date.now() - p.plantedAt;
-        const remaining = p.growTime - elapsed;
-        p.growTime -= Math.floor(remaining / 2);
-        AudioManager.playSound('water');
-        NotificationManager.spawnParticles(i, '💧');
-        NotificationManager.toast('💧 Tanaman disiram! Waktu panen dipercepat.');
-    }
-    else if (p.state === 'ready') {
-        // CAPACITY CHECK
-        const currentCap = getBuildingEffect('silo') || 50;
-        if (getInventoryTotal() >= currentCap) {
-            AudioManager.playSound('error');
-            NotificationManager.toast('⚠️ Gudang Penuh! Tingkatkan kapasitas Silo Anda.', 'warn');
-            return;
-        }
 
-        const c = CROPS[p.crop];
-        let reward = c.reward;
-        if (S.boosters.coin > Date.now()) reward *= 2;
-        S.inventory[p.crop] = (S.inventory[p.crop] || 0) + 1;
-        if (p.crop === 'pumpkin') S.pumpkinHarvest = (S.pumpkinHarvest || 0) + 1;
-        S.totalHarvest++;
-        addXP(c.xp);
-        p.state = 'empty'; p.crop = null; p.watered = false;
-        if (typeof window.updateQuest === 'function') window.updateQuest('harvest', 1);
-        NotificationManager.spawnParticles(i, `+${c.emoji}`, `+${c.xp} XP`, '💰');
-        NotificationManager.toast(`🧺 Panen ${c.name}! +${c.xp} XP`, 'success'); 
-        AudioManager.playSound('coin');
-        if (typeof window.checkAchievements === 'function') window.checkAchievements();
+    switch (p.state) {
+        case 'grass':
+            clearGrass(p, i);
+            break;
+        case 'empty':
+            plantSeed(p, i);
+            break;
+        case 'growing':
+            waterPlant(p, i);
+            break;
+        case 'ready':
+            harvestCrop(p, i);
+            break;
     }
-    if (typeof window.render === 'function') window.render();
+    
+    renderIfNeeded();
     queueSave();
 }
 
+/**
+ * Clear grass from plot
+ */
+function clearGrass(plot, index) {
+    plot.state = 'empty';
+    addXP(1);
+    NotificationManager.spawnParticles(index, '+1 XP');
+    NotificationManager.toast('🌿 Rumput dibersihkan', 'info');
+    AudioManager.playSound('pop');
+}
+
+/**
+ * Plant seed in empty plot
+ */
+function plantSeed(plot, index) {
+    const selectedCrop = GameState.selectedCrop;
+    const seedCount = S.seeds[selectedCrop] || 0;
+    
+    if (seedCount <= 0) {
+        AudioManager.playSound('error');
+        NotificationManager.toast(`Bibit ${CROPS[selectedCrop].name} habis! Beli di shop.`, 'warn');
+        return;
+    }
+
+    const cropConfig = CROPS[selectedCrop];
+    S.seeds[selectedCrop]--;
+    
+    plot.state = 'growing';
+    plot.crop = selectedCrop;
+    plot.plantedAt = Date.now();
+    plot.watered = false;
+    
+    // Calculate grow time with all bonuses
+    let growTime = calculateGrowTime(cropConfig.time);
+    plot.growTime = growTime;
+    
+    S.totalPlanted++;
+    addXP(5);
+    
+    if (typeof window.updateQuest === 'function') {
+        window.updateQuest('plant', 1);
+    }
+    
+    NotificationManager.spawnParticles(index, '+5 XP');
+    NotificationManager.toast(`🌱 ${cropConfig.name} ditanam!`);
+    AudioManager.playSound('pop');
+}
+
+/**
+ * Calculate effective grow time with all modifiers
+ * @param {number} baseTime - Base grow time in ms
+ * @returns {number} Modified grow time
+ */
+function calculateGrowTime(baseTime) {
+    let growTime = baseTime;
+    
+    // Growth booster (33% reduction)
+    if (S.boosters.growth > Date.now()) {
+        growTime *= 0.67;
+    }
+    
+    // Building bonuses
+    const waterTowerBonus = getBuildingEffect('watertower') || 0;
+    const greenhouseBonus = getBuildingEffect('greenhouse') ? 0.1 : 0;
+    const totalBonus = waterTowerBonus + greenhouseBonus;
+    
+    growTime *= (1 - totalBonus);
+    
+    return growTime;
+}
+
+/**
+ * Water a growing plant
+ */
+function waterPlant(plot, index) {
+    if (plot.watered) return;
+    
+    plot.watered = true;
+    const elapsed = Date.now() - plot.plantedAt;
+    const remaining = plot.growTime - elapsed;
+    plot.growTime -= Math.floor(remaining / 2);
+    
+    AudioManager.playSound('water');
+    NotificationManager.spawnParticles(index, '💧');
+    NotificationManager.toast('💧 Tanaman disiram! Waktu panen dipercepat.');
+}
+
+/**
+ * Harvest ready crop
+ */
+function harvestCrop(plot, index) {
+    if (isInventoryFull()) {
+        AudioManager.playSound('error');
+        NotificationManager.toast('⚠️ Gudang Penuh! Tingkatkan kapasitas Silo Anda.', 'warn');
+        return;
+    }
+
+    const cropConfig = CROPS[plot.crop];
+    let reward = cropConfig.reward;
+    
+    // Coin booster doubles reward
+    if (S.boosters.coin > Date.now()) {
+        reward *= 2;
+    }
+    
+    S.inventory[plot.crop] = (S.inventory[plot.crop] || 0) + 1;
+    
+    if (plot.crop === 'pumpkin') {
+        S.pumpkinHarvest = (S.pumpkinHarvest || 0) + 1;
+    }
+    
+    S.totalHarvest++;
+    addXP(cropConfig.xp);
+    
+    // Reset plot
+    plot.state = 'empty';
+    plot.crop = null;
+    plot.watered = false;
+    
+    if (typeof window.updateQuest === 'function') {
+        window.updateQuest('harvest', 1);
+    }
+    
+    NotificationManager.spawnParticles(index, `+${cropConfig.emoji}`, `+${cropConfig.xp} XP`, '💰');
+    NotificationManager.toast(`🧺 Panen ${cropConfig.name}! +${cropConfig.xp} XP`, 'success');
+    AudioManager.playSound('coin');
+    checkAchievements();
+}
+
+/**
+ * Render UI if render function is available
+ */
+function renderIfNeeded() {
+    if (typeof window.render === 'function') {
+        window.render();
+    }
+}
+
+/**
+ * Buy seeds from shop
+ * @param {string} key - Crop key
+ */
 export function buySeed(key) {
-    const c = CROPS[key];
-    if (S.level < c.minLv) { 
-        AudioManager.playSound('error'); 
-        NotificationManager.toast(`Butuh Level ${c.minLv}!`, 'warn'); 
-        return; 
+    const cropConfig = CROPS[key];
+    
+    if (!cropConfig) {
+        console.warn(`Crop ${key} tidak ditemukan`);
+        return;
     }
-    if (S.coins < c.cost) { 
-        AudioManager.playSound('error'); 
-        NotificationManager.toast('💰 Koin tidak cukup!', 'warn'); 
-        return; 
+    
+    if (S.level < cropConfig.minLv) {
+        AudioManager.playSound('error');
+        NotificationManager.toast(`Butuh Level ${cropConfig.minLv}!`, 'warn');
+        return;
     }
-    S.coins -= c.cost;
+    
+    if (S.coins < cropConfig.cost) {
+        AudioManager.playSound('error');
+        NotificationManager.toast('💰 Koin tidak cukup!', 'warn');
+        return;
+    }
+    
+    S.coins -= cropConfig.cost;
     S.seeds[key] = (S.seeds[key] || 0) + 1;
-    AudioManager.playSound('pop'); 
-    NotificationManager.toast(`🌱 Beli ${c.name}!`);
-    if (typeof window.render === 'function') window.render();
+    
+    AudioManager.playSound('pop');
+    NotificationManager.toast(`🌱 Beli ${cropConfig.name}!`);
+    
+    renderIfNeeded();
     queueSave();
 }
 
+/**
+ * Get total items in inventory
+ * @returns {number} Total inventory count
+ */
 export function getInventoryTotal() {
     if (!S.inventory) return 0;
-    return Object.values(S.inventory).reduce((a, b) => a + b, 0);
+    return Object.values(S.inventory).reduce((sum, qty) => sum + qty, 0);
 }

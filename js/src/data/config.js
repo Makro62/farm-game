@@ -27,4 +27,5 @@ export const CONFIG = {
     GRID_SIZE: 36,
     SAVE_KEY: 'farmTycoonSave',
     WEATHER_INTERVAL: 5 * 60 * 1000, // 5 menit
+    DEFAULT_INVENTORY_CAPACITY: 50,
 };
