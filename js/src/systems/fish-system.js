@@ -1,6 +1,6 @@
 import { S } from '../core/state.js';
 import { FISHES } from '../data/fishes.js';
-import { getInventoryTotal } from './crop-system.js';
+import { getInventoryTotal } from '../utils/helpers.js';
 import { queueSave } from '../core/save-manager.js';
 import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';

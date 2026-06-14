@@ -1,8 +1,9 @@
 import { S } from '../core/state.js';
-import { ACHIEVEMENTS } from '../data/config.js';
+import { ACHIEVEMENTS, CONFIG } from '../data/config.js';
 import { queueSave } from '../core/save-manager.js';
 import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
+import { getBuildingEffect } from '../systems/building-system.js';
 
 export function addXP(n) {
     S.xp += n;
@@ -27,6 +28,32 @@ export function checkAchievements() {
     });
 }
 
-// Temporary bindings for migration
+/**
+ * Check if inventory is at capacity using Silo building effect
+ * @returns {boolean} true if inventory is full
+ */
+export function isInventoryFull() {
+    const currentCap = getBuildingEffect('silo') || CONFIG.DEFAULT_INVENTORY_CAPACITY;
+    return getInventoryTotal() >= currentCap;
+}
+
+/**
+ * Get total items in inventory
+ * @returns {number} Total inventory count
+ */
+export function getInventoryTotal() {
+    if (!S.inventory) return 0;
+    return Object.values(S.inventory).reduce((sum, qty) => sum + qty, 0);
+}
+
+/**
+ * Render UI if render function is available
+ */
+export function renderIfNeeded() {
+    if (typeof window.render === 'function') {
+        window.render();
+    }
+}
+
 window.addXP = addXP;
 window.checkAchievements = checkAchievements;

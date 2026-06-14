@@ -1,8 +1,7 @@
 import { S } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
 import { ANIMALS } from '../data/animals.js';
-import { getInventoryTotal } from './crop-system.js';
-import { addXP } from '../utils/helpers.js';
+import { getInventoryTotal, addXP } from '../utils/helpers.js';
 import { getBuildingEffect } from './building-system.js';
 
 export function processGnome() {

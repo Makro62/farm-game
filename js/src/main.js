@@ -22,7 +22,7 @@ import { claimDaily } from './systems/quest-system.js';
 import './systems/gnome-system.js';
 import './systems/weather-system.js';
 
-// Re-bind imported specific exports to window for `render` to find
+// Re-bind render functions to window for game loop and cross-module access
 window.renderShop = renderShop;
 window.renderCropList = renderCropList;
 window.renderDecorations = renderDecorations;
@@ -36,11 +36,6 @@ window.renderQuests = renderQuests;
 window.renderOrders = renderOrders;
 window.renderBuildings = renderBuildings;
 window.renderCrafting = renderCrafting;
-
-// Expose S and GameState for debugging if needed
-window.S = S;
-window.GameState = GameState;
-window.NotificationManager = NotificationManager;
 
 // Entry Point
 document.addEventListener('DOMContentLoaded', () => {

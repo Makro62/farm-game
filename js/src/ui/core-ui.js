@@ -1,6 +1,6 @@
 import { S } from '../core/state.js';
 import { ACHIEVEMENTS, WEATHERS, CONFIG } from '../data/config.js';
-import { getInventoryTotal } from '../systems/crop-system.js';
+import { getInventoryTotal } from '../utils/helpers.js';
 import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
 import { getBuildingEffect } from '../systems/building-system.js';
@@ -237,5 +237,3 @@ window.buyGnomeFarm = buyGnomeFarm;
 window.toggleGnomeFarm = toggleGnomeFarm;
 window.buyGnomeAnimal = buyGnomeAnimal;
 window.toggleGnomeAnimal = toggleGnomeAnimal;
-
-

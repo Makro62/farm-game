@@ -1,10 +1,9 @@
 import { S } from '../core/state.js';
 import { ANIMALS } from '../data/animals.js';
-import { getInventoryTotal } from './crop-system.js';
 import { queueSave } from '../core/save-manager.js';
 import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
-import { addXP } from '../utils/helpers.js';
+import { addXP, isInventoryFull, renderIfNeeded } from '../utils/helpers.js';
 import { getBuildingEffect } from './building-system.js';
 
 /**
@@ -136,15 +135,6 @@ export function collectAnimalProduct(id) {
 }
 
 /**
- * Check if inventory is at capacity
- * @returns {boolean} true if inventory is full
- */
-function isInventoryFull() {
-    const currentCap = S.inventoryCapacity || 50;
-    return getInventoryTotal() >= currentCap;
-}
-
-/**
  * Process animal loop (production and movement)
  * @returns {boolean} true if animals changed
  */
@@ -173,15 +163,6 @@ export function processAnimalLoop() {
     }
     
     return animalChanged;
-}
-
-/**
- * Render UI if render function is available
- */
-function renderIfNeeded() {
-    if (typeof window.render === 'function') {
-        window.render();
-    }
 }
 
 // Export to window for backward compatibility

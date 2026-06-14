@@ -1,20 +1,10 @@
 import { S, GameState } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
-import { CONFIG } from '../data/config.js';
 import { queueSave } from '../core/save-manager.js';
 import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
-import { addXP, checkAchievements } from '../utils/helpers.js';
+import { addXP, checkAchievements, isInventoryFull, getInventoryTotal, renderIfNeeded } from '../utils/helpers.js';
 import { getBuildingEffect } from './building-system.js';
-
-/**
- * Check if inventory is at capacity
- * @returns {boolean} true if inventory is full
- */
-function isInventoryFull() {
-    const currentCap = getBuildingEffect('silo') || CONFIG.DEFAULT_INVENTORY_CAPACITY;
-    return getInventoryTotal() >= currentCap;
-}
 
 /**
  * Handle plot click actions
@@ -177,15 +167,6 @@ function harvestCrop(plot, index) {
 }
 
 /**
- * Render UI if render function is available
- */
-function renderIfNeeded() {
-    if (typeof window.render === 'function') {
-        window.render();
-    }
-}
-
-/**
  * Buy seeds from shop
  * @param {string} key - Crop key
  */
@@ -217,13 +198,4 @@ export function buySeed(key) {
     
     renderIfNeeded();
     queueSave();
-}
-
-/**
- * Get total items in inventory
- * @returns {number} Total inventory count
- */
-export function getInventoryTotal() {
-    if (!S.inventory) return 0;
-    return Object.values(S.inventory).reduce((sum, qty) => sum + qty, 0);
 }

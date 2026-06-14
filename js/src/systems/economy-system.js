@@ -5,8 +5,7 @@ import { DECORATIONS } from '../data/items.js';
 import { queueSave } from '../core/save-manager.js';
 import { AudioManager } from '../managers/audio-manager.js';
 import { NotificationManager } from '../managers/notification-manager.js';
-import { addXP } from '../utils/helpers.js';
-import { getInventoryTotal } from './crop-system.js';
+import { addXP, getInventoryTotal } from '../utils/helpers.js';
 
 export function buyBooster(type) {
     const cost = type === 'growth' ? 50 : 100;

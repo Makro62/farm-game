@@ -1,6 +1,6 @@
 import { S } from '../core/state.js';
 import { CROPS } from '../data/crops.js';
-import { getInventoryTotal } from '../systems/crop-system.js';
+import { getInventoryTotal } from '../utils/helpers.js';
 import { fulfillOrder } from '../systems/quest-system.js';
 import { getBuildingEffect } from '../systems/building-system.js';
 import { CRAFTING_RECIPES } from '../data/crafting.js';
@@ -92,12 +92,4 @@ export function renderOrders() {
         card.appendChild(btn);
         el.appendChild(card);
     });
-
-    // Gnome courier
-    if (S.gnomeActive) {
-        const gnome = document.createElement('div');
-        gnome.style.cssText = 'position: relative; flex: 0 0 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); animation: bounceGlow 2s infinite; pointer-events: none;';
-        gnome.innerHTML = '🧑‍💼<div class="text-muted-sm" style="font-weight:bold; color:white; background:rgba(0,0,0,0.5); border-radius:4px; padding:2px; text-align:center;">Kurir</div>';
-        el.appendChild(gnome);
-    }
 }
