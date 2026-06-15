@@ -9,19 +9,16 @@ import toast from 'react-hot-toast';
 export default function TabAnimal() {
   const animals = useGameStore(state => state.animals);
   const collectAnimal = useGameStore(state => state.collectAnimal);
-  const moveAnimal = useGameStore(state => state.moveAnimal);
+  const swapAnimals = useGameStore(state => state.swapAnimals);
   const openPrompt = useGameStore(state => state.openPrompt);
   const openConfirm = useGameStore(state => state.openConfirm);
   const buyMultipleAnimals = useGameStore(state => state.buyMultipleAnimals);
   const workers = useGameStore(state => state.workers);
   const hireWorker = useGameStore(state => state.hireWorker);
 
-  const workers = useGameStore(state => state.workers);
-  const hireWorker = useGameStore(state => state.hireWorker);
-
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [autoFarm, setAutoFarm] = useState(false);
-  const animalRef = useRef(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -158,41 +155,64 @@ export default function TabAnimal() {
                <div className="font-bold text-lg flex items-center gap-2 text-green-900">
                  <span>🐔</span> Area Peternakan
                </div>
-               <button 
-                onClick={handleToggleAuto}
-                className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFarm ? 'bg-blue-500 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
-              >
-                🧑‍🍳 Auto: {autoFarm ? 'ON' : 'OFF'}
-              </button>
+               <div className="flex gap-2">
+                 <button 
+                  onClick={() => setIsEditMode(!isEditMode)}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${isEditMode ? 'bg-yellow-400 text-yellow-900 border-yellow-500 animate-pulse' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+                 >
+                  {isEditMode ? '💾 Selesai Edit' : '✏️ Edit Layout'}
+                 </button>
+                 <button 
+                  onClick={handleToggleAuto}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFarm ? 'bg-blue-500 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+                 >
+                  🧑‍🍳 Auto: {autoFarm ? 'ON' : 'OFF'}
+                 </button>
+               </div>
             </div>
 
-            <div ref={animalRef} className="bg-[#4caf50] p-4 sm:p-6 rounded-3xl shadow-inner border-8 border-[#2e7d32] relative min-h-[500px]">
+            <div className={`bg-[#4caf50] p-4 sm:p-6 rounded-3xl shadow-inner border-8 border-[#2e7d32] relative min-h-[400px] transition-all ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}>
               <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '15px 15px' }}></div>
-              <div className="relative w-full h-full z-10 min-h-[450px]">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 relative z-10">
                 {animals.map((animal, i) => {
                   const animalData = SHOP_ANIMALS.find(a => a.id === animal.type);
                   const progress = Math.min(100, ((currentTime - animal.lastCollected) / animal.produceTime) * 100);
                   const isReady = progress >= 100;
-                  
-                  const aX = animal.x ?? ((i % 4) * 80 + 10);
-                  const aY = animal.y ?? (Math.floor(i / 4) * 80 + 10);
-
                   return (
                     <motion.button
                       key={animal.id}
-                      drag
-                      dragMomentum={false}
-                      dragConstraints={animalRef}
-                      onDragEnd={(e, info) => moveAnimal(animal.id, aX + info.offset.x, aY + info.offset.y)}
-                      animate={{ x: aX, y: aY }}
-                      style={{ position: 'absolute' }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      layout
+                      draggable={isEditMode}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('animalId', animal.id);
+                        e.currentTarget.style.opacity = '0.5';
+                      }}
+                      onDragEnd={(e) => {
+                        e.currentTarget.style.opacity = '1';
+                      }}
+                      onDragOver={(e) => {
+                        if (isEditMode) e.preventDefault();
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (isEditMode) {
+                          const draggedId = e.dataTransfer.getData('animalId');
+                          if (draggedId && draggedId !== animal.id.toString()) {
+                            swapAnimals(draggedId, animal.id);
+                          }
+                        }
+                      }}
+                      whileHover={!isEditMode ? { scale: 1.05 } : {}}
+                      whileTap={!isEditMode ? { scale: 0.95 } : {}}
                       onClick={(e) => {
-                        if (e.defaultPrevented) return;
+                        if (isEditMode) {
+                          e.preventDefault();
+                          return;
+                        }
                         handleCollect(animal);
                       }}
-                      className={`w-[70px] h-[70px] sm:w-[80px] sm:h-[80px] rounded-2xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md bg-white/20 backdrop-blur-sm border-2
+                      className={`aspect-square w-full rounded-2xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md bg-white/20 backdrop-blur-sm border-2
+                        ${isEditMode ? 'cursor-grab hover:ring-4 ring-yellow-400' : ''}
                         ${isReady ? 'border-yellow-300 ring-4 ring-yellow-400/50 bg-white/40' : 'border-white/30 hover:bg-white/30'}
                       `}
                     >

@@ -11,7 +11,7 @@ export default function TabFarm() {
   const inventory = useGameStore(state => state.inventory);
   const plant = useGameStore(state => state.plant);
   const harvest = useGameStore(state => state.harvest);
-  const movePlot = useGameStore(state => state.movePlot);
+  const swapPlots = useGameStore(state => state.swapPlots);
   const addCoins = useGameStore(state => state.addCoins);
   const openPrompt = useGameStore(state => state.openPrompt);
   const openConfirm = useGameStore(state => state.openConfirm);
@@ -32,7 +32,7 @@ export default function TabFarm() {
   const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [autoFarm, setAutoFarm] = useState(false);
-  const farmRef = useRef(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -331,12 +331,6 @@ export default function TabFarm() {
                   <span className="text-xs text-gray-400 ml-2 font-mono">{weather.nextChangeIn}s</span>
                 </div>
               </div>
-              <button 
-                onClick={handleToggleAuto}
-                className={`px-4 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFarm ? 'bg-blue-500 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
-              >
-                🧙‍♂️ Auto: {autoFarm ? 'ON' : 'OFF'}
-              </button>
               <div className="flex gap-2">
                 <button onClick={handleClaimDaily} className="bg-gradient-to-r from-pink-400 to-rose-400 text-white px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm hover:scale-105 transition-transform">🎁 Daily</button>
                 <button onClick={handleSave} className="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm hover:bg-gray-300">💾 Save</button>
@@ -344,9 +338,29 @@ export default function TabFarm() {
               </div>
             </div>
 
-            <div ref={farmRef} className="bg-[#8b5a2b] p-4 sm:p-6 rounded-3xl shadow-inner border-8 border-[#6b4226] relative overflow-hidden mb-6 min-h-[500px]">
+            <div className="flex justify-between items-center mb-4">
+               <div className="font-bold text-lg flex items-center gap-2 text-green-900">
+                 <span>🌾</span> Area Pertanian
+               </div>
+               <div className="flex gap-2">
+                 <button 
+                  onClick={() => setIsEditMode(!isEditMode)}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${isEditMode ? 'bg-yellow-400 text-yellow-900 border-yellow-500 animate-pulse' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+                 >
+                  {isEditMode ? '💾 Selesai Edit' : '✏️ Edit Layout'}
+                 </button>
+                 <button 
+                  onClick={handleToggleAuto}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFarm ? 'bg-green-500 text-white border-green-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+                 >
+                  🧙‍♂️ Auto: {autoFarm ? 'ON' : 'OFF'}
+                 </button>
+               </div>
+            </div>
+
+            <div className={`bg-[#8b5a2b] p-4 sm:p-6 rounded-3xl shadow-inner border-8 border-[#6b4226] relative overflow-hidden mb-6 transition-all ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}>
               <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-              <div className="relative w-full h-full z-10 min-h-[450px]">
+              <div className="grid grid-cols-4 gap-2 sm:gap-4 relative z-10">
                 {plots.map((plot, i) => {
                   const isGrowing = plot.status === 'growing';
                   let progress = 0;
@@ -358,27 +372,41 @@ export default function TabFarm() {
                     isReady = true;
                     progress = 100;
                   }
-                  
-                  const pX = plot.x ?? ((i % 4) * 80 + 10);
-                  const pY = plot.y ?? (Math.floor(i / 4) * 80 + 10);
-
                   return (
                     <motion.button
                       key={plot.id}
-                      drag
-                      dragMomentum={false}
-                      dragConstraints={farmRef}
-                      onDragEnd={(e, info) => movePlot(plot.id, pX + info.offset.x, pY + info.offset.y)}
-                      animate={{ x: pX, y: pY }}
-                      style={{ position: 'absolute' }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      layout
+                      draggable={isEditMode}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('plotId', plot.id);
+                        e.currentTarget.style.opacity = '0.5';
+                      }}
+                      onDragEnd={(e) => {
+                        e.currentTarget.style.opacity = '1';
+                      }}
+                      onDragOver={(e) => {
+                        if (isEditMode) e.preventDefault();
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (isEditMode) {
+                          const draggedId = e.dataTransfer.getData('plotId');
+                          if (draggedId && draggedId !== plot.id.toString()) {
+                            swapPlots(parseInt(draggedId, 10), plot.id);
+                          }
+                        }
+                      }}
+                      whileHover={!isEditMode ? { scale: 1.05 } : {}}
+                      whileTap={!isEditMode ? { scale: 0.95 } : {}}
                       onClick={(e) => {
-                        // Prevent click if we are dragging
-                        if (e.defaultPrevented) return;
+                        if (isEditMode) {
+                          e.preventDefault();
+                          return;
+                        }
                         handlePlotClick(plot);
                       }}
-                      className={`w-[70px] h-[70px] sm:w-[80px] sm:h-[80px] rounded-xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md
+                      className={`aspect-square w-full rounded-xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md
+                        ${isEditMode ? 'cursor-grab hover:ring-4 ring-yellow-400' : ''}
                         ${plot.status === 'empty' ? 'bg-[#a06a38] border-b-4 border-[#7a4e28] hover:bg-[#b07843]' : ''}
                         ${isGrowing && !isReady ? 'bg-[#5c4033] border-b-4 border-[#3e2b22]' : ''}
                         ${isReady ? 'bg-[#7c5836] border-b-4 border-[#5a4027] animate-glow ring-2 ring-yellow-400 z-10' : ''}

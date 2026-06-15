@@ -19,9 +19,7 @@ const initialState = {
     status: 'empty',
     crop: null,
     plantedAt: null,
-    growTime: null,
-    x: (i % 4) * 80 + 10,
-    y: Math.floor(i / 4) * 80 + 10
+    growTime: null
   })),
   
   // Inventory
@@ -266,9 +264,7 @@ export const useGameStore = create(
                   status: 'empty',
                   crop: null,
                   plantedAt: null,
-                  growTime: null,
-                  x: p.x,
-                  y: p.y
+                  growTime: null
                 }
               : p
           ),
@@ -314,12 +310,18 @@ export const useGameStore = create(
         }));
       },
       
-      movePlot: (plotId, x, y) => {
-        set((state) => ({
-          plots: state.plots.map(p =>
-            p.id === plotId ? { ...p, x, y } : p
-          )
-        }));
+      swapPlots: (id1, id2) => {
+        set((state) => {
+          const newPlots = [...state.plots];
+          const idx1 = newPlots.findIndex(p => p.id === id1);
+          const idx2 = newPlots.findIndex(p => p.id === id2);
+          if (idx1 !== -1 && idx2 !== -1) {
+            const temp = newPlots[idx1];
+            newPlots[idx1] = newPlots[idx2];
+            newPlots[idx2] = temp;
+          }
+          return { plots: newPlots };
+        });
       },
       
       // ===== INVENTORY =====
@@ -362,9 +364,7 @@ export const useGameStore = create(
               type: animalType,
               status: 'producing',
               lastCollected: Date.now(),
-              produceTime,
-              x: Math.random() * 200 + 20,
-              y: Math.random() * 200 + 20
+              produceTime
             }
           ]
         }));
@@ -393,12 +393,18 @@ export const useGameStore = create(
         return true;
       },
       
-      moveAnimal: (animalId, x, y) => {
-        set((state) => ({
-          animals: state.animals.map(a =>
-            a.id === animalId ? { ...a, x, y } : a
-          )
-        }));
+      swapAnimals: (id1, id2) => {
+        set((state) => {
+          const newAnimals = [...state.animals];
+          const idx1 = newAnimals.findIndex(a => a.id === id1);
+          const idx2 = newAnimals.findIndex(a => a.id === id2);
+          if (idx1 !== -1 && idx2 !== -1) {
+            const temp = newAnimals[idx1];
+            newAnimals[idx1] = newAnimals[idx2];
+            newAnimals[idx2] = temp;
+          }
+          return { animals: newAnimals };
+        });
       },
       
       // ===== STREAK SYSTEM =====
