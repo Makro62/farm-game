@@ -1,0 +1,21 @@
+{
+  "name": "Farm Tycoon",
+  "short_name": "Farm Tycoon",
+  "description": "Game bertani yang seru!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#dcf0dc",
+  "theme_color": "#3d8b3d",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

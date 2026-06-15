@@ -2,111 +2,74 @@
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)
+![Stack](https://img.shields.io/badge/Next.js-14+-black?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)
 
-Selamat datang di **Farm Tycoon**, sebuah web-game interaktif dan responsif di mana Anda dapat membangun dan mengelola perkebunan impian Anda langsung dari browser! Dibangun sepenuhnya dengan HTML, CSS, dan JavaScript murni (Vanilla ES Modules) — tanpa framework atau proses build.
+Selamat datang di **Farm Tycoon**, sebuah web-game interaktif dan responsif di mana Anda dapat membangun dan mengelola perkebunan impian Anda langsung dari browser! 
 
-## 📸 Screenshots
+Versi terbaru ini telah **dimigrasikan secara penuh ke ekosistem Next.js modern** untuk menghadirkan performa tingkat produksi, reaktivitas waktu nyata, dan struktur kode kelas _Enterprise_.
 
-_(Tambahkan screenshot gameplay di sini, misalnya `![Gameplay](img/screenshot-farm.png)`)_
+## 🌟 Tech Stack Baru (Fase Migrasi)
 
-## 🌐 Live Demo
-
-Coba mainkan langsung: [▶️ Main Sekarang](https://makro62.github.io/farm-game)
+Proyek ini telah bertransformasi dari sekadar Vanilla JS/HTML menjadi aplikasi React mutakhir dengan tumpukan teknologi berikut:
+- **Next.js 14+** — Framerwork React untuk optimasi performa dan *Fast Refresh*.
+- **TypeScript** — *Static typing* secara menyeluruh (End-to-End) untuk mengeleminasi _bug_ tersembunyi.
+- **Zustand** — Sistem manajemen *State* yang ringan dan sangat reaktif (menggantikan *mutable global state* lama).
+- **Tailwind CSS** — *Utility-first styling* untuk antarmuka yang sangat responsif, membuang belasan file CSS monolitik.
+- **Framer Motion** — Animasi deklaratif yang _smooth_ dengan 60fps.
 
 ## 🕹️ Tata Letak (3 Tab)
 
-Game dibagi menjadi tiga area yang dapat dipindah lewat tab di atas:
+Game dibagi menjadi tiga area yang dapat dipindah lewat tab navigasi:
 
 - **🌾 Pertanian** — kebun, shop bibit, pekerja kebun, papan pesanan, inventory, quest, dan dapur olahan tanaman.
 - **🐔 Peternakan** — beli & pelihara hewan, pekerja peternak, serta dapur olahan hasil ternak.
 - **🏘️ Kota & Fitur** — danau pemancingan, dapur masakan ikan, dekorasi, bangunan, booster, Pedagang Kota, dan achievements.
 
-## 🌟 Fitur Utama
+## 🚀 Fitur Unggulan
 
-- **Sistem Pertanian Real-Time**: Tanam berbagai bibit (Wortel, Jagung, Tomat, Stroberi, Nanas, Labu Emas), siram untuk mempercepat tumbuh, lalu panen saat siap.
-- **Beli Bibit dalam Jumlah Banyak**: Klik bibit di shop untuk membuka **box input jumlah**, lalu beli sekaligus dalam satu klik.
-- **Hewan Ternak**: Beli Ayam, Sapi, dan Lebah Madu yang berkeliaran di lahan dan menghasilkan **Telur, Susu, serta Madu** yang **masuk ke gudang** — siap dijual atau diolah.
-- **Peternakan Ikan & Masakan Laut**: Tebar bibit ikan (Nila, Lele, Mas) di danau, panen hasilnya ke gudang, lalu masak menjadi **Sushi, Ikan Bakar, dan Sashimi** di Dapur Ikan.
-- **Dapur Produksi (Crafting)**: Tiga dapur terpisah — olahan **tanaman** (Sup, Tepung), olahan **ternak** (Keju, Kue, Pie), dan **masakan ikan** — dengan antrian produksi.
-- **Pekerja Otomatis (Auto)**:
-  - 🧙‍♂️ **Kurcaci Petani** — panen, tanam ulang, dan kirim pesanan otomatis.
-  - 🧑‍🍳 **Kurcaci Peternak** — kumpulkan hasil ternak otomatis ke gudang.
-  - 🧑‍💼 **Pedagang Kota** — otomatis menjual seluruh hasil panen saat gudang hampir penuh agar tidak terbuang.
-  - Setiap pekerja menampilkan **status (sudah dimiliki / belum)** dan tombol Aktif/Istirahat, serta **berpatroli mengelilingi area**.
-- **Papan Pesanan (Order Board)**: Penuhi pesanan untuk hadiah Koin & XP ganda.
-- **Bangunan**: Tingkatkan Silo, Kandang, Menara Air, Rumah Kaca, dan Kincir Angin untuk memperluas kapasitas dan mempercepat produksi.
-- **Quest Harian per Tempat**: Setiap area punya quest sendiri — Kebun, Peternakan, Dapur, Danau, dan Kota.
-- **Siklus Cuaca Dinamis**: Cuaca acak (Cerah, Berawan, Hujan, Badai, Berangin) lengkap dengan efek hujan.
-- **Dekorasi & Prestige**: Hias kebun untuk menambah Prestige dan bonus harga jual.
-- **Level, XP, & Achievement**: Naik level untuk membuka konten baru dan raih trofi prestasi.
-- **Auto-Save Aman**: Progres tersimpan otomatis di LocalStorage dengan verifikasi hash SHA-256 anti-manipulasi.
+- **Sistem Pertanian Real-Time**: Tanam berbagai bibit, siram untuk mempercepat tumbuh, lalu panen saat siap. Seluruh status tersinkronisasi lewat _Zustand Store_.
+- **Hewan Ternak & Perikanan**: Pelihara sapi, ayam, dan ikan. Produk akan terakumulasi otomatis ke dalam gudang (Inventory).
+- **Pekerja Otomatis (Auto)**: Sistem Kurcaci dan Pedagang Kota yang bekerja otomatis mengumpulkan produk saat Anda AFK.
+- **Siklus Cuaca Dinamis**: Efek visual hujan, salju, dan badai yang memengaruhi kecepatan tumbuh tanaman.
+- **Auto-Save Fleksibel**: Progres tersimpan secara periodik dan diam-diam _(silent save)_ di LocalStorage berkat _Zustand Persist Middleware_.
 
-## 🚀 Cara Menjalankan Game
+## ⚙️ Cara Menjalankan Server Development
 
-Karena game menggunakan **ES Modules**, file harus disajikan lewat HTTP (bukan dibuka langsung via `file://`).
+Karena menggunakan **Next.js**, Anda harus menjalankan server node:
 
-1. **Clone/Download** repositori ini.
-2. Jalankan server statis sederhana dari folder proyek, contoh:
+1. **Install Dependencies**
+   Pastikan Anda sudah menginstal NodeJS, lalu jalankan di root folder:
    ```bash
-   python3 -m http.server 8000
+   npm install
    ```
-   atau
+
+2. **Jalankan Server Development**
    ```bash
-   npx serve .
+   npm run dev
    ```
-   _Atau gunakan ekstensi Live Server di VSCode._
-3. Buka `http://localhost:8000` di browser (Chrome, Safari, Firefox).
-4. Mulailah bertani! Progres Anda tersimpan otomatis.
 
-## ⌨️ Pintasan Keyboard
+3. Buka **`http://localhost:3000`** di browser kesayangan Anda.
 
-- `1` – `6`: Pilih bibit (Wortel … Labu).
-- `S`: Simpan game secara manual.
-- `D`: Klaim hadiah harian.
-- `Esc`: Tutup modal/dialog.
+## 🗂️ Struktur Proyek Modern
 
-## 🌐 Kompatibilitas Browser
-
-| Browser | Versi Minimum | Status            |
-| ------- | :-----------: | ----------------- |
-| Chrome  |      90+      | ✅ Full Support   |
-| Firefox |      88+      | ✅ Full Support   |
-| Safari  |      14+      | ✅ Full Support   |
-| Edge    |      90+      | ✅ Full Support   |
-| IE      |     Semua     | ❌ Tidak didukung |
-
-> **Catatan:** Harus dijalankan via HTTP server, bukan `file://`.
-
-## 🗂️ Struktur Proyek
-
-Kode disusun modular agar mudah dirawat:
+Kode kini disusun sangat modular berdasarkan kaidah React/Next.js terbaru:
 
 ```
 farm-game/
-├── index.html              # Markup & struktur UI (3 tab)
-├── css/style.css           # Styling, animasi, skala font, layout responsif
-└── js/src/
-    ├── main.js             # Entry point: inisialisasi & binding window
-    ├── core/               # state, game-engine (loop), save-manager, security
-    ├── data/               # crops, animals, fishes, buildings, crafting, items, config
-    ├── managers/           # AudioManager, UIManager, NotificationManager
-    ├── systems/            # crop, animal, fish, economy, quest, gnome, weather, building, crafting
-    ├── ui/                 # core, shop, farm, inventory, building, crafting
-    └── utils/              # Helper (addXP, achievements, inventory)
+├── src/
+│   ├── app/                    # Next.js App Router (layout & entry pages)
+│   ├── components/             # React Client Components (FarmGrid, TopBar, AnimalPen)
+│   ├── store/                  # Zustand global stores (gameStore.ts, farmStore.ts)
+│   ├── types/                  # Definisi antarmuka TypeScript (.ts)
+│   ├── hooks/                  # Custom React hooks (useGameLoop.ts)
+│   ├── styles/                 # Tailwind global configurations (globals.css)
+│   └── lib/                    # Fungsi murni utilitas (utils.ts)
+├── public/                     # Aset gambar dan efek suara
+├── tailwind.config.js          # Konfigurasi utility Tailwind
+├── next.config.js              # Pengaturan Next.js engine
+└── package.json                # Daftar dependensi aplikasi
 ```
-
-### Catatan Arsitektur
-
-- **`data/items.js`** menyediakan `PRODUCTS` (hasil ternak/ikan yang dapat disimpan) dan helper terpusat `getItemData()` untuk resolusi nama/emoji/harga setiap item inventory (bibit, produk mentah, maupun hasil olahan).
-- Hasil ternak & ikan kini **masuk ke inventory** menggunakan key tipe hewan/ikan, sehingga dapat langsung dipakai sebagai bahan di dapur produksi.
-
-## 🛠️ Teknologi yang Digunakan
-
-- **HTML5** — struktur dan antarmuka.
-- **CSS3** — styling, efek cuaca/partikel, Flexbox & Grid, skala tipografi konsisten.
-- **JavaScript (ES6 Modules)** — game loop, state management, dan logika sistem.
-- **Web Audio API** — efek suara prosedural.
-- **Web Crypto API (SHA-256)** — keamanan data save.
 
 ## 🐛 Laporkan Bug
 
@@ -116,23 +79,4 @@ Menemukan bug atau punya saran fitur? [Silakan buka Issue baru](https://github.c
 
 Bantuan Anda sangat dihargai! Silakan baca [Panduan Kontribusi (CONTRIBUTING.md)](CONTRIBUTING.md) sebelum memulai.
 
-## 📝 Perubahan Terbaru
-
-### Update Fitur & Konsistensi UI
-
-- **Tipografi konsisten**: skala ukuran font terpusat (`--fs-*`) + kelas kartu (`.ui-card-*`) menggantikan ukuran inline yang tidak seragam.
-- **Status pekerja**: tombol pekerja menampilkan badge "✅ Dimiliki" alih-alih hilang saat dibeli.
-- **Patroli pekerja**: animasi `gnomePatrol` membuat pekerja mengelilingi area (atas–kanan–bawah–kiri), bukan sekadar geser kiri-kanan.
-- **Dapur peternakan berfungsi**: hasil ternak masuk gudang sehingga Keju/Kue/Pie bisa diproduksi.
-- **Beli banyak sekaligus**: box input jumlah (modal) untuk membeli bibit.
-- **Pekerja Kota (Pedagang)**: auto-jual hasil panen saat gudang hampir penuh.
-- **Masakan ikan**: resep Sushi, Ikan Bakar, dan Sashimi di Dapur Ikan.
-- **Quest harian per tempat**: Kebun, Peternakan, Dapur, Danau, dan Kota.
-
-### Refactoring Sebelumnya
-
-- `crop-system.js` & `animal-system.js` dipecah menjadi fungsi kecil ber-single-responsibility dengan dokumentasi JSDoc.
-- `config.js` menambahkan `DEFAULT_INVENTORY_CAPACITY` untuk menghindari magic number.
-- Prinsip yang diterapkan: **SRP**, **DRY**, **KISS**, **Clean Code**, dan **Separation of Concerns**.
-
-Selamat bersenang-senang dan jadilah petani terkaya testing ! 🌻💰
+Selamat bersenang-senang dan jadilah petani terkaya di dunia Next.js! 🌻💰
