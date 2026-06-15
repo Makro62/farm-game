@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
 import { getAnimalEmoji, SHOP_ANIMALS } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -9,19 +9,26 @@ import toast from 'react-hot-toast';
 export default function TabAnimal() {
   const animals = useGameStore(state => state.animals);
   const collectAnimal = useGameStore(state => state.collectAnimal);
+  const moveAnimal = useGameStore(state => state.moveAnimal);
   const openPrompt = useGameStore(state => state.openPrompt);
   const openConfirm = useGameStore(state => state.openConfirm);
   const buyMultipleAnimals = useGameStore(state => state.buyMultipleAnimals);
   const workers = useGameStore(state => state.workers);
   const hireWorker = useGameStore(state => state.hireWorker);
 
+  const workers = useGameStore(state => state.workers);
+  const hireWorker = useGameStore(state => state.hireWorker);
+
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [autoFarm, setAutoFarm] = useState(false);
-
+  const animalRef = useRef(null);
+  
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+
 
   // Auto-collect: ambil hasil ternak yang siap (butuh Kurcaci Peternak).
   useEffect(() => {
@@ -159,20 +166,33 @@ export default function TabAnimal() {
               </button>
             </div>
 
-            <div className="bg-[#4caf50] p-4 sm:p-6 rounded-3xl shadow-inner border-8 border-[#2e7d32] relative min-h-[400px]">
+            <div ref={animalRef} className="bg-[#4caf50] p-4 sm:p-6 rounded-3xl shadow-inner border-8 border-[#2e7d32] relative min-h-[500px]">
               <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '15px 15px' }}></div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 relative z-10">
-                {animals.map((animal) => {
+              <div className="relative w-full h-full z-10 min-h-[450px]">
+                {animals.map((animal, i) => {
                   const animalData = SHOP_ANIMALS.find(a => a.id === animal.type);
                   const progress = Math.min(100, ((currentTime - animal.lastCollected) / animal.produceTime) * 100);
                   const isReady = progress >= 100;
+                  
+                  const aX = animal.x ?? ((i % 4) * 80 + 10);
+                  const aY = animal.y ?? (Math.floor(i / 4) * 80 + 10);
+
                   return (
                     <motion.button
                       key={animal.id}
+                      drag
+                      dragMomentum={false}
+                      dragConstraints={animalRef}
+                      onDragEnd={(e, info) => moveAnimal(animal.id, aX + info.offset.x, aY + info.offset.y)}
+                      animate={{ x: aX, y: aY }}
+                      style={{ position: 'absolute' }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => handleCollect(animal)}
-                      className={`aspect-square rounded-2xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md bg-white/20 backdrop-blur-sm border-2
+                      onClick={(e) => {
+                        if (e.defaultPrevented) return;
+                        handleCollect(animal);
+                      }}
+                      className={`w-[70px] h-[70px] sm:w-[80px] sm:h-[80px] rounded-2xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md bg-white/20 backdrop-blur-sm border-2
                         ${isReady ? 'border-yellow-300 ring-4 ring-yellow-400/50 bg-white/40' : 'border-white/30 hover:bg-white/30'}
                       `}
                     >
@@ -201,28 +221,10 @@ export default function TabAnimal() {
         <div className="lg:col-span-1 space-y-4">
           <div className="glass-panel p-4 h-full">
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-amber-200 pb-2 text-amber-900">
-              <span>🍳</span> Dapur Produksi (Peternakan)
+              <span>🍳</span> Dapur Produksi
             </div>
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 min-h-[120px] flex items-center justify-center mb-4">
-              <span className="text-amber-400 text-sm font-medium italic">Antrean masak kosong.</span>
-            </div>
-            
-            {/* Recipes Placeholder */}
-            <div className="space-y-2">
-              <div className="bg-white border border-gray-100 p-2 rounded-lg flex items-center justify-between opacity-50">
-                <div className="flex items-center gap-2">
-                   <span className="text-xl">🧀</span>
-                   <span className="text-sm font-bold">Keju</span>
-                </div>
-                <span className="text-xs">2 🥛</span>
-              </div>
-              <div className="bg-white border border-gray-100 p-2 rounded-lg flex items-center justify-between opacity-50">
-                <div className="flex items-center gap-2">
-                   <span className="text-xl">🧥</span>
-                   <span className="text-sm font-bold">Jaket Bulu</span>
-                </div>
-                <span className="text-xs">3 🧶</span>
-              </div>
+            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 min-h-[80px] flex items-center justify-center mb-4">
+              <span className="text-amber-400 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
             </div>
 
           </div>

@@ -59,10 +59,15 @@ export function formatRelativeTime(timestamp) {
 }
 
 export const SHOP_SEEDS = [
-  { id: 'bibit_wortel', cropId: 'wortel', name: 'Bibit Wortel', price: 10, time: 15 },
-  { id: 'bibit_jagung', cropId: 'jagung', name: 'Bibit Jagung', price: 20, time: 30 },
-  { id: 'bibit_tomat', cropId: 'tomat', name: 'Bibit Tomat', price: 35, time: 60 },
-  { id: 'bibit_stroberi', cropId: 'stroberi', name: 'Bibit Stroberi', price: 75, time: 120 },
+  { id: 'bibit_wortel', cropId: 'wortel', name: 'Bibit Wortel', price: 10, time: 15, season: 'all' },
+  { id: 'bibit_jagung', cropId: 'jagung', name: 'Bibit Jagung', price: 20, time: 30, season: 'all' },
+  { id: 'bibit_tomat', cropId: 'tomat', name: 'Bibit Tomat', price: 35, time: 60, season: 'all' },
+  { id: 'bibit_stroberi', cropId: 'stroberi', name: 'Bibit Stroberi', price: 75, time: 120, season: 'all' },
+  // Bibit Musiman
+  { id: 'bibit_tulip', cropId: 'tulip', name: 'Bibit Tulip', price: 200, time: 200, season: 'spring' },
+  { id: 'bibit_semangka', cropId: 'semangka', name: 'Bibit Semangka', price: 120, time: 150, season: 'summer' },
+  { id: 'bibit_apel', cropId: 'apel', name: 'Bibit Apel', price: 150, time: 240, season: 'autumn' },
+  { id: 'bibit_jamur', cropId: 'jamur', name: 'Spora Jamur', price: 500, time: 300, season: 'winter' },
 ];
 
 export const SHOP_ANIMALS = [
@@ -75,10 +80,10 @@ export const SHOP_ANIMALS = [
 ];
 
 /**
- * Get crop emoji
+ * Get item emoji (handles crops, seeds, animal products, fishes, and minerals)
  */
-export function getCropEmoji(crop) {
-  if (crop.startsWith('bibit_')) return '🌱';
+export function getCropEmoji(itemId) {
+  if (itemId.startsWith('bibit_')) return '🌱';
   
   const emojis = {
     wortel: '🥕',
@@ -88,10 +93,48 @@ export function getCropEmoji(crop) {
     nanas: '🍍',
     labu: '🎃',
     kentang: '🥔',
-    gandum: '🌾'
+    gandum: '🌾',
+    tulip: '🌷',
+    semangka: '🍉',
+    apel: '🍎',
+    jamur: '🍄'
   };
-  return emojis[crop] || '🌱';
+  
+  if (emojis[itemId]) return emojis[itemId];
+  
+  const animal = SHOP_ANIMALS.find(a => a.product === itemId);
+  if (animal) return animal.productEmoji;
+  
+  const fish = FISHES.find(f => f.id === itemId);
+  if (fish) return fish.emoji;
+  
+  const mineral = MINERALS.find(m => m.id === itemId);
+  if (mineral) return mineral.emoji;
+  
+  return '📦';
 }
+
+export const FISHES = [
+  { id: 'ikan_mas', name: 'Ikan Mas', emoji: '🐟', priceNormal: 80, priceBig: 160, chance: 0.4 },
+  { id: 'lele', name: 'Lele', emoji: '🐠', priceNormal: 100, priceBig: 200, chance: 0.3 },
+  { id: 'ikan_badut', name: 'Ikan Badut', emoji: '🐡', priceNormal: 200, priceBig: 400, chance: 0.15 },
+  { id: 'cumi', name: 'Cumi-cumi', emoji: '🦑', priceNormal: 350, priceBig: 700, chance: 0.1 },
+  { id: 'gurita', name: 'Gurita Emas', emoji: '🐙', priceNormal: 2000, priceBig: 4000, chance: 0.05 },
+];
+
+export const MINERALS = [
+  { id: 'batu', name: 'Batu', emoji: '🪨', price: 5, chance: 0.8 },
+  { id: 'tembaga', name: 'Tembaga', emoji: '🔶', price: 30, chance: 0.5 },
+  { id: 'besi', name: 'Besi', emoji: '⚫', price: 80, chance: 0.3 },
+  { id: 'emas', name: 'Emas', emoji: '🟡', price: 300, chance: 0.15 },
+  { id: 'berlian', name: 'Berlian', emoji: '💎', price: 1000, chance: 0.05 },
+];
+
+export const NPC_LIST = [
+  { id: 'maria', name: 'Chef Maria', role: 'Koki Kota', emoji: '👩‍🍳', likes: ['tomat', 'wortel', 'susu'], maxLevel: 5 },
+  { id: 'botan', name: 'Pak Tua Botan', role: 'Ahli Tani', emoji: '🧙‍♂️', likes: ['tulip', 'semangka', 'apel'], maxLevel: 5 },
+  { id: 'hadi', name: 'Paman Hadi', role: 'Peternak', emoji: '🐮', likes: ['jagung', 'gandum'], maxLevel: 5 },
+];
 
 /**
  * Get animal emoji

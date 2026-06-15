@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
 import { getCropEmoji, formatNumber, SHOP_SEEDS, SHOP_ANIMALS } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,6 +11,7 @@ export default function TabFarm() {
   const inventory = useGameStore(state => state.inventory);
   const plant = useGameStore(state => state.plant);
   const harvest = useGameStore(state => state.harvest);
+  const movePlot = useGameStore(state => state.movePlot);
   const addCoins = useGameStore(state => state.addCoins);
   const openPrompt = useGameStore(state => state.openPrompt);
   const openConfirm = useGameStore(state => state.openConfirm);
@@ -23,10 +24,22 @@ export default function TabFarm() {
   const hireWorker = useGameStore(state => state.hireWorker);
   const checkStreak = useGameStore(state => state.checkStreak);
   const resetGame = useGameStore(state => state.resetGame);
+  const season = useGameStore(state => state.season);
+  const weather = useGameStore(state => state.weather);
+
+  const availableSeeds = SHOP_SEEDS.filter(s => s.season === 'all' || s.season === season.current);
 
   const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [autoFarm, setAutoFarm] = useState(false);
+  const farmRef = useRef(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+
 
   // Tick: perbarui waktu + sinkronkan status petak (growing -> ready)
   useEffect(() => {
@@ -37,26 +50,41 @@ export default function TabFarm() {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-farm: panen otomatis petak yang sudah siap (butuh Kurcaci Petani).
+  // Auto-farm: panen dan tanam otomatis (butuh Kurcaci Petani).
   useEffect(() => {
     if (!autoFarm || !workers.farmer) return;
     const interval = setInterval(() => {
       const state = useGameStore.getState();
       const now = Date.now();
       let harvested = 0;
+      let planted = 0;
+      
       state.plots.forEach((p) => {
+        // Harvest
         const ready =
           p.crop &&
           (p.status === 'ready' ||
             (p.status === 'growing' && p.plantedAt && now - p.plantedAt >= p.growTime));
-        if (ready && state.harvest(p.id)) harvested++;
+        if (ready && state.harvest(p.id)) {
+          harvested++;
+        } 
+        // Plant
+        else if (p.status === 'empty' && selectedInventoryItem) {
+          const seedData = SHOP_SEEDS.find(s => s.id === selectedInventoryItem);
+          if (seedData && state.inventory[selectedInventoryItem] > 0) {
+             state.removeItem(selectedInventoryItem, 1);
+             state.plant(p.id, seedData.cropId, (seedData.time * 1000) / state.growthMultiplier);
+             planted++;
+          }
+        }
       });
-      if (harvested > 0) {
-        toast.success(`🧙‍♂️ Kurcaci panen ${harvested} tanaman!`, { id: 'auto-farm' });
+      
+      if (harvested > 0 || planted > 0) {
+        toast.success(`🧙‍♂️ Kurcaci panen ${harvested} & tanam ${planted}!`, { id: 'auto-farm' });
       }
     }, 1500);
     return () => clearInterval(interval);
-  }, [autoFarm, workers.farmer]);
+  }, [autoFarm, workers.farmer, selectedInventoryItem]);
 
   const handleToggleAuto = () => {
     if (!workers.farmer) {
@@ -219,7 +247,7 @@ export default function TabFarm() {
               <span>🛒</span> Shop Bibit
             </div>
             <div className="grid grid-cols-2 gap-2 mb-6">
-              {SHOP_SEEDS.map((seed) => (
+              {availableSeeds.map((seed) => (
                 <button
                   key={`shop-${seed.id}`}
                   onClick={() => handleShopClick(seed)}
@@ -290,10 +318,18 @@ export default function TabFarm() {
           <div className="glass-panel p-4">
             
             <div className="flex flex-wrap justify-between items-center gap-2 mb-4 bg-white/50 p-2 rounded-xl border border-green-100">
-              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-gray-100">
-                <span className="text-xl">☀️</span>
-                <span className="font-bold text-sm">Cerah</span>
-                <span className="text-xs text-gray-400 ml-2 font-mono">Next: 5:00</span>
+              <div className="flex gap-2">
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-gray-100">
+                  <span className="font-bold text-sm text-pink-600 capitalize">
+                    {season.current === 'spring' ? '🌸' : season.current === 'summer' ? '☀️' : season.current === 'autumn' ? '🍂' : '❄️'} Musim {season.current} (Hari {season.day})
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-gray-100">
+                  <span className="font-bold text-sm text-blue-600">
+                    {weather.current}
+                  </span>
+                  <span className="text-xs text-gray-400 ml-2 font-mono">{weather.nextChangeIn}s</span>
+                </div>
               </div>
               <button 
                 onClick={handleToggleAuto}
@@ -308,10 +344,10 @@ export default function TabFarm() {
               </div>
             </div>
 
-            <div className="bg-[#8b5a2b] p-4 sm:p-6 rounded-3xl shadow-inner border-8 border-[#6b4226] relative overflow-hidden mb-6">
+            <div ref={farmRef} className="bg-[#8b5a2b] p-4 sm:p-6 rounded-3xl shadow-inner border-8 border-[#6b4226] relative overflow-hidden mb-6 min-h-[500px]">
               <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-              <div className="grid grid-cols-4 gap-2 sm:gap-4 relative z-10">
-                {plots.map((plot) => {
+              <div className="relative w-full h-full z-10 min-h-[450px]">
+                {plots.map((plot, i) => {
                   const isGrowing = plot.status === 'growing';
                   let progress = 0;
                   let isReady = false;
@@ -322,13 +358,27 @@ export default function TabFarm() {
                     isReady = true;
                     progress = 100;
                   }
+                  
+                  const pX = plot.x ?? ((i % 4) * 80 + 10);
+                  const pY = plot.y ?? (Math.floor(i / 4) * 80 + 10);
+
                   return (
                     <motion.button
                       key={plot.id}
+                      drag
+                      dragMomentum={false}
+                      dragConstraints={farmRef}
+                      onDragEnd={(e, info) => movePlot(plot.id, pX + info.offset.x, pY + info.offset.y)}
+                      animate={{ x: pX, y: pY }}
+                      style={{ position: 'absolute' }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => handlePlotClick(plot)}
-                      className={`aspect-square rounded-xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md
+                      onClick={(e) => {
+                        // Prevent click if we are dragging
+                        if (e.defaultPrevented) return;
+                        handlePlotClick(plot);
+                      }}
+                      className={`w-[70px] h-[70px] sm:w-[80px] sm:h-[80px] rounded-xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md
                         ${plot.status === 'empty' ? 'bg-[#a06a38] border-b-4 border-[#7a4e28] hover:bg-[#b07843]' : ''}
                         ${isGrowing && !isReady ? 'bg-[#5c4033] border-b-4 border-[#3e2b22]' : ''}
                         ${isReady ? 'bg-[#7c5836] border-b-4 border-[#5a4027] animate-glow ring-2 ring-yellow-400 z-10' : ''}
@@ -412,12 +462,12 @@ export default function TabFarm() {
               </div>
             </div>
 
-            {/* 3. Dapur Produksi */}
+            {/* Dapur Produksi */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-red-200 pb-2 text-red-900 mt-6">
-              <span>🍳</span> Dapur Produksi (Tanaman)
+              <span>🍳</span> Dapur Produksi
             </div>
-            <div className="bg-red-50 border border-red-100 rounded-xl p-4 min-h-[120px] flex items-center justify-center">
-              <span className="text-red-300 text-sm font-medium italic">Tidak ada antrean resep.</span>
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 min-h-[80px] flex items-center justify-center">
+              <span className="text-red-300 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
             </div>
 
           </div>

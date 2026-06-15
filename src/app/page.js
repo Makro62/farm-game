@@ -6,6 +6,7 @@ import TabsNav from '../components/TabsNav';
 import TabFarm from '../components/TabFarm';
 import TabAnimal from '../components/TabAnimal';
 import TabTown from '../components/TabTown';
+import TabMine from '../components/TabMine';
 import Modals from '../components/Modals';
 import { useGameStore } from '@/lib/store';
 
@@ -40,6 +41,18 @@ export default function Page() {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
+  }, [isHydrated]);
+  
+  // Global Game Loop for Phase 1 features (Seasons, Weather, Mining)
+  useEffect(() => {
+    if (!isHydrated) return;
+    const globalTick = setInterval(() => {
+      const state = useGameStore.getState();
+      state.advanceSeasonTick();
+      state.changeWeather();
+      state.syncMiningNodes();
+    }, 1000);
+    return () => clearInterval(globalTick);
   }, [isHydrated]);
   
   // Development shortcuts
@@ -87,6 +100,7 @@ export default function Page() {
       <main id="main" className="flex-1 overflow-y-auto pb-20 p-4">
         {activeTab === 'farm' && <TabFarm />}
         {activeTab === 'animal' && <TabAnimal />}
+        {activeTab === 'mine' && <TabMine />}
         {activeTab === 'town' && <TabTown />}
       </main>
       

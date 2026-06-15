@@ -1,17 +1,135 @@
-'use client';
-
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
+import { FISHES, NPC_LIST } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export default function TabTown() {
   const spinWheel = useGameStore(state => state.spinWheel);
   const spendCoins = useGameStore(state => state.spendCoins);
+  const addCoins = useGameStore(state => state.addCoins);
+  const addItem = useGameStore(state => state.addItem);
   const activateCoinBooster = useGameStore(state => state.activateCoinBooster);
   const coinMultiplier = useGameStore(state => state.coinMultiplier);
   const dev = useGameStore(state => state.dev);
   const openConfirm = useGameStore(state => state.openConfirm);
   const workers = useGameStore(state => state.workers);
   const hireWorker = useGameStore(state => state.hireWorker);
+  const inventory = useGameStore(state => state.inventory);
+  const activeEvent = useGameStore(state => state.activeEvent);
+  const npcs = useGameStore(state => state.npcs);
+  const openNpcGift = useGameStore(state => state.openNpcGift);
+
+  const [fishState, setFishState] = useState('idle'); // idle | waiting | bite | minigame
+  const [indicatorPos, setIndicatorPos] = useState(50);
+  const [score, setScore] = useState(0);
+  const [isHolding, setIsHolding] = useState(false);
+  
+  const holdingRef = useRef(false);
+
+  // Update ref when state changes so setInterval sees it
+  useEffect(() => {
+    holdingRef.current = isHolding;
+  }, [isHolding]);
+
+  // Handle waiting for bite
+  useEffect(() => {
+    if (fishState === 'waiting') {
+      const waitTime = 2000 + Math.random() * 3000;
+      const timer = setTimeout(() => {
+        setFishState('bite');
+      }, waitTime);
+      return () => clearTimeout(timer);
+    }
+  }, [fishState]);
+
+  // Handle bite window
+  useEffect(() => {
+    if (fishState === 'bite') {
+      const timer = setTimeout(() => {
+        toast.error('Yah, ikannya lepas! 🐟💨');
+        setFishState('idle');
+      }, 1500); // 1.5s to react
+      return () => clearTimeout(timer);
+    }
+  }, [fishState]);
+
+  // Handle minigame loop
+  useEffect(() => {
+    if (fishState !== 'minigame') return;
+    
+    let pos = 50;
+    let dir = 1;
+    let currentScore = 0;
+    const speed = 2 + Math.random() * 3;
+    
+    const interval = setInterval(() => {
+      pos += dir * speed;
+      if (pos >= 90) { pos = 90; dir = -1; }
+      if (pos <= 10) { pos = 10; dir = 1; }
+      
+      setIndicatorPos(pos);
+      
+      // Hit zone is between 35 and 65
+      const inZone = pos >= 35 && pos <= 65;
+      if (inZone && holdingRef.current) {
+        currentScore += 1;
+        setScore(currentScore);
+      } else if (!inZone && holdingRef.current) {
+        currentScore -= 0.5; // Penalty for holding outside zone
+        if (currentScore < 0) currentScore = 0;
+        setScore(currentScore);
+      }
+
+      if (currentScore >= 50) {
+        finishMinigame(true);
+      }
+    }, 50);
+
+    const timeout = setTimeout(() => {
+      finishMinigame(false);
+    }, 5000); // 5 seconds max
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [fishState]);
+
+  const finishMinigame = (success) => {
+    setFishState('idle');
+    setIsHolding(false);
+    setScore(0);
+    
+    if (success) {
+      // Roll fish based on chance
+      const rand = Math.random();
+      let cumulative = 0;
+      let caughtFish = FISHES[0];
+      for (const fish of FISHES) {
+        cumulative += fish.chance;
+        if (rand <= cumulative) {
+          caughtFish = fish;
+          break;
+        }
+      }
+      
+      addItem(caughtFish.id, 1);
+      toast.success(`Berhasil menangkap ${caughtFish.emoji} ${caughtFish.name}!`, { duration: 4000 });
+    } else {
+      toast.error('Gagal menangkap ikan, kurang tarikan!');
+    }
+  };
+
+  const startFishing = () => {
+    setFishState('waiting');
+  };
+
+  const startMinigame = () => {
+    setFishState('minigame');
+    setScore(0);
+    setIndicatorPos(50);
+  };
+
 
   const handleSpinWheel = () => {
     const result = spinWheel();
@@ -61,6 +179,19 @@ export default function TabTown() {
 
   return (
     <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+      {activeEvent && (
+        <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl p-5 mb-6 shadow-lg text-white flex items-center gap-4 animate-in slide-in-from-top-4">
+          <div className="text-5xl bg-white/20 p-3 rounded-2xl backdrop-blur-sm border border-white/30">
+            {activeEvent.name.split(' ')[0]}
+          </div>
+          <div>
+            <div className="text-xs font-bold tracking-widest text-pink-200 uppercase mb-1">Event Spesial Hari Ini</div>
+            <h2 className="font-black text-2xl">{activeEvent.name.split(' ').slice(1).join(' ')}</h2>
+            <p className="opacity-90 font-medium text-sm mt-1">{activeEvent.desc}</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         
         {/* ================= LEFT COLUMN ================= */}
@@ -156,29 +287,76 @@ export default function TabTown() {
         {/* ================= CENTER COLUMN ================= */}
         <div className="lg:col-span-2 space-y-4">
           <div className="glass-panel p-4 min-h-[500px]">
-            
-            {/* Area Dekorasi */}
-            <div className="min-h-[100px] border-2 border-dashed border-green-200 rounded-2xl flex items-center justify-center mb-6">
-               <span className="text-green-400/50 font-medium italic">Area Dekorasi Kota</span>
-            </div>
 
             {/* Danau Pemancingan */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-blue-200 pb-2 text-blue-900">
-              <span>🎣</span> Danau Pemancingan (Peternakan Ikan)
+              <span>🎣</span> Danau Pemancingan (Interaktif)
             </div>
-            <div className="bg-[#4a90e2] p-4 rounded-3xl shadow-inner border-8 border-[#357abd] relative min-h-[200px] overflow-hidden flex items-center justify-center mb-8">
-              <div className="text-center relative z-10 bg-white/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/30 shadow-lg">
-                <span className="text-4xl drop-shadow-md inline-block mb-2">🐟</span>
-                <p className="text-blue-100 text-sm">Fitur belum tersedia</p>
-              </div>
+            <div className="bg-[#4a90e2] p-4 rounded-3xl shadow-inner border-8 border-[#357abd] relative min-h-[250px] overflow-hidden flex items-center justify-center mb-8">
+              
+              {fishState === 'idle' && (
+                <button onClick={startFishing} className="relative z-10 bg-white/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/30 shadow-lg hover:scale-105 transition-transform text-center">
+                  <span className="text-5xl drop-shadow-md inline-block mb-2">🎣</span>
+                  <p className="text-blue-100 font-bold text-lg">Lempar Kail!</p>
+                </button>
+              )}
+
+              {fishState === 'waiting' && (
+                <div className="relative z-10 text-center">
+                  <span className="text-5xl drop-shadow-md animate-bounce inline-block">🎣</span>
+                  <p className="text-blue-100 font-bold mt-3 text-lg bg-black/30 px-4 py-1 rounded-full">Menunggu gigitan...</p>
+                </div>
+              )}
+
+              {fishState === 'bite' && (
+                <button onClick={startMinigame} className="relative z-10 bg-red-500 text-white px-8 py-4 rounded-full border-4 border-white shadow-xl hover:scale-110 animate-pulse text-center">
+                  <span className="text-5xl drop-shadow-md inline-block mb-2">💦</span>
+                  <p className="font-black text-2xl">TARIK SEKARANG!</p>
+                </button>
+              )}
+
+              {fishState === 'minigame' && (
+                <div className="relative z-10 w-full max-w-sm bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-2xl flex flex-col items-center border border-gray-200">
+                  <h3 className="font-bold mb-3 text-gray-800 text-center leading-tight">Tahan tombol saat garis merah<br/>di area HIJAU!</h3>
+                  
+                  <div className="w-full h-10 bg-gray-200 rounded-full relative overflow-hidden mb-5 border-[3px] border-gray-400 shadow-inner">
+                    {/* Green zone (35% to 65%) */}
+                    <div className="absolute left-[35%] right-[35%] top-0 bottom-0 bg-green-400 opacity-60 border-l-2 border-r-2 border-green-500" />
+                    {/* Indicator */}
+                    <div className="absolute w-2 h-full bg-red-600 top-0 shadow-md transition-all duration-75 z-10" style={{ left: `calc(${indicatorPos}%)` }} />
+                  </div>
+                  
+                  <div className="w-full h-4 bg-gray-200 rounded-full mb-5 overflow-hidden shadow-inner border border-gray-300">
+                    <div className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 transition-all duration-100" style={{ width: `${(score / 50) * 100}%` }} />
+                  </div>
+                  
+                  <button 
+                    onPointerDown={() => setIsHolding(true)}
+                    onPointerUp={() => setIsHolding(false)}
+                    onPointerLeave={() => setIsHolding(false)}
+                    className={`w-full py-4 rounded-xl font-bold text-white transition-all shadow-md active:scale-95 touch-none select-none ${isHolding ? 'bg-blue-600 shadow-inner' : 'bg-blue-500 hover:bg-blue-400'}`}
+                  >
+                    {isHolding ? 'MENARIK... 🎣' : 'TAHAN (KLIK) 👇'}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Pasar Ikan Kota */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-teal-200 pb-2 text-teal-900 mt-8">
-              <span>🏪</span> Pasar Ikan Kota
+              <span>🏪</span> Hasil Tangkapan (Inventory Ikan)
             </div>
             <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 min-h-[100px] flex flex-wrap gap-2 items-center justify-center">
-              <span className="text-teal-400 text-sm font-medium italic">Belum ada ikan di pasar.</span>
+              {FISHES.every(f => !inventory[f.id]) && (
+                <span className="text-teal-400 text-sm font-medium italic">Belum ada ikan yang ditangkap.</span>
+              )}
+              {FISHES.map(f => inventory[f.id] > 0 && (
+                <div key={f.id} className="bg-white p-2 rounded-lg border border-teal-200 shadow-sm flex flex-col items-center">
+                  <span className="text-3xl mb-1">{f.emoji}</span>
+                  <span className="font-bold text-xs">{f.name}</span>
+                  <span className="text-[10px] bg-teal-100 px-2 py-0.5 rounded text-teal-800 font-bold mt-1">x{inventory[f.id]}</span>
+                </div>
+              ))}
             </div>
 
           </div>
@@ -188,25 +366,47 @@ export default function TabTown() {
         <div className="lg:col-span-1 space-y-4">
           <div className="glass-panel p-4 h-full">
             
-            {/* Dapur Ikan */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-orange-200 pb-2 text-orange-900 mt-6">
-              <span>🍳</span> Dapur Ikan (Masakan Laut)
+            {/* Warga Kota (NPCs) */}
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-pink-200 pb-2 text-pink-900">
+              <span>👨‍👩‍👧‍👦</span> Warga Kota
             </div>
-            <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 min-h-[120px] flex items-center justify-center mb-4">
-              <span className="text-orange-300 text-sm font-medium italic">Antrean masak kosong.</span>
-            </div>
-            
-            {/* Recipes Placeholder */}
-            <div className="space-y-2">
-              <div className="bg-white border border-gray-100 p-2 rounded-lg flex items-center justify-between opacity-50">
-                <div className="flex items-center gap-2">
-                   <span className="text-xl">🍣</span>
-                   <span className="text-sm font-bold">Sushi</span>
-                </div>
-                <span className="text-xs">1 🐟</span>
-              </div>
+            <div className="space-y-3 mb-8">
+              {NPC_LIST.map(npc => {
+                const data = npcs[npc.id] || { level: 1, points: 0 };
+                const maxPoints = data.level * 100;
+                return (
+                  <div key={npc.id} className="bg-pink-50 border border-pink-100 p-3 rounded-xl flex items-center gap-3">
+                    <div className="text-3xl bg-white p-2 rounded-full shadow-sm">{npc.emoji}</div>
+                    <div className="flex-1">
+                      <div className="font-bold text-pink-900 text-sm flex justify-between">
+                        <span>{npc.name}</span>
+                        <span className="text-pink-600 bg-pink-100 px-2 rounded-full text-xs">Lv {data.level}</span>
+                      </div>
+                      <div className="text-[10px] text-pink-700 mb-1">{npc.role}</div>
+                      <div className="w-full h-1.5 bg-pink-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-pink-500" style={{ width: `${(data.points / maxPoints) * 100}%` }} />
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => openNpcGift(npc.id)}
+                      className="bg-white border-2 border-pink-300 text-pink-600 hover:bg-pink-100 p-2 rounded-xl transition-colors shadow-sm active:scale-95"
+                      title="Beri Hadiah"
+                    >
+                      🎁
+                    </button>
+                  </div>
+                );
+              })}
             </div>
 
+            {/* Dapur Ikan */}
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-orange-200 pb-2 text-orange-900 mt-6">
+              <span>🍳</span> Dapur Ikan
+            </div>
+            <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 min-h-[80px] flex items-center justify-center mb-4">
+              <span className="text-orange-300 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
+            </div>
+            
           </div>
         </div>
 

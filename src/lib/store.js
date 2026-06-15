@@ -19,7 +19,9 @@ const initialState = {
     status: 'empty',
     crop: null,
     plantedAt: null,
-    growTime: null
+    growTime: null,
+    x: (i % 4) * 80 + 10,
+    y: Math.floor(i / 4) * 80 + 10
   })),
   
   // Inventory
@@ -52,14 +54,36 @@ const initialState = {
   // UI Modals
   modals: {
     prompt: { isOpen: false, title: '', msg: '', onConfirm: null },
-    confirm: { isOpen: false, title: '', msg: '', onConfirm: null }
+    confirm: { isOpen: false, title: '', msg: '', onConfirm: null },
+    npcGift: { isOpen: false, npcId: null }
   },
 
   combo: {
     count: 0,
     multiplier: 1,
     lastAction: 0
-  }
+  },
+  
+  // Mega Update Phase 1
+  season: { current: 'spring', day: 1, tick: 0 },
+  weather: { current: '☀️ Cerah', nextChangeIn: 300 },
+  mining: {
+    nodes: Array.from({ length: 24 }, (_, i) => ({
+      id: i,
+      status: 'ready',
+      type: Math.random() < 0.05 ? 'berlian' : Math.random() < 0.15 ? 'emas' : Math.random() < 0.3 ? 'besi' : Math.random() < 0.5 ? 'tembaga' : 'batu',
+      regenAt: null
+    })),
+    pickaxeLevel: 1
+  },
+  
+  // Mega Update Phase 2
+  npcs: {
+    maria: { level: 1, points: 0 },
+    botan: { level: 1, points: 0 },
+    hadi:  { level: 1, points: 0 }
+  },
+  activeEvent: null
 };
 
 export const useGameStore = create(
@@ -87,11 +111,21 @@ export const useGameStore = create(
         }));
       },
       
+      openNpcGift: (npcId) => {
+        set((state) => ({
+          modals: {
+            ...state.modals,
+            npcGift: { isOpen: true, npcId }
+          }
+        }));
+      },
+      
       closeModals: () => {
         set((state) => ({
           modals: {
             prompt: { isOpen: false, title: '', msg: '', onConfirm: null },
-            confirm: { isOpen: false, title: '', msg: '', onConfirm: null }
+            confirm: { isOpen: false, title: '', msg: '', onConfirm: null },
+            npcGift: { isOpen: false, npcId: null }
           }
         }));
       },
@@ -212,8 +246,6 @@ export const useGameStore = create(
           return null;
         }
 
-        // Petak dianggap siap panen jika statusnya 'ready' ATAU waktu tumbuh
-        // sudah terlewati (tanpa bergantung pada game loop yang mengubah status).
         const isReady =
           plot.status === 'ready' ||
           (plot.status === 'growing' &&
@@ -234,7 +266,9 @@ export const useGameStore = create(
                   status: 'empty',
                   crop: null,
                   plantedAt: null,
-                  growTime: null
+                  growTime: null,
+                  x: p.x,
+                  y: p.y
                 }
               : p
           ),
@@ -280,6 +314,14 @@ export const useGameStore = create(
         }));
       },
       
+      movePlot: (plotId, x, y) => {
+        set((state) => ({
+          plots: state.plots.map(p =>
+            p.id === plotId ? { ...p, x, y } : p
+          )
+        }));
+      },
+      
       // ===== INVENTORY =====
       
       addItem: (itemId, quantity = 1) => {
@@ -320,7 +362,9 @@ export const useGameStore = create(
               type: animalType,
               status: 'producing',
               lastCollected: Date.now(),
-              produceTime
+              produceTime,
+              x: Math.random() * 200 + 20,
+              y: Math.random() * 200 + 20
             }
           ]
         }));
@@ -347,6 +391,14 @@ export const useGameStore = create(
         get().addXP(8);
 
         return true;
+      },
+      
+      moveAnimal: (animalId, x, y) => {
+        set((state) => ({
+          animals: state.animals.map(a =>
+            a.id === animalId ? { ...a, x, y } : a
+          )
+        }));
       },
       
       // ===== STREAK SYSTEM =====
@@ -521,6 +573,139 @@ export const useGameStore = create(
         return true;
       },
       
+      // ===== PHASE 1 LOGIC =====
+      
+      advanceSeasonTick: () => {
+        set((state) => {
+          if (!state.season) return state;
+          let { tick, day, current } = state.season;
+          let activeEvent = state.activeEvent;
+          tick += 1;
+          
+          if (tick >= 180) { // 3 real minutes per day for testing
+            tick = 0;
+            day += 1;
+            
+            // Random Event Check on new day
+            const eventChance = Math.random();
+            if (eventChance < 0.3) {
+              const events = [
+                { id: 'panen', name: '🎊 Festival Panen', desc: 'Harga jual semua tanaman x2 hari ini!' },
+                { id: 'bahari', name: '🎣 Hari Bahari', desc: 'Ikan terjual dengan harga x2!' },
+                { id: 'tambang', name: '💎 Demam Emas', desc: 'Peluang mendapat Emas & Berlian meningkat!' }
+              ];
+              activeEvent = events[Math.floor(Math.random() * events.length)];
+            } else {
+              activeEvent = null;
+            }
+
+            if (day > 7) { // 7 days per season
+              day = 1;
+              const seasons = ['spring', 'summer', 'autumn', 'winter'];
+              const idx = seasons.indexOf(current);
+              current = seasons[(idx + 1) % 4];
+            }
+          }
+          return { season: { current, day, tick }, activeEvent };
+        });
+      },
+
+      changeWeather: () => {
+        set((state) => {
+          if (!state.weather) return state;
+          let { nextChangeIn } = state.weather;
+          nextChangeIn -= 1;
+          if (nextChangeIn <= 0) {
+            const weathers = ['☀️ Cerah', '⛅ Berawan', '🌧️ Hujan', '⛈️ Badai', '💨 Berangin'];
+            const randomWeather = weathers[Math.floor(Math.random() * weathers.length)];
+            return { weather: { current: randomWeather, nextChangeIn: 300 } };
+          }
+          return { weather: { ...state.weather, nextChangeIn } };
+        });
+      },
+
+      mineNode: (nodeId) => {
+        const state = get();
+        const node = state.mining.nodes.find(n => n.id === nodeId);
+        if (!node || node.status !== 'ready') return null;
+
+        const regenTime = 120 * 1000; // 2 minutes regen
+        
+        set((state) => ({
+          mining: {
+            ...state.mining,
+            nodes: state.mining.nodes.map(n => 
+              n.id === nodeId ? { ...n, status: 'cooldown', regenAt: Date.now() + regenTime } : n
+            )
+          },
+          inventory: {
+            ...state.inventory,
+            [node.type]: (state.inventory[node.type] || 0) + 1
+          }
+        }));
+
+        get().addXP(15);
+        return node.type;
+      },
+
+      syncMiningNodes: () => {
+        const now = Date.now();
+        const state = get();
+        if (!state.mining) return;
+        let changed = false;
+        
+        const newNodes = state.mining.nodes.map(n => {
+          if (n.status === 'cooldown' && n.regenAt && now >= n.regenAt) {
+            changed = true;
+            return { 
+              ...n, 
+              status: 'ready', 
+              regenAt: null,
+              type: Math.random() < 0.05 ? 'berlian' : Math.random() < 0.15 ? 'emas' : Math.random() < 0.3 ? 'besi' : Math.random() < 0.5 ? 'tembaga' : 'batu'
+            };
+          }
+          return n;
+        });
+
+        if (changed) {
+          set({ mining: { ...state.mining, nodes: newNodes } });
+        }
+      },
+
+      giveGift: (npcId, itemId, isLiked) => {
+        const state = get();
+        if (!state.inventory[itemId] || state.inventory[itemId] <= 0) return null;
+
+        // Decrease item
+        const newInventory = { ...state.inventory, [itemId]: state.inventory[itemId] - 1 };
+        
+        // Add points
+        const currentNpc = state.npcs[npcId] || { level: 1, points: 0 };
+        const pointsGained = isLiked ? 50 : 10;
+        let newPoints = currentNpc.points + pointsGained;
+        let newLevel = currentNpc.level;
+        let leveledUp = false;
+
+        const maxPoints = currentNpc.level * 100;
+        if (newPoints >= maxPoints && newLevel < 5) { // max level 5
+          newPoints -= maxPoints;
+          newLevel += 1;
+          leveledUp = true;
+          // Reward user
+          get().addXP(100 * newLevel);
+        }
+
+        set({
+          inventory: newInventory,
+          npcs: {
+            ...state.npcs,
+            [npcId]: { level: newLevel, points: newPoints }
+          }
+        });
+
+        return { leveledUp, newLevel, pointsGained };
+      },
+      
       // Development only - cheat functions
       dev: {
         addCoins: (amount) => {
@@ -568,7 +753,12 @@ export const useGameStore = create(
         lastWheelSpin: state.lastWheelSpin,
         coinMultiplier: state.coinMultiplier,
         growthMultiplier: state.growthMultiplier,
-        workers: state.workers
+        workers: state.workers,
+        season: state.season,
+        weather: state.weather,
+        mining: state.mining,
+        npcs: state.npcs,
+        activeEvent: state.activeEvent
       }),
       onRehydrateStorage: () => (state, error) => {
         if (error) {
@@ -594,3 +784,8 @@ export const useSettings = () => useGameStore((s) => ({
   musicEnabled: s.musicEnabled,
   notificationsEnabled: s.notificationsEnabled
 }));
+export const useSeason = () => useGameStore((s) => s.season);
+export const useWeather = () => useGameStore((s) => s.weather);
+export const useMining = () => useGameStore((s) => s.mining);
+export const useNpcs = () => useGameStore((s) => s.npcs);
+export const useActiveEvent = () => useGameStore((s) => s.activeEvent);

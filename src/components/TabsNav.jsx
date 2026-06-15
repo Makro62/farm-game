@@ -4,6 +4,7 @@ export default function TabsNav({ activeTab, onTabChange }) {
   const tabs = [
     { id: 'farm', label: '🌾 Pertanian' },
     { id: 'animal', label: '🐔 Peternakan' },
+    { id: 'mine', label: '⛏️ Tambang' },
     { id: 'town', label: '🏘️ Kota & Fitur' }
   ];
 
