@@ -3,6 +3,7 @@
 // ========================================
 
 import { S } from '../core/state.js';
+import { addToInventory, addXP, isInventoryFull } from '../utils/helpers.js';
 
 export function initFarmUI() {
     setupFarmGrid();
@@ -199,33 +200,6 @@ function getCropConfig(cropId) {
     };
     
     return configs[cropId];
-}
-
-function isInventoryFull() {
-    const totalItems = S.inventory.reduce((sum, item) => sum + item.quantity, 0);
-    return totalItems >= S.config.maxInventory;
-}
-
-function addToInventory(itemId, quantity) {
-    const existing = S.inventory.find(item => item.id === itemId);
-    
-    if (existing) {
-        existing.quantity += quantity;
-    } else {
-        S.inventory.push({ id: itemId, quantity });
-    }
-}
-
-function addXP(amount) {
-    S.xp += amount;
-    
-    while (S.xp >= S.xpToNextLevel) {
-        S.xp -= S.xpToNextLevel;
-        S.level++;
-        S.xpToNextLevel = Math.floor(S.xpToNextLevel * 1.5);
-        
-        window.notificationManager?.show(`⭐ Level Up! Level ${S.level}`, 'success');
-    }
 }
 
 function updateTopbar() {
