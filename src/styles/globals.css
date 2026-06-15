@@ -7,16 +7,25 @@
     @apply border-gray-200;
   }
   
+  html,
   body {
-    @apply bg-gradient-to-br from-farm-100 to-farm-200 text-farm-900;
-    @apply overflow-x-hidden;
+    @apply h-full;
     -webkit-tap-highlight-color: transparent;
   }
   
-  /* Prevent text selection in game */
-  .game-area {
-    user-select: none;
-    -webkit-user-select: none;
+  body {
+    @apply bg-gradient-to-br from-green-100 via-green-50 to-green-200;
+    @apply text-green-900 overflow-x-hidden;
+    @apply antialiased;
+  }
+  
+  /* Hide scrollbar tapi tetap bisa scroll */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -25,36 +34,60 @@
   .btn {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200;
     @apply active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
   
   .btn-primary {
-    @apply btn bg-gradient-to-r from-farm-500 to-farm-600 text-white;
-    @apply hover:from-farm-600 hover:to-farm-700;
+    @apply btn bg-gradient-to-r from-green-500 to-green-600 text-white;
+    @apply hover:from-green-600 hover:to-green-700;
     @apply shadow-lg hover:shadow-xl;
+    @apply focus:ring-green-500;
   }
   
   .btn-gold {
-    @apply btn bg-gradient-to-r from-gold-400 to-gold-500 text-white;
-    @apply hover:from-gold-500 hover:to-gold-600;
+    @apply btn bg-gradient-to-r from-yellow-400 to-yellow-500 text-white;
+    @apply hover:from-yellow-500 hover:to-yellow-600;
     @apply shadow-lg hover:shadow-xl;
+    @apply focus:ring-yellow-500;
   }
   
   .btn-secondary {
-    @apply btn bg-white text-farm-700 border-2 border-farm-300;
-    @apply hover:bg-farm-50;
+    @apply btn bg-white text-green-700 border-2 border-green-300;
+    @apply hover:bg-green-50;
+    @apply focus:ring-green-300;
+  }
+  
+  .btn-danger {
+    @apply btn bg-red-500 text-white;
+    @apply hover:bg-red-600;
+    @apply shadow-lg hover:shadow-xl;
+    @apply focus:ring-red-500;
   }
   
   /* Card */
   .card {
     @apply bg-white rounded-2xl shadow-lg p-4;
-    @apply border border-farm-200;
+    @apply border border-green-200;
+    @apply transition-all duration-200;
   }
   
-  /* Plot */
+  .card-hover {
+    @apply card hover:shadow-xl hover:-translate-y-1;
+  }
+  
+  /* Glass effect */
+  .glass-panel {
+    @apply bg-white/80 backdrop-blur-md;
+    @apply border border-white/20;
+    @apply shadow-lg;
+  }
+  
+  /* Plot styles */
   .plot {
     @apply relative aspect-square rounded-xl cursor-pointer;
     @apply transition-all duration-200 ease-out;
     @apply hover:scale-105 hover:shadow-xl;
+    @apply active:scale-95;
   }
   
   .plot-empty {
@@ -63,14 +96,37 @@
   }
   
   .plot-growing {
-    @apply bg-gradient-to-br from-farm-400 to-farm-500;
-    @apply border-2 border-farm-300;
+    @apply bg-gradient-to-br from-green-400 to-green-500;
+    @apply border-2 border-green-300;
   }
   
   .plot-ready {
-    @apply bg-gradient-to-br from-gold-400 to-gold-500;
-    @apply border-2 border-gold-600;
+    @apply bg-gradient-to-br from-yellow-400 to-yellow-500;
+    @apply border-2 border-yellow-600;
     @apply animate-glow;
+  }
+  
+  /* Stat chip */
+  .stat-chip {
+    @apply flex items-center gap-2 px-3 py-2 rounded-full;
+    @apply font-bold text-sm sm:text-base;
+    @apply shadow-md;
+  }
+  
+  /* Progress bar */
+  .progress-bar {
+    @apply h-2 bg-green-100 rounded-full overflow-hidden;
+  }
+  
+  .progress-fill {
+    @apply h-full bg-gradient-to-r from-green-400 to-green-500;
+    @apply transition-all duration-500 ease-out;
+  }
+  
+  /* Toast custom */
+  .toast-custom {
+    @apply rounded-xl shadow-lg;
+    @apply font-semibold;
   }
 }
 
@@ -83,22 +139,60 @@
     text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   }
   
-  /* Hide scrollbar but keep functionality */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  /* Safe area untuk mobile notch */
+  .safe-top {
+    padding-top: max(env(safe-area-inset-top), 0.75rem);
   }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
+  }
+  
+  /* Animasi custom */
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite;
+  }
+  
+  .animate-wiggle {
+    animation: wiggle 1s ease-in-out infinite;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
   }
 }
 
-/* Safe area for mobile notches */
-@supports (padding: max(0px)) {
-  .safe-top {
-    padding-top: max(env(safe-area-inset-top), 1rem);
+/* Keyframes */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(251, 191, 36, 0.5), 
+                0 0 10px rgba(251, 191, 36, 0.3);
   }
-  .safe-bottom {
-    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  50% {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.8), 
+                0 0 30px rgba(245, 158, 11, 0.6),
+                0 0 40px rgba(245, 158, 11, 0.4);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
   }
 }

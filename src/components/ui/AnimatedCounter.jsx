@@ -7,7 +7,7 @@ export function AnimatedCounter({
   value, 
   duration = 0.5, 
   className = '',
-  format = (val) => val.toLocaleString()
+  format = (val) => val.toLocaleString('id-ID')
 }) {
   const count = useMotionValue(0);
   const rounded = useTransform(count, (latest) => format(Math.round(latest)));
