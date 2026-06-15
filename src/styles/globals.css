@@ -3,8 +3,25 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --primary: #4CAF50;
+    --primary-dark: #388E3C;
+    --secondary: #FF9800;
+    --danger: #f44336;
+    --info: #2196F3;
+    --success: #4CAF50;
+    --warning: #FFC107;
+    
+    --bg-dark: #191654;
+    --bg-light: #43C6AC;
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --text-primary: #ffffff;
+    --text-secondary: #e2e8f0;
+  }
+
   * {
-    @apply border-gray-200;
+    @apply border-transparent;
   }
   
   html,
@@ -14,8 +31,10 @@
   }
   
   body {
-    @apply bg-gradient-to-br from-green-100 via-green-50 to-green-200;
-    @apply text-green-900 overflow-x-hidden;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
     @apply antialiased;
   }
   
@@ -32,78 +51,93 @@
 @layer components {
   /* Button variants */
   .btn {
-    @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200;
+    @apply px-4 py-2 rounded-lg font-semibold transition-all duration-300;
     @apply active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
-    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply focus:outline-none;
   }
   
   .btn-primary {
-    @apply btn bg-gradient-to-r from-green-500 to-green-600 text-white;
-    @apply hover:from-green-600 hover:to-green-700;
-    @apply shadow-lg hover:shadow-xl;
-    @apply focus:ring-green-500;
+    @apply btn text-white;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
   }
   
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+  }
+
   .btn-gold {
     @apply btn bg-gradient-to-r from-yellow-400 to-yellow-500 text-white;
     @apply hover:from-yellow-500 hover:to-yellow-600;
-    @apply shadow-lg hover:shadow-xl;
-    @apply focus:ring-yellow-500;
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
   }
   
   .btn-secondary {
-    @apply btn bg-white text-green-700 border-2 border-green-300;
-    @apply hover:bg-green-50;
-    @apply focus:ring-green-300;
+    @apply btn text-white;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
   }
   
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
   .btn-danger {
-    @apply btn bg-red-500 text-white;
-    @apply hover:bg-red-600;
-    @apply shadow-lg hover:shadow-xl;
-    @apply focus:ring-red-500;
-  }
-  
-  /* Card */
-  .card {
-    @apply bg-white rounded-2xl shadow-lg p-4;
-    @apply border border-green-200;
-    @apply transition-all duration-200;
-  }
-  
-  .card-hover {
-    @apply card hover:shadow-xl hover:-translate-y-1;
+    @apply btn text-white;
+    background: var(--danger);
   }
   
   /* Glass effect */
   .glass-panel {
-    @apply bg-white/80 backdrop-blur-md;
-    @apply border border-white/20;
-    @apply shadow-lg;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+  }
+
+  .glass-card {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
   }
   
   /* Plot styles */
   .plot {
     @apply relative aspect-square rounded-xl cursor-pointer;
-    @apply transition-all duration-200 ease-out;
-    @apply hover:scale-105 hover:shadow-xl;
-    @apply active:scale-95;
+    @apply transition-all duration-300 ease-out flex flex-col items-center justify-center;
+    @apply active:scale-95 text-4xl;
   }
   
+  .plot:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  }
+
   .plot-empty {
-    @apply bg-gradient-to-br from-amber-700 to-amber-800;
-    @apply border-2 border-dashed border-amber-600;
+    background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+    border-bottom: 4px solid #7a4e28;
   }
   
   .plot-growing {
-    @apply bg-gradient-to-br from-green-400 to-green-500;
-    @apply border-2 border-green-300;
+    background: linear-gradient(135deg, #8B4513 0%, #6B8E23 100%);
+    border-bottom: 4px solid #3e2b22;
   }
   
   .plot-ready {
-    @apply bg-gradient-to-br from-yellow-400 to-yellow-500;
-    @apply border-2 border-yellow-600;
-    @apply animate-glow;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    border-bottom: 4px solid #5a4027;
+    animation: glow 1.5s ease-in-out infinite alternate;
   }
   
   /* Stat chip */

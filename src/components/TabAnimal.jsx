@@ -5,6 +5,7 @@ import { useGameStore } from '@/lib/store';
 import { getAnimalEmoji, SHOP_ANIMALS } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
+import { StatusHeader } from './StatusHeader';
 import toast from 'react-hot-toast';
 
 export default function TabAnimal() {
@@ -16,6 +17,7 @@ export default function TabAnimal() {
   const buyMultipleAnimals = useGameStore(state => state.buyMultipleAnimals);
   const workers = useGameStore(state => state.workers);
   const hireWorker = useGameStore(state => state.hireWorker);
+  const coins = useGameStore(state => state.coins);
 
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [autoFarm, setAutoFarm] = useState(false);
@@ -130,7 +132,7 @@ export default function TabAnimal() {
           <div className="glass-panel p-4">
             
             {/* 1. Shop Hewan */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-pink-200 pb-2 text-pink-900">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white">
               <span>🐔</span> HEWAN TERNAK
             </div>
             <div className="grid grid-cols-2 gap-2 mb-6">
@@ -138,29 +140,30 @@ export default function TabAnimal() {
                 <button
                   key={animal.id}
                   onClick={() => handleShopClick(animal)}
-                  className="p-2 rounded-xl border-2 border-pink-100 hover:border-pink-300 hover:shadow-sm transition-all flex flex-col items-center gap-1 bg-white"
+                  disabled={coins < animal.price}
+                  className="p-2 glass-card flex flex-col items-center gap-1 disabled:opacity-50"
                 >
-                  <span className="text-3xl">{getAnimalEmoji(animal.id)}</span>
-                  <span className="font-semibold text-xs">{animal.name}</span>
-                  <span className="text-[10px] font-bold text-pink-600">{animal.price}💰</span>
+                  <img src={animal.image} alt={animal.name} className="w-12 h-12 object-contain" />
+                  <span className="font-semibold text-xs text-white">{animal.name}</span>
+                  <span className="text-[10px] font-bold text-pink-300">{animal.price}💰</span>
                 </button>
               ))}
             </div>
 
             {/* 2. Pekerja (Auto) */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-pink-200 pb-2 text-pink-900 mt-6">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
               <span>🧑‍🌾</span> Pekerja (Auto)
             </div>
             <button
               onClick={handleHireWorker}
-              className={`w-full border-2 p-2 rounded-xl shadow-sm flex justify-between items-center transition-colors text-left ${
+              className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left ${
                 workers.rancher
-                  ? 'bg-green-50 border-green-300'
-                  : 'bg-white border-blue-200 hover:bg-blue-50'
+                  ? 'border-primary bg-white/10'
+                  : ''
               }`}
             >
               <div>
-                <div className="font-bold text-blue-900 text-sm">🧑‍🍳 Kurcaci Peternak</div>
+                <div className="font-bold text-gray-100 text-sm">🧑‍🍳 Kurcaci Peternak</div>
                 <div className="text-[10px] text-gray-500">Auto-Collect Products</div>
               </div>
               <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs">
@@ -174,28 +177,33 @@ export default function TabAnimal() {
         <div className="lg:col-span-2 space-y-4">
           <div className="glass-panel p-4">
             
+            <StatusHeader setAutoFarm={setAutoFarm} />
+
             <div className="flex justify-between items-center mb-4">
-               <div className="font-bold text-lg flex items-center gap-2 text-green-900">
+               <div className="font-bold text-lg flex items-center gap-2 text-white drop-shadow-md">
                  <span>🐔</span> Area Peternakan
                </div>
                <div className="flex gap-2">
                  <button 
                   onClick={() => setIsEditMode(!isEditMode)}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${isEditMode ? 'bg-yellow-400 text-yellow-900 border-yellow-500 animate-pulse' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${isEditMode ? 'bg-yellow-400 text-yellow-900 border-yellow-500 animate-pulse' : 'glass-card text-gray-200'}`}
                  >
                   {isEditMode ? '💾 Selesai Edit' : '✏️ Edit Layout'}
                  </button>
                  <button 
                   onClick={handleToggleAuto}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFarm ? 'bg-blue-500 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFarm ? 'bg-blue-500 text-white border-blue-600' : 'glass-card text-gray-200'}`}
                  >
                   🧑‍🍳 Auto: {autoFarm ? 'ON' : 'OFF'}
                  </button>
                </div>
             </div>
 
-            <div className={`bg-[#4caf50] p-4 sm:p-6 rounded-3xl shadow-inner border-8 border-[#2e7d32] relative min-h-[400px] transition-all ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}>
-              <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '15px 15px' }}></div>
+            <div 
+              className={`p-4 sm:p-6 rounded-3xl shadow-inner border-4 border-[#2e7d32] relative min-h-[400px] transition-all bg-cover bg-center ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}
+              style={{ backgroundImage: "url('/img/backgrounds/animal_bg.png')" }}
+            >
+              <div className="absolute inset-0 bg-black/40 pointer-events-none rounded-2xl"></div>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 relative z-10">
                 {animals.map((animal, i) => {
                   const animalData = SHOP_ANIMALS.find(a => a.id === animal.type);
@@ -239,8 +247,8 @@ export default function TabAnimal() {
                         ${isReady ? 'border-yellow-300 ring-4 ring-yellow-400/50 bg-white/40' : 'border-white/30 hover:bg-white/30'}
                       `}
                     >
-                      <motion.div animate={isReady ? { y: [0, -5, 0] } : {}} transition={{ duration: 1, repeat: Infinity }} className="text-4xl drop-shadow-md z-10">
-                        {getAnimalEmoji(animal.type)}
+                      <motion.div animate={isReady ? { y: [0, -5, 0] } : {}} transition={{ duration: 1, repeat: Infinity }} className="drop-shadow-md z-10 flex items-center justify-center">
+                        <img src={animalData?.image} alt={animalData?.name} className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-xl" />
                       </motion.div>
                       {!isReady && (
                         <div className="absolute bottom-2 left-2 right-2 h-1.5 bg-black/30 rounded-full overflow-hidden">
@@ -281,7 +289,7 @@ export default function TabAnimal() {
             {/* Inventory */}
             <InventoryWidget />
 
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-red-200 pb-2 text-red-900 mt-6">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
               <span>🍳</span> Dapur Produksi
             </div>
             <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 min-h-[80px] flex items-center justify-center mb-4">

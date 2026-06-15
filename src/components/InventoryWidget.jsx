@@ -1,5 +1,5 @@
 import { useGameStore } from '@/lib/store';
-import { SHOP_SEEDS, SHOP_ANIMALS, FISHES, MINERALS, getCropEmoji, getProductEmoji } from '@/lib/utils';
+import { SHOP_SEEDS, SHOP_ANIMALS, FISHES, MINERALS, getCropEmoji } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export function InventoryWidget() {
@@ -49,12 +49,12 @@ export function InventoryWidget() {
 
   return (
     <div className="mb-6">
-      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-orange-200 pb-2 text-orange-900">
+      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white">
         <span>📦</span> Inventory (Global)
       </div>
-      <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 min-h-[100px]">
+      <div className="glass-card border-orange-100/30 p-4 min-h-[100px]">
         {inventoryItems.length === 0 ? (
-          <div className="text-center text-sm text-gray-500 py-4 italic">Tas masih kosong.</div>
+          <div className="text-center text-sm text-gray-300 py-4 italic">Tas masih kosong.</div>
         ) : (
           <div className="flex flex-wrap gap-2 mb-4">
             {inventoryItems.map(item => {
@@ -73,7 +73,7 @@ export function InventoryWidget() {
               return (
                 <div 
                   key={item}
-                  className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center relative hover:scale-105 transition-transform"
+                  className="w-12 h-12 glass-card flex items-center justify-center relative hover:scale-105 transition-transform"
                   title={item}
                 >
                   <span className="text-2xl">{emoji}</span>

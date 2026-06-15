@@ -16,7 +16,7 @@ export default function Topbar() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', damping: 20 }}
-      className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b-2 border-green-200 shadow-md safe-top"
+      className="sticky top-0 z-50 bg-white/10 backdrop-blur-md border-b border-white/20 shadow-md safe-top"
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
         {/* Top row */}
@@ -30,7 +30,7 @@ export default function Topbar() {
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
               className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
             />
-            <h1 className="text-xl sm:text-2xl font-black text-[#198236] hidden xs:block tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-white hidden xs:block tracking-tight drop-shadow-md">
               Farm Tycoon
             </h1>
           </div>

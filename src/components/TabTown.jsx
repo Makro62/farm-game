@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
 import { FISHES, NPC_LIST } from '@/lib/utils';
 import { InventoryWidget } from './InventoryWidget';
+import { StatusHeader } from './StatusHeader';
 import toast from 'react-hot-toast';
 
 export default function TabTown() {
@@ -200,19 +201,6 @@ export default function TabTown() {
 
   return (
     <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-      {activeEvent && (
-        <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl p-5 mb-6 shadow-lg text-white flex items-center gap-4 animate-in slide-in-from-top-4">
-          <div className="text-5xl bg-white/20 p-3 rounded-2xl backdrop-blur-sm border border-white/30">
-            {activeEvent.name.split(' ')[0]}
-          </div>
-          <div>
-            <div className="text-xs font-bold tracking-widest text-pink-200 uppercase mb-1">Event Spesial Hari Ini</div>
-            <h2 className="font-black text-2xl">{activeEvent.name.split(' ').slice(1).join(' ')}</h2>
-            <p className="opacity-90 font-medium text-sm mt-1">{activeEvent.desc}</p>
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         
         {/* ================= LEFT COLUMN ================= */}
@@ -220,26 +208,26 @@ export default function TabTown() {
           <div className="glass-panel p-4">
             
             {/* 1. Bibit Ikan */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-cyan-200 pb-2 text-cyan-900">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-cyan-200 pb-2 text-cyan-100">
               <span>🐟</span> BIBIT IKAN
             </div>
-            <div className="bg-cyan-50 p-3 rounded-xl border border-cyan-100 text-sm text-cyan-800 mb-6 text-center italic">
+            <div className="glass-card p-3 rounded-xl border border-cyan-100/30 text-sm text-cyan-100 mb-6 text-center italic">
               Buka di Level 10
             </div>
 
             {/* 2. Dekorasi */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-green-200 pb-2 text-green-900 mt-6">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-green-200 pb-2 text-green-100 mt-6">
               <span>🏡</span> DEKORASI
             </div>
-            <div className="bg-green-50 p-3 rounded-xl border border-green-100 text-sm text-green-800 mb-6 text-center italic">
+            <div className="glass-card p-3 rounded-xl border border-green-100/30 text-sm text-green-100 mb-6 text-center italic">
               Shop dekorasi kosong.
             </div>
 
             {/* 3. Bangunan */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-orange-200 pb-2 text-orange-900 mt-6">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-orange-200 pb-2 text-orange-100 mt-6">
               <span>🏗️</span> Bangunan
             </div>
-            <div className="bg-orange-50 p-3 rounded-xl border border-orange-100 text-sm text-orange-800 mb-6 text-center italic">
+            <div className="glass-card p-3 rounded-xl border border-orange-100/30 text-sm text-orange-100 mb-6 text-center italic">
               Area bangunan belum tersedia.
             </div>
 
@@ -257,45 +245,39 @@ export default function TabTown() {
             </button>
 
             {/* 5. Roda Harian */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-purple-200 pb-2 text-purple-900 mt-6">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-purple-200 pb-2 text-purple-100 mt-6">
               <span>🎡</span> Roda Harian
             </div>
-            <button onClick={handleSpinWheel} className="w-full bg-white border-2 border-amber-300 p-2 rounded-xl shadow-sm flex justify-between items-center hover:bg-amber-50 transition-colors text-left mb-6" style={{ background: 'linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.1))' }}>
+            <button onClick={handleSpinWheel} className="w-full glass-card border border-amber-300 p-2 flex justify-between items-center transition-colors text-left mb-6">
               <div>
-                <div className="font-bold text-amber-700 text-sm">🎰 Putar Roda</div>
-                <div className="text-[10px] text-gray-500">1x Putaran Gratis/Hari</div>
+                <div className="font-bold text-amber-300 text-sm">🎰 Putar Roda</div>
+                <div className="text-[10px] text-gray-300">1x Putaran Gratis/Hari</div>
               </div>
             </button>
 
             {/* 6. Pekerja Kota */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-blue-200 pb-2 text-blue-900 mt-6">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-blue-200 pb-2 text-blue-100 mt-6">
               <span>🧑‍🌾</span> Pekerja Kota (Auto)
             </div>
-            <button onClick={handleBuyMerchant} className={`w-full border-2 p-2 rounded-xl shadow-sm flex justify-between items-center transition-colors text-left mb-2 ${workers.fisher ? 'bg-green-50 border-green-300' : 'bg-white border-blue-200 hover:bg-blue-50'}`}>
+            <button onClick={handleBuyMerchant} className={`w-full glass-card p-2 rounded-xl flex justify-between items-center transition-colors text-left mb-2 ${workers.fisher ? 'border-primary bg-white/10' : ''}`}>
               <div>
-                <div className="font-bold text-blue-900 text-sm">🧑‍🌾 Pemancing Kota</div>
-                <div className="text-[10px] text-gray-500">Auto-mancing & jual hasil</div>
+                <div className="font-bold text-blue-300 text-sm">🧑‍🌾 Pemancing Kota</div>
+                <div className="text-[10px] text-gray-400">Auto-mancing & jual hasil</div>
               </div>
               <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs">
                 {workers.fisher ? '✅ Disewa' : '12000💰'}
               </span>
             </button>
-            <button
-              onClick={() => toast('Fitur memancing segera hadir! 🎣', { icon: '⏳' })}
-              className={`w-full px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border mb-6 ${workers.fisher ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
-            >
-              🧑‍🌾 Auto: {workers.fisher ? 'SIAP' : 'OFF'}
-            </button>
 
             {/* 7. Achievements */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-indigo-200 pb-2 text-indigo-900 mt-6">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-indigo-200/30 pb-2 text-indigo-100 mt-6">
               <span>🏆</span> Achievements
             </div>
-            <div className="text-sm font-bold text-gray-500">0 / 12</div>
+            <div className="text-sm font-bold text-white">0 / 12</div>
 
             {/* Cheat Panel / Dev Menu */}
-            <div className="mt-8 border-t border-red-200 pt-4">
-               <div className="font-bold text-xs text-red-600 mb-2">🛠️ CHEAT MENU (DEV)</div>
+            <div className="mt-8 border-t border-red-200/30 pt-4">
+               <div className="font-bold text-xs text-red-400 mb-2">🛠️ CHEAT MENU (DEV)</div>
                <div className="flex gap-2">
                   <button onClick={() => dev.addCoins(1000)} className="flex-1 bg-gray-800 text-green-400 text-xs py-1 rounded">
                     +1000 💰
@@ -313,11 +295,27 @@ export default function TabTown() {
         <div className="lg:col-span-2 space-y-4">
           <div className="glass-panel p-4 min-h-[500px]">
 
+            <StatusHeader />
+
             {/* Danau Pemancingan */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-blue-200 pb-2 text-blue-900">
-              <span>🎣</span> Danau Pemancingan (Interaktif)
+            <div className="flex justify-between items-center mb-4 border-b-2 border-blue-200 pb-2">
+              <div className="font-bold text-lg flex items-center gap-2 text-blue-100">
+                <span>🎣</span> Danau Pemancingan
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => toast('Auto memancing berjalan via Pemancing Kota!', { icon: '🎣' })}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${workers.fisher ? 'bg-blue-500 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+                >
+                  🧑‍🌾 Auto: {workers.fisher ? 'ON' : 'OFF'}
+                </button>
+              </div>
             </div>
-            <div className="bg-[#4a90e2] p-4 rounded-3xl shadow-inner border-8 border-[#357abd] relative min-h-[250px] overflow-hidden flex items-center justify-center mb-8">
+            <div 
+              className="p-4 rounded-3xl shadow-inner border-4 border-[#357abd] relative min-h-[250px] overflow-hidden flex items-center justify-center mb-8 bg-cover bg-center"
+              style={{ backgroundImage: "url('/img/backgrounds/lake_bg.png')" }}
+            >
+              <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
               
               {fishState === 'idle' && (
                 <button onClick={startFishing} className="relative z-10 bg-white/20 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/30 shadow-lg hover:scale-105 transition-transform text-center">
@@ -341,8 +339,8 @@ export default function TabTown() {
               )}
 
               {fishState === 'minigame' && (
-                <div className="relative z-10 w-full max-w-sm bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-2xl flex flex-col items-center border border-gray-200">
-                  <h3 className="font-bold mb-3 text-gray-800 text-center leading-tight">Tahan tombol saat garis merah<br/>di area HIJAU!</h3>
+                <div className="relative z-10 w-full max-w-sm glass-card p-5 rounded-2xl shadow-2xl flex flex-col items-center border border-white/20">
+                  <h3 className="font-bold mb-3 text-white text-center leading-tight">Tahan tombol saat garis merah<br/>di area HIJAU!</h3>
                   
                   <div className="w-full h-10 bg-gray-200 rounded-full relative overflow-hidden mb-5 border-[3px] border-gray-400 shadow-inner">
                     {/* Green zone (35% to 65%) */}
@@ -368,18 +366,18 @@ export default function TabTown() {
             </div>
 
             {/* Pasar Ikan Kota */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-teal-200 pb-2 text-teal-900 mt-8">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-teal-200/30 pb-2 text-teal-100 mt-8">
               <span>🏪</span> Hasil Tangkapan (Inventory Ikan)
             </div>
-            <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 min-h-[100px] flex flex-wrap gap-2 items-center justify-center">
+            <div className="glass-card border-teal-100/30 p-4 min-h-[100px] flex flex-wrap gap-2 items-center justify-center">
               {FISHES.every(f => !inventory[f.id]) && (
-                <span className="text-teal-400 text-sm font-medium italic">Belum ada ikan yang ditangkap.</span>
+                <span className="text-teal-200 text-sm font-medium italic">Belum ada ikan yang ditangkap.</span>
               )}
               {FISHES.map(f => inventory[f.id] > 0 && (
-                <div key={f.id} className="bg-white p-2 rounded-lg border border-teal-200 shadow-sm flex flex-col items-center">
+                <div key={f.id} className="glass-card p-2 flex flex-col items-center">
                   <span className="text-3xl mb-1">{f.emoji}</span>
                   <span className="font-bold text-xs">{f.name}</span>
-                  <span className="text-[10px] bg-teal-100 px-2 py-0.5 rounded text-teal-800 font-bold mt-1">x{inventory[f.id]}</span>
+                  <span className="text-[10px] bg-teal-900/50 px-2 py-0.5 rounded text-teal-200 font-bold mt-1">x{inventory[f.id]}</span>
                 </div>
               ))}
             </div>
@@ -394,7 +392,7 @@ export default function TabTown() {
             <InventoryWidget />
 
             {/* Warga Kota (NPCs) */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-pink-200 pb-2 text-pink-900 mt-6">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-pink-200/30 pb-2 text-pink-100 mt-6">
               <span>👨‍👩‍👧‍👦</span> Warga Kota
             </div>
             <div className="space-y-3 mb-8">
@@ -402,15 +400,15 @@ export default function TabTown() {
                 const data = npcs[npc.id] || { level: 1, points: 0 };
                 const maxPoints = data.level * 100;
                 return (
-                  <div key={npc.id} className="bg-pink-50 border border-pink-100 p-3 rounded-xl flex items-center gap-3">
-                    <div className="text-3xl bg-white p-2 rounded-full shadow-sm">{npc.emoji}</div>
+                  <div key={npc.id} className="glass-card border border-pink-100/30 p-3 rounded-xl flex items-center gap-3">
+                    <div className="text-3xl bg-white/20 p-2 rounded-full shadow-sm">{npc.emoji}</div>
                     <div className="flex-1">
-                      <div className="font-bold text-pink-900 text-sm flex justify-between">
+                      <div className="font-bold text-white text-sm flex justify-between">
                         <span>{npc.name}</span>
-                        <span className="text-pink-600 bg-pink-100 px-2 rounded-full text-xs">Lv {data.level}</span>
+                        <span className="text-pink-300 bg-pink-900/50 px-2 rounded-full text-xs">Lv {data.level}</span>
                       </div>
-                      <div className="text-[10px] text-pink-700 mb-1">{npc.role}</div>
-                      <div className="w-full h-1.5 bg-pink-200 rounded-full overflow-hidden">
+                      <div className="text-[10px] text-pink-200 mb-1">{npc.role}</div>
+                      <div className="w-full h-1.5 bg-pink-900/50 rounded-full overflow-hidden">
                         <div className="h-full bg-pink-500" style={{ width: `${(data.points / maxPoints) * 100}%` }} />
                       </div>
                     </div>
@@ -427,11 +425,11 @@ export default function TabTown() {
             </div>
 
             {/* Dapur Ikan */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-orange-200 pb-2 text-orange-900 mt-6">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-orange-200/30 pb-2 text-orange-100 mt-6">
               <span>🍳</span> Dapur Ikan
             </div>
-            <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 min-h-[80px] flex items-center justify-center mb-4">
-              <span className="text-orange-300 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
+            <div className="glass-card border-orange-100/30 rounded-xl p-4 min-h-[80px] flex items-center justify-center mb-4">
+              <span className="text-orange-200 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
             </div>
             
           </div>
