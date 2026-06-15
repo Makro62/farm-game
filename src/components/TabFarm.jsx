@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
 import { getCropEmoji, formatNumber, SHOP_SEEDS, SHOP_ANIMALS } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { InventoryWidget } from './InventoryWidget';
 import toast from 'react-hot-toast';
 
 export default function TabFarm() {
@@ -30,6 +31,7 @@ export default function TabFarm() {
   const availableSeeds = SHOP_SEEDS.filter(s => s.season === 'all' || s.season === season.current);
 
   const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
+  const [shopAmounts, setShopAmounts] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [autoFarm, setAutoFarm] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -247,48 +249,57 @@ export default function TabFarm() {
               <span>🛒</span> Shop Bibit
             </div>
             <div className="grid grid-cols-2 gap-2 mb-6">
-              {availableSeeds.map((seed) => (
-                <button
-                  key={`shop-${seed.id}`}
-                  onClick={() => handleShopClick(seed)}
-                  className="p-2 rounded-xl border-2 border-gray-200 transition-all flex flex-col items-center gap-1 bg-white hover:border-green-300 hover:shadow-sm"
-                >
-                  <span className="text-2xl">{getCropEmoji(seed.id)}</span>
-                  <span className="font-semibold text-xs">{seed.name}</span>
-                  <span className="text-[10px] font-bold text-amber-600">{seed.price}💰</span>
-                </button>
-              ))}
+              {availableSeeds.map((seed) => {
+                const amt = shopAmounts[seed.id] || 1;
+                return (
+                  <div
+                    key={`shop-${seed.id}`}
+                    className="p-2 rounded-xl border-2 border-gray-200 bg-white flex flex-col items-center gap-2 shadow-sm"
+                  >
+                    <span className="text-2xl">{getCropEmoji(seed.id)}</span>
+                    <span className="font-semibold text-[11px] text-green-800 text-center leading-tight">{seed.name}</span>
+                    <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
+                      <button onClick={() => setShopAmounts(p => ({ ...p, [seed.id]: Math.max(1, amt - 1) }))} className="w-5 h-5 flex items-center justify-center bg-gray-200 rounded text-gray-700 font-bold">-</button>
+                      <span className="text-xs font-bold w-4 text-center">{amt}</span>
+                      <button onClick={() => setShopAmounts(p => ({ ...p, [seed.id]: amt + 1 }))} className="w-5 h-5 flex items-center justify-center bg-gray-200 rounded text-gray-700 font-bold">+</button>
+                    </div>
+                    <button 
+                      onClick={() => buyItem(seed.id, amt, seed.price)}
+                      className="w-full text-[11px] font-bold text-white bg-green-500 hover:bg-green-600 px-2 py-1.5 rounded-lg transition-colors mt-1"
+                    >
+                      Beli ({seed.price * amt} 💰)
+                    </button>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* 2. Pilih Tanaman (Feedback Visual) */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-green-200 pb-2">
               <span>🌱</span> PILIH TANAMAN
             </div>
-            <div className={`p-3 rounded-xl border mb-6 font-medium text-sm text-center ${selectedInventoryItem ? 'bg-green-100 border-green-300 text-green-900 shadow-inner' : 'bg-green-50 border-green-100 text-green-700'}`}>
-              {selectedInventoryItem 
-                ? (SHOP_SEEDS.find(s=>s.id === selectedInventoryItem) 
-                   ? `Siap Ditanam: ${SHOP_SEEDS.find(s=>s.id === selectedInventoryItem).name}` 
-                   : 'Item ini bukan bibit!') 
-                : 'Pilih dari Inventory 👉'}
+            <div className="bg-green-50 border border-green-100 rounded-xl p-3 mb-6">
+              {SHOP_SEEDS.filter(s => inventory[s.id] > 0).length === 0 ? (
+                <div className="text-center text-sm text-green-700 italic">Belum ada bibit di Inventory.</div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {SHOP_SEEDS.filter(s => inventory[s.id] > 0).map(seed => (
+                    <button
+                      key={`inv-${seed.id}`}
+                      onClick={() => setSelectedInventoryItem(seed.id)}
+                      className={`p-2 rounded-lg border-2 flex flex-col items-center gap-1 transition-all
+                        ${selectedInventoryItem === seed.id ? 'bg-green-200 border-green-500 scale-105 shadow-md' : 'bg-white border-green-200 hover:bg-green-100'}`}
+                    >
+                      <span className="text-2xl relative">
+                        {getCropEmoji(seed.id)}
+                        <span className="absolute -bottom-1 -right-1 bg-yellow-400 text-yellow-900 text-[9px] font-bold px-1 rounded-sm shadow-sm">
+                          {inventory[seed.id]}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-
-            {/* 3. Booster */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-green-200 pb-2">
-              <span>⚡</span> Booster
-            </div>
-            <button
-              onClick={handleBuyGrowthBooster}
-              className={`w-full p-2 rounded-xl shadow-sm mb-6 font-bold flex justify-between items-center transition-transform ${
-                growthMultiplier > 1
-                  ? 'bg-green-500 text-white cursor-default'
-                  : 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white hover:scale-105'
-              }`}
-            >
-              <span>⚡ Growth ×1.5</span>
-              <span className="bg-black/20 px-2 py-0.5 rounded text-xs">
-                {growthMultiplier > 1 ? 'AKTIF' : '50💰'}
-              </span>
-            </button>
 
             {/* 4. Pekerja (Auto) */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-green-200 pb-2">
@@ -448,33 +459,7 @@ export default function TabFarm() {
           <div className="glass-panel p-4 h-full">
             
             {/* 1. Inventory */}
-            <div className="font-bold text-lg mb-3 flex items-center justify-between border-b-2 border-amber-200 pb-2">
-              <div className="flex items-center gap-2 text-amber-900">
-                <span>📦</span> Inventory
-              </div>
-            </div>
-            <div className="grid grid-cols-4 gap-1 mb-3">
-              {Object.keys(inventory).length === 0 && (
-                <div className="col-span-4 text-center text-xs text-gray-400 py-2">Kosong...</div>
-              )}
-              {Object.entries(inventory).map(([item, amount]) => amount > 0 && (
-                <button 
-                  key={item} 
-                  onClick={() => setSelectedInventoryItem(item)}
-                  className={`bg-white rounded-lg p-1 flex flex-col items-center border-2 relative transition-all hover:scale-105 active:scale-95
-                    ${selectedInventoryItem === item ? 'border-green-500 bg-green-50 shadow-md transform scale-110' : 'border-gray-100'}
-                  `}
-                >
-                  <span className="text-xl">{getCropEmoji(item)}</span>
-                  <span className="absolute -bottom-1 -right-1 bg-amber-500 text-white text-[10px] font-bold px-1 rounded shadow-sm">
-                    {amount}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <button onClick={handleSellAll} className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 text-white py-2 rounded-xl shadow-sm mb-6 font-bold hover:scale-105 transition-transform text-sm">
-              💰 Jual Semua
-            </button>
+            <InventoryWidget />
 
             {/* 2. Quest Harian */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-purple-200 pb-2 text-purple-900 mt-6">

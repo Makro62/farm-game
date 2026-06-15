@@ -3,6 +3,7 @@
 import { useGameStore } from '@/lib/store';
 import { MINERALS, getCropEmoji } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { InventoryWidget } from './InventoryWidget';
 import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 
@@ -10,6 +11,9 @@ export default function TabMine() {
   const mining = useGameStore(state => state.mining);
   const mineNode = useGameStore(state => state.mineNode);
   const inventory = useGameStore(state => state.inventory);
+  const hireWorker = useGameStore(state => state.hireWorker);
+  const workers = useGameStore(state => state.workers);
+  const openConfirm = useGameStore(state => state.openConfirm);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
@@ -29,7 +33,23 @@ export default function TabMine() {
     }
   };
 
-  const myMinerals = MINERALS.map(m => ({ ...m, amount: inventory[m.id] || 0 })).filter(m => m.amount > 0);
+  const handleHireMiner = () => {
+    if (workers.miner) {
+      toast('Kurcaci Tambang sudah bekerja! ⛏️', { icon: '✅' });
+      return;
+    }
+    openConfirm(
+      'Sewa Kurcaci Tambang',
+      'Sewa Kurcaci Tambang seharga 15.000 💰? Dia akan menambang otomatis untukmu!',
+      () => {
+        if (hireWorker('miner', 15000)) {
+          toast.success('Kurcaci Tambang berhasil disewa! ⛏️');
+        } else {
+          toast.error('Koin tidak cukup!');
+        }
+      }
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -58,18 +78,36 @@ export default function TabMine() {
               <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded font-bold">Upgrade</span>
             </button>
             
+            {/* Pekerja Auto */}
             <div className="font-bold text-lg mb-3 mt-6 flex items-center gap-2 border-b-2 border-gray-200 pb-2">
-              <span>💎</span> Mineral Anda
+              <span>🧑‍🌾</span> Pekerja (Auto)
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {myMinerals.length === 0 && <span className="text-xs text-gray-400 col-span-3">Kosong...</span>}
-              {myMinerals.map(m => (
-                <div key={m.id} className="bg-gray-100 p-2 rounded-lg flex flex-col items-center border border-gray-200 relative">
-                  <span className="text-2xl">{m.emoji}</span>
-                  <span className="absolute -bottom-1 -right-1 bg-gray-800 text-white text-[10px] font-bold px-1 rounded">{m.amount}</span>
-                </div>
-              ))}
+            <button
+              onClick={handleHireMiner}
+              className={`w-full border-2 p-2 rounded-xl shadow-sm flex justify-between items-center transition-colors text-left mb-6 ${
+                workers.miner
+                  ? 'bg-gray-100 border-gray-400'
+                  : 'bg-white border-blue-200 hover:bg-blue-50'
+              }`}
+            >
+              <div>
+                <div className="font-bold text-gray-800 text-sm">⛏️ Kurcaci Tambang</div>
+                <div className="text-[10px] text-gray-500">Auto-Mine</div>
+              </div>
+              <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs">
+                {workers.miner ? '✅ Dimiliki' : '15000💰'}
+              </span>
+            </button>
+            
+            {/* Pabrik / Produksi */}
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-red-200 pb-2 text-red-900 mt-6">
+              <span>🏭</span> Pabrik (Crafting)
             </div>
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 min-h-[80px] flex items-center justify-center mb-6">
+              <span className="text-red-300 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
+            </div>
+
+            <InventoryWidget />
           </div>
         </div>
 

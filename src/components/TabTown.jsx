@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
 import { FISHES, NPC_LIST } from '@/lib/utils';
+import { InventoryWidget } from './InventoryWidget';
 import toast from 'react-hot-toast';
 
 export default function TabTown() {
@@ -10,6 +11,8 @@ export default function TabTown() {
   const addItem = useGameStore(state => state.addItem);
   const activateCoinBooster = useGameStore(state => state.activateCoinBooster);
   const coinMultiplier = useGameStore(state => state.coinMultiplier);
+  const buyGrowthBooster = useGameStore(state => state.buyGrowthBooster);
+  const growthMultiplier = useGameStore(state => state.growthMultiplier);
   const dev = useGameStore(state => state.dev);
   const openConfirm = useGameStore(state => state.openConfirm);
   const workers = useGameStore(state => state.workers);
@@ -159,6 +162,24 @@ export default function TabTown() {
     );
   };
 
+  const handleBuyGrowthBooster = () => {
+    if (growthMultiplier > 1) {
+      toast('Booster Growth sudah aktif!', { icon: '⚡' });
+      return;
+    }
+    openConfirm(
+      'Beli Booster Growth',
+      'Beli Booster Growth x1.5 (Tumbuh lebih cepat) seharga 50 💰?',
+      () => {
+        if (buyGrowthBooster()) {
+          toast.success('Booster Growth x1.5 Aktif!', { icon: '🌱' });
+        } else {
+          toast.error('Koin tidak cukup!');
+        }
+      }
+    );
+  };
+
   const handleBuyMerchant = () => {
     if (workers.fisher) {
       toast('Pemancing Kota sudah disewa! 🎣', { icon: '✅' });
@@ -226,9 +247,13 @@ export default function TabTown() {
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-yellow-200 pb-2 text-yellow-900 mt-6">
               <span>⚡</span> Booster
             </div>
-            <button onClick={handleBuyBooster} className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 text-white p-2 rounded-xl shadow-sm mb-6 font-bold flex justify-between items-center hover:scale-105 transition-transform">
+            <button onClick={handleBuyGrowthBooster} className={`w-full p-2 rounded-xl shadow-sm mb-2 font-bold flex justify-between items-center transition-transform ${growthMultiplier > 1 ? 'bg-green-500 text-white cursor-default' : 'bg-gradient-to-r from-green-400 to-emerald-500 text-white hover:scale-105'}`}>
+              <span>🌱 Growth ×1.5</span>
+              <span className="bg-black/20 px-2 py-0.5 rounded text-xs">{growthMultiplier > 1 ? 'AKTIF' : '50💰'}</span>
+            </button>
+            <button onClick={handleBuyBooster} className={`w-full p-2 rounded-xl shadow-sm mb-6 font-bold flex justify-between items-center transition-transform ${coinMultiplier > 1 ? 'bg-amber-600 text-white cursor-default' : 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white hover:scale-105'}`}>
               <span>💰 Coin ×2</span>
-              <span className="bg-black/20 px-2 py-0.5 rounded text-xs">100💰</span>
+              <span className="bg-black/20 px-2 py-0.5 rounded text-xs">{coinMultiplier > 1 ? 'AKTIF' : '100💰'}</span>
             </button>
 
             {/* 5. Roda Harian */}
@@ -366,8 +391,10 @@ export default function TabTown() {
         <div className="lg:col-span-1 space-y-4">
           <div className="glass-panel p-4 h-full">
             
+            <InventoryWidget />
+
             {/* Warga Kota (NPCs) */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-pink-200 pb-2 text-pink-900">
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-pink-200 pb-2 text-pink-900 mt-6">
               <span>👨‍👩‍👧‍👦</span> Warga Kota
             </div>
             <div className="space-y-3 mb-8">

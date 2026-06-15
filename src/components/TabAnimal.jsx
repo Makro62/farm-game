@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
 import { getAnimalEmoji, SHOP_ANIMALS } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { InventoryWidget } from './InventoryWidget';
 import toast from 'react-hot-toast';
 
 export default function TabAnimal() {
@@ -56,7 +57,29 @@ export default function TabAnimal() {
     setAutoFarm((prev) => !prev);
   };
 
-  const handleHireRancher = () => {
+  const handleSellAnimal = (animal) => {
+    const animalData = SHOP_ANIMALS.find(a => a.id === animal.type);
+    if (!animalData) return;
+    
+    // Asumsikan harga jual hewan adalah setengah dari harga beli
+    const sellPrice = Math.floor(animalData.price / 2);
+    
+    openConfirm(
+      'Jual Hewan',
+      `Apakah Anda yakin ingin menjual ${animalData.name} seharga ${sellPrice} 💰?`,
+      () => {
+        // Implement sell logic (hapus dari array animals dan tambah koin)
+        useGameStore.setState(state => {
+          const newAnimals = state.animals.filter(a => a.id !== animal.id);
+          const currentCoins = state.coins;
+          return { animals: newAnimals, coins: currentCoins + sellPrice };
+        });
+        toast.success(`${animalData.name} berhasil dijual! (+${sellPrice} 💰)`);
+      }
+    );
+  };
+
+  const handleHireWorker = () => {
     if (workers.rancher) {
       toast('Kurcaci Peternak sudah dimiliki! Aktifkan Auto. 🧑‍🍳', { icon: '✅' });
       return;
@@ -129,7 +152,7 @@ export default function TabAnimal() {
               <span>🧑‍🌾</span> Pekerja (Auto)
             </div>
             <button
-              onClick={handleHireRancher}
+              onClick={handleHireWorker}
               className={`w-full border-2 p-2 rounded-xl shadow-sm flex justify-between items-center transition-colors text-left ${
                 workers.rancher
                   ? 'bg-green-50 border-green-300'
@@ -211,7 +234,7 @@ export default function TabAnimal() {
                         }
                         handleCollect(animal);
                       }}
-                      className={`aspect-square w-full rounded-2xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md bg-white/20 backdrop-blur-sm border-2
+                      className={`group aspect-square w-full rounded-2xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md bg-white/20 backdrop-blur-sm border-2
                         ${isEditMode ? 'cursor-grab hover:ring-4 ring-yellow-400' : ''}
                         ${isReady ? 'border-yellow-300 ring-4 ring-yellow-400/50 bg-white/40' : 'border-white/30 hover:bg-white/30'}
                       `}
@@ -229,6 +252,20 @@ export default function TabAnimal() {
                           {animalData?.productEmoji}
                         </div>
                       )}
+                      
+                      {/* Tombol Jual Hewan */}
+                      {!isEditMode && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSellAnimal(animal);
+                          }}
+                          className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white p-1 rounded-md text-[10px] font-bold z-30 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Jual Hewan"
+                        >
+                          Jual
+                        </button>
+                      )}
                     </motion.button>
                   );
                 })}
@@ -240,7 +277,11 @@ export default function TabAnimal() {
         {/* ================= RIGHT COLUMN ================= */}
         <div className="lg:col-span-1 space-y-4">
           <div className="glass-panel p-4 h-full">
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-amber-200 pb-2 text-amber-900">
+            
+            {/* Inventory */}
+            <InventoryWidget />
+
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-red-200 pb-2 text-red-900 mt-6">
               <span>🍳</span> Dapur Produksi
             </div>
             <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 min-h-[80px] flex items-center justify-center mb-4">

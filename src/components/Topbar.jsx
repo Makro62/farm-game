@@ -23,14 +23,14 @@ export default function Topbar() {
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <motion.span
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-              className="text-2xl sm:text-3xl"
-            >
-              🌾
-            </motion.span>
-            <h1 className="text-lg sm:text-xl font-bold text-green-700 hidden xs:block">
+            <motion.img
+              src="/img/logo.png"
+              alt="Farm Tycoon Logo"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
+              className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+            />
+            <h1 className="text-xl sm:text-2xl font-black text-[#198236] hidden xs:block tracking-tight">
               Farm Tycoon
             </h1>
           </div>

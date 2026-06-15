@@ -660,8 +660,8 @@ export const useGameStore = create(
         if (!state.mining) return;
         let changed = false;
         
-        const newNodes = state.mining.nodes.map(n => {
-          if (n.status === 'cooldown' && n.regenAt && now >= n.regenAt) {
+        let newNodes = state.mining.nodes.map(n => {
+          if ((n.status === 'cooldown' || n.status === 'depleted') && n.regenAt && now >= n.regenAt) {
             changed = true;
             return { 
               ...n, 
@@ -672,6 +672,30 @@ export const useGameStore = create(
           }
           return n;
         });
+
+        if (state.workers.miner) {
+          const readyNodes = newNodes.filter(n => n.status === 'ready');
+          if (readyNodes.length > 0 && Math.random() < 0.2) { // 20% chance
+            const nodeToMine = readyNodes[0];
+            const rand = Math.random();
+            let minedType = 'batu';
+            if (rand < 0.05) minedType = 'berlian';
+            else if (rand < 0.15) minedType = 'emas';
+            else if (rand < 0.3) minedType = 'besi';
+            else if (rand < 0.5) minedType = 'tembaga';
+            
+            newNodes = newNodes.map(n => 
+              n.id === nodeToMine.id 
+                ? { ...n, status: 'depleted', regenAt: now + 120000 }
+                : n
+            );
+            changed = true;
+            
+            setTimeout(() => {
+              useGameStore.getState().addItem(minedType, 1);
+            }, 0);
+          }
+        }
 
         if (changed) {
           set({ mining: { ...state.mining, nodes: newNodes } });
