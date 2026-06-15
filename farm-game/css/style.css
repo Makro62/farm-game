@@ -1,0 +1,688 @@
+/* ========================================
+   FARM TYCOON - GLOBAL STYLES
+   Glassmorphism Design System
+   ======================================== */
+
+:root {
+    --primary: #4CAF50;
+    --primary-dark: #388E3C;
+    --secondary: #FF9800;
+    --danger: #f44336;
+    --info: #2196F3;
+    --success: #4CAF50;
+    --warning: #FFC107;
+    
+    --bg-dark: #1a1a2e;
+    --bg-light: #16213e;
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    
+    --spring-color: #FFB7C5;
+    --summer-color: #FFD700;
+    --autumn-color: #FF8C00;
+    --winter-color: #87CEEB;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Glassmorphism Effect */
+.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+}
+
+/* Topbar */
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1000;
+    margin: 10px;
+}
+
+.stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.xp-bar-container {
+    width: 200px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--secondary), var(--primary));
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* Tab Navigation */
+.tab-nav {
+    position: fixed;
+    top: 80px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    z-index: 999;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+/* Main Content */
+.game-content {
+    margin-top: 150px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+}
+
+/* Sidebar */
+.sidebar {
+    padding: 20px;
+    height: fit-content;
+}
+
+.shop-grid, .tools-grid, .npc-grid {
+    display: grid;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.shop-item, .tool-item, .npc-card {
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.shop-item:hover, .tool-item:hover, .npc-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+    transform: translateX(5px);
+}
+
+/* Farm Grid */
+.farm-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.farm-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+}
+
+.plot {
+    width: 80px;
+    height: 80px;
+    background: #8B4513;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.plot:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.plot.grass {
+    background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+}
+
+.plot.empty {
+    background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+}
+
+.plot.growing {
+    background: linear-gradient(135deg, #8B4513 0%, #6B8E23 100%);
+}
+
+.plot.ready {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+    to { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+}
+
+.progress-bar {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    right: 5px;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--success));
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* Animal Pen */
+.animal-area {
+    position: relative;
+    min-height: 400px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#animal-pen {
+    position: relative;
+    width: 100%;
+    height: 300px;
+}
+
+.animal {
+    position: absolute;
+    font-size: 40px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.animal:hover {
+    transform: scale(1.2);
+}
+
+.animal-product {
+    position: absolute;
+    font-size: 24px;
+    animation: bounce 1s ease-in-out infinite;
+    cursor: pointer;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Order Board */
+.order-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    padding: 20px;
+}
+
+.order-card {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.order-card.premium {
+    border-color: var(--warning);
+    background: rgba(255, 193, 7, 0.1);
+}
+
+.order-card.express {
+    border-color: var(--danger);
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.order-timer {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--warning);
+    margin-top: 10px;
+}
+
+/* Crafting Station */
+.crafting-station {
+    padding: 20px;
+}
+
+.crafting-queue {
+    margin-top: 15px;
+}
+
+.craft-item {
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+/* Mine Grid */
+.mine-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+}
+
+.mine-node {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #696969 0%, #808080 100%);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.mine-node:hover {
+    transform: scale(1.1);
+}
+
+.mine-node.stone { background: linear-gradient(135deg, #808080 0%, #A9A9A9 100%); }
+.mine-node.copper { background: linear-gradient(135deg, #B87333 0%, #CD7F32 100%); }
+.mine-node.iron { background: linear-gradient(135deg, #4A4A4A 0%, #696969 100%); }
+.mine-node.gold { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); }
+.mine-node.diamond { 
+    background: linear-gradient(135deg, #B9F2FF 0%, #00CED1 100%);
+    animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% { box-shadow: 0 0 10px rgba(0, 206, 209, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(0, 206, 209, 0.8); }
+}
+
+/* Lake Zone */
+.lake-zone {
+    position: relative;
+    min-height: 400px;
+    background: linear-gradient(180deg, #87CEEB 0%, #1E90FF 100%);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.lake-zone::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60%;
+    background: linear-gradient(0deg, #1E90FF 0%, #87CEEB 100%);
+    border-radius: 50% 50% 0 0;
+}
+
+/* Fishing Mini-game */
+.fishing-minigame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+}
+
+.fishing-bar {
+    width: 300px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    border: 3px solid #fff;
+}
+
+.green-zone {
+    position: absolute;
+    left: 40%;
+    width: 20%;
+    height: 100%;
+    background: rgba(76, 175, 80, 0.6);
+}
+
+.indicator {
+    position: absolute;
+    width: 10px;
+    height: 100%;
+    background: #ff0000;
+    left: 50%;
+    transition: left 0.05s linear;
+}
+
+/* Inventory Panel */
+.inventory-panel {
+    position: fixed;
+    right: 0;
+    top: 80px;
+    width: 300px;
+    padding: 20px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.inv-slot {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    position: relative;
+    cursor: pointer;
+}
+
+.inv-count {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Buttons */
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.btn-secondary {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-icon:hover {
+    background: var(--primary);
+    transform: scale(1.1);
+}
+
+.btn-toggle {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-toggle.off {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-toggle.on {
+    background: var(--success);
+    color: white;
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 2000;
+}
+
+.toast {
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 8px;
+    color: white;
+    animation: slideIn 0.3s ease;
+    max-width: 300px;
+}
+
+.toast.success { border-left: 4px solid var(--success); }
+.toast.error { border-left: 4px solid var(--danger); }
+.toast.warning { border-left: 4px solid var(--warning); }
+.toast.info { border-left: 4px solid var(--info); }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    z-index: 3000;
+}
+
+.modal::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content h2 {
+    margin-bottom: 15px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+/* Weather Effects */
+body.weather-rain::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cline x1='10' y1='0' x2='10' y2='20' stroke='%234FC3F7' stroke-width='0.5'/%3E%3C/svg%3E");
+    animation: rain 0.5s linear infinite;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+@keyframes rain {
+    from { background-position: 0 0; }
+    to { background-position: 0 100px; }
+}
+
+body.weather-snow::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='10' cy='10' r='2' fill='white'/%3E%3C/svg%3E");
+    animation: snow 3s linear infinite;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+@keyframes snow {
+    from { background-position: 0 0; }
+    to { background-position: 50px 100px; }
+}
+
+/* Season Colors */
+body.season-spring { --bg-dark: #2d1f3d; --bg-light: #1a1a2e; }
+body.season-summer { --bg-dark: #1a3d2f; --bg-light: #1a2e3d; }
+body.season-autumn { --bg-dark: #3d2f1a; --bg-light: #3d1a1a; }
+body.season-winter { --bg-dark: #1a2f3d; --bg-light: #1a1a3d; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .game-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .tab-content.active {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+        order: 2;
+    }
+    
+    .inventory-panel {
+        position: relative;
+        width: 100%;
+        max-height: none;
+        order: 3;
+    }
+}
+
+@media (max-width: 768px) {
+    .topbar {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px;
+    }
+    
+    .tab-nav {
+        top: 140px;
+        flex-wrap: wrap;
+    }
+    
+    .game-content {
+        margin-top: 200px;
+    }
+    
+    .farm-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .mine-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

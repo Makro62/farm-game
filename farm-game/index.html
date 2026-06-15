@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌾 Farm Tycoon</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Topbar -->
+    <header class="topbar glass">
+        <div class="stat-chip">
+            <span>💰</span>
+            <span id="coin-val">500</span>
+        </div>
+        <div class="stat-chip">
+            <span>⭐ Level</span>
+            <span id="level-val">1</span>
+        </div>
+        <div class="xp-bar-container">
+            <div id="xp-bar-fill" class="xp-bar-fill"></div>
+        </div>
+        <div class="stat-chip" id="weather-chip">
+            <span>☀️</span>
+            <span id="weather-text">Cerah</span>
+        </div>
+        <div class="stat-chip" id="season-chip">
+            <span>🌸</span>
+            <span id="season-text">Semi</span>
+        </div>
+        <button id="btn-save" class="btn-icon" title="Save (S)">💾</button>
+        <button id="btn-settings" class="btn-icon" title="Settings">⚙️</button>
+    </header>
+
+    <!-- Main Tabs Navigation -->
+    <nav class="tab-nav glass">
+        <button class="tab-btn active" data-tab="farm">🌱 Pertanian</button>
+        <button class="tab-btn" data-tab="animals">🐄 Peternakan</button>
+        <button class="tab-btn" data-tab="city">🏪 Kota</button>
+        <button class="tab-btn" data-tab="mine">⛏️ Tambang</button>
+        <button class="tab-btn" data-tab="lake">🎣 Danau</button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="game-content">
+        <!-- Tab: Pertanian -->
+        <section id="tab-farm" class="tab-content active">
+            <div class="sidebar glass">
+                <h3>🏪 Toko Bibit</h3>
+                <div id="seed-shop" class="shop-grid"></div>
+                
+                <h3>🧙‍♂️ Auto-Farm</h3>
+                <div class="gnome-control">
+                    <button id="btn-gnome-farmer" class="btn-toggle">OFF</button>
+                    <span>Kurcaci Petani (5.000)</span>
+                </div>
+            </div>
+            
+            <div class="farm-area">
+                <div id="farm-grid" class="farm-grid"></div>
+            </div>
+        </section>
+
+        <!-- Tab: Peternakan -->
+        <section id="tab-animals" class="tab-content">
+            <div class="sidebar glass">
+                <h3>🏪 Toko Hewan</h3>
+                <div id="animal-shop" class="shop-grid"></div>
+                
+                <h3>🧑‍🍳 Auto-Peternakan</h3>
+                <div class="gnome-control">
+                    <button id="btn-gnome-rancher" class="btn-toggle">OFF</button>
+                    <span>Kurcaci Peternak (8.000)</span>
+                </div>
+            </div>
+            
+            <div class="animal-area">
+                <div id="animal-pen"></div>
+                <div id="animal-products"></div>
+            </div>
+        </section>
+
+        <!-- Tab: Kota -->
+        <section id="tab-city" class="tab-content">
+            <div class="sidebar glass">
+                <h3>🏗️ Bangunan</h3>
+                <div id="building-shop" class="shop-grid"></div>
+                
+                <h3>👥 NPC</h3>
+                <div id="npc-list" class="npc-grid"></div>
+            </div>
+            
+            <div class="city-area">
+                <div id="order-board" class="order-board"></div>
+                <div id="crafting-station" class="crafting-station"></div>
+            </div>
+        </section>
+
+        <!-- Tab: Tambang -->
+        <section id="tab-mine" class="tab-content">
+            <div class="sidebar glass">
+                <h3>⛏️ Alat Tambang</h3>
+                <div id="mining-tools" class="tools-grid"></div>
+            </div>
+            
+            <div class="mine-area">
+                <div id="mine-grid" class="mine-grid"></div>
+            </div>
+        </section>
+
+        <!-- Tab: Danau -->
+        <section id="tab-lake" class="tab-content">
+            <div class="sidebar glass">
+                <h3>🎣 Peralatan Pancing</h3>
+                <div id="fishing-rods" class="tools-grid"></div>
+            </div>
+            
+            <div class="lake-area">
+                <div id="lake-zone" class="lake-zone"></div>
+                <div id="fishing-minigame" class="fishing-minigame" style="display:none;">
+                    <div class="fishing-bar">
+                        <div class="green-zone"></div>
+                        <div class="indicator"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Inventory Panel -->
+    <aside class="inventory-panel glass">
+        <h3>🎒 Inventory <span id="inventory-count">0/50</span></h3>
+        <div id="inventory-grid" class="inventory-grid"></div>
+        
+        <h3>💰 Jual Cepat</h3>
+        <button id="btn-sell-all" class="btn-primary">Jual Semua Hasil Panen</button>
+    </aside>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Modal Dialog -->
+    <dialog id="modal-dialog" class="modal glass">
+        <div class="modal-content">
+            <h2 id="modal-title">Title</h2>
+            <p id="modal-message">Message</p>
+            <div class="modal-actions">
+                <button id="modal-confirm" class="btn-primary">OK</button>
+                <button id="modal-cancel" class="btn-secondary">Batal</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Game Scripts -->
+    <script type="module" src="js/src/main.js"></script>
+</body>
+</html>
