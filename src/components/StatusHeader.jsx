@@ -1,7 +1,7 @@
 import { useGameStore } from '@/lib/store';
 import toast from 'react-hot-toast';
 
-export function StatusHeader({ setAutoFarm, setSelectedInventoryItem }) {
+export function StatusHeader() {
   const season = useGameStore(state => state.season);
   const weather = useGameStore(state => state.weather);
   const activeEvent = useGameStore(state => state.activeEvent);
@@ -30,8 +30,6 @@ export function StatusHeader({ setAutoFarm, setSelectedInventoryItem }) {
       'Semua progress (koin, level, tanaman, hewan) akan hilang. Yakin?',
       () => {
         resetGame();
-        if (setSelectedInventoryItem) setSelectedInventoryItem(null);
-        if (setAutoFarm) setAutoFarm(false);
         toast.success('Game di-reset ke awal!');
       }
     );

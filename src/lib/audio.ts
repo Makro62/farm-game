@@ -179,6 +179,7 @@ export const audioManager = new AudioManager();
 if (typeof window !== 'undefined') {
   const initOnInteraction = () => {
     audioManager.ensureInitialized();
+    audioManager.playMusic('main');
     document.removeEventListener('click', initOnInteraction);
     document.removeEventListener('touchstart', initOnInteraction);
   };

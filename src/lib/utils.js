@@ -63,11 +63,8 @@ export const SHOP_SEEDS = [
   { id: 'bibit_jagung', cropId: 'jagung', name: 'Bibit Jagung', price: 20, time: 30, season: 'all' },
   { id: 'bibit_tomat', cropId: 'tomat', name: 'Bibit Tomat', price: 35, time: 60, season: 'all' },
   { id: 'bibit_stroberi', cropId: 'stroberi', name: 'Bibit Stroberi', price: 75, time: 120, season: 'all' },
-  // Bibit Musiman
-  { id: 'bibit_tulip', cropId: 'tulip', name: 'Bibit Tulip', price: 200, time: 200, season: 'spring' },
-  { id: 'bibit_semangka', cropId: 'semangka', name: 'Bibit Semangka', price: 120, time: 150, season: 'summer' },
-  { id: 'bibit_apel', cropId: 'apel', name: 'Bibit Apel', price: 150, time: 240, season: 'autumn' },
-  { id: 'bibit_jamur', cropId: 'jamur', name: 'Spora Jamur', price: 500, time: 300, season: 'winter' },
+  { id: 'bibit_semangka', cropId: 'semangka', name: 'Bibit Semangka', price: 120, time: 150, season: 'all' },
+  { id: 'bibit_jamur', cropId: 'jamur', name: 'Spora Jamur', price: 500, time: 300, season: 'all' },
 ];
 
 export const SHOP_ANIMALS = [
@@ -77,6 +74,15 @@ export const SHOP_ANIMALS = [
   { id: 'domba', name: 'Domba', price: 800, time: 90, product: 'bulu', productEmoji: '🧶', image: '/img/animals/sheep.png' },
   { id: 'babi', name: 'Babi', price: 1200, time: 120, product: 'truffle', productEmoji: '🍄', image: '/img/animals/pig.png' },
   { id: 'kuda', name: 'Kuda', price: 2000, time: 150, product: 'tapal', productEmoji: '🧲', image: '/img/animals/horse.png' },
+];
+
+export const SHOP_MINING = [
+  { id: 'bom_kecil', name: 'Bom Kecil', emoji: '🧨', price: 50 },
+  { id: 'bom_besar', name: 'Bom Besar', emoji: '💣', price: 150 },
+  { id: 'pickaxe_besi', name: 'Pickaxe Besi', emoji: '⛏️', price: 300 },
+  { id: 'pickaxe_emas', name: 'Pickaxe Emas', emoji: '🛠️', price: 800 },
+  { id: 'senter', name: 'Senter Goa', emoji: '🔦', price: 120 },
+  { id: 'tali', name: 'Tali Tambang', emoji: '🪢', price: 60 },
 ];
 
 /**

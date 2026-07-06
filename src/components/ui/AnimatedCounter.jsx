@@ -1,32 +1,47 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 export function AnimatedCounter({ 
   value, 
   duration = 0.5, 
   className = '',
-  format = (val) => val.toLocaleString('id-ID')
+  format = (val) => (val ?? 0).toLocaleString('id-ID')
 }) {
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, (latest) => format(Math.round(latest)));
-  const prevValue = useRef(value);
-  
+  const [displayValue, setDisplayValue] = useState(value ?? 0);
+
   useEffect(() => {
-    const controls = animate(count, value, {
-      duration,
-      ease: 'easeOut'
-    });
-    
-    prevValue.current = value;
-    
-    return controls.stop;
-  }, [value, duration, count]);
+    let startTimestamp = null;
+    const startValue = displayValue ?? 0;
+    const endValue = value ?? 0;
+    const durationMs = duration * 1000;
+
+    if (startValue === endValue) return;
+
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / durationMs, 1);
+      
+      // easeOut cubic
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(startValue + (endValue - startValue) * ease);
+      
+      setDisplayValue(current);
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        setDisplayValue(endValue);
+      }
+    };
+
+    window.requestAnimationFrame(step);
+  }, [value, duration]);
   
   return (
     <motion.span className={className}>
-      {rounded}
+      {format(displayValue)}
     </motion.span>
   );
 }

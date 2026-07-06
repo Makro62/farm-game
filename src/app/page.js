@@ -46,11 +46,16 @@ export default function Page() {
   // Global Game Loop for Phase 1 features (Seasons, Weather, Mining)
   useEffect(() => {
     if (!isHydrated) return;
+    
+    // Ensure daily quests are generated for today
+    useGameStore.getState().generateDailyQuests();
+    
     const globalTick = setInterval(() => {
       const state = useGameStore.getState();
       state.advanceSeasonTick();
       state.changeWeather();
       state.syncMiningNodes();
+      state.runAutoWorkers();
     }, 1000);
     return () => clearInterval(globalTick);
   }, [isHydrated]);

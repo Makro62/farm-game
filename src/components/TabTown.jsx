@@ -22,6 +22,8 @@ export default function TabTown() {
   const activeEvent = useGameStore(state => state.activeEvent);
   const npcs = useGameStore(state => state.npcs);
   const openNpcGift = useGameStore(state => state.openNpcGift);
+  const autoFisher = useGameStore(state => state.autoFisher);
+  const toggleAutoFisher = useGameStore(state => state.toggleAutoFisher);
 
   const [fishState, setFishState] = useState('idle'); // idle | waiting | bite | minigame
   const [indicatorPos, setIndicatorPos] = useState(50);
@@ -303,12 +305,15 @@ export default function TabTown() {
                 <span>🎣</span> Danau Pemancingan
               </div>
               <div className="flex gap-2">
-                <button
-                  onClick={() => toast('Auto memancing berjalan via Pemancing Kota!', { icon: '🎣' })}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${workers.fisher ? 'bg-blue-500 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
-                >
-                  🧑‍🌾 Auto: {workers.fisher ? 'ON' : 'OFF'}
-                </button>
+                <button 
+                  onClick={() => {
+                    if (workers.fisher) toggleAutoFisher();
+                    else toast('Sewa Pemancing Kota dulu!', { icon: '🎣' });
+                  }}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFisher ? 'bg-blue-500 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+                 >
+                  🧑‍🌾 Auto: {autoFisher ? 'ON' : 'OFF'}
+                 </button>
               </div>
             </div>
             <div 

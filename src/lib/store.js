@@ -2,6 +2,8 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import toast from 'react-hot-toast';
+import { SHOP_SEEDS, SHOP_ANIMALS, FISHES } from './utils';
 
 // Initial state
 const initialState = {
@@ -14,7 +16,7 @@ const initialState = {
   lastLogin: null,
   
   // Farm
-  plots: Array.from({ length: 16 }, (_, i) => ({
+  plots: Array.from({ length: 30 }, (_, i) => ({
     id: i,
     status: 'empty',
     crop: null,
@@ -49,6 +51,11 @@ const initialState = {
     fisher: false
   },
   
+  autoFarmer: false,
+  autoRancher: false,
+  autoFisher: false,
+  selectedSeed: null,
+  
   // UI Modals
   modals: {
     prompt: { isOpen: false, title: '', msg: '', onConfirm: null },
@@ -66,7 +73,7 @@ const initialState = {
   season: { current: 'spring', day: 1, tick: 0 },
   weather: { current: '☀️ Cerah', nextChangeIn: 300 },
   mining: {
-    nodes: Array.from({ length: 24 }, (_, i) => ({
+    nodes: Array.from({ length: 30 }, (_, i) => ({
       id: i,
       status: 'ready',
       type: Math.random() < 0.05 ? 'berlian' : Math.random() < 0.15 ? 'emas' : Math.random() < 0.3 ? 'besi' : Math.random() < 0.5 ? 'tembaga' : 'batu',
@@ -81,7 +88,11 @@ const initialState = {
     botan: { level: 1, points: 0 },
     hadi:  { level: 1, points: 0 }
   },
-  activeEvent: null
+  activeEvent: null,
+  
+  // Quests
+  dailyQuests: [],
+  lastQuestDate: null
 };
 
 export const useGameStore = create(
@@ -127,6 +138,12 @@ export const useGameStore = create(
           }
         }));
       },
+
+      // ===== AUTO WORKERS TOGGLES =====
+      toggleAutoFarmer: () => set(state => ({ autoFarmer: !state.autoFarmer })),
+      toggleAutoRancher: () => set(state => ({ autoRancher: !state.autoRancher })),
+      toggleAutoFisher: () => set(state => ({ autoFisher: !state.autoFisher })),
+      setSelectedSeed: (seedId) => set({ selectedSeed: seedId }),
       
       // ===== COIN MANAGEMENT =====
       
@@ -275,6 +292,7 @@ export const useGameStore = create(
         }));
 
         get().addXP(10);
+        get().progressQuest('harvest', crop, 1);
 
         return crop;
       },
@@ -389,6 +407,7 @@ export const useGameStore = create(
         }));
 
         get().addXP(8);
+        get().progressQuest('collect', productType, 1);
 
         return true;
       },
@@ -438,6 +457,71 @@ export const useGameStore = create(
           reward,
           message: `🔥 Streak ${newStreak} hari! +${reward} 💰`
         };
+      },
+
+      // ===== QUEST SYSTEM =====
+      
+      generateDailyQuests: () => {
+        const today = new Date().toDateString();
+        const state = get();
+        
+        if (state.lastQuestDate === today && state.dailyQuests.length > 0) {
+          return; // Already generated for today
+        }
+        
+        // Randomly generate 3 quests
+        const possibleQuests = [
+          { type: 'harvest', action: 'Panen', targetId: 'wortel', targetName: 'Wortel', count: 0, required: 10, rewardCoins: 100, rewardXp: 50, claimed: false },
+          { type: 'harvest', action: 'Panen', targetId: 'tomat', targetName: 'Tomat', count: 0, required: 15, rewardCoins: 150, rewardXp: 80, claimed: false },
+          { type: 'harvest', action: 'Panen', targetId: 'gandum', targetName: 'Gandum', count: 0, required: 20, rewardCoins: 200, rewardXp: 100, claimed: false },
+          { type: 'mine', action: 'Tambang', targetId: 'batu', targetName: 'Batu', count: 0, required: 15, rewardCoins: 120, rewardXp: 60, claimed: false },
+          { type: 'mine', action: 'Tambang', targetId: 'tembaga', targetName: 'Tembaga', count: 0, required: 5, rewardCoins: 180, rewardXp: 90, claimed: false },
+          { type: 'mine', action: 'Tambang', targetId: 'besi', targetName: 'Besi', count: 0, required: 3, rewardCoins: 250, rewardXp: 120, claimed: false },
+          { type: 'fish', action: 'Pancing', targetId: 'ikan_teri', targetName: 'Ikan Teri', count: 0, required: 5, rewardCoins: 100, rewardXp: 50, claimed: false },
+          { type: 'fish', action: 'Pancing', targetId: 'ikan_lele', targetName: 'Ikan Lele', count: 0, required: 3, rewardCoins: 150, rewardXp: 80, claimed: false },
+          { type: 'collect', action: 'Kumpulkan', targetId: 'telur', targetName: 'Telur Ayam', count: 0, required: 5, rewardCoins: 100, rewardXp: 50, claimed: false }
+        ];
+        
+        // Shuffle and pick 3
+        const shuffled = [...possibleQuests].sort(() => 0.5 - Math.random());
+        const selectedQuests = shuffled.slice(0, 3).map((q, i) => ({ ...q, id: `q_${Date.now()}_${i}` }));
+        
+        set({ dailyQuests: selectedQuests, lastQuestDate: today });
+      },
+      
+      progressQuest: (type, targetId, amount = 1) => {
+        set(state => {
+          let updated = false;
+          const newQuests = state.dailyQuests.map(q => {
+            if (!q.claimed && q.type === type && q.targetId === targetId && q.count < q.required) {
+              updated = true;
+              return { ...q, count: Math.min(q.required, q.count + amount) };
+            }
+            return q;
+          });
+          
+          if (updated) {
+            return { dailyQuests: newQuests };
+          }
+          return {};
+        });
+      },
+      
+      claimQuestReward: (questId) => {
+        const state = get();
+        const quest = state.dailyQuests.find(q => q.id === questId);
+        
+        if (!quest || quest.claimed || quest.count < quest.required) {
+          return false;
+        }
+        
+        set(state => ({
+          dailyQuests: state.dailyQuests.map(q => q.id === questId ? { ...q, claimed: true } : q),
+          coins: state.coins + quest.rewardCoins
+        }));
+        
+        get().addXP(quest.rewardXp);
+        return true;
       },
       
       // ===== WHEEL SYSTEM =====
@@ -647,10 +731,11 @@ export const useGameStore = create(
           inventory: {
             ...state.inventory,
             [node.type]: (state.inventory[node.type] || 0) + 1
-          }
+          },
+          xp: state.xp + 15
         }));
 
-        get().addXP(15);
+        get().progressQuest('mine', node.type, 1);
         return node.type;
       },
 
@@ -735,6 +820,106 @@ export const useGameStore = create(
 
         return { leveledUp, newLevel, pointsGained };
       },
+
+      runAutoWorkers: () => {
+        const state = get();
+        const now = Date.now();
+        let changed = false;
+
+        // --- 1. KURCACI PETANI ---
+        if (state.workers.farmer && state.autoFarmer) {
+          let harvested = 0;
+          let planted = 0;
+          const newPlots = [...state.plots];
+          const newInventory = { ...state.inventory };
+          
+          for (let i = 0; i < newPlots.length; i++) {
+            const p = newPlots[i];
+            const isReady = p.crop && (p.status === 'ready' || (p.status === 'growing' && p.plantedAt && now - p.plantedAt >= p.growTime));
+            
+            // Harvest
+            if (isReady) {
+              const crop = p.crop;
+              newPlots[i] = { id: p.id, status: 'empty', crop: null, plantedAt: null, growTime: null };
+              newInventory[crop] = (newInventory[crop] || 0) + 1;
+              harvested++;
+              changed = true;
+              // quest progress done outside loop to avoid many state updates? Actually let's just do it inside loop via direct mutation of state if we want, or just call action which calls set. Calling action in loop is fine for zustand, but we can aggregate. Actually, calling `get().progressQuest` directly in the loop is safe because it's a small array.
+              get().progressQuest('harvest', crop, 1);
+            } 
+            
+            // Plant (dapat langsung dilakukan setelah panen)
+            if (newPlots[i].status === 'empty' && state.selectedSeed) {
+              const seedData = SHOP_SEEDS.find(s => s.id === state.selectedSeed);
+              if (seedData && (newInventory[state.selectedSeed] || 0) > 0) {
+                newInventory[state.selectedSeed] -= 1;
+                newPlots[i] = {
+                  id: newPlots[i].id,
+                  status: 'growing',
+                  crop: seedData.cropId,
+                  plantedAt: now,
+                  growTime: (seedData.time * 1000) / state.growthMultiplier
+                };
+                planted++;
+                changed = true;
+              }
+            }
+          }
+          if (changed) {
+            set({ plots: newPlots, inventory: newInventory, xp: state.xp + (harvested * 10) });
+            if (harvested > 0 || planted > 0) toast.success(`👨‍🌾 Petani Budi panen ${harvested} & tanam ${planted}!`, { id: 'auto-farm' });
+          }
+        }
+
+        // --- 2. KURCACI PETERNAK ---
+        if (state.workers.rancher && state.autoRancher) {
+          let collected = 0;
+          let rancherChanged = false;
+          const newAnimals = [...state.animals];
+          const newInventory = { ...state.inventory };
+
+          for (let i = 0; i < newAnimals.length; i++) {
+            const a = newAnimals[i];
+            const data = SHOP_ANIMALS.find((s) => s.id === a.type);
+            if (data && a.status === 'producing' && now - a.lastCollected >= a.produceTime) {
+              newAnimals[i] = { ...a, lastCollected: now };
+              newInventory[data.product] = (newInventory[data.product] || 0) + 1;
+              collected++;
+              rancherChanged = true;
+              get().progressQuest('collect', data.product, 1);
+            }
+          }
+          if (rancherChanged) {
+            set({ animals: newAnimals, inventory: newInventory, xp: get().xp + (collected * 8) });
+            if (collected > 0) toast.success(`👩‍🌾 Peternak Siti ambil ${collected} hasil ternak!`, { id: 'auto-rancher' });
+            changed = true;
+          }
+        }
+
+        // --- 3. KURCACI PEMANCING (FISHER) ---
+        if (state.workers.fisher && state.autoFisher) {
+          // 10% chance per tick to catch a fish
+          if (Math.random() < 0.1) {
+            const rand = Math.random();
+            let cumulative = 0;
+            let caughtFish = FISHES[0];
+            for (const fish of FISHES) {
+              cumulative += fish.chance;
+              if (rand <= cumulative) {
+                caughtFish = fish;
+                break;
+              }
+            }
+            set(s => ({
+              inventory: { ...s.inventory, [caughtFish.id]: (s.inventory[caughtFish.id] || 0) + 1 },
+              xp: s.xp + 15
+            }));
+            get().progressQuest('fish', caughtFish.id, 1);
+            toast.success(`🎣 Nelayan Mamat mendapat ${caughtFish.emoji} ${caughtFish.name}!`, { id: 'auto-fisher', duration: 2000 });
+            changed = true;
+          }
+        }
+      },
       
       // Development only - cheat functions
       dev: {
@@ -784,12 +969,43 @@ export const useGameStore = create(
         coinMultiplier: state.coinMultiplier,
         growthMultiplier: state.growthMultiplier,
         workers: state.workers,
+        autoFarmer: state.autoFarmer,
+        autoRancher: state.autoRancher,
+        autoFisher: state.autoFisher,
+        selectedSeed: state.selectedSeed,
         season: state.season,
         weather: state.weather,
         mining: state.mining,
         npcs: state.npcs,
-        activeEvent: state.activeEvent
+        activeEvent: state.activeEvent,
+        dailyQuests: state.dailyQuests,
+        lastQuestDate: state.lastQuestDate
       }),
+      merge: (persistedState, currentState) => {
+        const merged = { ...currentState, ...persistedState };
+        
+        // MIGRATION: Pastikan array selalu 30 petak walau user punya save lama
+        if (merged.plots && merged.plots.length < 30) {
+          const newPlots = [...merged.plots];
+          while (newPlots.length < 30) {
+            newPlots.push({ id: newPlots.length, status: 'empty', crop: null, plantedAt: null, growTime: null });
+          }
+          merged.plots = newPlots;
+        }
+        
+        if (merged.mining && merged.mining.nodes && merged.mining.nodes.length < 30) {
+          const newNodes = [...merged.mining.nodes];
+          while (newNodes.length < 30) {
+            newNodes.push({
+              id: newNodes.length, status: 'ready', regenAt: null,
+              type: Math.random() < 0.05 ? 'berlian' : Math.random() < 0.15 ? 'emas' : Math.random() < 0.3 ? 'besi' : Math.random() < 0.5 ? 'tembaga' : 'batu'
+            });
+          }
+          merged.mining.nodes = newNodes;
+        }
+        
+        return merged;
+      },
       onRehydrateStorage: () => (state, error) => {
         if (error) {
           console.error('Failed to rehydrate store:', error);

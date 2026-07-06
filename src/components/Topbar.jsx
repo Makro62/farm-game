@@ -4,13 +4,21 @@ import { motion } from 'framer-motion';
 import { Coins, Star, Flame, Volume2, VolumeX } from 'lucide-react';
 import { useGameStore } from '@/lib/store';
 import { AnimatedCounter } from './ui/AnimatedCounter';
+import audioManager from '@/lib/audio';
 
 export default function Topbar() {
-  const { coins, level, xp, streak, soundEnabled, toggleSound } = useGameStore();
+  const { coins, level, xp, streak, soundEnabled, toggleSound, toggleMusic } = useGameStore();
   
   const xpNeeded = level * 100;
   const xpProgress = (xp / xpNeeded) * 100;
   
+  const handleToggleSound = () => {
+    toggleSound();
+    toggleMusic();
+    audioManager.toggleSound();
+    audioManager.toggleMusic();
+  };
+
   return (
     <motion.header
       initial={{ y: -100 }}
@@ -69,7 +77,7 @@ export default function Topbar() {
             {/* Sound toggle */}
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={toggleSound}
+              onClick={handleToggleSound}
               className="p-2 rounded-full bg-green-100 hover:bg-green-200 transition-colors"
               title={soundEnabled ? 'Mute sound' : 'Unmute sound'}
             >

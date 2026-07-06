@@ -1,7 +1,7 @@
 'use client';
 
 import { useGameStore } from '@/lib/store';
-import { MINERALS, getCropEmoji } from '@/lib/utils';
+import { MINERALS, getCropEmoji, SHOP_MINING } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
@@ -15,7 +15,9 @@ export default function TabMine() {
   const hireWorker = useGameStore(state => state.hireWorker);
   const workers = useGameStore(state => state.workers);
   const openConfirm = useGameStore(state => state.openConfirm);
+  const buyItem = useGameStore(state => state.buyItem);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [shopAmounts, setShopAmounts] = useState({});
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -36,20 +38,28 @@ export default function TabMine() {
 
   const handleHireMiner = () => {
     if (workers.miner) {
-      toast('Kurcaci Tambang sudah bekerja! ⛏️', { icon: '✅' });
+      toast('Penambang Tarjo sudah bekerja! 👷‍♂️', { icon: '✅' });
       return;
     }
     openConfirm(
-      'Sewa Kurcaci Tambang',
-      'Sewa Kurcaci Tambang seharga 15.000 💰? Dia akan menambang otomatis untukmu!',
+      'Sewa Penambang Tarjo',
+      'Sewa Penambang Tarjo seharga 15.000 💰? Dia akan menambang otomatis untukmu!',
       () => {
         if (hireWorker('miner', 15000)) {
-          toast.success('Kurcaci Tambang berhasil disewa! ⛏️');
+          toast.success('Penambang Tarjo berhasil disewa! 👷‍♂️');
         } else {
           toast.error('Koin tidak cukup!');
         }
       }
     );
+  };
+
+  const handleShopBuy = (item, amount) => {
+    if (buyItem(item.id, amount, item.price)) {
+      toast.success(`Berhasil membeli ${amount} ${item.name}!`);
+    } else {
+      toast.error('Koin tidak cukup!');
+    }
   };
 
   return (
@@ -92,7 +102,7 @@ export default function TabMine() {
               }`}
             >
               <div>
-                <div className="font-bold text-gray-100 text-sm">⛏️ Kurcaci Tambang</div>
+                <div className="font-bold text-gray-100 text-sm">👷‍♂️ Penambang Tarjo</div>
                 <div className="text-[10px] text-gray-500">Auto-Mine</div>
               </div>
               <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs">
@@ -115,7 +125,7 @@ export default function TabMine() {
               </div>
               <div className="flex gap-2">
                  <button 
-                  onClick={() => toast('Auto Tambang berjalan via Kurcaci Tambang!', { icon: '⛏️' })}
+                  onClick={() => toast('Auto Tambang berjalan via Penambang Tarjo!', { icon: '👷‍♂️' })}
                   className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${workers.miner ? 'bg-gray-700 text-white border-gray-800' : 'glass-card text-gray-200'}`}
                  >
                   ⛏️ Auto: {workers.miner ? 'ON' : 'OFF'}
@@ -128,7 +138,7 @@ export default function TabMine() {
               style={{ backgroundImage: "url('/img/backgrounds/mine_bg.png')" }}
             >
               <div className="absolute inset-0 bg-black/50 rounded-2xl pointer-events-none"></div>
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 sm:gap-4 relative z-10">
+              <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 sm:gap-4 relative z-10">
                 {mining.nodes.map((node) => {
                   const isReady = node.status === 'ready';
                   let progress = 0;
@@ -170,14 +180,45 @@ export default function TabMine() {
         <div className="lg:col-span-1 space-y-4">
           <div className="glass-panel p-4 h-full">
             
-            <InventoryWidget />
-
-            {/* Pabrik / Produksi */}
+            {/* 1. Shop Tambang */}
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white">
+              <span>🧰</span> PERALATAN TAMBANG
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
+              {SHOP_MINING.map((item) => {
+                const amt = shopAmounts[item.id] || 1;
+                return (
+                  <div
+                    key={item.id}
+                    className="p-2 glass-card flex flex-col items-center gap-2"
+                  >
+                    <span className="text-2xl">{item.emoji}</span>
+                    <span className="font-semibold text-[11px] text-white text-center leading-tight">{item.name}</span>
+                    <span className="text-[10px] font-bold text-orange-300">{item.price}💰</span>
+                    <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
+                      <button onClick={() => setShopAmounts(p => ({ ...p, [item.id]: Math.max(1, amt - 1) }))} className="w-5 h-5 flex items-center justify-center bg-gray-200 rounded text-gray-700 font-bold">-</button>
+                      <span className="text-xs font-bold w-4 text-center text-gray-800">{amt}</span>
+                      <button onClick={() => setShopAmounts(p => ({ ...p, [item.id]: amt + 1 }))} className="w-5 h-5 flex items-center justify-center bg-gray-200 rounded text-gray-700 font-bold">+</button>
+                    </div>
+                    <button 
+                      onClick={() => handleShopBuy(item, amt)}
+                      className="w-full text-[11px] font-bold text-white bg-orange-500 hover:bg-orange-600 px-2 py-1.5 rounded-lg transition-colors mt-1"
+                    >
+                      Beli ({item.price * amt} 💰)
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* 2. Pekerja (Auto) */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
               <span>🏭</span> Pabrik (Crafting)
             </div>
-            <div className="bg-red-50 border border-red-100 rounded-xl p-4 min-h-[80px] flex items-center justify-center mb-6">
-              <span className="text-red-300 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
+            
+            {/* 3. Inventory */}
+            <div className="mt-6">
+              <InventoryWidget />
             </div>
 
           </div>

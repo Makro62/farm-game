@@ -24,13 +24,18 @@ export default function TabFarm() {
   const buyGrowthBooster = useGameStore(state => state.buyGrowthBooster);
   const workers = useGameStore(state => state.workers);
   const hireWorker = useGameStore(state => state.hireWorker);
+  const autoFarm = useGameStore(state => state.autoFarmer);
+  const toggleAutoFarm = useGameStore(state => state.toggleAutoFarmer);
+  const selectedInventoryItem = useGameStore(state => state.selectedSeed);
+  const setSelectedInventoryItem = useGameStore(state => state.setSelectedSeed);
+  
+  const dailyQuests = useGameStore(state => state.dailyQuests);
+  const claimQuestReward = useGameStore(state => state.claimQuestReward);
 
   const availableSeeds = SHOP_SEEDS.filter(s => s.season === 'all' || s.season === useGameStore.getState().season.current);
 
-  const [selectedInventoryItem, setSelectedInventoryItem] = useState(null);
   const [shopAmounts, setShopAmounts] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
-  const [autoFarm, setAutoFarm] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
@@ -49,48 +54,14 @@ export default function TabFarm() {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-farm: panen dan tanam otomatis (butuh Kurcaci Petani).
-  useEffect(() => {
-    if (!autoFarm || !workers.farmer) return;
-    const interval = setInterval(() => {
-      const state = useGameStore.getState();
-      const now = Date.now();
-      let harvested = 0;
-      let planted = 0;
-      
-      state.plots.forEach((p) => {
-        // Harvest
-        const ready =
-          p.crop &&
-          (p.status === 'ready' ||
-            (p.status === 'growing' && p.plantedAt && now - p.plantedAt >= p.growTime));
-        if (ready && state.harvest(p.id)) {
-          harvested++;
-        } 
-        // Plant
-        else if (p.status === 'empty' && selectedInventoryItem) {
-          const seedData = SHOP_SEEDS.find(s => s.id === selectedInventoryItem);
-          if (seedData && state.inventory[selectedInventoryItem] > 0) {
-             state.removeItem(selectedInventoryItem, 1);
-             state.plant(p.id, seedData.cropId, (seedData.time * 1000) / state.growthMultiplier);
-             planted++;
-          }
-        }
-      });
-      
-      if (harvested > 0 || planted > 0) {
-        toast.success(`🧙‍♂️ Kurcaci panen ${harvested} & tanam ${planted}!`, { id: 'auto-farm' });
-      }
-    }, 1500);
-    return () => clearInterval(interval);
-  }, [autoFarm, workers.farmer, selectedInventoryItem]);
+  // Global Game Loop (di page.js) sudah menangani auto-farm via store.runAutoWorkers()
 
   const handleToggleAuto = () => {
     if (!workers.farmer) {
-      toast('Sewa Kurcaci Petani dulu di panel kiri! 🔒', { icon: '🧙‍♂️' });
+      toast('Sewa Petani Budi dulu di panel kiri! 🔒', { icon: '👨‍🌾' });
       return;
     }
-    setAutoFarm((prev) => !prev);
+    toggleAutoFarm();
   };
 
   const handleBuyGrowthBooster = () => {
@@ -107,15 +78,15 @@ export default function TabFarm() {
 
   const handleHireFarmer = () => {
     if (workers.farmer) {
-      toast('Kurcaci Petani sudah dimiliki! Aktifkan Auto. 🧙‍♂️', { icon: '✅' });
+      toast('Petani Budi sudah dimiliki! Aktifkan Auto. 👨‍🌾', { icon: '✅' });
       return;
     }
     openConfirm(
-      'Sewa Kurcaci Petani',
-      'Sewa Kurcaci Petani (Auto-Farm & Harvest) seharga 5000 💰?',
+      'Sewa Petani Budi',
+      'Sewa Petani Budi (Auto-Farm & Harvest) seharga 5000 💰?',
       () => {
         if (hireWorker('farmer', 5000)) {
-          toast.success('Kurcaci Petani disewa! Nyalakan tombol Auto. 🧙‍♂️');
+          toast.success('Petani Budi disewa! Nyalakan tombol Auto. 👨‍🌾');
         } else {
           toast.error('Koin tidak cukup!');
         }
@@ -218,7 +189,7 @@ export default function TabFarm() {
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-green-200 pb-2">
               <span>🛒</span> Shop Bibit
             </div>
-            <div className="grid grid-cols-2 gap-2 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
               {availableSeeds.map((seed) => {
                 const amt = shopAmounts[seed.id] || 1;
                 return (
@@ -231,7 +202,7 @@ export default function TabFarm() {
                     <span className="text-[10px] font-bold text-green-300">{seed.price}💰</span>
                     <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
                       <button onClick={() => setShopAmounts(p => ({ ...p, [seed.id]: Math.max(1, amt - 1) }))} className="w-5 h-5 flex items-center justify-center bg-gray-200 rounded text-gray-700 font-bold">-</button>
-                      <span className="text-xs font-bold w-4 text-center">{amt}</span>
+                      <span className="text-xs font-bold w-4 text-center text-gray-800">{amt}</span>
                       <button onClick={() => setShopAmounts(p => ({ ...p, [seed.id]: amt + 1 }))} className="w-5 h-5 flex items-center justify-center bg-gray-200 rounded text-gray-700 font-bold">+</button>
                     </div>
                     <button 
@@ -285,7 +256,7 @@ export default function TabFarm() {
               }`}
             >
               <div>
-                <div className="font-bold text-white text-sm">🧙‍♂️ Kurcaci Petani</div>
+                <div className="font-bold text-white text-sm">👨‍🌾 Petani Budi</div>
                 <div className="text-[10px] text-gray-500">Auto-Farm & Harvest</div>
               </div>
               <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs">
@@ -299,7 +270,7 @@ export default function TabFarm() {
         <div className="lg:col-span-2 space-y-4">
           <div className="glass-panel p-4">
             
-            <StatusHeader setAutoFarm={setAutoFarm} setSelectedInventoryItem={setSelectedInventoryItem} />
+            <StatusHeader />
 
             <div className="flex justify-between items-center mb-4">
                <div className="font-bold text-lg flex items-center gap-2 text-white drop-shadow-md">
@@ -326,7 +297,7 @@ export default function TabFarm() {
               style={{ backgroundImage: "url('/img/backgrounds/farm_bg.png')" }}
             >
               <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
-              <div className="grid grid-cols-4 gap-2 sm:gap-4 relative z-10">
+              <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 sm:gap-4 relative z-10">
                 {plots.map((plot, i) => {
                   const isGrowing = plot.status === 'growing';
                   let progress = 0;
@@ -420,15 +391,54 @@ export default function TabFarm() {
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
               <span>📝</span> Quest Harian
             </div>
-            <div className="bg-purple-50 border border-purple-100 rounded-xl p-3 min-h-[80px] mb-6">
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="font-medium text-purple-800">Panen 10 Wortel</span>
-                <span className="text-purple-600 font-bold">0/10</span>
+            
+            {dailyQuests && dailyQuests.length > 0 ? (
+              dailyQuests.map(quest => {
+                const percent = Math.min(100, (quest.count / quest.required) * 100);
+                const isComplete = quest.count >= quest.required;
+                
+                return (
+                  <div key={quest.id} className="bg-purple-50 border border-purple-100 rounded-xl p-3 mb-3 relative overflow-hidden">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="font-medium text-purple-800 line-clamp-1 pr-2">
+                        {quest.action} {quest.required} {quest.targetName}
+                      </span>
+                      <span className="text-purple-600 font-bold whitespace-nowrap">{quest.count}/{quest.required}</span>
+                    </div>
+                    
+                    <div className="w-full bg-purple-200 rounded-full h-2 mb-2">
+                      <div className="bg-purple-500 h-2 rounded-full transition-all" style={{width: `${percent}%`}}></div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="text-xs font-bold text-yellow-600">
+                        🎁 {quest.rewardCoins} 💰 | {quest.rewardXp} ⭐
+                      </div>
+                      
+                      {quest.claimed ? (
+                        <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Diambil</span>
+                      ) : isComplete ? (
+                        <button 
+                          onClick={() => {
+                            if (claimQuestReward(quest.id)) {
+                              toast.success('Hadiah quest berhasil diambil!');
+                            }
+                          }}
+                          className="text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1 rounded-md shadow-sm transition-colors animate-pulse"
+                        >
+                          Klaim
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="bg-purple-50 border border-purple-100 rounded-xl p-3 min-h-[80px] mb-6 flex flex-col items-center justify-center text-center">
+                <span className="text-purple-400 text-sm font-medium mb-2">Quest sedang disiapkan...</span>
+                <span className="text-xs text-purple-300">Tunggu sejenak untuk quest baru.</span>
               </div>
-              <div className="w-full bg-purple-200 rounded-full h-1.5">
-                <div className="bg-purple-500 h-1.5 rounded-full" style={{width: '0%'}}></div>
-              </div>
-            </div>
+            )}
 
             {/* Dapur Produksi */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
