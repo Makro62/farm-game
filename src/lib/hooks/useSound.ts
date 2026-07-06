@@ -1,21 +1,15 @@
-import { useCallback, useRef } from 'react';
-import audioManager from '../audio';
+'use client';
 
-export function useSound(soundName, options = {}) {
-  const soundRef = useRef(null);
-  
-  const play = useCallback((sprite = null) => {
-    soundRef.current = audioManager.play(soundName, sprite);
-    return soundRef.current;
+import { useCallback } from 'react';
+import audioManager, { type SoundName, type MusicName } from '../audio';
+
+export function useSound(soundName: SoundName) {
+  const play = useCallback((sprite: string | null = null) => {
+    audioManager.ensureInitialized();
+    return audioManager.play(soundName, sprite);
   }, [soundName]);
-  
-  const stop = useCallback(() => {
-    if (soundRef.current) {
-      soundRef.current.stop();
-    }
-  }, []);
-  
-  return { play, stop };
+
+  return { play };
 }
 
 // Pre-defined sound hooks
@@ -31,24 +25,24 @@ export const useLevelUpSound = () => useSound('levelup');
 export const useAchievementSound = () => useSound('achievement');
 export const useComboSound = () => useSound('combo');
 
-// Music hook
-export function useMusic(musicName) {
+export function useMusic(musicName: MusicName) {
   const play = useCallback(() => {
+    audioManager.ensureInitialized();
     audioManager.playMusic(musicName);
   }, [musicName]);
-  
+
   const stop = useCallback(() => {
     audioManager.stopMusic();
   }, []);
-  
+
   const pause = useCallback(() => {
     audioManager.pauseMusic();
   }, []);
-  
+
   const resume = useCallback(() => {
     audioManager.resumeMusic();
   }, []);
-  
+
   return { play, stop, pause, resume };
 }
 
