@@ -32,7 +32,7 @@ export default function Topbar() {
       transition={{ type: 'spring', damping: 20 }}
       className="sticky top-0 z-50 bg-white/10 backdrop-blur-md border-b border-white/20 shadow-md safe-top"
     >
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
+      <div className="game-container py-2 sm:py-3">
         {/* Top row */}
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo */}

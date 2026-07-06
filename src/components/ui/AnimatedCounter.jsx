@@ -7,14 +7,14 @@ export function AnimatedCounter({
   value, 
   duration = 0.5, 
   className = '',
-  format = (val) => (val ?? 0).toLocaleString('id-ID')
+  format = (val) => (Number.isFinite(val) ? val : 0).toLocaleString('id-ID')
 }) {
-  const [displayValue, setDisplayValue] = useState(value ?? 0);
+  const [displayValue, setDisplayValue] = useState(Number.isFinite(value) ? value : 0);
 
   useEffect(() => {
     let startTimestamp = null;
-    const startValue = displayValue ?? 0;
-    const endValue = value ?? 0;
+    const startValue = Number.isFinite(displayValue) ? displayValue : 0;
+    const endValue = Number.isFinite(value) ? value : 0;
     const durationMs = duration * 1000;
 
     if (startValue === endValue) return;

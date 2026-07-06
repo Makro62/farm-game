@@ -1,21 +1,31 @@
 'use client';
 
 import { useGameStore } from '@/lib/store';
-import { MINERALS, getCropEmoji, SHOP_MINING } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { MINERALS, SHOP_MINING, PICKAXE_LABELS } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
+import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
+import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 
+const TARGET_TOOLS = new Set(['bom_kecil', 'tali']);
+
 export default function TabMine() {
   const mining = useGameStore(state => state.mining);
-  const mineNode = useGameStore(state => state.mineNode);
   const inventory = useGameStore(state => state.inventory);
+  const mineNode = useGameStore(state => state.mineNode);
+  const useMiningTool = useGameStore(state => state.useMiningTool);
+  const setSelectedMiningTool = useGameStore(state => state.setSelectedMiningTool);
+  const selectedMiningTool = useGameStore(state => state.selectedMiningTool);
   const hireWorker = useGameStore(state => state.hireWorker);
   const workers = useGameStore(state => state.workers);
+  const autoMiner = useGameStore(state => state.autoMiner);
+  const toggleAutoMiner = useGameStore(state => state.toggleAutoMiner);
   const openConfirm = useGameStore(state => state.openConfirm);
   const buyItem = useGameStore(state => state.buyItem);
+
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [shopAmounts, setShopAmounts] = useState({});
 
@@ -24,11 +34,33 @@ export default function TabMine() {
     return () => clearInterval(interval);
   }, []);
 
+  const pickaxe = PICKAXE_LABELS[mining.pickaxeLevel] || PICKAXE_LABELS[1];
+  const lanternActive = mining.lanternUntil && mining.lanternUntil > currentTime;
+  const lanternSecs = lanternActive ? Math.ceil((mining.lanternUntil - currentTime) / 1000) : 0;
+
+  const ownedTools = SHOP_MINING.filter(t => (inventory[t.id] || 0) > 0);
+
+  const handleUseTool = (toolId, nodeId = null) => {
+    const result = useMiningTool(toolId, nodeId);
+    if (result.ok) {
+      toast.success(result.message);
+    } else if (result.needTarget) {
+      setSelectedMiningTool(toolId);
+      const tool = SHOP_MINING.find(t => t.id === toolId);
+      toast(`Pilih petak tambang untuk memakai ${tool?.name}`, { icon: tool?.emoji });
+    } else {
+      toast.error(result.message);
+    }
+  };
+
   const handleMine = (node) => {
+    if (selectedMiningTool) {
+      handleUseTool(selectedMiningTool, node.id);
+      return;
+    }
+
     if (node.status !== 'ready') return;
-    
-    // In a real game, here we would start a progress bar (2-10s) based on pickaxe level.
-    // For now, instant mine with toast.
+
     const minedType = mineNode(node.id);
     if (minedType) {
       const mineral = MINERALS.find(m => m.id === minedType);
@@ -38,7 +70,7 @@ export default function TabMine() {
 
   const handleHireMiner = () => {
     if (workers.miner) {
-      toast('Penambang Tarjo sudah bekerja! 👷‍♂️', { icon: '✅' });
+      toast('Penambang Tarjo sudah bekerja! Aktifkan Auto jika perlu. 👷‍♂️', { icon: '✅' });
       return;
     }
     openConfirm(
@@ -46,12 +78,20 @@ export default function TabMine() {
       'Sewa Penambang Tarjo seharga 15.000 💰? Dia akan menambang otomatis untukmu!',
       () => {
         if (hireWorker('miner', 15000)) {
-          toast.success('Penambang Tarjo berhasil disewa! 👷‍♂️');
+          toast.success('Penambang Tarjo berhasil disewa! Auto tambang aktif. 👷‍♂️');
         } else {
           toast.error('Koin tidak cukup!');
         }
       }
     );
+  };
+
+  const handleToggleAuto = () => {
+    if (!workers.miner) {
+      toast('Sewa Penambang Tarjo dulu di panel kiri! 🔒', { icon: '👷‍♂️' });
+      return;
+    }
+    toggleAutoMiner();
   };
 
   const handleShopBuy = (item, amount) => {
@@ -62,108 +102,149 @@ export default function TabMine() {
     }
   };
 
-  return (
-    <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        
-        {/* ================= LEFT COLUMN ================= */}
-        <div className="lg:col-span-1 space-y-4">
-          <div className="glass-panel p-4">
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white">
-              <span>⛏️</span> Alat Tambang
-            </div>
-            
-            <button className="w-full glass-card p-3 mb-4 text-left flex justify-between items-center cursor-default">
-              <div>
-                <div className="font-bold">🪨 Cangkul Kayu</div>
-                <div className="text-xs text-gray-500">Lv 1 (Default)</div>
-              </div>
-              <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded font-bold">Dipakai</span>
-            </button>
+  const getRegenProgress = (node) => {
+    if (!node.regenAt) return 0;
+    const total = mining.pickaxeLevel >= 3 ? 60000 : mining.pickaxeLevel >= 2 ? 90000 : 120000;
+    const lanternFactor = lanternActive ? 0.5 : 1;
+    const duration = total * lanternFactor;
+    return Math.max(0, Math.min(100, 100 - ((node.regenAt - currentTime) / duration) * 100));
+  };
 
-            <button className="w-full glass-card p-3 mb-2 text-left flex justify-between items-center transition-colors">
+  return (
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="game-tab-grid">
+
+        <div className="game-sidebar-left">
+          <div className="glass-panel p-4">
+            <ShopSectionTitle icon="⛏️">Alat Aktif</ShopSectionTitle>
+            <div className="glass-card p-3 mb-4 flex justify-between items-center">
               <div>
-                <div className="font-bold text-orange-700">🔶 Cangkul Tembaga</div>
-                <div className="text-xs text-orange-500 text-[10px]">Butuh: 5x Tembaga</div>
+                <div className="font-bold text-white text-sm">{pickaxe.emoji} {pickaxe.name}</div>
+                <div className="text-[10px] text-gray-400">Regen: {pickaxe.regen}{lanternActive ? ' (senter aktif)' : ''}</div>
               </div>
-              <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded font-bold">Upgrade</span>
-            </button>
-            
-            {/* Pekerja Auto */}
-            <div className="font-bold text-lg mb-3 mt-6 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white">
-              <span>🧑‍🌾</span> Pekerja (Auto)
+              <span className="bg-green-500/30 text-green-200 text-xs px-2 py-1 rounded font-bold">Lv {mining.pickaxeLevel}</span>
             </div>
+            {lanternActive && (
+              <div className="glass-card p-2 mb-4 text-center text-xs text-yellow-200">
+                🔦 Senter aktif — {lanternSecs}s tersisa
+              </div>
+            )}
+
+            {workers?.miner && (
+              <p className="text-[10px] text-gray-400 mb-2">
+                {autoMiner ? '✅ Kurcaci aktif — tambang otomatis' : 'Nyalakan tombol Auto di gua'}
+              </p>
+            )}
+
+            <ShopSectionTitle icon="🧰">Alat di Tas</ShopSectionTitle>
+            <div className="glass-card rounded-xl p-3 mb-6 space-y-2">
+              {ownedTools.length === 0 ? (
+                <div className="text-center text-sm text-gray-400 italic">Belum ada alat. Beli di shop kanan.</div>
+              ) : (
+                ownedTools.map(tool => (
+                  <div key={tool.id} className="flex items-center justify-between gap-2 p-2 glass-card rounded-lg">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-white text-xs flex items-center gap-1">
+                        <span>{tool.emoji}</span>
+                        <span className="truncate">{tool.name}</span>
+                        <span className="text-yellow-300 shrink-0">×{inventory[tool.id]}</span>
+                      </div>
+                      <div className="text-[10px] text-gray-400 truncate">{tool.desc}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleUseTool(tool.id)}
+                      className={`shrink-0 px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                        selectedMiningTool === tool.id
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-white/15 text-white hover:bg-white/25'
+                      }`}
+                    >
+                      {TARGET_TOOLS.has(tool.id) ? 'Pilih' : 'Pakai'}
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            {selectedMiningTool && (
+              <button
+                type="button"
+                onClick={() => setSelectedMiningTool(null)}
+                className="w-full mb-4 text-xs text-gray-300 underline"
+              >
+                ✕ Batal pilih alat
+              </button>
+            )}
+
+            <ShopSectionTitle icon="🧑‍🌾">Pekerja (Auto)</ShopSectionTitle>
             <button
               onClick={handleHireMiner}
-              className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left mb-6 ${
-                workers.miner
-                  ? 'border-primary bg-white/10'
-                  : ''
+              className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left ${
+                workers.miner ? 'border-primary bg-white/10' : ''
               }`}
             >
               <div>
-                <div className="font-bold text-gray-100 text-sm">👷‍♂️ Penambang Tarjo</div>
+                <div className="font-bold text-white text-sm">👷‍♂️ Penambang Tarjo</div>
                 <div className="text-[10px] text-gray-500">Auto-Mine</div>
               </div>
-              <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs">
-                {workers.miner ? '✅ Dimiliki' : '15000💰'}
+              <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs whitespace-nowrap">
+                {workers.miner ? '✅ Dimiliki' : '15000 💰'}
               </span>
             </button>
-            
           </div>
         </div>
 
-        {/* ================= CENTER COLUMN ================= */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="game-main">
           <div className="glass-panel p-4">
-            
             <StatusHeader />
 
-            <div className="flex justify-between items-center mb-4 border-b border-white/20 pb-2">
-              <div className="font-bold text-lg flex items-center gap-2 text-white drop-shadow-md">
-                <span>⛏️</span> Gua Tambang
-              </div>
-              <div className="flex gap-2">
-                 <button 
-                  onClick={() => toast('Auto Tambang berjalan via Penambang Tarjo!', { icon: '👷‍♂️' })}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${workers.miner ? 'bg-gray-700 text-white border-gray-800' : 'glass-card text-gray-200'}`}
-                 >
-                  ⛏️ Auto: {workers.miner ? 'ON' : 'OFF'}
-                 </button>
-              </div>
-            </div>
+            <GameAreaHeader icon="⛏️" title="Gua Tambang">
+              <GameActionButton
+                variant="miner"
+                active={autoMiner}
+                onClick={handleToggleAuto}
+              >
+                ⛏️ Auto: {autoMiner ? 'ON' : 'OFF'}
+              </GameActionButton>
+            </GameAreaHeader>
 
-            <div 
+            {selectedMiningTool && (
+              <div className="mb-3 text-center text-sm text-orange-200 bg-orange-500/20 rounded-lg py-2 px-3">
+                {SHOP_MINING.find(t => t.id === selectedMiningTool)?.emoji} Klik petak untuk memakai alat
+              </div>
+            )}
+
+            <div
               className="p-4 sm:p-6 rounded-3xl shadow-inner border-4 border-[#252422] relative min-h-[400px] bg-cover bg-center"
               style={{ backgroundImage: "url('/img/backgrounds/mine_bg.png')" }}
             >
-              <div className="absolute inset-0 bg-black/50 rounded-2xl pointer-events-none"></div>
-              <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 sm:gap-4 relative z-10">
+              <div className="absolute inset-0 bg-black/50 rounded-2xl pointer-events-none" />
+              <div className="game-plot-grid relative z-10">
                 {mining.nodes.map((node) => {
                   const isReady = node.status === 'ready';
-                  let progress = 0;
-                  if (!isReady && node.regenAt) {
-                    progress = Math.max(0, Math.min(100, 100 - ((node.regenAt - currentTime) / (120 * 1000)) * 100));
-                  }
+                  const progress = getRegenProgress(node);
+                  const mineral = MINERALS.find(m => m.id === node.type);
 
                   return (
                     <motion.button
                       key={node.id}
-                      whileHover={isReady ? { scale: 1.05 } : {}}
-                      whileTap={isReady ? { scale: 0.95 } : {}}
+                      whileHover={{ scale: isReady || selectedMiningTool ? 1.05 : 1 }}
+                      whileTap={{ scale: isReady || selectedMiningTool ? 0.95 : 1 }}
                       onClick={() => handleMine(node)}
-                      disabled={!isReady}
-                      className={`aspect-square rounded-xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md border-b-4
-                        ${isReady ? 'bg-[#5c5952] border-[#3d3b36] hover:bg-[#6b6861] cursor-pointer' : 'bg-[#1f1e1c] border-[#141312] cursor-not-allowed'}
+                      disabled={!isReady && !selectedMiningTool}
+                      className={`game-plot-cell border-b-4
+                        ${isReady ? 'bg-[#5c5952] border-[#3d3b36] hover:bg-[#6b6861] cursor-pointer' : selectedMiningTool ? 'bg-[#3d3a35] border-[#5c5952] cursor-crosshair' : 'bg-[#1f1e1c] border-[#141312] cursor-not-allowed'}
+                        ${selectedMiningTool ? 'ring-1 ring-orange-400/50' : ''}
                       `}
+                      title={isReady && mineral ? `${mineral.emoji} ${mineral.name}` : undefined}
                     >
                       {isReady ? (
-                        <span className="text-4xl drop-shadow-md">🪨</span>
+                        <span className="plot-emoji">{mineral?.emoji || '🪨'}</span>
                       ) : (
                         <div className="w-full px-2 flex flex-col items-center">
-                          <span className="text-xl opacity-30 mb-1">🪨</span>
+                          <span className="text-xl opacity-30 mb-1">{mineral?.emoji || '🪨'}</span>
                           <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden">
-                            <div className="h-full bg-gray-400" style={{ width: `${progress}%` }} />
+                            <div className="h-full bg-gray-400 transition-all" style={{ width: `${progress}%` }} />
                           </div>
                         </div>
                       )}
@@ -172,55 +253,31 @@ export default function TabMine() {
                 })}
               </div>
             </div>
-            
           </div>
         </div>
 
-        {/* ================= RIGHT COLUMN ================= */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="game-sidebar-right">
           <div className="glass-panel p-4 h-full">
-            
-            {/* 1. Shop Tambang */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white">
-              <span>🧰</span> PERALATAN TAMBANG
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
+            <ShopSectionTitle icon="🛒">Shop Peralatan</ShopSectionTitle>
+            <div className="shop-grid mb-6">
               {SHOP_MINING.map((item) => {
                 const amt = shopAmounts[item.id] || 1;
                 return (
-                  <div
+                  <ShopItemCard
                     key={item.id}
-                    className="p-2 glass-card flex flex-col items-center gap-2"
-                  >
-                    <span className="text-2xl">{item.emoji}</span>
-                    <span className="font-semibold text-[11px] text-white text-center leading-tight">{item.name}</span>
-                    <span className="text-[10px] font-bold text-orange-300">{item.price}💰</span>
-                    <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
-                      <button onClick={() => setShopAmounts(p => ({ ...p, [item.id]: Math.max(1, amt - 1) }))} className="w-5 h-5 flex items-center justify-center bg-gray-200 rounded text-gray-700 font-bold">-</button>
-                      <span className="text-xs font-bold w-4 text-center text-gray-800">{amt}</span>
-                      <button onClick={() => setShopAmounts(p => ({ ...p, [item.id]: amt + 1 }))} className="w-5 h-5 flex items-center justify-center bg-gray-200 rounded text-gray-700 font-bold">+</button>
-                    </div>
-                    <button 
-                      onClick={() => handleShopBuy(item, amt)}
-                      className="w-full text-[11px] font-bold text-white bg-orange-500 hover:bg-orange-600 px-2 py-1.5 rounded-lg transition-colors mt-1"
-                    >
-                      Beli ({item.price * amt} 💰)
-                    </button>
-                  </div>
+                    icon={item.emoji}
+                    name={item.name}
+                    price={item.price}
+                    amount={amt}
+                    onDecrease={() => setShopAmounts(p => ({ ...p, [item.id]: Math.max(1, amt - 1) }))}
+                    onIncrease={() => setShopAmounts(p => ({ ...p, [item.id]: amt + 1 }))}
+                    onBuy={() => handleShopBuy(item, amt)}
+                  />
                 );
               })}
             </div>
-            
-            {/* 2. Pekerja (Auto) */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
-              <span>🏭</span> Pabrik (Crafting)
-            </div>
-            
-            {/* 3. Inventory */}
-            <div className="mt-6">
-              <InventoryWidget />
-            </div>
 
+            <InventoryWidget />
           </div>
         </div>
 

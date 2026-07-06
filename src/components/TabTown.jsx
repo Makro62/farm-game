@@ -5,6 +5,7 @@ import { useGameStore } from '@/lib/store';
 import { FISHES, NPC_LIST } from '@/lib/utils';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
+import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import toast from 'react-hot-toast';
 
 export default function TabTown() {
@@ -176,7 +177,7 @@ export default function TabTown() {
       'Beli Booster Growth',
       'Beli Booster Growth x1.5 (Tumbuh lebih cepat) seharga 50 💰?',
       () => {
-        if (buyGrowthBooster()) {
+        if (buyGrowthBooster(50)) {
           toast.success('Booster Growth x1.5 Aktif!', { icon: '🌱' });
         } else {
           toast.error('Koin tidak cukup!');
@@ -195,7 +196,7 @@ export default function TabTown() {
       'Sewa Pemancing Kota (Auto-mancing) seharga 12000 💰?',
       () => {
         if (hireWorker('fisher', 12000)) {
-          toast.success('Pemancing Kota berhasil disewa! 🎣');
+          toast.success('Pemancing Kota disewa! Auto mancing aktif. 🎣');
         } else {
           toast.error('Koin tidak cukup!');
         }
@@ -204,11 +205,11 @@ export default function TabTown() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="game-tab-grid">
         
         {/* ================= LEFT COLUMN ================= */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="game-sidebar-left">
           <div className="glass-panel p-4">
             
             {/* 1. Bibit Ikan */}
@@ -263,15 +264,20 @@ export default function TabTown() {
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-blue-200 pb-2 text-blue-100 mt-6">
               <span>🧑‍🌾</span> Pekerja Kota (Auto)
             </div>
-            <button onClick={handleBuyMerchant} className={`w-full glass-card p-2 rounded-xl flex justify-between items-center transition-colors text-left mb-2 ${workers.fisher ? 'border-primary bg-white/10' : ''}`}>
+            <button onClick={handleBuyMerchant} className={`w-full glass-card p-2 rounded-xl flex justify-between items-center transition-colors text-left mb-2 ${workers?.fisher ? 'border-primary bg-white/10' : ''}`}>
               <div>
                 <div className="font-bold text-blue-300 text-sm">🧑‍🌾 Pemancing Kota</div>
                 <div className="text-[10px] text-gray-400">Auto-mancing & jual hasil</div>
               </div>
               <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs">
-                {workers.fisher ? '✅ Disewa' : '12000💰'}
+                {workers?.fisher ? '✅ Disewa' : '12000💰'}
               </span>
             </button>
+            {workers?.fisher && (
+              <p className="text-[10px] text-gray-400 mb-2">
+                {autoFisher ? '✅ Kurcaci aktif — mancing otomatis' : 'Nyalakan tombol Auto di danau'}
+              </p>
+            )}
 
             {/* 7. Achievements */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-indigo-200/30 pb-2 text-indigo-100 mt-6">
@@ -296,28 +302,23 @@ export default function TabTown() {
         </div>
 
         {/* ================= CENTER COLUMN ================= */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="game-main">
           <div className="glass-panel p-4 min-h-[500px]">
 
             <StatusHeader />
 
-            {/* Danau Pemancingan */}
-            <div className="flex justify-between items-center mb-4 border-b-2 border-blue-200 pb-2">
-              <div className="font-bold text-lg flex items-center gap-2 text-blue-100">
-                <span>🎣</span> Danau Pemancingan
-              </div>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => {
-                    if (workers.fisher) toggleAutoFisher();
-                    else toast('Sewa Pemancing Kota dulu!', { icon: '🎣' });
-                  }}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFisher ? 'bg-green-500 text-white border-green-600' : 'glass-card text-gray-200'}`}
-                 >
-                  🧑‍🌾 Auto: {autoFisher ? 'ON' : 'OFF'}
-                 </button>
-              </div>
-            </div>
+            <GameAreaHeader icon="🎣" title="Danau Pemancingan">
+              <GameActionButton
+                variant="auto"
+                active={autoFisher}
+                onClick={() => {
+                  if (workers.fisher) toggleAutoFisher();
+                  else toast('Sewa Pemancing Kota dulu!', { icon: '🎣' });
+                }}
+              >
+                🧑‍🌾 Auto: {autoFisher ? 'ON' : 'OFF'}
+              </GameActionButton>
+            </GameAreaHeader>
             <div 
               className="p-4 rounded-3xl shadow-inner border-4 border-[#357abd] relative min-h-[250px] overflow-hidden flex items-center justify-center mb-8 bg-cover bg-center"
               style={{ backgroundImage: "url('/img/backgrounds/lake_bg.png')" }}
@@ -393,7 +394,7 @@ export default function TabTown() {
         </div>
 
         {/* ================= RIGHT COLUMN ================= */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="game-sidebar-right">
           <div className="glass-panel p-4 h-full">
             
             <InventoryWidget />

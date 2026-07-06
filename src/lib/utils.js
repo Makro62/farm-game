@@ -12,6 +12,7 @@ export function cn(...inputs) {
  * Format number dengan separator
  */
 export function formatNumber(num) {
+  if (!Number.isFinite(num)) return '0';
   if (num >= 1000000) {
     return `${(num / 1000000).toFixed(1)}M`;
   }
@@ -58,13 +59,28 @@ export function formatRelativeTime(timestamp) {
   return `${Math.floor(diff / 86400000)} hari lalu`;
 }
 
+export const CROP_DATA = {
+  wortel: { name: 'Wortel', emoji: '🥕' },
+  jagung: { name: 'Jagung', emoji: '🌽' },
+  tomat: { name: 'Tomat', emoji: '🍅' },
+  stroberi: { name: 'Stroberi', emoji: '🍓' },
+  semangka: { name: 'Semangka', emoji: '🍉' },
+  jamur: { name: 'Jamur', emoji: '🍄' },
+  nanas: { name: 'Nanas', emoji: '🍍' },
+  labu: { name: 'Labu', emoji: '🎃' },
+  kentang: { name: 'Kentang', emoji: '🥔' },
+  gandum: { name: 'Gandum', emoji: '🌾' },
+  tulip: { name: 'Tulip', emoji: '🌷' },
+  apel: { name: 'Apel', emoji: '🍎' },
+};
+
 export const SHOP_SEEDS = [
-  { id: 'bibit_wortel', cropId: 'wortel', name: 'Bibit Wortel', price: 10, time: 15, season: 'all' },
-  { id: 'bibit_jagung', cropId: 'jagung', name: 'Bibit Jagung', price: 20, time: 30, season: 'all' },
-  { id: 'bibit_tomat', cropId: 'tomat', name: 'Bibit Tomat', price: 35, time: 60, season: 'all' },
-  { id: 'bibit_stroberi', cropId: 'stroberi', name: 'Bibit Stroberi', price: 75, time: 120, season: 'all' },
-  { id: 'bibit_semangka', cropId: 'semangka', name: 'Bibit Semangka', price: 120, time: 150, season: 'all' },
-  { id: 'bibit_jamur', cropId: 'jamur', name: 'Spora Jamur', price: 500, time: 300, season: 'all' },
+  { id: 'bibit_wortel', cropId: 'wortel', name: 'Bibit Wortel', emoji: '🥕', price: 10, time: 15, season: 'all' },
+  { id: 'bibit_jagung', cropId: 'jagung', name: 'Bibit Jagung', emoji: '🌽', price: 20, time: 30, season: 'all' },
+  { id: 'bibit_tomat', cropId: 'tomat', name: 'Bibit Tomat', emoji: '🍅', price: 35, time: 60, season: 'all' },
+  { id: 'bibit_stroberi', cropId: 'stroberi', name: 'Bibit Stroberi', emoji: '🍓', price: 75, time: 120, season: 'all' },
+  { id: 'bibit_semangka', cropId: 'semangka', name: 'Bibit Semangka', emoji: '🍉', price: 120, time: 150, season: 'all' },
+  { id: 'bibit_jamur', cropId: 'jamur', name: 'Spora Jamur', emoji: '🍄', price: 500, time: 300, season: 'all' },
 ];
 
 export const SHOP_ANIMALS = [
@@ -77,36 +93,52 @@ export const SHOP_ANIMALS = [
 ];
 
 export const SHOP_MINING = [
-  { id: 'bom_kecil', name: 'Bom Kecil', emoji: '🧨', price: 50 },
-  { id: 'bom_besar', name: 'Bom Besar', emoji: '💣', price: 150 },
-  { id: 'pickaxe_besi', name: 'Pickaxe Besi', emoji: '⛏️', price: 300 },
-  { id: 'pickaxe_emas', name: 'Pickaxe Emas', emoji: '🛠️', price: 800 },
-  { id: 'senter', name: 'Senter Goa', emoji: '🔦', price: 120 },
-  { id: 'tali', name: 'Tali Tambang', emoji: '🪢', price: 60 },
+  { id: 'bom_kecil', name: 'Bom Kecil', emoji: '🧨', price: 50, desc: '×2 hasil / buka petak tertutup' },
+  { id: 'bom_besar', name: 'Bom Besar', emoji: '💣', price: 150, desc: 'Tambang semua petak siap' },
+  { id: 'pickaxe_besi', name: 'Pickaxe Besi', emoji: '⛏️', price: 300, desc: 'Regen 90 detik' },
+  { id: 'pickaxe_emas', name: 'Pickaxe Emas', emoji: '🛠️', price: 800, desc: 'Regen 60 detik + rare ore' },
+  { id: 'senter', name: 'Senter Goa', emoji: '🔦', price: 120, desc: 'Buff 5 menit regen cepat' },
+  { id: 'tali', name: 'Tali Tambang', emoji: '🪢', price: 60, desc: 'Pulihkan 1 petak tertutup' },
 ];
+
+export const PICKAXE_LABELS = {
+  1: { name: 'Cangkul Kayu', emoji: '🪨', regen: '120 detik' },
+  2: { name: 'Pickaxe Besi', emoji: '⛏️', regen: '90 detik' },
+  3: { name: 'Pickaxe Emas', emoji: '🛠️', regen: '60 detik' },
+};
+
+/**
+ * Lookup bibit / tanaman dari shop
+ */
+export function getShopSeed(itemId) {
+  return SHOP_SEEDS.find((s) => s.id === itemId);
+}
+
+/**
+ * Emoji tanaman berdasarkan cropId (hasil panen)
+ */
+export function getCropEmojiById(cropId) {
+  if (!cropId) return '📦';
+  const seed = SHOP_SEEDS.find((s) => s.cropId === cropId);
+  if (seed?.emoji) return seed.emoji;
+  return CROP_DATA[cropId]?.emoji || '📦';
+}
 
 /**
  * Get item emoji (handles crops, seeds, animal products, fishes, and minerals)
  */
 export function getCropEmoji(itemId) {
-  if (itemId.startsWith('bibit_')) return '🌱';
-  
-  const emojis = {
-    wortel: '🥕',
-    jagung: '🌽',
-    tomat: '🍅',
-    stroberi: '🍓',
-    nanas: '🍍',
-    labu: '🎃',
-    kentang: '🥔',
-    gandum: '🌾',
-    tulip: '🌷',
-    semangka: '🍉',
-    apel: '🍎',
-    jamur: '🍄'
-  };
-  
-  if (emojis[itemId]) return emojis[itemId];
+  if (!itemId) return '📦';
+
+  const seed = getShopSeed(itemId);
+  if (seed) return seed.emoji || getCropEmojiById(seed.cropId);
+
+  if (itemId.startsWith('bibit_')) {
+    const cropId = itemId.replace('bibit_', '');
+    return getCropEmojiById(cropId);
+  }
+
+  if (CROP_DATA[itemId]?.emoji) return CROP_DATA[itemId].emoji;
   
   const animal = SHOP_ANIMALS.find(a => a.product === itemId);
   if (animal) return animal.productEmoji;
@@ -177,6 +209,50 @@ export function getAnimalEmoji(animal) {
     horse: '🐴',
   };
   return emojis[animal] || '🐾';
+}
+
+/**
+ * Harga jual per item di inventory. null = tidak bisa dijual.
+ */
+export function getItemSellPrice(itemId) {
+  const seedData = SHOP_SEEDS.find(s => s.id === itemId);
+  if (seedData) return Math.floor(seedData.price * 0.5);
+
+  const cropData = SHOP_SEEDS.find(s => s.cropId === itemId);
+  if (cropData) return Math.floor(cropData.price * 1.5);
+
+  const animalProduct = SHOP_ANIMALS.find(a => a.product === itemId);
+  if (animalProduct) return Math.floor(animalProduct.price * 0.5);
+
+  const fishData = FISHES.find(f => f.id === itemId);
+  if (fishData) return fishData.priceNormal ?? 0;
+
+  const mineralData = MINERALS.find(m => m.id === itemId);
+  if (mineralData) return mineralData.price;
+
+  return null;
+}
+
+/**
+ * Nama tampilan item inventory
+ */
+export function getItemDisplayName(itemId) {
+  const seedData = SHOP_SEEDS.find(s => s.id === itemId);
+  if (seedData) return seedData.name;
+
+  const cropData = SHOP_SEEDS.find(s => s.cropId === itemId);
+  if (cropData) return cropData.name.replace('Bibit ', '');
+
+  const animalProduct = SHOP_ANIMALS.find(a => a.product === itemId);
+  if (animalProduct) return animalProduct.productEmoji + ' ' + (animalProduct.product.replace('_', ' '));
+
+  const fishData = FISHES.find(f => f.id === itemId);
+  if (fishData) return fishData.name;
+
+  const mineralData = MINERALS.find(m => m.id === itemId);
+  if (mineralData) return mineralData.name;
+
+  return itemId;
 }
 
 /**

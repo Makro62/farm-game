@@ -5,30 +5,49 @@ import { useGameStore } from './store';
 
 export function GameProvider({ children }) {
   const [isMounted, setIsMounted] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-  
+  const [isStoreReady, setIsStoreReady] = useState(
+    () => useGameStore.persist.hasHydrated()
+  );
+
   useEffect(() => {
     setIsMounted(true);
-    
-    // Initialize game
+
+    if (useGameStore.persist.hasHydrated()) {
+      setIsStoreReady(true);
+      return;
+    }
+
+    return useGameStore.persist.onFinishHydration(() => {
+      setIsStoreReady(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isStoreReady) return;
+
     const state = useGameStore.getState();
-    
-    // Check streak
     const streakResult = state.checkStreak();
     if (streakResult.claimed) {
       console.log(streakResult.message);
     }
-    
-    // Initialize market if needed
+
     if (!state.todayPrices || Object.keys(state.todayPrices).length === 0) {
       state.updateMarket();
     }
-    
-    setIsInitialized(true);
-  }, []);
-  
-  // Loading state
-  if (!isMounted || !isInitialized) {
+
+    state.generateDailyQuests();
+  }, [isStoreReady]);
+
+  useEffect(() => {
+    if (!isStoreReady) return;
+
+    const tick = () => useGameStore.getState().processGameTick();
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [isStoreReady]);
+
+  if (!isMounted || !isStoreReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--bg-dark)] to-[var(--bg-light)]">
         <div className="text-center">
@@ -40,6 +59,6 @@ export function GameProvider({ children }) {
       </div>
     );
   }
-  
+
   return <>{children}</>;
 }

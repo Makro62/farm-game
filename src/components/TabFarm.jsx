@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
-import { getCropEmoji, formatNumber, SHOP_SEEDS, SHOP_ANIMALS } from '@/lib/utils';
+import { getCropEmoji, SHOP_SEEDS } from '@/lib/utils';
+import { CropIcon } from './ui/CropIcon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
+import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
+import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import toast from 'react-hot-toast';
 
 export default function TabFarm() {
@@ -14,12 +17,10 @@ export default function TabFarm() {
   const plant = useGameStore(state => state.plant);
   const harvest = useGameStore(state => state.harvest);
   const swapPlots = useGameStore(state => state.swapPlots);
-  const addCoins = useGameStore(state => state.addCoins);
   const openPrompt = useGameStore(state => state.openPrompt);
   const openConfirm = useGameStore(state => state.openConfirm);
   const buyItem = useGameStore(state => state.buyItem);
   const removeItem = useGameStore(state => state.removeItem);
-  const coinMultiplier = useGameStore(state => state.coinMultiplier);
   const growthMultiplier = useGameStore(state => state.growthMultiplier);
   const buyGrowthBooster = useGameStore(state => state.buyGrowthBooster);
   const workers = useGameStore(state => state.workers);
@@ -48,11 +49,20 @@ export default function TabFarm() {
   // syncPlots & auto-workers ditangani global game loop di page.js
 
   const handleToggleAuto = () => {
-    if (!workers.farmer) {
+    if (!workers?.farmer) {
       toast('Sewa Petani Budi dulu di panel kiri! 🔒', { icon: '👨‍🌾' });
       return;
     }
+    const next = !autoFarm;
     toggleAutoFarm();
+    if (next) {
+      const hasSeeds = SHOP_SEEDS.some((s) => (inventory[s.id] || 0) > 0);
+      if (!hasSeeds) {
+        toast('Auto ON — beli bibit dulu agar kurcaci bisa menanam! 🌱', { icon: '👨‍🌾' });
+      } else {
+        toast.success('Kurcaci petani aktif! Auto panen & tanam.', { id: 'auto-farm-toggle' });
+      }
+    }
   };
 
   const handleBuyGrowthBooster = () => {
@@ -77,7 +87,7 @@ export default function TabFarm() {
       'Sewa Petani Budi (Auto-Farm & Harvest) seharga 5000 💰?',
       () => {
         if (hireWorker('farmer', 5000)) {
-          toast.success('Petani Budi disewa! Nyalakan tombol Auto. 👨‍🌾');
+          toast.success('Petani Budi disewa! Auto farm sudah aktif. 👨‍🌾');
         } else {
           toast.error('Koin tidak cukup!');
         }
@@ -85,18 +95,12 @@ export default function TabFarm() {
     );
   };
 
-  const handleShopClick = (seed) => {
-    openPrompt(
-      `Beli ${seed.name}`, 
-      `Harga: ${seed.price} 💰/bibit`, 
-      (amount) => {
-        if (buyItem(seed.id, amount, seed.price)) {
-          toast.success(`Berhasil membeli ${amount} ${seed.name}!`);
-        } else {
-          toast.error('Koin tidak cukup!');
-        }
-      }
-    );
+  const handleShopBuy = (item, amount) => {
+    if (buyItem(item.id, amount, item.price)) {
+      toast.success(`Berhasil membeli ${amount} ${item.name}!`);
+    } else {
+      toast.error('Koin tidak cukup!');
+    }
   };
 
   const handlePlotClick = (plot) => {
@@ -126,90 +130,34 @@ export default function TabFarm() {
     }
   };
 
-  const handleSellAll = () => {
-    let totalEarned = 0;
-    const currentInventory = { ...inventory };
-    Object.keys(currentInventory).forEach(itemId => {
-      const amount = currentInventory[itemId];
-      if (amount > 0) {
-        let sellPrice = 20;
-        
-        // Cek jika item adalah bibit (jual rugi)
-        const seedData = SHOP_SEEDS.find(s => s.id === itemId);
-        if (seedData) {
-          sellPrice = Math.floor(seedData.price * 0.5);
-        } else {
-          // Cek jika item adalah hasil panen (jual untung)
-          const cropData = SHOP_SEEDS.find(s => s.cropId === itemId);
-          if (cropData) {
-            sellPrice = Math.floor(cropData.price * 1.5);
-          } else {
-            // Cek jika item adalah hasil ternak
-            const animalData = SHOP_ANIMALS.find(a => a.product === itemId);
-            if (animalData) {
-              sellPrice = Math.floor(animalData.price * 0.5); 
-            }
-          }
-        }
-        
-        totalEarned += sellPrice * amount;
-        removeItem(itemId, amount);
-      }
-    });
-    if (totalEarned > 0) {
-      const finalEarned = Math.round(totalEarned * coinMultiplier);
-      addCoins(finalEarned);
-      toast.success(
-        coinMultiplier > 1
-          ? `Terjual ${formatNumber(finalEarned)} 💰 (×${coinMultiplier} booster!)`
-          : `Terjual seharga ${formatNumber(finalEarned)} 💰`
-      );
-    } else {
-      toast.error('Inventory kosong!');
-    }
-  };
-
   return (
-    <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="game-tab-grid">
         
         {/* ================= LEFT COLUMN ================= */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="game-sidebar-left">
           <div className="glass-panel p-4">
             {/* 1. Shop Bibit */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-green-200 pb-2">
-              <span>🛒</span> Shop Bibit
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
+            <ShopSectionTitle icon="🛒">Shop Bibit</ShopSectionTitle>
+            <div className="shop-grid mb-6">
               {availableSeeds.map((seed) => {
                 const amt = shopAmounts[seed.id] || 1;
                 return (
-                  <div
+                  <ShopItemCard
                     key={`shop-${seed.id}`}
-                    className="p-2 glass-card flex flex-col items-center gap-2"
-                  >
-                    <span className="text-2xl">{getCropEmoji(seed.id)}</span>
-                    <span className="font-semibold text-[11px] text-white text-center leading-tight">{seed.name}</span>
-                    <span className="text-[10px] font-bold text-green-300">{seed.price}💰</span>
-                    <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1">
-                      <button onClick={() => setShopAmounts(p => ({ ...p, [seed.id]: Math.max(1, amt - 1) }))} className="w-5 h-5 flex items-center justify-center bg-white/20 rounded text-white font-bold">-</button>
-                      <span className="text-xs font-bold w-4 text-center text-white">{amt}</span>
-                      <button onClick={() => setShopAmounts(p => ({ ...p, [seed.id]: amt + 1 }))} className="w-5 h-5 flex items-center justify-center bg-white/20 rounded text-white font-bold">+</button>
-                    </div>
-                    <button 
-                      onClick={() => buyItem(seed.id, amt, seed.price)}
-                      className="w-full text-[11px] font-bold text-white bg-green-500 hover:bg-green-600 px-2 py-1.5 rounded-lg transition-colors mt-1"
-                    >
-                      Beli ({seed.price * amt} 💰)
-                    </button>
-                  </div>
+                    icon={<CropIcon itemId={seed.id} className="shop-item-icon" />}
+                    name={seed.name}
+                    price={seed.price}
+                    amount={amt}
+                    onDecrease={() => setShopAmounts(p => ({ ...p, [seed.id]: Math.max(1, amt - 1) }))}
+                    onIncrease={() => setShopAmounts(p => ({ ...p, [seed.id]: amt + 1 }))}
+                    onBuy={() => handleShopBuy(seed, amt)}
+                  />
                 );
               })}
             </div>
 
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white">
-              <span>🌱</span> BIBIT TANAMAN
-            </div>
+            <ShopSectionTitle icon="🌱">Bibit Tanaman</ShopSectionTitle>
             <div className="glass-card rounded-xl p-3 mb-6">
               {SHOP_SEEDS.filter(s => inventory[s.id] > 0).length === 0 ? (
                 <div className="text-center text-sm text-gray-400 italic">Belum ada bibit di Inventory.</div>
@@ -223,7 +171,7 @@ export default function TabFarm() {
                         ${selectedInventoryItem === seed.id ? 'border-primary scale-105 shadow-md bg-white/20' : 'hover:bg-white/10'}`}
                     >
                       <span className="text-2xl relative">
-                        {getCropEmoji(seed.id)}
+                        <CropIcon itemId={seed.id} />
                         <span className="absolute -bottom-1 -right-1 bg-yellow-400 text-yellow-900 text-[9px] font-bold px-1 rounded-sm shadow-sm">
                           {inventory[seed.id]}
                         </span>
@@ -234,61 +182,54 @@ export default function TabFarm() {
               )}
             </div>
 
-            {/* 4. Pekerja (Auto) */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
-              <span>🧑‍🌾</span> Pekerja (Auto)
-            </div>
+            <ShopSectionTitle icon="🧑‍🌾">Pekerja (Auto)</ShopSectionTitle>
             <button
               onClick={handleHireFarmer}
-              className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left ${
-                workers.farmer
-                  ? 'border-primary bg-white/10'
-                  : ''
+              className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left mb-2 ${
+                workers?.farmer ? 'border-primary bg-white/10' : ''
               }`}
             >
               <div>
                 <div className="font-bold text-white text-sm">👨‍🌾 Petani Budi</div>
                 <div className="text-[10px] text-gray-500">Auto-Farm & Harvest</div>
               </div>
-              <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs">
-                {workers.farmer ? '✅ Dimiliki' : '5000💰'}
+              <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs whitespace-nowrap">
+                {workers?.farmer ? '✅ Dimiliki' : '5000 💰'}
               </span>
             </button>
+            {workers?.farmer && (
+              <p className="text-[10px] text-gray-400 mb-2">
+                {autoFarm
+                  ? SHOP_SEEDS.some((s) => (inventory[s.id] || 0) > 0)
+                    ? '✅ Kurcaci aktif — panen & tanam otomatis'
+                    : '⚠️ Auto ON — beli bibit agar bisa menanam'
+                  : 'Nyalakan tombol Auto di atas untuk mulai'}
+              </p>
+            )}
           </div>
         </div>
 
         {/* ================= CENTER COLUMN ================= */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="game-main">
           <div className="glass-panel p-4">
             
             <StatusHeader />
 
-            <div className="flex justify-between items-center mb-4">
-               <div className="font-bold text-lg flex items-center gap-2 text-white drop-shadow-md">
-                 <span>🌾</span> Area Pertanian
-               </div>
-               <div className="flex gap-2">
-                 <button 
-                  onClick={() => setIsEditMode(!isEditMode)}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${isEditMode ? 'bg-yellow-400 text-yellow-900 border-yellow-500 animate-pulse' : 'glass-card text-gray-200'}`}
-                 >
-                  {isEditMode ? '💾 Selesai Edit' : '✏️ Edit Layout'}
-                 </button>
-                 <button 
-                  onClick={handleToggleAuto}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFarm ? 'bg-green-500 text-white border-green-600' : 'glass-card text-gray-200'}`}
-                 >
-                  🧙‍♂️ Auto: {autoFarm ? 'ON' : 'OFF'}
-                 </button>
-               </div>
-            </div>
+            <GameAreaHeader icon="🌾" title="Area Pertanian">
+              <GameActionButton variant="edit" active={isEditMode} onClick={() => setIsEditMode(!isEditMode)}>
+                {isEditMode ? '💾 Selesai Edit' : '✏️ Edit Layout'}
+              </GameActionButton>
+              <GameActionButton variant="auto" active={autoFarm} onClick={handleToggleAuto}>
+                🧙‍♂️ Auto: {autoFarm ? 'ON' : 'OFF'}
+              </GameActionButton>
+            </GameAreaHeader>
 
             <div 
               className={`p-4 sm:p-6 rounded-3xl shadow-inner border-4 border-[#6b4226] relative overflow-hidden mb-6 transition-all bg-cover bg-center ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}
               style={{ backgroundImage: "url('/img/backgrounds/farm_bg.png')" }}
             >
               <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
-              <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 sm:gap-4 relative z-10">
+              <div className="game-plot-grid relative z-10">
                 {plots.map((plot, i) => {
                   const isGrowing = plot.status === 'growing';
                   let progress = 0;
@@ -333,7 +274,7 @@ export default function TabFarm() {
                         }
                         handlePlotClick(plot);
                       }}
-                      className={`aspect-square w-full rounded-xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md
+                      className={`game-plot-cell
                         ${isEditMode ? 'cursor-grab hover:ring-4 ring-yellow-400' : ''}
                         ${plot.status === 'empty' ? 'bg-[#a06a38] border-b-4 border-[#7a4e28] hover:bg-[#b07843]' : ''}
                         ${isGrowing && !isReady ? 'bg-[#5c4033] border-b-4 border-[#3e2b22]' : ''}
@@ -345,9 +286,9 @@ export default function TabFarm() {
                           <motion.div
                             initial={{ scale: 0, y: 10 }}
                             animate={{ scale: isReady ? 1.5 : 0.8 + (progress / 100) * 0.4, y: 0 }}
-                            className="text-4xl drop-shadow-lg z-10"
+                            className="z-10"
                           >
-                            {getCropEmoji(plot.crop)}
+                            <CropIcon cropId={plot.crop} />
                           </motion.div>
                         </AnimatePresence>
                       )}
@@ -372,7 +313,7 @@ export default function TabFarm() {
         </div>
 
         {/* ================= RIGHT COLUMN ================= */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="game-sidebar-right">
           <div className="glass-panel p-4 h-full">
             
             {/* 1. Inventory */}

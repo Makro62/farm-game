@@ -63,7 +63,7 @@
   }
   
   .btn-primary:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
   }
 
@@ -95,6 +95,7 @@
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
+    @apply p-3 sm:p-4;
   }
 
   .glass-card {
@@ -180,6 +181,208 @@
   
   .safe-bottom {
     padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
+  }
+
+  /* Layout game — full width semua ukuran layar */
+  .game-container {
+    @apply w-full max-w-[100%] mx-auto;
+    @apply px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8 2xl:px-10;
+  }
+
+  .game-tab-grid {
+    @apply grid grid-cols-1 lg:grid-cols-12 w-full;
+    @apply gap-3 sm:gap-4 lg:gap-5 xl:gap-6;
+  }
+
+  .game-sidebar {
+    @apply lg:col-span-3 xl:col-span-2 space-y-3 sm:space-y-4 min-w-0;
+  }
+
+  .game-sidebar-left {
+    @apply game-sidebar order-2 lg:order-1;
+  }
+
+  .game-sidebar-right {
+    @apply game-sidebar order-3;
+  }
+
+  .game-main {
+    @apply lg:col-span-6 xl:col-span-8 space-y-3 sm:space-y-4 order-1 lg:order-2 min-w-0;
+  }
+
+  .game-plot-grid {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: clamp(0.25rem, 1.2vw, 1rem);
+  }
+
+  @media (min-width: 640px) {
+    .game-plot-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+
+  .game-plot-cell {
+    @apply aspect-square w-full rounded-lg sm:rounded-xl relative overflow-hidden;
+    @apply flex flex-col items-center justify-center transition-all shadow-md;
+  }
+
+  .plot-emoji {
+    font-size: clamp(1.25rem, 4.5vw, 2.25rem);
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+  }
+
+  .animal-cell-img {
+    width: clamp(1.5rem, 72%, 3.25rem);
+    height: clamp(1.5rem, 72%, 3.25rem);
+    object-fit: contain;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+  }
+
+  .shop-grid {
+    display: grid;
+    width: 100%;
+    gap: 0.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 640px) {
+    .shop-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .shop-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .shop-grid {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .shop-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .shop-section-title {
+    @apply font-bold text-base sm:text-lg mb-3 flex items-center gap-2;
+    @apply border-b-2 border-white/20 pb-2 text-white;
+  }
+
+  .shop-item-card {
+    @apply p-2 sm:p-2.5 glass-card flex flex-col gap-1.5 h-full min-w-0;
+  }
+
+  .shop-item-info {
+    @apply flex flex-col items-center gap-1 flex-1 min-w-0 text-center;
+  }
+
+  .shop-item-icon {
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    line-height: 1;
+  }
+
+  .shop-item-name {
+    @apply font-semibold text-white leading-tight line-clamp-2 w-full;
+    font-size: clamp(0.625rem, 2vw, 0.6875rem);
+  }
+
+  .shop-item-price {
+    @apply font-bold text-yellow-300/90 tabular-nums whitespace-nowrap;
+    font-size: clamp(0.625rem, 1.8vw, 0.6875rem);
+  }
+
+  .shop-qty-control {
+    @apply flex items-center gap-1 bg-white/10 rounded-lg p-0.5 w-full shrink-0;
+  }
+
+  .btn-qty {
+    @apply shrink-0 flex items-center justify-center bg-white/15 hover:bg-white/25;
+    @apply rounded-md text-white font-bold transition-colors;
+    width: clamp(1.5rem, 5vw, 1.75rem);
+    height: clamp(1.5rem, 5vw, 1.75rem);
+    font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  }
+
+  .shop-qty-value {
+    @apply font-bold flex-1 text-center text-white tabular-nums;
+    font-size: clamp(0.6875rem, 2vw, 0.75rem);
+  }
+
+  .btn-shop {
+    @apply w-full shrink-0 rounded-lg text-white font-bold text-center;
+    @apply flex flex-col items-center justify-center gap-0.5;
+    @apply active:scale-[0.98] transition-all duration-200;
+    min-height: clamp(2.5rem, 8vw, 3rem);
+    padding: 0.375rem 0.5rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.25);
+  }
+
+  .btn-shop:hover {
+    filter: brightness(1.06);
+  }
+
+  .btn-shop-label {
+    @apply leading-none;
+    font-size: clamp(0.6875rem, 2vw, 0.8125rem);
+  }
+
+  .btn-shop-total {
+    @apply leading-none tabular-nums opacity-95;
+    font-size: clamp(0.625rem, 1.8vw, 0.75rem);
+  }
+
+  .game-area-header {
+    @apply flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between;
+    @apply mb-3 sm:mb-4;
+  }
+
+  .game-area-title {
+    @apply font-bold text-white drop-shadow-md flex items-center gap-2 shrink-0;
+    font-size: clamp(0.9375rem, 2.5vw, 1.125rem);
+  }
+
+  .game-area-actions {
+    @apply flex flex-wrap gap-1.5 sm:gap-2;
+  }
+
+  .game-action-btn {
+    @apply rounded-lg font-bold shadow-sm transition-colors border;
+    @apply px-2 py-1.5 sm:px-3 sm:py-1.5;
+    @apply glass-card text-gray-200;
+    font-size: clamp(0.6875rem, 2vw, 0.875rem);
+    min-height: 2rem;
+  }
+
+  @media (min-width: 640px) {
+    .game-action-btn {
+      min-height: 2.25rem;
+    }
+  }
+
+  .game-action-btn--edit {
+    @apply bg-yellow-400 text-yellow-900 border-yellow-500 animate-pulse;
+  }
+
+  .game-action-btn--auto {
+    @apply bg-green-500 text-white border-green-600;
+  }
+
+  .game-action-btn--miner {
+    @apply bg-gray-700 text-white border-gray-800;
+  }
+
+  .game-action-btn--muted {
+    @apply bg-white/10 text-gray-200;
   }
   
   /* Animasi custom */

@@ -12,17 +12,9 @@ import { useGameStore } from '@/lib/store';
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState('farm');
-  const [isHydrated, setIsHydrated] = useState(false);
-  
-  // Wait for Zustand to hydrate from localStorage
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
   
   // Auto-save every 30 seconds
   useEffect(() => {
-    if (!isHydrated) return;
-    
     const interval = setInterval(() => {
       // Zustand auto-saves via persist middleware
       console.log('💾 Game auto-saved');
@@ -41,25 +33,7 @@ export default function Page() {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isHydrated]);
-  
-  // Global Game Loop for Phase 1 features (Seasons, Weather, Mining)
-  useEffect(() => {
-    if (!isHydrated) return;
-    
-    // Ensure daily quests are generated for today
-    useGameStore.getState().generateDailyQuests();
-    
-    const globalTick = setInterval(() => {
-      const state = useGameStore.getState();
-      state.advanceSeasonTick();
-      state.changeWeather();
-      state.syncPlots();
-      state.syncMiningNodes();
-      state.runAutoWorkers();
-    }, 1000);
-    return () => clearInterval(globalTick);
-  }, [isHydrated]);
+  }, []);
   
   // Development shortcuts
   useEffect(() => {
@@ -93,17 +67,13 @@ export default function Page() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
   
-  if (!isHydrated) {
-    return null; // Return null to prevent hydration mismatch. Handled by GameProvider.
-  }
-  
   return (
     <div id="app" className="min-h-screen flex flex-col">
       <Topbar />
       
       <TabsNav activeTab={activeTab} onTabChange={setActiveTab} />
       
-      <main id="main" className="flex-1 overflow-y-auto pb-20 p-4">
+      <main id="main" className="flex-1 overflow-y-auto overflow-x-hidden pb-16 sm:pb-20 game-container min-h-0 py-3 sm:py-4">
         {activeTab === 'farm' && <TabFarm />}
         {activeTab === 'animal' && <TabAnimal />}
         {activeTab === 'mine' && <TabMine />}

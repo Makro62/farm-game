@@ -3,7 +3,179 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import toast from 'react-hot-toast';
-import { SHOP_SEEDS, SHOP_ANIMALS, FISHES } from './utils';
+import { SHOP_SEEDS, SHOP_ANIMALS, FISHES, getItemSellPrice } from './utils';
+
+const MINING_REGEN_MS = { 1: 120000, 2: 90000, 3: 60000 };
+
+function getMiningRegenMs(mining) {
+  let ms = MINING_REGEN_MS[mining?.pickaxeLevel] || MINING_REGEN_MS[1];
+  if (mining?.lanternUntil && mining.lanternUntil > Date.now()) {
+    ms = Math.floor(ms * 0.5);
+  }
+  return ms;
+}
+
+function rollMineralType(pickaxeLevel = 1, lanternActive = false) {
+  const bonus = (lanternActive ? 0.05 : 0) + (pickaxeLevel >= 3 ? 0.08 : pickaxeLevel >= 2 ? 0.04 : 0);
+  const r = Math.random();
+  if (r < 0.05 + bonus) return 'berlian';
+  if (r < 0.15 + bonus) return 'emas';
+  if (r < 0.3 + (pickaxeLevel >= 2 ? 0.05 : 0)) return 'besi';
+  if (r < 0.5) return 'tembaga';
+  return 'batu';
+}
+
+function pickAutoSeed(inventory, selectedSeed, season) {
+  if (selectedSeed) {
+    const seed = SHOP_SEEDS.find((s) => s.id === selectedSeed);
+    if (seed && (inventory[selectedSeed] || 0) > 0) {
+      if (seed.season === 'all' || seed.season === season) return seed;
+    }
+  }
+  const available = SHOP_SEEDS.filter(
+    (s) => (inventory[s.id] || 0) > 0 && (s.season === 'all' || s.season === season)
+  );
+  if (available.length === 0) return null;
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+function getGrowthMultiplier(state) {
+  const mult = state?.growthMultiplier;
+  return mult > 0 ? mult : 1;
+}
+
+function consumeInventoryItem(inventory, itemId) {
+  const next = (inventory[itemId] || 0) - 1;
+  if (next <= 0) {
+    delete inventory[itemId];
+  } else {
+    inventory[itemId] = next;
+  }
+}
+
+function safeCoins(value, fallback = 100) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : fallback;
+}
+
+function safePositiveNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+const WORKER_AUTO_KEYS = {
+  farmer: 'autoFarmer',
+  rancher: 'autoRancher',
+  fisher: 'autoFisher',
+  miner: 'autoMiner',
+};
+
+function isWorkerActive(state, type) {
+  if (!state?.workers?.[type]) return false;
+  const autoKey = WORKER_AUTO_KEYS[type];
+  if (!autoKey) return false;
+  return state[autoKey] !== false;
+}
+
+const PLOT_STATE_MAP = {
+  empty: 'empty',
+  growing: 'growing',
+  ready: 'ready',
+  grass: 'empty',
+  depleted: 'empty',
+};
+
+function normalizePlot(plot, index = 0) {
+  if (!plot || typeof plot !== 'object') {
+    return { id: index, status: 'empty', crop: null, plantedAt: null, growTime: null };
+  }
+
+  const legacyState = plot.state;
+  const status = plot.status || (legacyState ? PLOT_STATE_MAP[legacyState] || legacyState : 'empty');
+
+  return {
+    id: plot.id ?? index,
+    status,
+    crop: plot.crop ?? null,
+    plantedAt: plot.plantedAt ?? null,
+    growTime: plot.growTime > 0 ? plot.growTime : null,
+  };
+}
+
+function normalizePlots(plots) {
+  if (!Array.isArray(plots)) {
+    return Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      status: 'empty',
+      crop: null,
+      plantedAt: null,
+      growTime: null,
+    }));
+  }
+
+  const normalized = plots.map((p, i) => normalizePlot(p, i));
+  while (normalized.length < 30) {
+    normalized.push({
+      id: normalized.length,
+      status: 'empty',
+      crop: null,
+      plantedAt: null,
+      growTime: null,
+    });
+  }
+  return normalized.slice(0, 30);
+}
+
+function normalizeAnimal(animal) {
+  if (!animal || typeof animal !== 'object') return animal;
+
+  const produceTime = animal.produceTime > 0 ? animal.produceTime : 20000;
+
+  if (animal.readyToCollect) {
+    return {
+      ...animal,
+      status: animal.status || 'producing',
+      lastCollected: 0,
+      produceTime,
+    };
+  }
+
+  return {
+    ...animal,
+    status: animal.status || 'producing',
+    lastCollected: animal.lastCollected ?? Date.now(),
+    produceTime,
+  };
+}
+
+function migrateLegacyWorkers(merged) {
+  if (typeof window === 'undefined') return merged;
+
+  try {
+    const legacyRaw = localStorage.getItem('farmTycoonSave');
+    if (!legacyRaw) return merged;
+
+    const payload = JSON.parse(legacyRaw);
+    const dataStr = payload.data ?? legacyRaw;
+    const legacy = typeof dataStr === 'string' ? JSON.parse(dataStr) : dataStr;
+    if (!legacy || typeof legacy !== 'object') return merged;
+
+    merged.workers = {
+      farmer: !!(merged.workers?.farmer || legacy.gnomeFarmOwned),
+      rancher: !!(merged.workers?.rancher || legacy.gnomeAnimalOwned),
+      fisher: !!(merged.workers?.fisher || legacy.merchantOwned),
+      miner: !!merged.workers?.miner,
+    };
+
+    if (legacy.gnomeFarmOwned && legacy.gnomeFarmActive !== false) merged.autoFarmer = true;
+    if (legacy.gnomeAnimalOwned && legacy.gnomeAnimalActive !== false) merged.autoRancher = true;
+    if (legacy.merchantOwned && legacy.merchantActive !== false) merged.autoFisher = true;
+  } catch {
+    // abaikan save lama yang rusak
+  }
+
+  return merged;
+}
 
 // Initial state
 const initialState = {
@@ -48,13 +220,16 @@ const initialState = {
   workers: {
     farmer: false,
     rancher: false,
-    fisher: false
+    fisher: false,
+    miner: false,
   },
   
   autoFarmer: false,
   autoRancher: false,
   autoFisher: false,
+  autoMiner: false,
   selectedSeed: null,
+  selectedMiningTool: null,
   
   // UI Modals
   modals: {
@@ -79,7 +254,8 @@ const initialState = {
       type: Math.random() < 0.05 ? 'berlian' : Math.random() < 0.15 ? 'emas' : Math.random() < 0.3 ? 'besi' : Math.random() < 0.5 ? 'tembaga' : 'batu',
       regenAt: null
     })),
-    pickaxeLevel: 1
+    pickaxeLevel: 1,
+    lanternUntil: null
   },
   
   // Mega Update Phase 2
@@ -92,7 +268,8 @@ const initialState = {
   
   // Quests
   dailyQuests: [],
-  lastQuestDate: null
+  lastQuestDate: null,
+  workerAutoMigrated: false,
 };
 
 export const useGameStore = create(
@@ -143,60 +320,73 @@ export const useGameStore = create(
       toggleAutoFarmer: () => set(state => ({ autoFarmer: !state.autoFarmer })),
       toggleAutoRancher: () => set(state => ({ autoRancher: !state.autoRancher })),
       toggleAutoFisher: () => set(state => ({ autoFisher: !state.autoFisher })),
+      toggleAutoMiner: () => set(state => ({ autoMiner: !state.autoMiner })),
       setSelectedSeed: (seedId) => set({ selectedSeed: seedId }),
+      setSelectedMiningTool: (toolId) => set({ selectedMiningTool: toolId }),
       
       // ===== COIN MANAGEMENT =====
       
       buyItem: (itemId, amount, unitPrice) => {
         const state = get();
-        const totalCost = unitPrice * amount;
-        
-        if (state.coins >= totalCost) {
-          set((state) => ({
-            coins: state.coins - totalCost,
-            inventory: {
-              ...state.inventory,
-              [itemId]: (state.inventory[itemId] || 0) + amount
-            }
-          }));
-          return true;
-        }
-        return false;
+        const qty = safePositiveNumber(amount, 0);
+        const price = safePositiveNumber(unitPrice, 0);
+        const totalCost = price * qty;
+
+        if (qty <= 0 || totalCost <= 0) return false;
+
+        const currentCoins = safeCoins(state.coins);
+        if (currentCoins < totalCost) return false;
+
+        set((state) => ({
+          coins: currentCoins - totalCost,
+          inventory: {
+            ...state.inventory,
+            [itemId]: (state.inventory[itemId] || 0) + qty,
+          },
+        }));
+        return true;
       },
 
       buyMultipleAnimals: (animalType, amount, unitPrice, produceTime) => {
         const state = get();
-        const totalCost = unitPrice * amount;
-        
-        if (state.coins >= totalCost) {
-          const newAnimals = Array.from({ length: amount }, () => ({
-            id: Date.now() + Math.random().toString(36).substr(2, 5),
-            type: animalType,
-            status: 'producing',
-            lastCollected: Date.now(),
-            produceTime
-          }));
-          
-          set((state) => ({
-            coins: state.coins - totalCost,
-            animals: [...state.animals, ...newAnimals]
-          }));
-          return true;
-        }
-        return false;
+        const qty = safePositiveNumber(amount, 0);
+        const price = safePositiveNumber(unitPrice, 0);
+        const totalCost = price * qty;
+
+        if (qty <= 0 || totalCost <= 0) return false;
+
+        const currentCoins = safeCoins(state.coins);
+        if (currentCoins < totalCost) return false;
+
+        const newAnimals = Array.from({ length: qty }, () => ({
+          id: Date.now() + Math.random().toString(36).substr(2, 5),
+          type: animalType,
+          status: 'producing',
+          lastCollected: Date.now(),
+          produceTime: safePositiveNumber(produceTime, 20000),
+        }));
+
+        set((state) => ({
+          coins: currentCoins - totalCost,
+          animals: [...state.animals, ...newAnimals],
+        }));
+        return true;
       },
 
       addCoins: (amount) => {
-        if (amount <= 0) return;
-        set((state) => ({ coins: state.coins + amount }));
+        const delta = Number(amount);
+        if (!Number.isFinite(delta) || delta <= 0) return;
+        set((state) => ({ coins: safeCoins(state.coins) + Math.floor(delta) }));
       },
       
       spendCoins: (amount) => {
-        const state = get();
-        if (state.coins < amount) {
-          return false;
-        }
-        set({ coins: state.coins - amount });
+        const cost = Number(amount);
+        if (!Number.isFinite(cost) || cost <= 0) return false;
+
+        const currentCoins = safeCoins(get().coins);
+        if (currentCoins < cost) return false;
+
+        set({ coins: currentCoins - Math.floor(cost) });
         return true;
       },
       
@@ -303,16 +493,21 @@ export const useGameStore = create(
         const now = Date.now();
         let changed = false;
 
-        const plots = get().plots.map(p => {
+        const plots = normalizePlots(get().plots).map((p, index) => {
+          const plot = normalizePlot(p, index);
+          const growTime = plot.growTime > 0 ? plot.growTime : null;
+
           if (
-            p.status === 'growing' &&
-            p.plantedAt &&
-            now - p.plantedAt >= p.growTime
+            plot.status === 'growing' &&
+            plot.plantedAt &&
+            growTime != null &&
+            now - plot.plantedAt >= growTime
           ) {
             changed = true;
-            return { ...p, status: 'ready' };
+            return { ...plot, status: 'ready' };
           }
-          return p;
+
+          return plot;
         });
 
         if (changed) {
@@ -361,14 +556,43 @@ export const useGameStore = create(
           return false;
         }
         
-        set((state) => ({
-          inventory: {
-            ...state.inventory,
-            [itemId]: current - quantity
+        set((state) => {
+          const newInventory = { ...state.inventory };
+          const next = current - quantity;
+          if (next <= 0) {
+            delete newInventory[itemId];
+          } else {
+            newInventory[itemId] = next;
           }
-        }));
+          return { inventory: newInventory };
+        });
         
         return true;
+      },
+
+      sellAllInventory: () => {
+        const state = get();
+        let totalEarned = 0;
+        const newInventory = { ...state.inventory };
+
+        Object.entries(newInventory).forEach(([itemId, amount]) => {
+          const qty = Number(amount);
+          if (!Number.isFinite(qty) || qty <= 0) return;
+          const sellPrice = getItemSellPrice(itemId);
+          if (sellPrice == null || !Number.isFinite(sellPrice)) return;
+          totalEarned += sellPrice * qty;
+          delete newInventory[itemId];
+        });
+
+        if (totalEarned <= 0) return 0;
+
+        const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
+        const finalEarned = Math.round(totalEarned * multiplier);
+        set({
+          inventory: newInventory,
+          coins: safeCoins(state.coins) + finalEarned,
+        });
+        return finalEarned;
       },
       
       // ===== ANIMALS =====
@@ -443,12 +667,12 @@ export const useGameStore = create(
         }
         
         const rewards = [100, 200, 300, 400, 500, 750, 1500];
-        const reward = rewards[Math.min(newStreak - 1, 6)];
-        
+        const reward = rewards[Math.min(newStreak - 1, 6)] ?? 100;
+
         set({
           streak: newStreak,
           lastLogin: today,
-          coins: state.coins + reward
+          coins: safeCoins(state.coins) + reward,
         });
         
         return {
@@ -465,7 +689,7 @@ export const useGameStore = create(
         const today = new Date().toDateString();
         const state = get();
         
-        if (state.lastQuestDate === today && state.dailyQuests.length > 0) {
+        if (state.lastQuestDate === today && Array.isArray(state.dailyQuests) && state.dailyQuests.length > 0) {
           return; // Already generated for today
         }
         
@@ -490,20 +714,45 @@ export const useGameStore = create(
       },
       
       progressQuest: (type, targetId, amount = 1) => {
-        set(state => {
+        set((state) => {
+          const quests = state.dailyQuests;
+          if (!Array.isArray(quests) || quests.length === 0) return state;
+
           let updated = false;
-          const newQuests = state.dailyQuests.map(q => {
+          const newQuests = quests.map((q) => {
             if (!q.claimed && q.type === type && q.targetId === targetId && q.count < q.required) {
               updated = true;
               return { ...q, count: Math.min(q.required, q.count + amount) };
             }
             return q;
           });
-          
-          if (updated) {
-            return { dailyQuests: newQuests };
+
+          return updated ? { dailyQuests: newQuests } : state;
+        });
+      },
+
+      batchProgressQuest: (entries = []) => {
+        if (!entries.length) return;
+        set((state) => {
+          const quests = state.dailyQuests;
+          if (!Array.isArray(quests) || quests.length === 0) return state;
+
+          const deltas = new Map();
+          for (const { type, targetId, amount = 1 } of entries) {
+            const key = `${type}:${targetId}`;
+            deltas.set(key, { type, targetId, amount: (deltas.get(key)?.amount || 0) + amount });
           }
-          return {};
+
+          let updated = false;
+          const newQuests = quests.map((q) => {
+            const key = `${q.type}:${q.targetId}`;
+            const delta = deltas.get(key);
+            if (!delta || q.claimed || q.count >= q.required) return q;
+            updated = true;
+            return { ...q, count: Math.min(q.required, q.count + delta.amount) };
+          });
+
+          return updated ? { dailyQuests: newQuests } : state;
         });
       },
       
@@ -515,9 +764,10 @@ export const useGameStore = create(
           return false;
         }
         
-        set(state => ({
+        const rewardCoins = safePositiveNumber(quest.rewardCoins, 0);
+        set((state) => ({
           dailyQuests: state.dailyQuests.map(q => q.id === questId ? { ...q, claimed: true } : q),
-          coins: state.coins + quest.rewardCoins
+          coins: safeCoins(state.coins) + rewardCoins,
         }));
         
         get().addXP(quest.rewardXp);
@@ -544,7 +794,7 @@ export const useGameStore = create(
         
         set({
           lastWheelSpin: today,
-          coins: state.coins + reward
+          coins: safeCoins(state.coins) + reward,
         });
         
         return {
@@ -561,11 +811,13 @@ export const useGameStore = create(
       },
 
       // Beli booster kecepatan tumbuh (mempercepat tanaman yang ditanam setelahnya).
-      buyGrowthBooster: (cost) => {
+      buyGrowthBooster: (cost = 50) => {
         const state = get();
-        if (state.growthMultiplier > 1) return false; // sudah aktif
-        if (state.coins < cost) return false;
-        set({ coins: state.coins - cost, growthMultiplier: 1.5 });
+        const price = safePositiveNumber(cost, 50);
+        if (state.growthMultiplier > 1) return false;
+        const currentCoins = safeCoins(state.coins);
+        if (currentCoins < price) return false;
+        set({ coins: currentCoins - price, growthMultiplier: 1.5 });
         return true;
       },
 
@@ -573,11 +825,23 @@ export const useGameStore = create(
 
       hireWorker: (type, cost) => {
         const state = get();
-        if (state.workers[type]) return false; // sudah dimiliki
-        if (state.coins < cost) return false;
+        if (state.workers[type]) return false;
+        const price = safePositiveNumber(cost, 0);
+        if (price <= 0) return false;
+        const currentCoins = safeCoins(state.coins);
+        if (currentCoins < price) return false;
+
+        const autoFlags = {
+          farmer: { autoFarmer: true },
+          rancher: { autoRancher: true },
+          fisher: { autoFisher: true },
+          miner: { autoMiner: true },
+        };
+
         set({
-          coins: state.coins - cost,
-          workers: { ...state.workers, [type]: true }
+          coins: currentCoins - price,
+          workers: { ...state.workers, [type]: true },
+          ...(autoFlags[type] || {}),
         });
         return true;
       },
@@ -719,7 +983,7 @@ export const useGameStore = create(
         const node = state.mining.nodes.find(n => n.id === nodeId);
         if (!node || node.status !== 'ready') return null;
 
-        const regenTime = 120 * 1000; // 2 minutes regen
+        const regenTime = getMiningRegenMs(state.mining);
         
         set((state) => ({
           mining: {
@@ -731,12 +995,138 @@ export const useGameStore = create(
           inventory: {
             ...state.inventory,
             [node.type]: (state.inventory[node.type] || 0) + 1
-          },
-          xp: state.xp + 15
+          }
         }));
 
+        get().addXP(15);
         get().progressQuest('mine', node.type, 1);
         return node.type;
+      },
+
+      useMiningTool: (itemId, nodeId = null) => {
+        const state = get();
+        const count = state.inventory[itemId] || 0;
+        if (count <= 0) {
+          return { ok: false, message: 'Kamu tidak punya alat ini. Beli di shop kanan.' };
+        }
+
+        const mining = state.mining;
+        const lanternActive = mining.lanternUntil && mining.lanternUntil > Date.now();
+
+        if (itemId === 'pickaxe_besi') {
+          if (mining.pickaxeLevel >= 2) {
+            return { ok: false, message: 'Pickaxe ini sudah terpasang atau ada yang lebih baik.' };
+          }
+          if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+          set({ mining: { ...get().mining, pickaxeLevel: 2 }, selectedMiningTool: null });
+          return { ok: true, message: '⛏️ Pickaxe Besi terpasang! Regen tambang 90 detik.' };
+        }
+
+        if (itemId === 'pickaxe_emas') {
+          if (mining.pickaxeLevel >= 3) {
+            return { ok: false, message: 'Pickaxe Emas sudah terpasang.' };
+          }
+          if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+          set({ mining: { ...get().mining, pickaxeLevel: 3 }, selectedMiningTool: null });
+          return { ok: true, message: '🛠️ Pickaxe Emas terpasang! Regen 60 detik + bonus mineral langka.' };
+        }
+
+        if (itemId === 'senter') {
+          if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+          set({
+            mining: { ...get().mining, lanternUntil: Date.now() + 300000 },
+            selectedMiningTool: null
+          });
+          return { ok: true, message: '🔦 Senter aktif 5 menit! Regen 2× lebih cepat + bonus ore.' };
+        }
+
+        if (itemId === 'bom_besar') {
+          const readyNodes = mining.nodes.filter(n => n.status === 'ready');
+          if (readyNodes.length === 0) {
+            return { ok: false, message: 'Tidak ada petak siap ditambang.' };
+          }
+          if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+          const regenTime = getMiningRegenMs(get().mining);
+          const newInventory = { ...get().inventory };
+          let mined = 0;
+          const newNodes = get().mining.nodes.map(n => {
+            if (n.status !== 'ready') return n;
+            newInventory[n.type] = (newInventory[n.type] || 0) + 1;
+            mined++;
+            get().progressQuest('mine', n.type, 1);
+            return { ...n, status: 'cooldown', regenAt: Date.now() + regenTime };
+          });
+          set({
+            mining: { ...get().mining, nodes: newNodes },
+            inventory: newInventory,
+            selectedMiningTool: null
+          });
+          get().addXP(mined * 15);
+          return { ok: true, message: `💣 Bom Besar meledak! ${mined} petak ditambang sekaligus.` };
+        }
+
+        if (nodeId === null || nodeId === undefined) {
+          return { ok: false, needTarget: true, message: 'Pilih petak tambang dulu.' };
+        }
+
+        const node = mining.nodes.find(n => n.id === nodeId);
+        if (!node) return { ok: false, message: 'Petak tidak ditemukan.' };
+
+        if (itemId === 'bom_kecil') {
+          if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+          const regenTime = getMiningRegenMs(get().mining);
+          const newInventory = { ...get().inventory };
+
+          if (node.status === 'ready') {
+            newInventory[node.type] = (newInventory[node.type] || 0) + 2;
+            get().progressQuest('mine', node.type, 1);
+            set({
+              mining: {
+                ...get().mining,
+                nodes: get().mining.nodes.map(n =>
+                  n.id === nodeId ? { ...n, status: 'cooldown', regenAt: Date.now() + regenTime } : n
+                )
+              },
+              inventory: newInventory,
+              selectedMiningTool: null
+            });
+            get().addXP(20);
+            return { ok: true, message: '🧨 Bom Kecil! Hasil tambang ×2 dari petak ini.' };
+          }
+
+          // Ledakkan batuan yang masih cooldown → langsung siap
+          const newType = rollMineralType(mining.pickaxeLevel, lanternActive);
+          set({
+            mining: {
+              ...get().mining,
+              nodes: get().mining.nodes.map(n =>
+                n.id === nodeId ? { ...n, status: 'ready', regenAt: null, type: newType } : n
+              )
+            },
+            selectedMiningTool: null
+          });
+          return { ok: true, message: '🧨 Bom Kecil membuka petak yang tertutup!' };
+        }
+
+        if (itemId === 'tali') {
+          if (node.status === 'ready') {
+            return { ok: false, message: 'Petak ini sudah siap — tidak perlu tali.' };
+          }
+          if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+          const newType = rollMineralType(mining.pickaxeLevel, lanternActive);
+          set({
+            mining: {
+              ...get().mining,
+              nodes: get().mining.nodes.map(n =>
+                n.id === nodeId ? { ...n, status: 'ready', regenAt: null, type: newType } : n
+              )
+            },
+            selectedMiningTool: null
+          });
+          return { ok: true, message: '🪢 Tali mempercepat pemulihan petak tambang!' };
+        }
+
+        return { ok: false, message: 'Alat tidak dikenali.' };
       },
 
       syncMiningNodes: () => {
@@ -748,37 +1138,47 @@ export const useGameStore = create(
         let newNodes = state.mining.nodes.map(n => {
           if ((n.status === 'cooldown' || n.status === 'depleted') && n.regenAt && now >= n.regenAt) {
             changed = true;
+            const lanternActive = state.mining.lanternUntil && state.mining.lanternUntil > Date.now();
             return { 
               ...n, 
               status: 'ready', 
               regenAt: null,
-              type: Math.random() < 0.05 ? 'berlian' : Math.random() < 0.15 ? 'emas' : Math.random() < 0.3 ? 'besi' : Math.random() < 0.5 ? 'tembaga' : 'batu'
+              type: rollMineralType(state.mining.pickaxeLevel, lanternActive)
             };
           }
           return n;
         });
 
-        if (state.workers.miner) {
+        if (isWorkerActive(state, 'miner')) {
           const readyNodes = newNodes.filter(n => n.status === 'ready');
-          if (readyNodes.length > 0 && Math.random() < 0.2) { // 20% chance
+          if (readyNodes.length > 0 && Math.random() < 0.2) {
             const nodeToMine = readyNodes[0];
-            const rand = Math.random();
-            let minedType = 'batu';
-            if (rand < 0.05) minedType = 'berlian';
-            else if (rand < 0.15) minedType = 'emas';
-            else if (rand < 0.3) minedType = 'besi';
-            else if (rand < 0.5) minedType = 'tembaga';
-            
-            newNodes = newNodes.map(n => 
-              n.id === nodeToMine.id 
-                ? { ...n, status: 'depleted', regenAt: now + 120000 }
+            const minedType = nodeToMine.type;
+            const lanternActive = state.mining.lanternUntil && state.mining.lanternUntil > Date.now();
+            const regenTime = getMiningRegenMs(state.mining);
+
+            newNodes = newNodes.map(n =>
+              n.id === nodeToMine.id
+                ? {
+                    ...n,
+                    status: 'cooldown',
+                    regenAt: now + regenTime,
+                    type: rollMineralType(state.mining.pickaxeLevel, lanternActive),
+                  }
                 : n
             );
             changed = true;
-            
-            setTimeout(() => {
-              useGameStore.getState().addItem(minedType, 1);
-            }, 0);
+
+            set({
+              mining: { ...state.mining, nodes: newNodes },
+              inventory: {
+                ...state.inventory,
+                [minedType]: (state.inventory[minedType] || 0) + 1,
+              },
+            });
+            get().addXP(15);
+            get().progressQuest('mine', minedType, 1);
+            return;
           }
         }
 
@@ -821,84 +1221,117 @@ export const useGameStore = create(
         return { leveledUp, newLevel, pointsGained };
       },
 
+      processGameTick: () => {
+        const actions = [
+          () => get().advanceSeasonTick(),
+          () => get().changeWeather(),
+          () => get().syncPlots(),
+          () => get().syncMiningNodes(),
+          () => get().runAutoWorkers(),
+        ];
+
+        for (const action of actions) {
+          try {
+            action();
+          } catch (error) {
+            console.error('Game tick error:', error);
+          }
+        }
+      },
+
       runAutoWorkers: () => {
         const state = get();
         const now = Date.now();
-        let changed = false;
+        const growthMult = getGrowthMultiplier(state);
+        let plots = normalizePlots(state.plots);
+        let animals = Array.isArray(state.animals) ? state.animals.map(normalizeAnimal) : [];
+        let inventory = { ...state.inventory };
+        let xpGain = 0;
+        let harvested = 0;
+        let planted = 0;
+        let collected = 0;
+        let plotsChanged = false;
+        let animalsChanged = false;
+        const questEntries = [];
 
         // --- 1. KURCACI PETANI ---
-        if (state.workers.farmer && state.autoFarmer) {
-          let harvested = 0;
-          let planted = 0;
-          const newPlots = [...state.plots];
-          const newInventory = { ...state.inventory };
-          
-          for (let i = 0; i < newPlots.length; i++) {
-            const p = newPlots[i];
-            const isReady = p.crop && (p.status === 'ready' || (p.status === 'growing' && p.plantedAt && now - p.plantedAt >= p.growTime));
-            
-            // Harvest
+        if (isWorkerActive(state, 'farmer')) {
+          plots = [...plots];
+
+          for (let i = 0; i < plots.length; i++) {
+            const p = normalizePlot(plots[i], i);
+            const growTime = p.growTime > 0 ? p.growTime : null;
+            const isReady = p.crop && (
+              p.status === 'ready' ||
+              (p.status === 'growing' && p.plantedAt && growTime != null && now - p.plantedAt >= growTime)
+            );
+
             if (isReady) {
               const crop = p.crop;
-              newPlots[i] = { id: p.id, status: 'empty', crop: null, plantedAt: null, growTime: null };
-              newInventory[crop] = (newInventory[crop] || 0) + 1;
+              plots[i] = { id: p.id, status: 'empty', crop: null, plantedAt: null, growTime: null };
+              inventory[crop] = (inventory[crop] || 0) + 1;
               harvested++;
-              changed = true;
-              // quest progress done outside loop to avoid many state updates? Actually let's just do it inside loop via direct mutation of state if we want, or just call action which calls set. Calling action in loop is fine for zustand, but we can aggregate. Actually, calling `get().progressQuest` directly in the loop is safe because it's a small array.
-              get().progressQuest('harvest', crop, 1);
-            } 
-            
-            // Plant (dapat langsung dilakukan setelah panen)
-            if (newPlots[i].status === 'empty' && state.selectedSeed) {
-              const seedData = SHOP_SEEDS.find(s => s.id === state.selectedSeed);
-              if (seedData && (newInventory[state.selectedSeed] || 0) > 0) {
-                newInventory[state.selectedSeed] -= 1;
-                newPlots[i] = {
-                  id: newPlots[i].id,
+              plotsChanged = true;
+              xpGain += 10;
+              questEntries.push({ type: 'harvest', targetId: crop, amount: 1 });
+            }
+
+            if (plots[i].status === 'empty') {
+              const seedData = pickAutoSeed(inventory, state.selectedSeed, state.season?.current);
+              if (seedData) {
+                consumeInventoryItem(inventory, seedData.id);
+                plots[i] = {
+                  id: plots[i].id,
                   status: 'growing',
                   crop: seedData.cropId,
                   plantedAt: now,
-                  growTime: (seedData.time * 1000) / state.growthMultiplier
+                  growTime: (seedData.time * 1000) / growthMult,
                 };
                 planted++;
-                changed = true;
+                plotsChanged = true;
               }
             }
-          }
-          if (changed) {
-            set({ plots: newPlots, inventory: newInventory, xp: state.xp + (harvested * 10) });
-            if (harvested > 0 || planted > 0) toast.success(`👨‍🌾 Petani Budi panen ${harvested} & tanam ${planted}!`, { id: 'auto-farm' });
           }
         }
 
         // --- 2. KURCACI PETERNAK ---
-        if (state.workers.rancher && state.autoRancher) {
-          let collected = 0;
-          let rancherChanged = false;
-          const newAnimals = [...state.animals];
-          const newInventory = { ...state.inventory };
+        if (isWorkerActive(state, 'rancher')) {
+          animals = [...animals];
 
-          for (let i = 0; i < newAnimals.length; i++) {
-            const a = newAnimals[i];
+          for (let i = 0; i < animals.length; i++) {
+            const a = normalizeAnimal(animals[i]);
             const data = SHOP_ANIMALS.find((s) => s.id === a.type);
             if (data && a.status === 'producing' && now - a.lastCollected >= a.produceTime) {
-              newAnimals[i] = { ...a, lastCollected: now };
-              newInventory[data.product] = (newInventory[data.product] || 0) + 1;
+              animals[i] = { ...a, lastCollected: now };
+              inventory[data.product] = (inventory[data.product] || 0) + 1;
               collected++;
-              rancherChanged = true;
-              get().progressQuest('collect', data.product, 1);
+              animalsChanged = true;
+              xpGain += 8;
+              questEntries.push({ type: 'collect', targetId: data.product, amount: 1 });
+            } else {
+              animals[i] = a;
             }
           }
-          if (rancherChanged) {
-            set({ animals: newAnimals, inventory: newInventory, xp: get().xp + (collected * 8) });
-            if (collected > 0) toast.success(`👩‍🌾 Peternak Siti ambil ${collected} hasil ternak!`, { id: 'auto-rancher' });
-            changed = true;
+        }
+
+        if (plotsChanged || animalsChanged) {
+          set({
+            ...(plotsChanged ? { plots } : {}),
+            ...(animalsChanged ? { animals } : {}),
+            inventory,
+          });
+          if (xpGain > 0) get().addXP(xpGain);
+          if (questEntries.length > 0) get().batchProgressQuest(questEntries);
+          if (harvested > 0 || planted > 0) {
+            toast.success(`👨‍🌾 Petani Budi panen ${harvested} & tanam ${planted}!`, { id: 'auto-farm' });
+          }
+          if (collected > 0) {
+            toast.success(`👩‍🌾 Peternak Siti ambil ${collected} hasil ternak!`, { id: 'auto-rancher' });
           }
         }
 
         // --- 3. KURCACI PEMANCING (FISHER) ---
-        if (state.workers.fisher && state.autoFisher) {
-          // 10% chance per tick to catch a fish
+        if (isWorkerActive(state, 'fisher')) {
           if (Math.random() < 0.1) {
             const rand = Math.random();
             let cumulative = 0;
@@ -910,13 +1343,12 @@ export const useGameStore = create(
                 break;
               }
             }
-            set(s => ({
+            set((s) => ({
               inventory: { ...s.inventory, [caughtFish.id]: (s.inventory[caughtFish.id] || 0) + 1 },
-              xp: s.xp + 15
             }));
+            get().addXP(15);
             get().progressQuest('fish', caughtFish.id, 1);
             toast.success(`🎣 Nelayan Mamat mendapat ${caughtFish.emoji} ${caughtFish.name}!`, { id: 'auto-fisher', duration: 2000 });
-            changed = true;
           }
         }
       },
@@ -972,6 +1404,7 @@ export const useGameStore = create(
         autoFarmer: state.autoFarmer,
         autoRancher: state.autoRancher,
         autoFisher: state.autoFisher,
+        autoMiner: state.autoMiner,
         selectedSeed: state.selectedSeed,
         season: state.season,
         weather: state.weather,
@@ -979,20 +1412,59 @@ export const useGameStore = create(
         npcs: state.npcs,
         activeEvent: state.activeEvent,
         dailyQuests: state.dailyQuests,
-        lastQuestDate: state.lastQuestDate
+        lastQuestDate: state.lastQuestDate,
+        workerAutoMigrated: state.workerAutoMigrated,
       }),
       merge: (persistedState, currentState) => {
-        const merged = { ...currentState, ...persistedState };
+        let merged = { ...currentState, ...persistedState };
         
-        // MIGRATION: Pastikan array selalu 30 petak walau user punya save lama
-        if (merged.plots && merged.plots.length < 30) {
-          const newPlots = [...merged.plots];
-          while (newPlots.length < 30) {
-            newPlots.push({ id: newPlots.length, status: 'empty', crop: null, plantedAt: null, growTime: null });
-          }
-          merged.plots = newPlots;
+        merged.plots = normalizePlots(merged.plots);
+
+        if (merged.mining) {
+          if (merged.mining.pickaxeLevel == null) merged.mining.pickaxeLevel = 1;
+          if (merged.mining.lanternUntil == null) merged.mining.lanternUntil = null;
         }
-        
+
+        merged.workers = {
+          farmer: false,
+          rancher: false,
+          fisher: false,
+          miner: false,
+          ...(merged.workers || {}),
+        };
+
+        merged = migrateLegacyWorkers(merged);
+
+        if (!Array.isArray(merged.dailyQuests)) {
+          merged.dailyQuests = [];
+        }
+
+        if (!merged.growthMultiplier || merged.growthMultiplier <= 0) {
+          merged.growthMultiplier = 1;
+        }
+
+        if (!Number.isFinite(Number(merged.coins))) {
+          merged.coins = 100;
+        } else {
+          merged.coins = safeCoins(merged.coins);
+        }
+
+        if (!Number.isFinite(Number(merged.coinMultiplier)) || merged.coinMultiplier <= 0) {
+          merged.coinMultiplier = 1;
+        }
+
+        if (Array.isArray(merged.animals) && merged.animals.length > 0) {
+          merged.animals = merged.animals.map(normalizeAnimal);
+        }
+
+        if (!merged.workerAutoMigrated) {
+          if (merged.workers.farmer && merged.autoFarmer === false) merged.autoFarmer = true;
+          if (merged.workers.rancher && merged.autoRancher === false) merged.autoRancher = true;
+          if (merged.workers.fisher && merged.autoFisher === false) merged.autoFisher = true;
+          if (merged.workers.miner && merged.autoMiner === false) merged.autoMiner = true;
+          merged.workerAutoMigrated = true;
+        }
+
         if (merged.mining && merged.mining.nodes && merged.mining.nodes.length < 30) {
           const newNodes = [...merged.mining.nodes];
           while (newNodes.length < 30) {
@@ -1022,6 +1494,9 @@ export const useGameStore = create(
         if (error) {
           console.error('Failed to rehydrate store:', error);
         } else if (state) {
+          if (!Number.isFinite(state.coins)) {
+            useGameStore.setState({ coins: 100 });
+          }
           console.log('✓ Game loaded from localStorage');
         }
       }
