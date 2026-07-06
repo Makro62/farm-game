@@ -30,10 +30,10 @@ export function GameProvider({ children }) {
   // Loading state
   if (!isMounted || !isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 to-green-200">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--bg-dark)] to-[var(--bg-light)]">
         <div className="text-center">
           <div className="text-6xl mb-4 animate-bounce">🌾</div>
-          <div className="text-xl font-bold text-green-700 animate-pulse">
+          <div className="text-xl font-bold text-white animate-pulse">
             Loading Farm...
           </div>
         </div>

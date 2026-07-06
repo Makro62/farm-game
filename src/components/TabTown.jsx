@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
 import { FISHES, NPC_LIST } from '@/lib/utils';
@@ -310,7 +312,7 @@ export default function TabTown() {
                     if (workers.fisher) toggleAutoFisher();
                     else toast('Sewa Pemancing Kota dulu!', { icon: '🎣' });
                   }}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFisher ? 'bg-blue-500 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFisher ? 'bg-green-500 text-white border-green-600' : 'glass-card text-gray-200'}`}
                  >
                   🧑‍🌾 Auto: {autoFisher ? 'ON' : 'OFF'}
                  </button>

@@ -1,3 +1,5 @@
+'use client';
+
 import { useGameStore } from '@/lib/store';
 import toast from 'react-hot-toast';
 

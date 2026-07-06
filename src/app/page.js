@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Topbar from '../components/Topbar';
-import TabsNav from '../components/TabsNav';
-import TabFarm from '../components/TabFarm';
-import TabAnimal from '../components/TabAnimal';
-import TabTown from '../components/TabTown';
-import TabMine from '../components/TabMine';
-import Modals from '../components/Modals';
+import Topbar from '@/components/Topbar';
+import TabsNav from '@/components/TabsNav';
+import TabFarm from '@/components/TabFarm';
+import TabAnimal from '@/components/TabAnimal';
+import TabTown from '@/components/TabTown';
+import TabMine from '@/components/TabMine';
+import Modals from '@/components/Modals';
 import { useGameStore } from '@/lib/store';
 
 export default function Page() {
@@ -54,6 +54,7 @@ export default function Page() {
       const state = useGameStore.getState();
       state.advanceSeasonTick();
       state.changeWeather();
+      state.syncPlots();
       state.syncMiningNodes();
       state.runAutoWorkers();
     }, 1000);

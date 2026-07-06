@@ -7,7 +7,13 @@ import { AnimatedCounter } from './ui/AnimatedCounter';
 import audioManager from '@/lib/audio';
 
 export default function Topbar() {
-  const { coins, level, xp, streak, soundEnabled, toggleSound, toggleMusic } = useGameStore();
+  const coins = useGameStore(state => state.coins);
+  const level = useGameStore(state => state.level);
+  const xp = useGameStore(state => state.xp);
+  const streak = useGameStore(state => state.streak);
+  const soundEnabled = useGameStore(state => state.soundEnabled);
+  const toggleSound = useGameStore(state => state.toggleSound);
+  const toggleMusic = useGameStore(state => state.toggleMusic);
   
   const xpNeeded = level * 100;
   const xpProgress = (xp / xpNeeded) * 100;
@@ -78,13 +84,13 @@ export default function Topbar() {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={handleToggleSound}
-              className="p-2 rounded-full bg-green-100 hover:bg-green-200 transition-colors"
+              className="p-2 rounded-full glass-card hover:bg-white/20 transition-colors"
               title={soundEnabled ? 'Mute sound' : 'Unmute sound'}
             >
               {soundEnabled ? (
-                <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-700" />
+                <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               ) : (
-                <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-green-700" />
+                <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
               )}
             </motion.button>
           </div>
@@ -100,7 +106,7 @@ export default function Topbar() {
               className="progress-fill"
             />
           </div>
-          <span className="text-xs text-green-600 font-semibold whitespace-nowrap">
+          <span className="text-xs text-gray-300 font-semibold whitespace-nowrap">
             {xp}/{xpNeeded}
           </span>
         </div>

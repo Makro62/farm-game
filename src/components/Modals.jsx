@@ -7,7 +7,10 @@ import { NPC_LIST, getCropEmoji } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export default function Modals() {
-  const { modals, closeModals, inventory, giveGift } = useGameStore();
+  const modals = useGameStore(state => state.modals);
+  const closeModals = useGameStore(state => state.closeModals);
+  const inventory = useGameStore(state => state.inventory);
+  const giveGift = useGameStore(state => state.giveGift);
   const [promptValue, setPromptValue] = useState(1);
   const [selectedGift, setSelectedGift] = useState(null);
 

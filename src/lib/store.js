@@ -1003,6 +1003,18 @@ export const useGameStore = create(
           }
           merged.mining.nodes = newNodes;
         }
+
+        // MIGRATION: normalisasi tipe hewan dari save lama (chicken -> ayam)
+        const legacyAnimalTypes = {
+          chicken: 'ayam', duck: 'bebek', cow: 'sapi',
+          sheep: 'domba', pig: 'babi', horse: 'kuda',
+        };
+        if (Array.isArray(merged.animals) && merged.animals.length > 0) {
+          merged.animals = merged.animals.map((a) => ({
+            ...a,
+            type: legacyAnimalTypes[a.type] || a.type,
+          }));
+        }
         
         return merged;
       },

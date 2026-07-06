@@ -101,7 +101,11 @@ class AudioManager {
     if (!AUDIO_CONFIG.enabled) return;
     const sound = this.sounds[name];
     if (!sound) { console.warn(`Sound not found: ${name}`); return; }
-    if (sprite && sound.sprite()) { sound.play(sprite); } else { sound.play(); }
+    if (sprite && SOUNDS[name]?.sprite?.[sprite]) {
+      sound.play(sprite);
+    } else {
+      sound.play();
+    }
     return sound;
   }
 

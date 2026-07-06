@@ -2,11 +2,33 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
-import { getAnimalEmoji, SHOP_ANIMALS } from '@/lib/utils';
+import { getAnimalEmoji, getShopAnimal, SHOP_ANIMALS } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
 import toast from 'react-hot-toast';
+
+function AnimalIcon({ type }) {
+  const data = getShopAnimal(type);
+  const [imgOk, setImgOk] = useState(false);
+
+  return (
+    <div className="relative flex items-center justify-center w-full h-full py-1">
+      <span className="text-4xl sm:text-5xl drop-shadow-lg leading-none select-none" aria-hidden={imgOk}>
+        {getAnimalEmoji(type)}
+      </span>
+      {data?.image && (
+        <img
+          src={data.image}
+          alt={data.name}
+          className={`absolute inset-0 m-auto w-[88%] h-[88%] object-contain mix-blend-multiply contrast-[1.15] drop-shadow-[0_4px_8px_rgba(0,0,0,0.45)] transition-opacity duration-200 ${imgOk ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={() => setImgOk(true)}
+          onError={() => setImgOk(false)}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function TabAnimal() {
   const animals = useGameStore(state => state.animals);
@@ -44,7 +66,7 @@ export default function TabAnimal() {
   };
 
   const handleSellAnimal = (animal) => {
-    const animalData = SHOP_ANIMALS.find(a => a.id === animal.type);
+    const animalData = getShopAnimal(animal.type);
     if (!animalData) return;
     
     // Asumsikan harga jual hewan adalah setengah dari harga beli
@@ -92,7 +114,7 @@ export default function TabAnimal() {
   };
 
   const handleCollect = (animal) => {
-    const animalData = SHOP_ANIMALS.find(s => s.id === animal.type);
+    const animalData = getShopAnimal(animal.type);
     if (!animalData) return;
     if (currentTime - animal.lastCollected >= animal.produceTime) {
       if (collectAnimal(animal.id, animalData.product)) {
@@ -182,7 +204,7 @@ export default function TabAnimal() {
                  </button>
                  <button 
                   onClick={handleToggleAuto}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFarm ? 'bg-blue-500 text-white border-blue-600' : 'glass-card text-gray-200'}`}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border ${autoFarm ? 'bg-green-500 text-white border-green-600' : 'glass-card text-gray-200'}`}
                  >
                   🧑‍🍳 Auto: {autoFarm ? 'ON' : 'OFF'}
                  </button>
@@ -203,13 +225,12 @@ export default function TabAnimal() {
                     );
                   }
                   
-                  const animalData = SHOP_ANIMALS.find(a => a.id === animal.type);
+                  const animalData = getShopAnimal(animal.type);
                   const progress = Math.min(100, ((currentTime - animal.lastCollected) / animal.produceTime) * 100);
                   const isReady = progress >= 100;
                   return (
                     <motion.button
                       key={animal.id}
-                      layout
                       draggable={isEditMode}
                       onDragStart={(e) => {
                         e.dataTransfer.setData('animalId', animal.id);
@@ -239,13 +260,19 @@ export default function TabAnimal() {
                         }
                         handleCollect(animal);
                       }}
-                      className={`group aspect-square w-full rounded-2xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md bg-white/20 backdrop-blur-sm border-2
+                      className={`group aspect-square w-full rounded-2xl relative overflow-hidden flex flex-col items-center justify-center transition-all shadow-md border-2
                         ${isEditMode ? 'cursor-grab hover:ring-4 ring-yellow-400' : ''}
-                        ${isReady ? 'border-yellow-300 ring-4 ring-yellow-400/50 bg-white/40' : 'border-white/30 hover:bg-white/30'}
+                        ${isReady
+                          ? 'bg-[#5a7a4a] border-yellow-300 ring-4 ring-yellow-400/50'
+                          : 'bg-[#4a6741]/95 border-[#3d5c35] hover:bg-[#567a4a]'}
                       `}
                     >
-                      <motion.div animate={isReady ? { y: [0, -5, 0] } : {}} transition={{ duration: 1, repeat: Infinity }} className="drop-shadow-md z-10 flex items-center justify-center">
-                        <img src={animalData?.image} alt={animalData?.name} className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-xl" />
+                      <motion.div
+                        animate={isReady ? { y: [0, -5, 0] } : {}}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="z-10 w-full h-full flex items-center justify-center"
+                      >
+                        <AnimalIcon type={animal.type} />
                       </motion.div>
                       {!isReady && (
                         <div className="absolute bottom-2 left-2 right-2 h-1.5 bg-black/30 rounded-full overflow-hidden">

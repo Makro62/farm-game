@@ -45,16 +45,7 @@ export default function TabFarm() {
 
 
 
-  // Tick: perbarui waktu + sinkronkan status petak (growing -> ready)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(Date.now());
-      useGameStore.getState().syncPlots();
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Global Game Loop (di page.js) sudah menangani auto-farm via store.runAutoWorkers()
+  // syncPlots & auto-workers ditangani global game loop di page.js
 
   const handleToggleAuto = () => {
     if (!workers.farmer) {
@@ -200,10 +191,10 @@ export default function TabFarm() {
                     <span className="text-2xl">{getCropEmoji(seed.id)}</span>
                     <span className="font-semibold text-[11px] text-white text-center leading-tight">{seed.name}</span>
                     <span className="text-[10px] font-bold text-green-300">{seed.price}💰</span>
-                    <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
-                      <button onClick={() => setShopAmounts(p => ({ ...p, [seed.id]: Math.max(1, amt - 1) }))} className="w-5 h-5 flex items-center justify-center bg-gray-200 rounded text-gray-700 font-bold">-</button>
-                      <span className="text-xs font-bold w-4 text-center text-gray-800">{amt}</span>
-                      <button onClick={() => setShopAmounts(p => ({ ...p, [seed.id]: amt + 1 }))} className="w-5 h-5 flex items-center justify-center bg-gray-200 rounded text-gray-700 font-bold">+</button>
+                    <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1">
+                      <button onClick={() => setShopAmounts(p => ({ ...p, [seed.id]: Math.max(1, amt - 1) }))} className="w-5 h-5 flex items-center justify-center bg-white/20 rounded text-white font-bold">-</button>
+                      <span className="text-xs font-bold w-4 text-center text-white">{amt}</span>
+                      <button onClick={() => setShopAmounts(p => ({ ...p, [seed.id]: amt + 1 }))} className="w-5 h-5 flex items-center justify-center bg-white/20 rounded text-white font-bold">+</button>
                     </div>
                     <button 
                       onClick={() => buyItem(seed.id, amt, seed.price)}
@@ -219,9 +210,9 @@ export default function TabFarm() {
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white">
               <span>🌱</span> BIBIT TANAMAN
             </div>
-            <div className="bg-green-50 border border-green-100 rounded-xl p-3 mb-6">
+            <div className="glass-card rounded-xl p-3 mb-6">
               {SHOP_SEEDS.filter(s => inventory[s.id] > 0).length === 0 ? (
-                <div className="text-center text-sm text-green-700 italic">Belum ada bibit di Inventory.</div>
+                <div className="text-center text-sm text-gray-400 italic">Belum ada bibit di Inventory.</div>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
                   {SHOP_SEEDS.filter(s => inventory[s.id] > 0).map(seed => (
@@ -374,7 +365,7 @@ export default function TabFarm() {
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
               <span>📋</span> Papan Pesanan
             </div>
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 min-h-[120px] flex items-center justify-center">
+            <div className="glass-card rounded-xl p-4 min-h-[120px] flex items-center justify-center">
               <span className="text-gray-400 text-sm font-medium">Belum ada pesanan masuk.</span>
             </div>
           </div>
@@ -398,16 +389,16 @@ export default function TabFarm() {
                 const isComplete = quest.count >= quest.required;
                 
                 return (
-                  <div key={quest.id} className="bg-purple-50 border border-purple-100 rounded-xl p-3 mb-3 relative overflow-hidden">
+                  <div key={quest.id} className="glass-card rounded-xl p-3 mb-3 relative overflow-hidden">
                     <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="font-medium text-purple-800 line-clamp-1 pr-2">
+                      <span className="font-medium text-white line-clamp-1 pr-2">
                         {quest.action} {quest.required} {quest.targetName}
                       </span>
-                      <span className="text-purple-600 font-bold whitespace-nowrap">{quest.count}/{quest.required}</span>
+                      <span className="text-purple-300 font-bold whitespace-nowrap">{quest.count}/{quest.required}</span>
                     </div>
                     
-                    <div className="w-full bg-purple-200 rounded-full h-2 mb-2">
-                      <div className="bg-purple-500 h-2 rounded-full transition-all" style={{width: `${percent}%`}}></div>
+                    <div className="w-full bg-white/20 rounded-full h-2 mb-2">
+                      <div className="bg-purple-400 h-2 rounded-full transition-all" style={{width: `${percent}%`}}></div>
                     </div>
                     
                     <div className="flex items-center justify-between mt-2">
@@ -416,7 +407,7 @@ export default function TabFarm() {
                       </div>
                       
                       {quest.claimed ? (
-                        <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Diambil</span>
+                        <span className="text-xs font-bold text-gray-400 bg-white/10 px-2 py-1 rounded">Diambil</span>
                       ) : isComplete ? (
                         <button 
                           onClick={() => {
@@ -434,9 +425,9 @@ export default function TabFarm() {
                 );
               })
             ) : (
-              <div className="bg-purple-50 border border-purple-100 rounded-xl p-3 min-h-[80px] mb-6 flex flex-col items-center justify-center text-center">
-                <span className="text-purple-400 text-sm font-medium mb-2">Quest sedang disiapkan...</span>
-                <span className="text-xs text-purple-300">Tunggu sejenak untuk quest baru.</span>
+              <div className="glass-card rounded-xl p-3 min-h-[80px] mb-6 flex flex-col items-center justify-center text-center">
+                <span className="text-gray-400 text-sm font-medium mb-2">Quest sedang disiapkan...</span>
+                <span className="text-xs text-gray-500">Tunggu sejenak untuk quest baru.</span>
               </div>
             )}
 
@@ -444,8 +435,8 @@ export default function TabFarm() {
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
               <span>🍳</span> Dapur Produksi
             </div>
-            <div className="bg-red-50 border border-red-100 rounded-xl p-4 min-h-[80px] flex items-center justify-center">
-              <span className="text-red-300 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
+            <div className="glass-card rounded-xl p-4 min-h-[80px] flex items-center justify-center">
+              <span className="text-gray-400 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
             </div>
 
           </div>

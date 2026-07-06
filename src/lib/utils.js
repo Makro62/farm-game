@@ -143,15 +143,38 @@ export const NPC_LIST = [
 ];
 
 /**
+ * Get shop animal data by type id (supports legacy English keys from old saves)
+ */
+export function getShopAnimal(type) {
+  const legacyMap = {
+    chicken: 'ayam',
+    duck: 'bebek',
+    cow: 'sapi',
+    sheep: 'domba',
+    pig: 'babi',
+    horse: 'kuda',
+  };
+  const id = legacyMap[type] || type;
+  return SHOP_ANIMALS.find(a => a.id === id);
+}
+
+/**
  * Get animal emoji
  */
 export function getAnimalEmoji(animal) {
   const emojis = {
     ayam: '🐔',
+    bebek: '🦆',
     sapi: '🐄',
     domba: '🐑',
     babi: '🐖',
-    kuda: '🐴'
+    kuda: '🐴',
+    chicken: '🐔',
+    duck: '🦆',
+    cow: '🐄',
+    sheep: '🐑',
+    pig: '🐖',
+    horse: '🐴',
   };
   return emojis[animal] || '🐾';
 }
