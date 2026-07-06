@@ -32,6 +32,7 @@
   
   body {
     background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+    background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
     overflow-x: hidden;
@@ -183,19 +184,32 @@
     padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
   }
 
-  /* Layout game — full width semua ukuran layar */
+  /* Layout game — responsive, max-width agar di zoom kecil tetap rapi */
   .game-container {
-    @apply w-full max-w-[100%] mx-auto;
+    @apply w-full mx-auto;
+    max-width: 1800px;
     @apply px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8 2xl:px-10;
   }
 
   .game-tab-grid {
-    @apply grid grid-cols-1 lg:grid-cols-12 w-full;
+    @apply grid grid-cols-1 w-full;
     @apply gap-3 sm:gap-4 lg:gap-5 xl:gap-6;
   }
 
+  @media (min-width: 1024px) {
+    .game-tab-grid {
+      grid-template-columns: minmax(220px, 1fr) minmax(0, 3fr) minmax(220px, 1fr);
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .game-tab-grid {
+      grid-template-columns: minmax(260px, 1fr) minmax(0, 3.5fr) minmax(260px, 1fr);
+    }
+  }
+
   .game-sidebar {
-    @apply lg:col-span-3 xl:col-span-2 space-y-3 sm:space-y-4 min-w-0;
+    @apply space-y-3 sm:space-y-4 min-w-0;
   }
 
   .game-sidebar-left {
@@ -207,7 +221,7 @@
   }
 
   .game-main {
-    @apply lg:col-span-6 xl:col-span-8 space-y-3 sm:space-y-4 order-1 lg:order-2 min-w-0;
+    @apply space-y-3 sm:space-y-4 order-1 lg:order-2 min-w-0;
   }
 
   .game-plot-grid {
@@ -255,18 +269,6 @@
   }
 
   @media (min-width: 1024px) {
-    .shop-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 1280px) {
-    .shop-grid {
-      grid-template-columns: repeat(1, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 1536px) {
     .shop-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

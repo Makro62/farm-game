@@ -3,10 +3,13 @@
 import { useCallback } from 'react';
 import audioManager, { type SoundName, type MusicName } from '../audio';
 
+/**
+ * Hook to play a synthesized SFX.
+ * Respects the global audio enabled state managed by AudioManager.
+ */
 export function useSound(soundName: SoundName) {
-  const play = useCallback((sprite: string | null = null) => {
-    audioManager.ensureInitialized();
-    return audioManager.play(soundName, sprite);
+  const play = useCallback(() => {
+    audioManager.play(soundName);
   }, [soundName]);
 
   return { play };
@@ -25,9 +28,11 @@ export const useLevelUpSound = () => useSound('levelup');
 export const useAchievementSound = () => useSound('achievement');
 export const useComboSound = () => useSound('combo');
 
+/**
+ * Hook to control background music tracks.
+ */
 export function useMusic(musicName: MusicName) {
   const play = useCallback(() => {
-    audioManager.ensureInitialized();
     audioManager.playMusic(musicName);
   }, [musicName]);
 

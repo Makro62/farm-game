@@ -12,17 +12,17 @@ export default function Topbar() {
   const xp = useGameStore(state => state.xp);
   const streak = useGameStore(state => state.streak);
   const soundEnabled = useGameStore(state => state.soundEnabled);
-  const toggleSound = useGameStore(state => state.toggleSound);
-  const toggleMusic = useGameStore(state => state.toggleMusic);
   
   const xpNeeded = level * 100;
   const xpProgress = (xp / xpNeeded) * 100;
   
   const handleToggleSound = () => {
-    toggleSound();
-    toggleMusic();
-    audioManager.toggleSound();
-    audioManager.toggleMusic();
+    // Toggle all audio (SFX + Music) in the engine
+    const newState = audioManager.toggleAll();
+    // Sync Zustand store to match
+    const store = useGameStore.getState();
+    if (store.soundEnabled !== newState) store.toggleSound();
+    if (store.musicEnabled !== newState) store.toggleMusic();
   };
 
   return (
