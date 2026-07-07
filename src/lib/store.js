@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import toast from 'react-hot-toast';
-import { SHOP_SEEDS, SHOP_ANIMALS, FISHES, getItemSellPrice } from './utils';
+import { SHOP_SEEDS, SHOP_ANIMALS, FISHES, getItemSellPrice, RECIPES, ORDER_TEMPLATES } from './utils';
 
 const MINING_REGEN_MS = { 1: 120000, 2: 90000, 3: 60000 };
 
@@ -270,6 +270,10 @@ const initialState = {
   dailyQuests: [],
   lastQuestDate: null,
   workerAutoMigrated: false,
+  
+  // Crafting & Orders
+  craftingQueue: [],
+  orders: [],
 };
 
 export const useGameStore = create(
@@ -513,6 +517,113 @@ export const useGameStore = create(
         if (changed) {
           set({ plots });
         }
+      },
+      
+      completeQuest: (id) => {
+        set((state) => ({
+          dailyQuests: state.dailyQuests.map(q => 
+            q.id === id ? { ...q, completed: true } : q
+          )
+        }));
+      },
+
+      // ===== CRAFTING =====
+      startCrafting: (recipeId) => {
+        const state = get();
+        if (state.craftingQueue.length >= 5) {
+          toast.error("Antrean dapur penuh! Maksimal 5 antrean.");
+          return false;
+        }
+
+        const recipe = RECIPES.find(r => r.id === recipeId);
+        if (!recipe) return false;
+
+        // Check ingredients
+        const inv = { ...state.inventory };
+        for (const [item, qty] of Object.entries(recipe.req)) {
+          if ((inv[item] || 0) < qty) {
+            toast.error(`Bahan tidak cukup: ${qty}x ${item}`);
+            return false;
+          }
+        }
+
+        // Deduct ingredients
+        for (const [item, qty] of Object.entries(recipe.req)) {
+          inv[item] -= qty;
+          if (inv[item] <= 0) delete inv[item];
+        }
+
+        const id = Math.random().toString(36).substring(2, 9);
+        const startTime = Date.now();
+        const duration = (recipe.time * 1000); 
+
+        set(s => ({
+          inventory: inv,
+          craftingQueue: [...s.craftingQueue, { id, recipeId, startTime, duration }]
+        }));
+
+        toast.success(`Mulai membuat ${recipe.name}!`, { icon: '🍳' });
+        return true;
+      },
+
+      removeCraftingQueue: (queueId) => {
+        set(s => ({
+          craftingQueue: s.craftingQueue.filter(q => q.id !== queueId)
+        }));
+      },
+
+      // ===== ORDERS =====
+      generateOrders: () => {
+        const state = get();
+        const level = state.level || 1;
+        const templates = ORDER_TEMPLATES.filter(t => {
+          if (level < 5) return t.tier === 1;
+          if (level < 10) return t.tier <= 2;
+          return true;
+        });
+
+        const newOrders = [];
+        for (let i = 0; i < 3; i++) {
+          const t = templates[Math.floor(Math.random() * templates.length)];
+          newOrders.push({
+            id: Math.random().toString(36).substring(2, 9),
+            ...t,
+            createdAt: Date.now()
+          });
+        }
+        
+        set({ orders: newOrders });
+      },
+
+      fulfillOrder: (orderId) => {
+        const state = get();
+        const orderIndex = state.orders.findIndex(o => o.id === orderId);
+        if (orderIndex === -1) return false;
+        
+        const order = state.orders[orderIndex];
+        const inv = { ...state.inventory };
+
+        for (const item of order.items) {
+          if ((inv[item.id] || 0) < item.qty) {
+            toast.error(`Bahan tidak cukup: ${item.qty}x ${item.id}`);
+            return false;
+          }
+        }
+
+        for (const item of order.items) {
+          inv[item.id] -= item.qty;
+          if (inv[item.id] <= 0) delete inv[item.id];
+        }
+
+        get().addCoins(order.coins);
+        get().addXP(order.xp);
+        
+        const updatedOrders = [...state.orders];
+        updatedOrders.splice(orderIndex, 1);
+        
+        set({ inventory: inv, orders: updatedOrders });
+        toast.success(`Pesanan selesai! +${order.coins} 💰`, { icon: '📦' });
+        return true;
       },
       
       updatePlotStatus: (plotId, status) => {
@@ -1228,6 +1339,8 @@ export const useGameStore = create(
           () => get().syncPlots(),
           () => get().syncMiningNodes(),
           () => get().runAutoWorkers(),
+          () => get().processCraftingQueue(),
+          () => get().checkOrders(),
         ];
 
         for (const action of actions) {
@@ -1235,6 +1348,65 @@ export const useGameStore = create(
             action();
           } catch (error) {
             console.error('Game tick error:', error);
+          }
+        }
+      },
+
+      processCraftingQueue: () => {
+        const state = get();
+        if (!state.craftingQueue || state.craftingQueue.length === 0) return;
+
+        const now = Date.now();
+        let changed = false;
+        const newQueue = [...state.craftingQueue];
+        const inv = { ...state.inventory };
+        let xpGained = 0;
+
+        for (let i = newQueue.length - 1; i >= 0; i--) {
+          const item = newQueue[i];
+          if (now - item.startTime >= item.duration) {
+            const recipe = RECIPES.find(r => r.id === item.recipeId);
+            if (recipe) {
+              inv[recipe.id] = (inv[recipe.id] || 0) + 1;
+              xpGained += recipe.xp || 0;
+            }
+            newQueue.splice(i, 1);
+            changed = true;
+          }
+        }
+
+        if (changed) {
+          set({ craftingQueue: newQueue, inventory: inv });
+          if (xpGained > 0) get().addXP(xpGained);
+        }
+      },
+
+      checkOrders: () => {
+        const state = get();
+        // Generate orders if none exist
+        if (!state.orders || state.orders.length === 0) {
+          get().generateOrders();
+          return;
+        }
+
+        // Expire orders if timer is up
+        const now = Date.now();
+        let changed = false;
+        const newOrders = [...state.orders];
+        
+        for (let i = newOrders.length - 1; i >= 0; i--) {
+          const order = newOrders[i];
+          if (now - order.createdAt > order.timer * 1000) {
+            newOrders.splice(i, 1);
+            changed = true;
+          }
+        }
+
+        if (changed) {
+          set({ orders: newOrders });
+          // If we expired all of them, generate new ones
+          if (newOrders.length === 0) {
+            get().generateOrders();
           }
         }
       },

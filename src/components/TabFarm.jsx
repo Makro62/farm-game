@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
-import { getCropEmoji, SHOP_SEEDS } from '@/lib/utils';
+import { getCropEmoji, SHOP_SEEDS, RECIPES } from '@/lib/utils';
 import { CropIcon } from './ui/CropIcon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
 import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
+import { CraftingWidget } from './ui/CraftingWidget';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import toast from 'react-hot-toast';
 
@@ -29,12 +30,11 @@ export default function TabFarm() {
   const toggleAutoFarm = useGameStore(state => state.toggleAutoFarmer);
   const selectedInventoryItem = useGameStore(state => state.selectedSeed);
   const setSelectedInventoryItem = useGameStore(state => state.setSelectedSeed);
-  
+  const orders = useGameStore(state => state.orders);
+  const fulfillOrder = useGameStore(state => state.fulfillOrder);
   const dailyQuests = useGameStore(state => state.dailyQuests);
   const claimQuestReward = useGameStore(state => state.claimQuestReward);
-
-  const availableSeeds = SHOP_SEEDS.filter(s => s.season === 'all' || s.season === useGameStore.getState().season.current);
-
+  
   const [shopAmounts, setShopAmounts] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [isEditMode, setIsEditMode] = useState(false);
@@ -44,9 +44,7 @@ export default function TabFarm() {
     return () => clearInterval(interval);
   }, []);
 
-
-
-  // syncPlots & auto-workers ditangani global game loop di page.js
+  const availableSeeds = SHOP_SEEDS.filter(s => s.season === 'all' || s.season === useGameStore.getState().season.current);
 
   const handleToggleAuto = () => {
     if (!workers?.farmer) {
@@ -306,8 +304,60 @@ export default function TabFarm() {
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
               <span>📋</span> Papan Pesanan
             </div>
-            <div className="glass-card rounded-xl p-4 min-h-[120px] flex items-center justify-center">
-              <span className="text-gray-400 text-sm font-medium">Belum ada pesanan masuk.</span>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+              {!orders || orders.length === 0 ? (
+                <div className="col-span-full glass-card rounded-xl p-4 min-h-[120px] flex items-center justify-center">
+                  <span className="text-gray-400 text-sm font-medium">Belum ada pesanan masuk. Menunggu pesanan...</span>
+                </div>
+              ) : (
+                orders.map((order, index) => {
+                  const timeLeft = Math.max(0, Math.floor((order.timer * 1000 - (Date.now() - order.createdAt)) / 1000));
+                  const m = Math.floor(timeLeft / 60);
+                  const s = timeLeft % 60;
+                  
+                  return (
+                    <div key={order.id} className="glass-card rounded-xl p-4 border-2 border-amber-200/30 flex flex-col hover:border-amber-400/50 transition-colors">
+                      <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/10">
+                        <span className="font-black text-amber-300">Pesanan #{index + 1}</span>
+                        <span className="text-xs font-bold bg-black/40 text-red-300 px-2 py-1 rounded-full flex items-center gap-1">
+                          ⏰ {m}:{s.toString().padStart(2, '0')}
+                        </span>
+                      </div>
+                      
+                      <div className="flex-1 space-y-2 mb-4">
+                        {order.items.map(item => {
+                          const has = inventory[item.id] || 0;
+                          const isEnough = has >= item.qty;
+                          return (
+                            <div key={item.id} className="flex justify-between items-center text-sm">
+                              <span className="text-white flex items-center gap-1">
+                                <span>{getCropEmoji(item.id)}</span> {item.id.replace('_', ' ')}
+                              </span>
+                              <span className={`font-bold px-2 py-0.5 rounded text-xs ${isEnough ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
+                                {has} / {item.qty}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="text-xs font-bold text-yellow-300 flex flex-col">
+                          <span>{order.coins} 💰</span>
+                          <span>{order.xp} ⭐</span>
+                        </div>
+                        <button 
+                          onClick={() => fulfillOrder(order.id)}
+                          className="bg-amber-500 hover:bg-amber-400 text-white font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-transform active:scale-95"
+                        >
+                          Penuhi
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
@@ -373,12 +423,7 @@ export default function TabFarm() {
             )}
 
             {/* Dapur Produksi */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
-              <span>🍳</span> Dapur Produksi
-            </div>
-            <div className="glass-card rounded-xl p-4 min-h-[80px] flex items-center justify-center">
-              <span className="text-gray-400 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
-            </div>
+            <CraftingWidget type="kitchen" title="Dapur Produksi" icon="🍳" />
 
           </div>
         </div>

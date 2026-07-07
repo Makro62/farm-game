@@ -149,6 +149,9 @@ export function getCropEmoji(itemId) {
   const mineral = MINERALS.find(m => m.id === itemId);
   if (mineral) return mineral.emoji;
   
+  const recipe = RECIPES.find(r => r.id === itemId);
+  if (recipe) return recipe.emoji;
+  
   return '📦';
 }
 
@@ -169,8 +172,8 @@ export const MINERALS = [
 ];
 
 export const NPC_LIST = [
-  { id: 'maria', name: 'Chef Maria', role: 'Koki Kota', emoji: '👩‍🍳', likes: ['tomat', 'wortel', 'susu'], maxLevel: 5 },
-  { id: 'botan', name: 'Pak Tua Botan', role: 'Ahli Tani', emoji: '🧙‍♂️', likes: ['tulip', 'semangka', 'apel'], maxLevel: 5 },
+  { id: 'maria', name: 'Chef Maria', role: 'Koki Kota', emoji: '🍳', likes: ['tomat', 'wortel', 'susu'], maxLevel: 5 },
+  { id: 'botan', name: 'Pak Tua Botan', role: 'Ahli Tani', emoji: '👴', likes: ['tulip', 'semangka', 'apel'], maxLevel: 5 },
   { id: 'hadi', name: 'Paman Hadi', role: 'Peternak', emoji: '🐮', likes: ['jagung', 'gandum'], maxLevel: 5 },
 ];
 
@@ -230,6 +233,9 @@ export function getItemSellPrice(itemId) {
   const mineralData = MINERALS.find(m => m.id === itemId);
   if (mineralData) return mineralData.price;
 
+  const recipeData = RECIPES.find(r => r.id === itemId);
+  if (recipeData) return recipeData.price;
+
   return null;
 }
 
@@ -251,6 +257,9 @@ export function getItemDisplayName(itemId) {
 
   const mineralData = MINERALS.find(m => m.id === itemId);
   if (mineralData) return mineralData.name;
+
+  const recipeData = RECIPES.find(r => r.id === itemId);
+  if (recipeData) return recipeData.name;
 
   return itemId;
 }
@@ -377,3 +386,34 @@ export const storage = {
     localStorage.clear();
   }
 };
+
+/**
+ * Daftar resep crafting
+ */
+export const RECIPES = [
+  // Dapur Produksi
+  { id: 'sup_wortel', name: 'Sup Wortel', emoji: '🥣', type: 'kitchen', time: 180, price: 150, xp: 50, req: { wortel: 4 } },
+  { id: 'tepung_jagung', name: 'Tepung Jagung', emoji: '🌾', type: 'kitchen', time: 180, price: 200, xp: 60, req: { jagung: 4 } },
+  { id: 'keju', name: 'Keju', emoji: '🧀', type: 'kitchen', time: 300, price: 400, xp: 120, req: { susu: 3 } },
+  { id: 'kue_stroberi', name: 'Kue Stroberi', emoji: '🍰', type: 'kitchen', time: 600, price: 800, xp: 200, req: { stroberi: 3, telur: 2, susu: 1 } },
+  
+  // Dapur Ikan
+  { id: 'sushi_mas', name: 'Sushi Ikan Mas', emoji: '🍣', type: 'fish_kitchen', time: 240, price: 300, xp: 100, req: { ikan_mas: 2, tomat: 2 } },
+  { id: 'lele_bakar', name: 'Lele Bakar', emoji: '🍢', type: 'fish_kitchen', time: 300, price: 400, xp: 150, req: { lele: 2, jagung: 1 } },
+  { id: 'takoyaki', name: 'Takoyaki', emoji: '🧆', type: 'fish_kitchen', time: 360, price: 1000, xp: 300, req: { cumi: 2, telur: 2 } },
+];
+
+/**
+ * Template untuk pesanan di Papan Pesanan
+ */
+export const ORDER_TEMPLATES = [
+  // Mudah
+  { tier: 1, timer: 600, items: [{id: 'wortel', qty: 5}, {id: 'jagung', qty: 3}], coins: 200, xp: 100 },
+  { tier: 1, timer: 600, items: [{id: 'tomat', qty: 4}, {id: 'telur', qty: 2}], coins: 250, xp: 120 },
+  // Menengah
+  { tier: 2, timer: 900, items: [{id: 'stroberi', qty: 5}, {id: 'susu', qty: 2}], coins: 600, xp: 250 },
+  { tier: 2, timer: 900, items: [{id: 'semangka', qty: 2}, {id: 'ikan_mas', qty: 2}], coins: 800, xp: 300 },
+  // Sulit
+  { tier: 3, timer: 1200, items: [{id: 'keju', qty: 1}, {id: 'sup_wortel', qty: 2}], coins: 1500, xp: 600 },
+  { tier: 3, timer: 1200, items: [{id: 'sushi_mas', qty: 2}, {id: 'takoyaki', qty: 1}], coins: 2500, xp: 1000 },
+];

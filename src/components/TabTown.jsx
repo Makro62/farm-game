@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
-import { FISHES, NPC_LIST } from '@/lib/utils';
+import { getCropEmoji, FISHES, RECIPES, NPC_LIST } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
+import { CraftingWidget } from './ui/CraftingWidget';
 import { StatusHeader } from './StatusHeader';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import toast from 'react-hot-toast';
@@ -22,6 +24,8 @@ export default function TabTown() {
   const workers = useGameStore(state => state.workers);
   const hireWorker = useGameStore(state => state.hireWorker);
   const inventory = useGameStore(state => state.inventory);
+  const level = useGameStore(state => state.level);
+  const buyItem = useGameStore(state => state.buyItem);
   const activeEvent = useGameStore(state => state.activeEvent);
   const npcs = useGameStore(state => state.npcs);
   const openNpcGift = useGameStore(state => state.openNpcGift);
@@ -69,7 +73,7 @@ export default function TabTown() {
     let pos = 50;
     let dir = 1;
     let currentScore = 0;
-    const speed = 2 + Math.random() * 3;
+    const speed = 1.5 + Math.random() * 1.5;
     
     const interval = setInterval(() => {
       pos += dir * speed;
@@ -78,25 +82,25 @@ export default function TabTown() {
       
       setIndicatorPos(pos);
       
-      // Hit zone is between 35 and 65
-      const inZone = pos >= 35 && pos <= 65;
+      // Hit zone is between 30 and 70 (easier)
+      const inZone = pos >= 30 && pos <= 70;
       if (inZone && holdingRef.current) {
         currentScore += 1;
         setScore(currentScore);
       } else if (!inZone && holdingRef.current) {
-        currentScore -= 0.5; // Penalty for holding outside zone
+        currentScore -= 0.1; // Penalty for holding outside zone (reduced)
         if (currentScore < 0) currentScore = 0;
         setScore(currentScore);
       }
 
-      if (currentScore >= 50) {
+      if (currentScore >= 40) { // Easier to win
         finishMinigame(true);
       }
     }, 50);
 
     const timeout = setTimeout(() => {
       finishMinigame(false);
-    }, 5000); // 5 seconds max
+    }, 6000); // 6 seconds max
 
     return () => {
       clearInterval(interval);
@@ -204,6 +208,16 @@ export default function TabTown() {
     );
   };
 
+  const handleShopBuy = (item, amount) => {
+    if (buyItem(item.id, amount, item.price)) {
+      toast.success(`Berhasil membeli ${amount} ${item.name}!`);
+    } else {
+      toast.error('Koin tidak cukup!');
+    }
+  };
+
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="game-tab-grid">
@@ -212,13 +226,33 @@ export default function TabTown() {
         <div className="game-sidebar-left">
           <div className="glass-panel p-4">
             
-            {/* 1. Bibit Ikan */}
+            {/* 1. Pasar Ikan */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-cyan-200 pb-2 text-cyan-100">
-              <span>🐟</span> BIBIT IKAN
+              <span>🐟</span> PASAR IKAN
             </div>
-            <div className="glass-card p-3 rounded-xl border border-cyan-100/30 text-sm text-cyan-100 mb-6 text-center italic">
-              Buka di Level 10
-            </div>
+            {level >= 10 ? (
+              <div className="grid grid-cols-2 gap-2 mb-6">
+                {FISHES.map(fish => {
+                  return (
+                    <div key={fish.id} className="glass-card p-2 rounded-xl border border-cyan-100/30 flex flex-col items-center hover:bg-white/10 transition-colors">
+                      <span className="text-3xl mb-1">{fish.emoji}</span>
+                      <span className="font-bold text-cyan-100 text-[10px] sm:text-xs mb-1 text-center line-clamp-1">{fish.name}</span>
+                      <span className="text-yellow-400 font-bold text-xs mb-2">{fish.priceNormal * 2} 💰</span>
+                      <button 
+                        onClick={() => handleShopBuy({ id: fish.id, name: fish.name, price: fish.priceNormal * 2 }, 1)}
+                        className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-3 py-1 rounded-lg text-xs w-full shadow-sm transition-transform active:scale-95"
+                      >
+                        Beli
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="glass-card p-3 rounded-xl border border-cyan-100/30 text-sm text-cyan-100 mb-6 text-center italic">
+                Buka di Level 10
+              </div>
+            )}
 
             {/* 2. Dekorasi */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-green-200 pb-2 text-green-100 mt-6">
@@ -399,9 +433,46 @@ export default function TabTown() {
             
             <InventoryWidget />
 
+            {/* Hasil Tangkapan */}
+            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-cyan-200/30 pb-2 text-cyan-100 mt-6">
+              <span>🏪</span> Hasil Tangkapan (Inventory Ikan)
+            </div>
+            <div className="flex flex-wrap gap-2 mb-8">
+              {FISHES.map(fish => {
+                const count = inventory[fish.id] || 0;
+                if (count === 0) return null;
+                return (
+                  <div key={`inv-${fish.id}`} className="glass-card border border-cyan-100/30 p-2 rounded-xl flex flex-col items-center justify-center bg-white/5 relative overflow-hidden w-[72px] sm:w-[84px] flex-shrink-0">
+                    <motion.div 
+                      className="text-3xl mb-1 origin-center"
+                      animate={{ 
+                        rotate: [-15, 15, -15],
+                        x: [-5, 5, -5],
+                        y: [0, -8, 0] 
+                      }}
+                      transition={{ 
+                        repeat: Infinity, 
+                        duration: 2, 
+                        ease: "easeInOut" 
+                      }}
+                    >
+                      {fish.emoji}
+                    </motion.div>
+                    <span className="text-cyan-100 font-bold text-[10px] sm:text-xs truncate w-full text-center">{fish.name}</span>
+                    <span className="text-yellow-400 font-black text-xs">x{count}</span>
+                  </div>
+                );
+              })}
+              {FISHES.every(f => !inventory[f.id]) && (
+                <div className="col-span-full glass-card p-3 rounded-xl border border-cyan-100/30 text-sm text-cyan-100 text-center italic opacity-70">
+                  Belum ada ikan yang ditangkap.
+                </div>
+              )}
+            </div>
+
             {/* Warga Kota (NPCs) */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-pink-200/30 pb-2 text-pink-100 mt-6">
-              <span>👨‍👩‍👧‍👦</span> Warga Kota
+              <span>👥</span> Warga Kota
             </div>
             <div className="space-y-3 mb-8">
               {NPC_LIST.map(npc => {
@@ -409,20 +480,22 @@ export default function TabTown() {
                 const maxPoints = data.level * 100;
                 return (
                   <div key={npc.id} className="glass-card border border-pink-100/30 p-3 rounded-xl flex items-center gap-3">
-                    <div className="text-3xl bg-white/20 p-2 rounded-full shadow-sm">{npc.emoji}</div>
-                    <div className="flex-1">
-                      <div className="font-bold text-white text-sm flex justify-between">
-                        <span>{npc.name}</span>
-                        <span className="text-pink-300 bg-pink-900/50 px-2 rounded-full text-xs">Lv {data.level}</span>
+                    <div className="text-3xl bg-white/20 p-2 rounded-full shadow-sm flex-shrink-0 w-14 h-14 flex items-center justify-center">
+                      {npc.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-white text-sm flex items-center justify-between gap-1 mb-0.5">
+                        <span className="truncate">{npc.name}</span>
+                        <span className="text-pink-300 bg-pink-900/50 px-2 py-0.5 rounded-full text-[10px] whitespace-nowrap flex-shrink-0">Lv {data.level}</span>
                       </div>
-                      <div className="text-[10px] text-pink-200 mb-1">{npc.role}</div>
+                      <div className="text-[10px] text-pink-200 mb-1.5 truncate">{npc.role}</div>
                       <div className="w-full h-1.5 bg-pink-900/50 rounded-full overflow-hidden">
                         <div className="h-full bg-pink-500" style={{ width: `${(data.points / maxPoints) * 100}%` }} />
                       </div>
                     </div>
                     <button 
                       onClick={() => openNpcGift(npc.id)}
-                      className="bg-white border-2 border-pink-300 text-pink-600 hover:bg-pink-100 p-2 rounded-xl transition-colors shadow-sm active:scale-95"
+                      className="bg-white border-2 border-pink-300 text-pink-600 hover:bg-pink-100 p-2 rounded-xl transition-colors shadow-sm active:scale-95 flex-shrink-0"
                       title="Beri Hadiah"
                     >
                       🎁
@@ -433,12 +506,7 @@ export default function TabTown() {
             </div>
 
             {/* Dapur Ikan */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-orange-200/30 pb-2 text-orange-100 mt-6">
-              <span>🍳</span> Dapur Ikan
-            </div>
-            <div className="glass-card border-orange-100/30 rounded-xl p-4 min-h-[80px] flex items-center justify-center mb-4">
-              <span className="text-orange-200 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
-            </div>
+            <CraftingWidget type="fish_kitchen" title="Dapur Ikan" icon="🍳" />
             
           </div>
         </div>

@@ -31,17 +31,22 @@ export function InventoryWidget() {
         {inventoryItems.length === 0 ? (
           <div className="text-center text-sm text-gray-300 py-4 italic">Tas masih kosong.</div>
         ) : (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap justify-center gap-3 mb-5">
             {inventoryItems.map(item => (
               <div
                 key={item}
-                className="w-12 h-12 glass-card flex items-center justify-center relative hover:scale-105 transition-transform"
+                className="glass-card border border-orange-100/30 p-2 rounded-xl flex flex-col items-center justify-center bg-white/5 relative overflow-hidden w-[72px] sm:w-[84px] flex-shrink-0 hover:scale-105 transition-transform"
                 title={getItemDisplayName(item)}
               >
-                <span className="text-2xl">{getCropEmoji(item)}</span>
-                <span className="absolute -bottom-2 -right-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm border border-yellow-500">
-                  {inventory[item]}
-                </span>
+                <div className="text-3xl mb-1 drop-shadow-md">
+                  {getCropEmoji(item)}
+                </div>
+                <div className="text-[10px] sm:text-xs font-bold text-center text-orange-50 leading-tight truncate w-full px-1">
+                  {getItemDisplayName(item)}
+                </div>
+                <div className="mt-1 bg-orange-900/50 px-2 py-0.5 rounded-full text-[10px] border border-orange-400/30 text-orange-200 font-bold shadow-sm">
+                  x{inventory[item]}
+                </div>
               </div>
             ))}
           </div>

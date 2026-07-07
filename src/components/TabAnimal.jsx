@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
-import { getAnimalEmoji, getShopAnimal, SHOP_ANIMALS } from '@/lib/utils';
+import { getAnimalEmoji, getShopAnimal, SHOP_ANIMALS, RECIPES, getCropEmoji } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
 import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
+import { CraftingWidget } from './ui/CraftingWidget';
 import { AnimalIcon } from './ui/AnimalIcon';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import toast from 'react-hot-toast';
@@ -15,26 +16,23 @@ export default function TabAnimal() {
   const animals = useGameStore(state => state.animals);
   const inventory = useGameStore(state => state.inventory);
   const collectAnimal = useGameStore(state => state.collectAnimal);
-  const swapAnimals = useGameStore(state => state.swapAnimals);
-  const openPrompt = useGameStore(state => state.openPrompt);
   const openConfirm = useGameStore(state => state.openConfirm);
   const buyMultipleAnimals = useGameStore(state => state.buyMultipleAnimals);
   const workers = useGameStore(state => state.workers);
   const hireWorker = useGameStore(state => state.hireWorker);
-  const coins = useGameStore(state => state.coins);
   const autoFarm = useGameStore(state => state.autoRancher);
   const toggleAutoFarm = useGameStore(state => state.toggleAutoRancher);
   
   const [shopAmounts, setShopAmounts] = useState({});
 
   const [currentTime, setCurrentTime] = useState(Date.now());
-  const [isEditMode, setIsEditMode] = useState(false);
-  
+
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
 
+  const [isEditMode, setIsEditMode] = useState(false);
 
 
   // Global Game Loop (di page.js) sudah menangani auto-collect via store.runAutoWorkers()
@@ -308,12 +306,8 @@ export default function TabAnimal() {
             {/* Inventory */}
             <InventoryWidget />
 
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
-              <span>🍳</span> Dapur Produksi
-            </div>
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 min-h-[80px] flex items-center justify-center mb-4">
-              <span className="text-amber-400 text-sm font-medium italic">Fitur ini akan segera hadir.</span>
-            </div>
+            {/* Dapur Produksi */}
+            <CraftingWidget type="kitchen" title="Dapur Produksi" icon="🍳" />
 
           </div>
         </div>
