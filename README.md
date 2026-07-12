@@ -13,7 +13,7 @@ Versi terbaru ini telah **dimigrasikan secara penuh ke ekosistem Next.js modern*
 
 Proyek ini telah bertransformasi dari sekadar Vanilla JS/HTML menjadi aplikasi React mutakhir dengan tumpukan teknologi berikut:
 - **Next.js 14+** — Framerwork React untuk optimasi performa dan *Fast Refresh*.
-- **TypeScript** — *Static typing* secara menyeluruh (End-to-End) untuk mengeleminasi _bug_ tersembunyi.
+- **JavaScript & TypeScript** — Sebagian besar komponen inti menggunakan JavaScript, dengan migrasi bertahap ke TypeScript untuk fitur baru.
 - **Zustand** — Sistem manajemen *State* yang ringan dan sangat reaktif (menggantikan *mutable global state* lama).
 - **Tailwind CSS** — *Utility-first styling* untuk antarmuka yang sangat responsif, membuang belasan file CSS monolitik.
 - **Framer Motion** — Animasi deklaratif yang _smooth_ dengan 60fps.

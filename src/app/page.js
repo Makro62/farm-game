@@ -17,29 +17,7 @@ export default function Page() {
   useEffect(() => {
     useGameStore.getState().calculateOfflineProgress();
   }, []);
-  
-  // Auto-save every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Zustand auto-saves via persist middleware
-      console.log('💾 Game auto-saved');
-    }, 30000);
-    
-    // Save on visibility change
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        console.log('💾 Game saved on tab switch');
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-  
+
   // Development shortcuts
   useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return;
