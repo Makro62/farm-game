@@ -116,6 +116,27 @@ export default function TabMine() {
 
         <div className="game-sidebar-left">
           <div className="glass-panel p-4">
+            <div className="mb-6">
+              <ShopSectionTitle icon="🛒">Shop Peralatan</ShopSectionTitle>
+              <div className="shop-grid">
+                {SHOP_MINING.map((item) => {
+                  const amt = shopAmounts[item.id] || 1;
+                  return (
+                    <ShopItemCard
+                      key={item.id}
+                      icon={item.emoji}
+                      name={item.name}
+                      price={item.price}
+                      amount={amt}
+                      onDecrease={() => setShopAmounts(p => ({ ...p, [item.id]: Math.max(1, amt - 1) }))}
+                      onIncrease={() => setShopAmounts(p => ({ ...p, [item.id]: amt + 1 }))}
+                      onBuy={() => handleShopBuy(item, amt)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
             <ShopSectionTitle icon="⛏️">Alat Aktif</ShopSectionTitle>
             <div className="glass-card p-3 mb-4 flex justify-between items-center">
               <div>
@@ -258,25 +279,6 @@ export default function TabMine() {
 
         <div className="game-sidebar-right">
           <div className="glass-panel p-4 h-full">
-            <ShopSectionTitle icon="🛒">Shop Peralatan</ShopSectionTitle>
-            <div className="shop-grid mb-6">
-              {SHOP_MINING.map((item) => {
-                const amt = shopAmounts[item.id] || 1;
-                return (
-                  <ShopItemCard
-                    key={item.id}
-                    icon={item.emoji}
-                    name={item.name}
-                    price={item.price}
-                    amount={amt}
-                    onDecrease={() => setShopAmounts(p => ({ ...p, [item.id]: Math.max(1, amt - 1) }))}
-                    onIncrease={() => setShopAmounts(p => ({ ...p, [item.id]: amt + 1 }))}
-                    onBuy={() => handleShopBuy(item, amt)}
-                  />
-                );
-              })}
-            </div>
-
             <InventoryWidget />
           </div>
         </div>

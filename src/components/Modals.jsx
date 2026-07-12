@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { NPC_LIST, getCropEmoji } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import OfflineProgressModal from './OfflineProgressModal';
 
 export default function Modals() {
   const modals = useGameStore(state => state.modals);
@@ -74,6 +75,7 @@ export default function Modals() {
   return (
     <>
       <div className="rain-overlay"></div>
+      <OfflineProgressModal />
       
       <AnimatePresence>
         {modals.confirm.isOpen && (

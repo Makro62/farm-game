@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
-import { getCropEmoji, SHOP_SEEDS, RECIPES } from '@/lib/utils';
 import { CropIcon } from './ui/CropIcon';
+import { getCropEmoji, SHOP_SEEDS, RECIPES } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';

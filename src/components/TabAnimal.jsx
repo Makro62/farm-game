@@ -16,7 +16,11 @@ export default function TabAnimal() {
   const animals = useGameStore(state => state.animals);
   const inventory = useGameStore(state => state.inventory);
   const collectAnimal = useGameStore(state => state.collectAnimal);
+  const swapAnimals = useGameStore(state => state.swapAnimals);
+  const openPrompt = useGameStore(state => state.openPrompt);
   const openConfirm = useGameStore(state => state.openConfirm);
+  const buyItem = useGameStore(state => state.buyItem);
+  const coins = useGameStore(state => state.coins);
   const buyMultipleAnimals = useGameStore(state => state.buyMultipleAnimals);
   const workers = useGameStore(state => state.workers);
   const hireWorker = useGameStore(state => state.hireWorker);

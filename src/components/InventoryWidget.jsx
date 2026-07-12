@@ -31,11 +31,11 @@ export function InventoryWidget() {
         {inventoryItems.length === 0 ? (
           <div className="text-center text-sm text-gray-300 py-4 italic">Tas masih kosong.</div>
         ) : (
-          <div className="flex flex-wrap justify-center gap-3 mb-5">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5">
             {inventoryItems.map(item => (
               <div
                 key={item}
-                className="glass-card border border-orange-100/30 p-2 rounded-xl flex flex-col items-center justify-center bg-white/5 relative overflow-hidden w-[72px] sm:w-[84px] flex-shrink-0 hover:scale-105 transition-transform"
+                className="glass-card border border-orange-100/30 p-2 rounded-xl flex flex-col items-center justify-center bg-white/5 relative overflow-hidden w-full hover:scale-105 transition-transform"
                 title={getItemDisplayName(item)}
               >
                 <div className="text-3xl mb-1 drop-shadow-md">

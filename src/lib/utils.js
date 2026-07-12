@@ -152,6 +152,9 @@ export function getCropEmoji(itemId) {
   const recipe = RECIPES.find(r => r.id === itemId);
   if (recipe) return recipe.emoji;
   
+  const miningTool = SHOP_MINING.find(m => m.id === itemId);
+  if (miningTool) return miningTool.emoji;
+  
   return '📦';
 }
 
@@ -260,6 +263,9 @@ export function getItemDisplayName(itemId) {
 
   const recipeData = RECIPES.find(r => r.id === itemId);
   if (recipeData) return recipeData.name;
+  
+  const miningTool = SHOP_MINING.find(m => m.id === itemId);
+  if (miningTool) return miningTool.name;
 
   return itemId;
 }

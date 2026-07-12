@@ -13,6 +13,11 @@ import { useGameStore } from '@/lib/store';
 export default function Page() {
   const [activeTab, setActiveTab] = useState('farm');
   
+  // Hitung offline progress saat game pertama dimuat
+  useEffect(() => {
+    useGameStore.getState().calculateOfflineProgress();
+  }, []);
+  
   // Auto-save every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {

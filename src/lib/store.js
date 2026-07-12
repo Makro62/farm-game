@@ -186,6 +186,8 @@ const initialState = {
   day: 1,
   streak: 0,
   lastLogin: null,
+  lastSavedAt: Date.now(),
+  offlineReport: null,
   
   // Farm
   plots: Array.from({ length: 30 }, (_, i) => ({
@@ -1333,6 +1335,7 @@ export const useGameStore = create(
       },
 
       processGameTick: () => {
+        set({ lastSavedAt: Date.now() });
         const actions = [
           () => get().advanceSeasonTick(),
           () => get().changeWeather(),
@@ -1408,6 +1411,109 @@ export const useGameStore = create(
           if (newOrders.length === 0) {
             get().generateOrders();
           }
+        }
+      },
+
+      clearOfflineReport: () => {
+        set({ offlineReport: null });
+      },
+
+      calculateOfflineProgress: () => {
+        const state = get();
+        if (!state.lastSavedAt) return;
+        
+        const now = Date.now();
+        const deltaSeconds = Math.floor((now - state.lastSavedAt) / 1000);
+        
+        // Hanya proses jika offline lebih dari 60 detik (1 menit)
+        if (deltaSeconds < 60) return;
+        
+        let earnedCoins = 0;
+        let harvestedCrops = 0;
+        let collectedProducts = 0;
+        let newInventory = { ...state.inventory };
+        let newPlots = [...state.plots];
+        let newAnimals = Array.isArray(state.animals) ? [...state.animals] : [];
+        let newMiningNodes = [...(state.mining?.nodes || [])];
+        let newCraftingQueue = [...state.craftingQueue];
+        
+        // 1. Simulasikan panen (Auto Farmer)
+        if (isWorkerActive(state, 'farmer')) {
+          const cycles = deltaSeconds / 10; // Cek tiap 10 detik
+          for (let i = 0; i < newPlots.length; i++) {
+            const p = newPlots[i];
+            if (p.crop && p.status === 'growing' && p.growTime) {
+              // Jika waktu tanam + waktu tumbuh lebih kecil dari sekarang, crop sudah siap panen
+              if (p.plantedAt + p.growTime <= now) {
+                newInventory[p.crop] = (newInventory[p.crop] || 0) + 1;
+                harvestedCrops++;
+                newPlots[i] = { ...p, status: 'empty', crop: null, plantedAt: null, growTime: null };
+              }
+            } else if (p.crop && p.status === 'ready') {
+              newInventory[p.crop] = (newInventory[p.crop] || 0) + 1;
+              harvestedCrops++;
+              newPlots[i] = { ...p, status: 'empty', crop: null, plantedAt: null, growTime: null };
+            }
+          }
+        }
+        
+        // 2. Simulasikan peternakan (Auto Rancher)
+        if (isWorkerActive(state, 'rancher')) {
+          for (let i = 0; i < newAnimals.length; i++) {
+            const a = newAnimals[i];
+            const data = SHOP_ANIMALS.find(s => s.id === a.type);
+            if (data && a.status === 'producing') {
+              const produceTimeSecs = a.produceTime / 1000;
+              const cycles = Math.floor(deltaSeconds / produceTimeSecs);
+              if (cycles > 0) {
+                newInventory[data.product] = (newInventory[data.product] || 0) + cycles;
+                collectedProducts += cycles;
+                newAnimals[i] = { ...a, lastCollected: now };
+              }
+            }
+          }
+        }
+        
+        // 3. Simulasikan nelayan (Auto Fisher)
+        let caughtFishes = 0;
+        if (isWorkerActive(state, 'fisher')) {
+          const catchAttemptEverySecs = 10;
+          const attempts = Math.floor(deltaSeconds / catchAttemptEverySecs);
+          const catchChance = 0.1;
+          const expectedCatches = Math.floor(attempts * catchChance);
+          
+          if (expectedCatches > 0) {
+            caughtFishes = expectedCatches;
+            newInventory[FISHES[0].id] = (newInventory[FISHES[0].id] || 0) + caughtFishes; // Asumsikan dapat ikan dasar untuk simulasi offline
+          }
+        }
+        
+        // 4. Simulasikan penambang (Auto Miner)
+        let minedGems = 0;
+        if (isWorkerActive(state, 'miner')) {
+          const mineInterval = getMiningRegenMs(state.mining) / 1000;
+          const attempts = Math.floor(deltaSeconds / mineInterval);
+          if (attempts > 0) {
+            minedGems = Math.floor(attempts * 0.5); // Kasarannya 50% node yg siap ditambang
+            newInventory['batu'] = (newInventory['batu'] || 0) + minedGems;
+          }
+        }
+        
+        // Set report
+        if (harvestedCrops > 0 || collectedProducts > 0 || caughtFishes > 0 || minedGems > 0) {
+          set({
+            inventory: newInventory,
+            plots: newPlots,
+            animals: newAnimals,
+            offlineReport: {
+              deltaSeconds,
+              harvestedCrops,
+              collectedProducts,
+              caughtFishes,
+              minedGems,
+              earnedCoins
+            }
+          });
         }
       },
 
