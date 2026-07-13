@@ -53,12 +53,12 @@ export function PlotGrid({ isEditMode }) {
 
   return (
     <div 
-      className={cn("p-4 sm:p-6 rounded-3xl shadow-inner border-4 border-[#6b4226] relative overflow-hidden mb-6 transition-all bg-cover bg-center", 
+      className={cn("p-4 sm:p-6 field-frame relative overflow-hidden mb-6 transition-all bg-cover bg-center", 
         isEditMode && "ring-4 ring-yellow-400 border-dashed"
       )}
       style={{ backgroundImage: "url('/img/backgrounds/farm_bg.png')" }}
     >
-      <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/15 to-black/35 pointer-events-none rounded-[22px]"></div>
       <div className="game-plot-grid relative z-10">
         {plots.map((plot) => {
           const isGrowing = plot.status === 'growing';
@@ -119,9 +119,9 @@ export function PlotGrid({ isEditMode }) {
                 </AnimatePresence>
               )}
               {isGrowing && !isReady && (
-                <div className="absolute bottom-1 left-1 right-1 h-1.5 bg-black/40 rounded-full overflow-hidden">
+                <div className="absolute bottom-1.5 left-1.5 right-1.5 h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/10">
                   <div 
-                    className="h-full bg-green-400 origin-left" 
+                    className="h-full bg-gradient-to-r from-[#6fbf55] to-[#9fd67f] origin-left" 
                     style={{ 
                       animationName: 'grow-progress', 
                       animationDuration: `${plot.growTime}ms`, 

@@ -75,6 +75,7 @@ const initialState = {
   autoMiner: false,
   selectedSeed: null,
   selectedMiningTool: null,
+  selectedBait: null,
   
   // UI Modals
   modals: {
@@ -207,6 +208,7 @@ export const useGameStore = create(
         autoFisher: state.autoFisher,
         autoMiner: state.autoMiner,
         selectedSeed: state.selectedSeed,
+        selectedBait: state.selectedBait,
         season: state.season,
         weather: state.weather,
         mining: state.mining,

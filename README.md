@@ -15,7 +15,7 @@ Repositori ini baru saja mengalami *rewrite* total dari versi lama (Vanilla JS) 
 Proyek ini menggunakan tumpukan teknologi modern berikut:
 - **Next.js 16 (App Router)** — Framework React untuk optimasi performa dan rendering.
 - **React 18** — Component-based UI library.
-- **JavaScript & TypeScript** — Sebagian besar komponen inti menggunakan JavaScript, dengan pemakaian TypeScript secara bertahap pada hooks/utility tertentu (misalnya `useGameLoop.ts`).
+- **JavaScript & TypeScript** — Sebagian besar komponen inti menggunakan JavaScript, dengan rencana migrasi ke TypeScript. Beberapa file utility seperti `useSound.ts` sudah bermigrasi.
 - **Zustand** — Sistem manajemen state yang sangat ringan dan reaktif (menyimpan *save data* secara persisten di LocalStorage).
 - **Tailwind CSS** — Utility-first styling untuk membuat antarmuka responsif dengan cepat.
 - **Framer Motion** — Animasi deklaratif yang smooth dan Hardware Accelerated (seperti transisi panen tanaman).
@@ -69,10 +69,11 @@ farm-game/
 ├── src/
 │   ├── app/                # Next.js App Router (layout.js, page.js)
 │   ├── components/         # Komponen UI (TabFarm, TabAnimal, dll)
-│   │   └── game/           # Sub-komponen modular untuk setiap tab
+│   │   ├── game/           # Sub-komponen modular untuk setiap tab
+│   │   └── ui/             # Komponen UI reusable (GameAreaHeader, dll)
 │   ├── lib/
-│   │   ├── store.js        # Global state management dengan Zustand
-│   │   ├── hooks/          # Custom hooks seperti useGameLoop
+│   │   ├── store/          # Zustand slices dan orchestrator
+│   │   ├── hooks/          # Custom hooks (useFishingMinigame.js, dll)
 │   │   └── utils.js        # Fungsi helper dan data master (CROP_DATA, dll)
 │   └── styles/
 │       └── globals.css     # CSS Global (Tailwind & Keyframes)

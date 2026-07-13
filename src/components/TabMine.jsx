@@ -138,12 +138,12 @@ export default function TabMine() {
             </div>
 
             <ShopSectionTitle icon="⛏️">Alat Aktif</ShopSectionTitle>
-            <div className="glass-card p-3 mb-4 flex justify-between items-center">
+            <div className="glass-card p-3 mb-4 flex justify-between items-center border border-white/10">
               <div>
-                <div className="font-bold text-white text-sm">{pickaxe.emoji} {pickaxe.name}</div>
-                <div className="text-[10px] text-gray-400">Regen: {pickaxe.regen}{lanternActive ? ' (senter aktif)' : ''}</div>
+                <div className="font-bold text-[#f7f4e8] text-sm drop-shadow-sm">{pickaxe.emoji} {pickaxe.name}</div>
+                <div className="text-[10px] text-[#d7e4c8]/80 font-medium mt-0.5">Regen: {pickaxe.regen}{lanternActive ? ' (senter aktif)' : ''}</div>
               </div>
-              <span className="bg-green-500/30 text-green-200 text-xs px-2 py-1 rounded font-bold">Lv {mining.pickaxeLevel}</span>
+              <span className="bg-[#6fbf55]/30 border border-[#6fbf55]/50 text-[#f7f4e8] text-xs px-2 py-1 rounded-lg font-black">Lv {mining.pickaxeLevel}</span>
             </div>
             {lanternActive && (
               <div className="glass-card p-2 mb-4 text-center text-xs text-yellow-200">
@@ -236,10 +236,10 @@ export default function TabMine() {
             )}
 
             <div
-              className="p-4 sm:p-6 rounded-3xl shadow-inner border-4 border-[#252422] relative min-h-[400px] bg-cover bg-center"
+              className="p-4 sm:p-6 field-frame relative min-h-[400px] bg-cover bg-center"
               style={{ backgroundImage: "url('/img/backgrounds/mine_bg.png')" }}
             >
-              <div className="absolute inset-0 bg-black/50 rounded-2xl pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/25 to-black/45 rounded-[22px] pointer-events-none" />
               <div className="game-plot-grid relative z-10">
                 {mining.nodes.map((node) => {
                   const isReady = node.status === 'ready';

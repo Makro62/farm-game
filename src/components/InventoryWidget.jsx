@@ -24,28 +24,28 @@ export function InventoryWidget() {
 
   return (
     <div className="mb-6">
-      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white">
-        <span>📦</span> Inventory (Global)
+      <div className="shop-section-title">
+        <span>📦</span> Tas Petani
       </div>
-      <div className="glass-card border-orange-100/30 p-4 min-h-[100px]">
+      <div className="glass-card p-3 sm:p-4 min-h-[100px]">
         {inventoryItems.length === 0 ? (
-          <div className="text-center text-sm text-gray-300 py-4 italic">Tas masih kosong.</div>
+          <div className="text-center text-sm text-[#d7e4c8]/80 py-4 italic font-bold">Tas masih kosong.</div>
         ) : (
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
             {inventoryItems.map(item => (
               <div
                 key={item}
-                className="glass-card border border-orange-100/30 p-2 rounded-xl flex flex-col items-center justify-center bg-white/5 relative overflow-hidden w-full hover:scale-105 transition-transform"
+                className="rounded-xl border-2 border-[#e8d296]/25 bg-[#1c301e]/70 p-2 flex flex-col items-center justify-center relative overflow-hidden w-full hover:scale-105 transition-transform"
                 title={getItemDisplayName(item)}
               >
                 <div className="text-3xl mb-1 drop-shadow-md">
                   {getCropEmoji(item)}
                 </div>
-                <div className="text-[10px] sm:text-xs font-bold text-center text-orange-50 leading-tight truncate w-full px-1">
+                <div className="text-[10px] sm:text-xs font-extrabold text-center text-[#f7f4e8] leading-tight truncate w-full px-1">
                   {getItemDisplayName(item)}
                 </div>
-                <div className="mt-1 bg-orange-900/50 px-2 py-0.5 rounded-full text-[10px] border border-orange-400/30 text-orange-200 font-bold shadow-sm">
-                  x{inventory[item]}
+                <div className="mt-1 bg-[#f0b429] text-[#4a3208] px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm">
+                  ×{inventory[item]}
                 </div>
               </div>
             ))}
@@ -53,7 +53,7 @@ export function InventoryWidget() {
         )}
         <button
           onClick={handleSellAll}
-          className="w-full bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-2 rounded-lg transition-colors shadow-sm active:scale-95 text-sm"
+          className="btn-gold w-full !py-2.5 !rounded-xl text-sm"
         >
           💰 Jual Semua Hasil
         </button>

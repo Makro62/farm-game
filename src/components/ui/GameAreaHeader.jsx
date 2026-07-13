@@ -4,8 +4,10 @@ export function GameAreaHeader({ icon, title, children }) {
   return (
     <div className="game-area-header">
       <h2 className="game-area-title">
-        <span aria-hidden>{icon}</span>
-        {title}
+        <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-black/25 border border-white/15 text-xl" aria-hidden>
+          {icon}
+        </span>
+        <span className="text-shadow">{title}</span>
       </h2>
       {children && <div className="game-area-actions">{children}</div>}
     </div>

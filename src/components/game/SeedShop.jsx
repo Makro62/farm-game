@@ -87,21 +87,21 @@ export function SeedShop() {
       </div>
 
       <ShopSectionTitle icon="🌱">Bibit Tanaman</ShopSectionTitle>
-      <div className="glass-card rounded-xl p-3 mb-6">
+      <div className="glass-card p-3 mb-6">
         {SHOP_SEEDS.filter(s => inventory[s.id] > 0).length === 0 ? (
-          <div className="text-center text-sm text-gray-400 italic">Belum ada bibit di Inventory.</div>
+          <div className="text-center text-sm text-[#d7e4c8]/70 font-bold py-2">Belum ada bibit di Inventory.</div>
         ) : (
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {SHOP_SEEDS.filter(s => inventory[s.id] > 0).map(seed => (
               <button
                 key={`inv-${seed.id}`}
                 onClick={() => setSelectedInventoryItem(seed.id)}
-                className={`p-2 glass-card flex flex-col items-center gap-1 transition-all
-                  ${selectedInventoryItem === seed.id ? 'border-primary scale-105 shadow-md bg-white/20' : 'hover:bg-white/10'}`}
+                className={`p-2 glass-card flex flex-col items-center gap-1 transition-all border-2
+                  ${selectedInventoryItem === seed.id ? 'border-[var(--primary)] bg-[var(--primary)]/20 shadow-inner scale-105' : 'border-transparent hover:bg-black/20'}`}
               >
-                <span className="text-2xl relative">
+                <span className="text-2xl relative drop-shadow-sm">
                   <CropIcon itemId={seed.id} />
-                  <span className="absolute -bottom-1 -right-1 bg-yellow-400 text-yellow-900 text-[9px] font-bold px-1 rounded-sm shadow-sm">
+                  <span className="absolute -bottom-2 -right-2 bg-black text-[#f7f4e8] text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-white/20">
                     {inventory[seed.id]}
                   </span>
                 </span>
@@ -115,19 +115,19 @@ export function SeedShop() {
       <button
         onClick={handleHireFarmer}
         className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left mb-2 ${
-          workers?.farmer ? 'border-primary bg-white/10' : ''
+          workers?.farmer ? 'border-[#6fbf55] bg-white/10' : ''
         }`}
       >
         <div>
-          <div className="font-bold text-white text-sm">👨‍🌾 Petani Budi</div>
-          <div className="text-[10px] text-gray-500">Auto-Farm & Harvest</div>
+          <div className="font-bold text-[#f7f4e8] text-sm">👨‍🌾 Petani Budi</div>
+          <div className="text-[10px] text-[#d7e4c8]">Auto-Farm & Harvest</div>
         </div>
-        <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs whitespace-nowrap">
+        <span className="font-bold text-[#4a3208] bg-[#ffe08a] px-2 py-0.5 rounded text-xs whitespace-nowrap">
           {workers?.farmer ? '✅ Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_FARMER} 💰`}
         </span>
       </button>
       {workers?.farmer && (
-        <p className="text-[10px] text-gray-400 mb-2">
+        <p className="text-[10px] text-[#d7e4c8]/70 mb-2 font-medium">
           {autoFarm
             ? SHOP_SEEDS.some((s) => (inventory[s.id] || 0) > 0)
               ? '✅ Kurcaci aktif — panen & tanam otomatis'

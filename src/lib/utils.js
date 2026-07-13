@@ -98,6 +98,12 @@ export const SHOP_BUILDINGS = [
   { id: 'greenhouse', name: 'Greenhouse', emoji: '🏠', price: 5000, desc: 'Tanam bibit luar musim' },
 ];
 
+export const SHOP_BAIT = [
+  { id: 'umpan_biasa', name: 'Umpan Biasa', emoji: '🪱', price: 15, waitMult: 0.85, rareBonus: 0, desc: 'Gigitan lebih cepat' },
+  { id: 'umpan_premium', name: 'Umpan Premium', emoji: '🦐', price: 60, waitMult: 0.55, rareBonus: 0.12, desc: 'Cepat + chance ikan langka' },
+  { id: 'umpan_emas', name: 'Umpan Emas', emoji: '✨', price: 150, waitMult: 0.4, rareBonus: 0.25, desc: 'Chance rare tertinggi' },
+];
+
 export const SHOP_ANIMALS = [
   { id: 'ayam', name: 'Ayam', price: 150, time: 20, product: 'telur', productEmoji: '🥚', image: '/img/animals/chicken.png' },
   { id: 'bebek', name: 'Bebek', price: 300, time: 40, product: 'telur_bebek', productEmoji: '🥚', image: '/img/animals/duck.png' },
@@ -169,6 +175,9 @@ export function getCropEmoji(itemId) {
   
   const miningTool = SHOP_MINING.find(m => m.id === itemId);
   if (miningTool) return miningTool.emoji;
+
+  const bait = SHOP_BAIT.find((b) => b.id === itemId);
+  if (bait) return bait.emoji;
   
   return '📦';
 }
@@ -248,6 +257,9 @@ export function getItemSellPrice(itemId) {
   const fishData = FISHES.find(f => f.id === itemId);
   if (fishData) return fishData.priceNormal ?? 0;
 
+  const baitData = SHOP_BAIT.find((b) => b.id === itemId);
+  if (baitData) return Math.floor(baitData.price * 0.4);
+
   const mineralData = MINERALS.find(m => m.id === itemId);
   if (mineralData) return mineralData.price;
 
@@ -272,6 +284,9 @@ export function getItemDisplayName(itemId) {
 
   const fishData = FISHES.find(f => f.id === itemId);
   if (fishData) return fishData.name;
+
+  const baitData = SHOP_BAIT.find((b) => b.id === itemId);
+  if (baitData) return baitData.name;
 
   const mineralData = MINERALS.find(m => m.id === itemId);
   if (mineralData) return mineralData.name;

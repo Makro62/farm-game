@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useGameStore } from '@/lib/store';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
@@ -18,7 +19,9 @@ export default function TabFarm() {
   const autoFarm = useGameStore(state => state.autoFarmer);
   const toggleAutoFarm = useGameStore(state => state.toggleAutoFarmer);
   const inventory = useGameStore(state => state.inventory);
-  
+  const season = useGameStore(state => state.season);
+  const buildings = useGameStore(state => state.buildings);
+
   const [isEditMode, setIsEditMode] = useState(false);
 
   const handleToggleAuto = () => {
@@ -29,9 +32,6 @@ export default function TabFarm() {
     const next = !autoFarm;
     toggleAutoFarm();
     if (next) {
-      // Small check to see if there are any seeds in inventory
-      // (not strictly accurate as SHOP_SEEDS is not imported here, but we can just check if any inventory item > 0, 
-      // or simply rely on the notification).
       const hasSeeds = Object.values(inventory).some(val => val > 0);
       if (!hasSeeds) {
         toast('Auto ON — beli bibit dulu agar kurcaci bisa menanam! 🌱', { icon: '👨‍🌾' });
@@ -43,16 +43,31 @@ export default function TabFarm() {
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-4 rounded-2xl border-2 border-[#e8d296]/35 bg-gradient-to-r from-[#2f6b3a]/90 to-[#1c301e]/90 px-4 py-3 flex flex-wrap items-center justify-between gap-2 shadow-lg"
+      >
+        <div>
+          <p className="font-display font-bold text-lg text-[#f7f4e8] text-shadow">🌾 Ladang Musim {season?.current}</p>
+          <p className="text-xs font-bold text-[#d7e4c8]/90">
+            Beli bibit musiman · tanam · panen · jual di papan harga
+            {buildings?.greenhouse ? ' · 🏠 Greenhouse aktif' : ''}
+            {buildings?.silo ? ' · 🏚️ Silo +15%' : ''}
+          </p>
+        </div>
+        <div className="text-[11px] font-black uppercase tracking-wide bg-[#f0b429] text-[#4a3208] px-3 py-1.5 rounded-xl border border-[#fff1b8]">
+          Hari {season?.day || 1}/7
+        </div>
+      </motion.div>
+
       <div className="game-tab-grid">
-        
-        {/* ================= LEFT COLUMN ================= */}
         <div className="game-sidebar-left">
           <div className="glass-panel p-4">
             <SeedShop />
           </div>
         </div>
 
-        {/* ================= CENTER COLUMN ================= */}
         <div className="game-main">
           <div className="glass-panel p-4">
             <StatusHeader />
@@ -71,7 +86,6 @@ export default function TabFarm() {
           </div>
         </div>
 
-        {/* ================= RIGHT COLUMN ================= */}
         <div className="game-sidebar-right">
           <div className="glass-panel p-4 h-full">
             <InventoryWidget />
@@ -80,7 +94,6 @@ export default function TabFarm() {
             <CraftingWidget type="kitchen" title="Dapur Produksi" icon="🍳" />
           </div>
         </div>
-
       </div>
     </div>
   );

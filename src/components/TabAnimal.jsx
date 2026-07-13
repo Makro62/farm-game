@@ -10,6 +10,7 @@ import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
 import { CraftingWidget } from './ui/CraftingWidget';
 import { AnimalIcon } from './ui/AnimalIcon';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
+import { GAME_CONSTANTS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 
 export default function TabAnimal() {
@@ -178,7 +179,7 @@ export default function TabAnimal() {
                 <div className="text-[10px] text-gray-500">Auto-Collect Products</div>
               </div>
               <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs whitespace-nowrap">
-                {workers?.rancher ? '✅ Dimiliki' : '500 💰'}
+                {workers?.rancher ? '✅ Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_RANCHER} 💰`}
               </span>
             </button>
             {workers?.rancher && (
@@ -209,10 +210,10 @@ export default function TabAnimal() {
             </GameAreaHeader>
 
             <div 
-              className={`p-4 sm:p-6 rounded-3xl shadow-inner border-4 border-[#2e7d32] relative min-h-[400px] transition-all bg-cover bg-center ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}
+              className={`p-4 sm:p-6 field-frame relative min-h-[400px] transition-all bg-cover bg-center ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}
               style={{ backgroundImage: "url('/img/backgrounds/animal_bg.png')" }}
             >
-              <div className="absolute inset-0 bg-black/40 pointer-events-none rounded-2xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30 pointer-events-none rounded-[22px]"></div>
               <div className="game-plot-grid relative z-10">
                 {Array.from({ length: 30 }).map((_, i) => {
                   const animal = animals[i];
@@ -272,8 +273,8 @@ export default function TabAnimal() {
                         <AnimalIcon type={animal.type} />
                       </motion.div>
                       {!isReady && (
-                        <div className="absolute bottom-2 left-2 right-2 h-1.5 bg-black/30 rounded-full overflow-hidden">
-                          <div className="h-full bg-blue-400" style={{ width: `${progress}%` }} />
+                        <div className="absolute bottom-1.5 left-1.5 right-1.5 h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/10">
+                          <div className="h-full bg-gradient-to-r from-[#ffe08a] to-[#f0b429]" style={{ width: `${progress}%` }} />
                         </div>
                       )}
                       {isReady && (
@@ -290,7 +291,7 @@ export default function TabAnimal() {
                             e.stopPropagation();
                             handleSellAnimal(animal);
                           }}
-                          className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-30 cursor-pointer hover:bg-red-600"
+                          className="absolute -top-2 -left-2 bg-[#ff7a6b] text-[#3b120c] rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-30 cursor-pointer hover:brightness-110 border border-[#ffb3aa]"
                         >
                           ✕
                         </span>

@@ -11,6 +11,10 @@ export const createTownSlice = (set, get) => ({
   },
   activeEvent: null,
 
+  // Fishing gear
+  selectedBait: null,
+  setSelectedBait: (baitId) => set({ selectedBait: baitId }),
+
   // Kota upgrades
   buildings: {
     silo: false,
