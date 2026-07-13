@@ -28,13 +28,37 @@ export const createFarmingSlice = (set, get) => ({
               status: 'growing',
               crop,
               plantedAt: Date.now(),
-              growTime
+              growTime,
+              watered: false,
             }
           : p
-      )
+      ),
     }));
-    
     return true;
+  },
+
+  waterPlot: (plotId) => {
+    const state = get();
+    const plot = state.plots.find((p) => p.id === plotId);
+    if (!plot || plot.status !== 'growing') {
+      return { ok: false, message: 'Hanya tanaman yang sedang tumbuh yang bisa disiram.' };
+    }
+    if (plot.watered) {
+      return { ok: false, message: 'Petak ini sudah disiram.' };
+    }
+    const boost = Math.floor((plot.growTime || 0) * 0.18);
+    set((s) => ({
+      plots: s.plots.map((p) =>
+        p.id === plotId
+          ? {
+              ...p,
+              watered: true,
+              plantedAt: (p.plantedAt || Date.now()) - boost,
+            }
+          : p
+      ),
+    }));
+    return { ok: true, message: 'Disiram! Tumbuh lebih cepat.' };
   },
   
   harvest: (plotId) => {
@@ -65,7 +89,8 @@ export const createFarmingSlice = (set, get) => ({
               status: 'empty',
               crop: null,
               plantedAt: null,
-              growTime: null
+              growTime: null,
+              watered: false,
             }
           : p
       ),

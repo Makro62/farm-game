@@ -19,7 +19,7 @@ export function MarketBoard() {
 
   return (
     <div className="market-board p-3 mb-5">
-      <div className="font-display font-bold text-base mb-3 flex items-center justify-between gap-2 border-b-2 border-[var(--wood)]/40 pb-2 text-[var(--text-primary)]">
+      <div className="font-display font-bold text-base mb-3 flex items-center justify-between gap-2 border-b-2 border-white/20 pb-2 text-[#F4F7E8]">
         <span className="flex items-center gap-2">
           <span className="text-xl">📈</span> Papan Harga
         </span>
@@ -29,17 +29,17 @@ export function MarketBoard() {
       </div>
 
       {buildings?.silo && (
-        <p className="text-[10px] font-bold text-[var(--gold-deep)] mb-2 bg-[var(--primary-light)]/30 rounded-lg px-2 py-1">
+        <p className="text-[10px] font-bold text-[#FFE08A] mb-2 bg-black/20 rounded-lg px-2 py-1">
           Silo aktif — jual tanaman +15%
         </p>
       )}
 
-      <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
+      <p className="text-[10px] text-[#D7E8C8] mb-2 font-medium">
         Jual hasil lewat Tas · olahan di Restoran
       </p>
 
       {entries.length === 0 ? (
-        <div className="text-sm text-[var(--text-secondary)] italic text-center py-4 font-bold">
+        <div className="text-sm text-[#D7E8C8]/90 italic text-center py-4 font-bold">
           Pasar belum buka. Klik Refresh.
         </div>
       ) : (
@@ -51,14 +51,10 @@ export function MarketBoard() {
                 key={cropId}
                 className={`market-row ${up ? 'market-row--up' : 'market-row--down'} px-2.5 py-2 flex items-center justify-between gap-2`}
               >
-                <span className="text-sm font-extrabold text-[var(--text-primary)] truncate">
+                <span className="text-sm font-extrabold text-[#F4F7E8] truncate">
                   {getCropEmoji(cropId)} {CROP_DATA[cropId]?.name || cropId}
                 </span>
-                <span
-                  className={`text-xs font-black tabular-nums ${
-                    up ? 'text-[var(--primary-dark)]' : 'text-[#E53935]'
-                  }`}
-                >
+                <span className={`text-xs font-black tabular-nums ${up ? 'text-[#9FE870]' : 'text-[#FFB3AA]'}`}>
                   {price}💰 {up ? '▲' : '▼'}
                 </span>
               </div>

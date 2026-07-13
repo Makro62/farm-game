@@ -2,7 +2,7 @@ import { useGameStore } from '@/lib/store';
 import { formatNumber, getCropEmoji, getItemDisplayName } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
-export function InventoryWidget() {
+export function InventoryWidget({ title = 'Tas Petani' }) {
   const inventory = useGameStore((state) => state.inventory);
   const sellAllInventory = useGameStore((state) => state.sellAllInventory);
   const coinMultiplier = useGameStore((state) => state.coinMultiplier);
@@ -25,11 +25,11 @@ export function InventoryWidget() {
   return (
     <div className="mb-6">
       <div className="shop-section-title">
-        <span>📦</span> Tas Petani
+        <span>📦</span> {title}
       </div>
-      <div className="glass-card p-3 sm:p-4 min-h-[100px]">
+      <div className="inventory-leather p-3 sm:p-4 min-h-[100px]">
         {inventoryItems.length === 0 ? (
-          <div className="text-center text-sm text-[var(--text-secondary)] py-4 italic font-bold">
+          <div className="text-center text-sm text-[#FFF1D6]/80 py-4 italic font-bold">
             Tas masih kosong.
           </div>
         ) : (
@@ -37,11 +37,11 @@ export function InventoryWidget() {
             {inventoryItems.map((item) => (
               <div
                 key={item}
-                className="rounded-2xl border-2 border-[var(--wood)] bg-[var(--shop-bg)] p-2 flex flex-col items-center justify-center relative overflow-hidden w-full hover:scale-105 transition-transform shadow-[0_3px_0_var(--wood-light)]"
+                className="rounded-xl border-2 border-[#C4A074]/50 bg-[#3E2414]/45 p-2 flex flex-col items-center justify-center relative overflow-hidden w-full hover:scale-105 transition-transform"
                 title={getItemDisplayName(item)}
               >
                 <div className="text-3xl mb-1 drop-shadow-md">{getCropEmoji(item)}</div>
-                <div className="text-[10px] sm:text-xs font-extrabold text-center text-[var(--text-primary)] leading-tight truncate w-full px-1">
+                <div className="text-[10px] sm:text-xs font-extrabold text-center text-[#FFF8EC] leading-tight truncate w-full px-1">
                   {getItemDisplayName(item)}
                 </div>
                 <div className="mt-1 bg-[var(--gold)] text-[var(--text-primary)] px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm border border-[#FFF1B8]">
@@ -51,7 +51,12 @@ export function InventoryWidget() {
             ))}
           </div>
         )}
-        <button type="button" onClick={handleSellAll} className="btn-gold w-full !py-2.5 text-sm">
+        <button
+          type="button"
+          onClick={handleSellAll}
+          className="w-full !py-2.5 text-sm font-extrabold rounded-full text-white border-2 border-[#FFC4BA] shadow-[0_4px_0_#7A2E24]"
+          style={{ background: 'linear-gradient(180deg, #E8896A 0%, #B54A3A 100%)' }}
+        >
           Jual Semua Hasil
         </button>
       </div>

@@ -6,6 +6,8 @@ import { SHOP_BAIT } from '@/lib/utils';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
+import { MarketBoard } from './game/MarketBoard';
+import { QuestPanel } from './game/QuestPanel';
 import { TownShop } from './game/TownShop';
 import { TownPlaza, FishingLake, FishCatchBoard } from './game/TownPlaza';
 import { useFishingMinigame } from '@/lib/hooks/useFishingMinigame';
@@ -15,8 +17,6 @@ export default function TabTown() {
   const workers = useGameStore((s) => s.workers);
   const autoFisher = useGameStore((s) => s.autoFisher);
   const toggleAutoFisher = useGameStore((s) => s.toggleAutoFisher);
-  const buildings = useGameStore((s) => s.buildings);
-  const decorations = useGameStore((s) => s.decorations);
   const selectedBait = useGameStore((s) => s.selectedBait);
   const inventory = useGameStore((s) => s.inventory);
   const dev = useGameStore((s) => s.dev);
@@ -58,29 +58,18 @@ export default function TabTown() {
         <div className="game-sidebar-left">
           <div className="glass-panel p-4">
             <TownShop />
-            {(buildings?.silo || buildings?.greenhouse || (decorations || []).length > 0) && (
-              <p className="text-[10px] font-bold text-[var(--text-secondary)] mt-2">
-                {buildings?.silo ? 'Silo · ' : ''}
-                {buildings?.greenhouse ? 'Greenhouse · ' : ''}
-                {(decorations || []).length > 0 ? `${(decorations || []).length} dekor` : ''}
-              </p>
-            )}
 
             {process.env.NODE_ENV === 'development' && (
               <div className="mt-6 border-t border-red-200/30 pt-4">
                 <div className="font-bold text-xs text-red-400 mb-2">CHEAT MENU (DEV)</div>
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => dev.addCoins(1000)}
-                    className="flex-1 btn-secondary !text-xs !py-1"
-                  >
+                  <button type="button" onClick={() => dev.addCoins(1000)} className="flex-1 btn-wood">
                     +1000
                   </button>
                   <button
                     type="button"
                     onClick={() => dev.setLevel(useGameStore.getState().level + 1)}
-                    className="flex-1 btn-secondary !text-xs !py-1"
+                    className="flex-1 btn-wood"
                   >
                     +1 LVL
                   </button>
@@ -96,10 +85,10 @@ export default function TabTown() {
 
             <GameAreaHeader
               icon={area === 'plaza' ? '🏛️' : '🎣'}
-              title={area === 'plaza' ? 'Alun-alun Kota' : 'Danau Pemancingan'}
+              title={area === 'plaza' ? 'Pusat Kota' : 'Danau Pemancingan'}
             >
               <GameActionButton variant="edit" active={area === 'plaza'} onClick={() => setArea('plaza')}>
-                Alun-alun
+                Pusat Kota
               </GameActionButton>
               <GameActionButton variant="edit" active={area === 'lake'} onClick={() => setArea('lake')}>
                 Danau
@@ -129,11 +118,10 @@ export default function TabTown() {
 
         <div className="game-sidebar-right">
           <div className="glass-panel p-4 h-full">
-            <InventoryWidget />
+            <InventoryWidget title="Tas Kota" />
             <FishCatchBoard />
-            <p className="text-[10px] text-center text-[var(--text-secondary)] font-medium mt-2">
-              Olah ikan di tab Restoran
-            </p>
+            <MarketBoard />
+            <QuestPanel />
           </div>
         </div>
       </div>

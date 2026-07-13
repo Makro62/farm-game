@@ -60,7 +60,7 @@ export function SeedShop() {
 
   return (
     <>
-      <ShopSectionTitle icon="🛒">Shop Bibit ({seasonLabel})</ShopSectionTitle>
+      <ShopSectionTitle icon="🛒">Bibit Toko ({seasonLabel})</ShopSectionTitle>
       {buildings?.greenhouse && (
         <p className="text-[10px] text-[var(--primary-dark)] mb-2 font-bold">Greenhouse aktif — semua musim tersedia</p>
       )}

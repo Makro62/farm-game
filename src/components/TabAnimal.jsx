@@ -1,26 +1,24 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '@/lib/store';
-import { getAnimalEmoji, getShopAnimal, SHOP_ANIMALS, RECIPES, getCropEmoji } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { getAnimalEmoji, getShopAnimal, SHOP_ANIMALS } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
 import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
 import { AnimalIcon } from './ui/AnimalIcon';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
+import { MarketBoard } from './game/MarketBoard';
+import { QuestPanel } from './game/QuestPanel';
 import { GAME_CONSTANTS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 
 export default function TabAnimal() {
   const animals = useGameStore(state => state.animals);
-  const inventory = useGameStore(state => state.inventory);
   const collectAnimal = useGameStore(state => state.collectAnimal);
   const swapAnimals = useGameStore(state => state.swapAnimals);
-  const openPrompt = useGameStore(state => state.openPrompt);
   const openConfirm = useGameStore(state => state.openConfirm);
-  const buyItem = useGameStore(state => state.buyItem);
-  const coins = useGameStore(state => state.coins);
   const buyMultipleAnimals = useGameStore(state => state.buyMultipleAnimals);
   const workers = useGameStore(state => state.workers);
   const hireWorker = useGameStore(state => state.hireWorker);
@@ -119,8 +117,7 @@ export default function TabAnimal() {
         <div className="game-sidebar-left">
           <div className="glass-panel p-4">
             
-            {/* 1. Shop Hewan */}
-            <ShopSectionTitle icon="🐔">Shop Hewan</ShopSectionTitle>
+            <ShopSectionTitle icon="🐔">Shop Hewan Ternak</ShopSectionTitle>
             <div className="shop-grid mb-6">
               {SHOP_ANIMALS.map((animal) => {
                 const amt = shopAmounts[animal.id] || 1;
@@ -139,54 +136,64 @@ export default function TabAnimal() {
               })}
             </div>
 
-            <ShopSectionTitle icon="🥚">Hasil Ternak</ShopSectionTitle>
+            <ShopSectionTitle icon="🐾">Hewan Saya</ShopSectionTitle>
             <div className="glass-card rounded-xl p-3 mb-6">
-              {SHOP_ANIMALS.filter(a => inventory[a.product] > 0).length === 0 ? (
-                <div className="text-center text-sm text-gray-400 italic">Belum ada hasil ternak.</div>
+              {animals.length === 0 ? (
+                <div className="text-center text-sm text-[var(--text-secondary)] italic font-bold">
+                  Belum ada hewan. Beli di atas dulu.
+                </div>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
-                  {SHOP_ANIMALS.filter(a => inventory[a.product] > 0).map(animal => (
-                    <div
-                      key={animal.product}
-                      className="p-2 glass-card flex flex-col items-center gap-1"
-                      title={animal.name}
-                    >
-                      <span className="text-2xl relative">
-                        {animal.productEmoji}
-                        <span className="absolute -bottom-1 -right-1 bg-yellow-400 text-yellow-900 text-[9px] font-bold px-1 rounded-sm shadow-sm">
-                          {inventory[animal.product]}
+                  {SHOP_ANIMALS.map((animal) => {
+                    const count = animals.filter((a) => {
+                      const data = getShopAnimal(a.type);
+                      return data?.id === animal.id;
+                    }).length;
+                    if (count === 0) return null;
+                    return (
+                      <div
+                        key={animal.id}
+                        className="p-2 glass-card flex flex-col items-center gap-1"
+                        title={animal.name}
+                      >
+                        <span className="text-2xl relative">
+                          <AnimalIcon type={animal.id} />
+                          <span className="absolute -bottom-1 -right-1 bg-[var(--gold)] text-[var(--text-primary)] text-[9px] font-black px-1.5 rounded-full border border-[#FFF1B8]">
+                            {count}
+                          </span>
                         </span>
-                      </span>
-                      <span className="text-[9px] text-gray-300 text-center leading-tight capitalize">
-                        {animal.product.replace('_', ' ')}
-                      </span>
-                    </div>
-                  ))}
+                        <span className="text-[9px] text-[var(--text-secondary)] text-center leading-tight font-bold">
+                          {animal.name}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
             <ShopSectionTitle icon="🧑‍🌾">Pekerja (Auto)</ShopSectionTitle>
             <button
+              type="button"
               onClick={handleHireWorker}
               className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left mb-2 ${
-                workers?.rancher ? 'border-primary bg-white/10' : ''
+                workers?.rancher ? 'border-[var(--primary)] bg-[var(--primary)]/10' : ''
               }`}
             >
               <div>
-                <div className="font-bold text-[#3E2723] text-sm">👩‍🌾 Peternak Siti</div>
-                <div className="text-[10px] text-gray-500">Auto-Collect Products</div>
+                <div className="font-bold text-[var(--text-primary)] text-sm">Peternak Siti</div>
+                <div className="text-[10px] text-[var(--text-secondary)]">Auto-Collect Products</div>
               </div>
-              <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs whitespace-nowrap">
-                {workers?.rancher ? '✅ Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_RANCHER} 💰`}
+              <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-full text-xs whitespace-nowrap border border-[#FFF1B8]">
+                {workers?.rancher ? 'Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_RANCHER} 💰`}
               </span>
             </button>
             {workers?.rancher && (
-              <p className="text-[10px] text-gray-400 mb-2">
+              <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
                 {autoFarm
                   ? animals.length > 0
-                    ? '✅ Kurcaci aktif — ambil hasil ternak otomatis'
-                    : '⚠️ Auto ON — beli hewan dulu'
+                    ? 'Kurcaci aktif — ambil hasil ternak otomatis'
+                    : 'Auto ON — beli hewan dulu'
                   : 'Nyalakan tombol Auto di atas untuk mulai'}
               </p>
             )}
@@ -309,6 +316,8 @@ export default function TabAnimal() {
           <div className="glass-panel p-4 h-full">
             
             <InventoryWidget />
+            <MarketBoard />
+            <QuestPanel />
             <p className="text-[10px] text-center text-[var(--text-secondary)] font-medium mt-2">
               Olah susu & telur di tab Restoran
             </p>

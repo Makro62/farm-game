@@ -3,71 +3,77 @@ import { getCropEmoji } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 
 export function OrderBoard() {
-  const orders = useGameStore(state => state.orders);
-  const fulfillOrder = useGameStore(state => state.fulfillOrder);
-  const inventory = useGameStore(state => state.inventory);
-  
-  // We use a small local timer just to update the "timeLeft" display, 
-  // so the whole page doesn't have to re-render.
+  const orders = useGameStore((state) => state.orders);
+  const fulfillOrder = useGameStore((state) => state.fulfillOrder);
+  const inventory = useGameStore((state) => state.inventory);
+
   const [now, setNow] = useState(Date.now());
-  
+
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <>
-      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-[var(--wood-light)] pb-2 text-[var(--text-primary)] mt-6">
+    <div className="mt-2 rounded-2xl border-[3px] border-[var(--wood)] bg-gradient-to-b from-[#FFFCF5] to-[var(--panel)] p-3 sm:p-4 shadow-[0_6px_0_var(--wood-dark)]">
+      <div className="font-display font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-[var(--wood)]/30 pb-2 text-[var(--text-primary)]">
         <span>📋</span> Papan Pesanan
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         {!orders || orders.length === 0 ? (
-          <div className="col-span-full glass-card rounded-xl p-4 min-h-[120px] flex items-center justify-center">
-            <span className="text-gray-400 text-sm font-medium">Belum ada pesanan masuk. Menunggu pesanan...</span>
+          <div className="col-span-full glass-card rounded-xl p-4 min-h-[100px] flex items-center justify-center">
+            <span className="text-[var(--text-secondary)] text-sm font-medium">
+              Belum ada pesanan. Menunggu pelanggan...
+            </span>
           </div>
         ) : (
           orders.map((order, index) => {
             const timeLeft = Math.max(0, Math.floor((order.timer * 1000 - (now - order.createdAt)) / 1000));
             const m = Math.floor(timeLeft / 60);
             const s = timeLeft % 60;
-            
+
             return (
-              <div key={order.id} className="glass-card rounded-xl p-4 border-2 border-amber-200/30 flex flex-col hover:border-amber-400/50 transition-colors">
-                <div className="flex justify-between items-center mb-3 pb-2 border-b border-[var(--wood-light)]/50">
-                  <span className="font-black text-amber-300">Pesanan #{index + 1}</span>
-                  <span className="text-xs font-bold bg-[#EF5350]/20 border border-[#EF5350]/40 text-[#C62828] px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                    ⏰ {m}:{s.toString().padStart(2, '0')}
+              <div
+                key={order.id}
+                className="quest-parchment p-3 flex flex-col border-2 border-[var(--gold-rim)]"
+              >
+                <div className="flex justify-between items-center mb-2 pb-2 border-b border-[var(--wood)]/25">
+                  <span className="font-black text-[var(--gold-deep)]">Pesanan #{index + 1}</span>
+                  <span className="text-[10px] font-bold bg-[#EF5350]/15 border border-[#EF5350]/40 text-[#C62828] px-2 py-0.5 rounded-full">
+                    {m}:{s.toString().padStart(2, '0')}
                   </span>
                 </div>
-                
-                <div className="flex-1 space-y-2 mb-4">
-                  {order.items.map(item => {
+
+                <div className="flex-1 space-y-1.5 mb-3">
+                  {order.items.map((item) => {
                     const has = inventory[item.id] || 0;
                     const isEnough = has >= item.qty;
                     return (
                       <div key={item.id} className="flex justify-between items-center text-sm">
-                        <span className="text-[#3E2723] flex items-center gap-1">
+                        <span className="text-[var(--text-primary)] flex items-center gap-1 font-bold">
                           <span>{getCropEmoji(item.id)}</span> {item.id.replace('_', ' ')}
                         </span>
-                        <span className={`font-bold px-2 py-0.5 rounded text-xs ${isEnough ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
-                          {has} / {item.qty}
+                        <span
+                          className={`font-bold px-2 py-0.5 rounded-full text-xs ${
+                            isEnough
+                              ? 'bg-[var(--primary-light)]/50 text-[var(--primary-dark)]'
+                              : 'bg-red-100 text-red-700'
+                          }`}
+                        >
+                          {has}/{item.qty}
                         </span>
                       </div>
                     );
                   })}
                 </div>
-                
-                <div className="flex justify-between items-center">
-                  <div className="text-xs font-bold text-yellow-300 flex flex-col">
+
+                <div className="flex justify-between items-center gap-2">
+                  <div className="text-xs font-bold text-[var(--gold-deep)] flex flex-col">
                     <span>{order.coins} 💰</span>
                     <span>{order.xp} ⭐</span>
                   </div>
-                  <button 
-                    onClick={() => fulfillOrder(order.id)}
-                    className="btn-gold !px-4 !py-2 !text-sm"
-                  >
+                  <button type="button" onClick={() => fulfillOrder(order.id)} className="btn-gold !px-4 !py-2 !text-sm">
                     Penuhi
                   </button>
                 </div>
@@ -76,6 +82,6 @@ export function OrderBoard() {
           })
         )}
       </div>
-    </>
+    </div>
   );
 }

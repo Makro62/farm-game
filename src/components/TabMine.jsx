@@ -7,24 +7,27 @@ import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
 import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
+import { MarketBoard } from './game/MarketBoard';
+import { QuestPanel } from './game/QuestPanel';
+import { GAME_CONSTANTS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 
 const TARGET_TOOLS = new Set(['bom_kecil', 'tali']);
 
 export default function TabMine() {
-  const mining = useGameStore(state => state.mining);
-  const inventory = useGameStore(state => state.inventory);
-  const mineNode = useGameStore(state => state.mineNode);
-  const useMiningTool = useGameStore(state => state.useMiningTool);
-  const setSelectedMiningTool = useGameStore(state => state.setSelectedMiningTool);
-  const selectedMiningTool = useGameStore(state => state.selectedMiningTool);
-  const hireWorker = useGameStore(state => state.hireWorker);
-  const workers = useGameStore(state => state.workers);
-  const autoMiner = useGameStore(state => state.autoMiner);
-  const toggleAutoMiner = useGameStore(state => state.toggleAutoMiner);
-  const openConfirm = useGameStore(state => state.openConfirm);
-  const buyItem = useGameStore(state => state.buyItem);
+  const mining = useGameStore((state) => state.mining);
+  const inventory = useGameStore((state) => state.inventory);
+  const mineNode = useGameStore((state) => state.mineNode);
+  const useMiningTool = useGameStore((state) => state.useMiningTool);
+  const setSelectedMiningTool = useGameStore((state) => state.setSelectedMiningTool);
+  const selectedMiningTool = useGameStore((state) => state.selectedMiningTool);
+  const hireWorker = useGameStore((state) => state.hireWorker);
+  const workers = useGameStore((state) => state.workers);
+  const autoMiner = useGameStore((state) => state.autoMiner);
+  const toggleAutoMiner = useGameStore((state) => state.toggleAutoMiner);
+  const openConfirm = useGameStore((state) => state.openConfirm);
+  const buyItem = useGameStore((state) => state.buyItem);
 
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [shopAmounts, setShopAmounts] = useState({});
@@ -38,7 +41,7 @@ export default function TabMine() {
   const lanternActive = mining.lanternUntil && mining.lanternUntil > currentTime;
   const lanternSecs = lanternActive ? Math.ceil((mining.lanternUntil - currentTime) / 1000) : 0;
 
-  const ownedTools = SHOP_MINING.filter(t => (inventory[t.id] || 0) > 0);
+  const ownedTools = SHOP_MINING.filter((t) => (inventory[t.id] || 0) > 0);
 
   const handleUseTool = (toolId, nodeId = null) => {
     const result = useMiningTool(toolId, nodeId);
@@ -46,7 +49,7 @@ export default function TabMine() {
       toast.success(result.message);
     } else if (result.needTarget) {
       setSelectedMiningTool(toolId);
-      const tool = SHOP_MINING.find(t => t.id === toolId);
+      const tool = SHOP_MINING.find((t) => t.id === toolId);
       toast(`Pilih petak tambang untuk memakai ${tool?.name}`, { icon: tool?.emoji });
     } else {
       toast.error(result.message);
@@ -63,14 +66,14 @@ export default function TabMine() {
 
     const minedType = mineNode(node.id);
     if (minedType) {
-      const mineral = MINERALS.find(m => m.id === minedType);
+      const mineral = MINERALS.find((m) => m.id === minedType);
       toast.success(`Berhasil menambang ${mineral.emoji} ${mineral.name}!`);
     }
   };
 
   const handleHireMiner = () => {
     if (workers.miner) {
-      toast('Penambang Tarjo sudah bekerja! Aktifkan Auto jika perlu. 👷‍♂️', { icon: '✅' });
+      toast('Penambang Tarjo sudah bekerja! Aktifkan Auto jika perlu.', { icon: '✅' });
       return;
     }
     openConfirm(
@@ -88,7 +91,7 @@ export default function TabMine() {
 
   const handleToggleAuto = () => {
     if (!workers.miner) {
-      toast('Sewa Penambang Tarjo dulu di panel kiri! 🔒', { icon: '👷‍♂️' });
+      toast('Sewa Penambang Tarjo dulu di panel kiri!', { icon: '👷‍♂️' });
       return;
     }
     toggleAutoMiner();
@@ -113,72 +116,72 @@ export default function TabMine() {
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="game-tab-grid">
-
         <div className="game-sidebar-left">
           <div className="glass-panel p-4">
-            <div className="mb-6">
-              <ShopSectionTitle icon="🛒">Shop Peralatan</ShopSectionTitle>
-              <div className="shop-grid">
-                {SHOP_MINING.map((item) => {
-                  const amt = shopAmounts[item.id] || 1;
-                  return (
-                    <ShopItemCard
-                      key={item.id}
-                      icon={item.emoji}
-                      name={item.name}
-                      price={item.price}
-                      amount={amt}
-                      onDecrease={() => setShopAmounts(p => ({ ...p, [item.id]: Math.max(1, amt - 1) }))}
-                      onIncrease={() => setShopAmounts(p => ({ ...p, [item.id]: amt + 1 }))}
-                      onBuy={() => handleShopBuy(item, amt)}
-                    />
-                  );
-                })}
-              </div>
+            <ShopSectionTitle icon="🛒">Shop Tambang</ShopSectionTitle>
+            <div className="shop-grid mb-6">
+              {SHOP_MINING.map((item) => {
+                const amt = shopAmounts[item.id] || 1;
+                return (
+                  <ShopItemCard
+                    key={item.id}
+                    icon={item.emoji}
+                    name={item.name}
+                    price={item.price}
+                    amount={amt}
+                    onDecrease={() => setShopAmounts((p) => ({ ...p, [item.id]: Math.max(1, amt - 1) }))}
+                    onIncrease={() => setShopAmounts((p) => ({ ...p, [item.id]: amt + 1 }))}
+                    onBuy={() => handleShopBuy(item, amt)}
+                  />
+                );
+              })}
             </div>
 
             <ShopSectionTitle icon="⛏️">Alat Aktif</ShopSectionTitle>
-            <div className="glass-card p-3 mb-4 flex justify-between items-center border border-white/10">
+            <div className="glass-card p-3 mb-4 flex justify-between items-center">
               <div>
-                <div className="font-bold text-[#3E2723] text-sm drop-shadow-sm">{pickaxe.emoji} {pickaxe.name}</div>
-                <div className="text-[10px] text-[#5D4037]/80 font-medium mt-0.5">Regen: {pickaxe.regen}{lanternActive ? ' (senter aktif)' : ''}</div>
+                <div className="font-bold text-[var(--text-primary)] text-sm">
+                  {pickaxe.emoji} {pickaxe.name}
+                </div>
+                <div className="text-[10px] text-[var(--text-secondary)] font-medium mt-0.5">
+                  Regen: {pickaxe.regen}
+                  {lanternActive ? ' (senter aktif)' : ''}
+                </div>
               </div>
-              <span className="bg-[#6fbf55]/30 border border-[#6fbf55]/50 text-[#3E2723] text-xs px-2 py-1 rounded-lg font-black">Lv {mining.pickaxeLevel}</span>
+              <span className="bg-[var(--primary-light)]/40 border border-[var(--primary)] text-[var(--text-primary)] text-xs px-2 py-1 rounded-full font-black">
+                Lv {mining.pickaxeLevel}
+              </span>
             </div>
             {lanternActive && (
-              <div className="glass-card p-2 mb-4 text-center text-xs text-yellow-200">
-                🔦 Senter aktif — {lanternSecs}s tersisa
+              <div className="glass-card p-2 mb-4 text-center text-xs text-[var(--gold-deep)] font-bold">
+                Senter aktif — {lanternSecs}s tersisa
               </div>
             )}
 
-            {workers?.miner && (
-              <p className="text-[10px] text-gray-400 mb-2">
-                {autoMiner ? '✅ Kurcaci aktif — tambang otomatis' : 'Nyalakan tombol Auto di gua'}
-              </p>
-            )}
-
-            <ShopSectionTitle icon="🧰">Alat di Tas</ShopSectionTitle>
+            <ShopSectionTitle icon="🧰">Peralatan Saya</ShopSectionTitle>
             <div className="glass-card rounded-xl p-3 mb-6 space-y-2">
               {ownedTools.length === 0 ? (
-                <div className="text-center text-sm text-gray-400 italic">Belum ada alat. Beli di shop kanan.</div>
+                <div className="text-center text-sm text-[var(--text-secondary)] italic font-bold">
+                  Belum ada alat. Beli di shop atas.
+                </div>
               ) : (
-                ownedTools.map(tool => (
-                  <div key={tool.id} className="flex items-center justify-between gap-2 p-2 glass-card rounded-lg">
+                ownedTools.map((tool) => (
+                  <div key={tool.id} className="flex items-center justify-between gap-2 p-2 glass-card rounded-xl">
                     <div className="min-w-0 flex-1">
-                      <div className="font-bold text-[#3E2723] text-xs flex items-center gap-1">
+                      <div className="font-bold text-[var(--text-primary)] text-xs flex items-center gap-1">
                         <span>{tool.emoji}</span>
                         <span className="truncate">{tool.name}</span>
-                        <span className="text-yellow-300 shrink-0">×{inventory[tool.id]}</span>
+                        <span className="text-[var(--gold-deep)] shrink-0">×{inventory[tool.id]}</span>
                       </div>
-                      <div className="text-[10px] text-gray-400 truncate">{tool.desc}</div>
+                      <div className="text-[10px] text-[var(--text-secondary)] truncate">{tool.desc}</div>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleUseTool(tool.id)}
-                      className={`shrink-0 px-2 py-1 rounded-lg text-[10px] font-bold transition-colors border-2 ${
+                      className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors border-2 ${
                         selectedMiningTool === tool.id
-                          ? 'bg-[var(--gold)] text-[#4a3208] border-[var(--gold-deep)]'
-                          : 'bg-white/50 text-[var(--text-primary)] border-[var(--wood-light)] hover:bg-white'
+                          ? 'bg-[var(--gold)] text-[var(--text-primary)] border-[var(--gold-deep)]'
+                          : 'bg-white text-[var(--text-primary)] border-[var(--wood)] hover:brightness-105'
                       }`}
                     >
                       {TARGET_TOOLS.has(tool.id) ? 'Pilih' : 'Pakai'}
@@ -191,27 +194,33 @@ export default function TabMine() {
               <button
                 type="button"
                 onClick={() => setSelectedMiningTool(null)}
-                className="w-full mb-4 text-xs text-gray-300 underline"
+                className="w-full mb-4 text-xs text-[var(--text-secondary)] underline font-bold"
               >
-                ✕ Batal pilih alat
+                Batal pilih alat
               </button>
             )}
 
             <ShopSectionTitle icon="🧑‍🌾">Pekerja (Auto)</ShopSectionTitle>
             <button
+              type="button"
               onClick={handleHireMiner}
               className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left ${
-                workers.miner ? 'border-primary bg-white/10' : ''
+                workers.miner ? 'border-[var(--primary)] bg-[var(--primary)]/10' : ''
               }`}
             >
               <div>
-                <div className="font-bold text-[#3E2723] text-sm">👷‍♂️ Penambang Tarjo</div>
-                <div className="text-[10px] text-gray-500">Auto-Mine</div>
+                <div className="font-bold text-[var(--text-primary)] text-sm">Penambang Tarjo</div>
+                <div className="text-[10px] text-[var(--text-secondary)]">Auto-Mine</div>
               </div>
-              <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs whitespace-nowrap">
-                {workers.miner ? '✅ Dimiliki' : '15000 💰'}
+              <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-full text-xs whitespace-nowrap border border-[#FFF1B8]">
+                {workers.miner ? 'Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_MINER.toLocaleString()} 💰`}
               </span>
             </button>
+            {workers?.miner && (
+              <p className="text-[10px] text-[var(--text-secondary)] mt-2 font-medium">
+                {autoMiner ? 'Kurcaci aktif — tambang otomatis' : 'Nyalakan tombol Auto di gua'}
+              </p>
+            )}
           </div>
         </div>
 
@@ -219,19 +228,15 @@ export default function TabMine() {
           <div className="glass-panel p-4">
             <StatusHeader />
 
-            <GameAreaHeader icon="⛏️" title="Gua Tambang">
-              <GameActionButton
-                variant="miner"
-                active={autoMiner}
-                onClick={handleToggleAuto}
-              >
-                ⛏️ Auto: {autoMiner ? 'ON' : 'OFF'}
+            <GameAreaHeader icon="⛏️" title="Area Pertambangan">
+              <GameActionButton variant="miner" active={autoMiner} onClick={handleToggleAuto}>
+                Auto: {autoMiner ? 'ON' : 'OFF'}
               </GameActionButton>
             </GameAreaHeader>
 
             {selectedMiningTool && (
-              <div className="mb-3 text-center text-sm text-orange-200 bg-orange-500/20 rounded-lg py-2 px-3">
-                {SHOP_MINING.find(t => t.id === selectedMiningTool)?.emoji} Klik petak untuk memakai alat
+              <div className="mb-3 text-center text-sm font-bold text-[var(--gold-deep)] bg-[var(--gold)]/20 rounded-xl py-2 px-3 border-2 border-[var(--gold)]">
+                {SHOP_MINING.find((t) => t.id === selectedMiningTool)?.emoji} Klik petak untuk memakai alat
               </div>
             )}
 
@@ -239,12 +244,12 @@ export default function TabMine() {
               className="p-4 sm:p-6 field-frame relative min-h-[400px] bg-cover bg-center"
               style={{ backgroundImage: "url('/img/backgrounds/mine_bg.png')" }}
             >
-              <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/25 to-black/45 rounded-[22px] pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 rounded-[22px] pointer-events-none" />
               <div className="game-plot-grid relative z-10">
                 {mining.nodes.map((node) => {
                   const isReady = node.status === 'ready';
                   const progress = getRegenProgress(node);
-                  const mineral = MINERALS.find(m => m.id === node.type);
+                  const mineral = MINERALS.find((m) => m.id === node.type);
 
                   return (
                     <motion.button
@@ -254,7 +259,13 @@ export default function TabMine() {
                       onClick={() => handleMine(node)}
                       disabled={!isReady && !selectedMiningTool}
                       className={`game-plot-cell border-b-4
-                        ${isReady ? 'bg-[#5c5952] border-[#3d3b36] hover:bg-[#6b6861] cursor-pointer' : selectedMiningTool ? 'bg-[#3d3a35] border-[#5c5952] cursor-crosshair' : 'bg-[#1f1e1c] border-[#141312] cursor-not-allowed'}
+                        ${
+                          isReady
+                            ? 'bg-[#5c5952] border-[#3d3b36] hover:bg-[#6b6861] cursor-pointer'
+                            : selectedMiningTool
+                              ? 'bg-[#3d3a35] border-[#5c5952] cursor-crosshair'
+                              : 'bg-[#1f1e1c] border-[#141312] cursor-not-allowed'
+                        }
                         ${selectedMiningTool ? 'ring-1 ring-orange-400/50' : ''}
                       `}
                       title={isReady && mineral ? `${mineral.emoji} ${mineral.name}` : undefined}
@@ -280,9 +291,10 @@ export default function TabMine() {
         <div className="game-sidebar-right">
           <div className="glass-panel p-4 h-full">
             <InventoryWidget />
+            <MarketBoard />
+            <QuestPanel />
           </div>
         </div>
-
       </div>
     </div>
   );

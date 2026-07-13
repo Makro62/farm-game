@@ -187,17 +187,17 @@ export default function Topbar() {
         </div>
 
         <div className="flex flex-wrap items-center justify-center sm:justify-end gap-1.5 sm:gap-2 pb-1 relative">
-          <button type="button" onClick={handleClaimDaily} className="btn-gold !px-3 !py-1.5 !text-xs sm:!text-sm">
+          <button type="button" onClick={handleClaimDaily} className="btn-wood">
             Daily
           </button>
-          <button type="button" onClick={handleSave} className="btn-secondary !px-3 !py-1.5 !text-xs sm:!text-sm">
+          <button type="button" onClick={handleSave} className="btn-wood">
             Save
           </button>
           <div className="relative">
             <button
               type="button"
               onClick={() => setShowBoosters((v) => !v)}
-              className={`btn-primary !px-3 !py-1.5 !text-xs sm:!text-sm flex items-center gap-1 ${
+              className={`btn-wood flex items-center gap-1 ${
                 coinMultiplier > 1 || growthMultiplier > 1 ? 'ring-2 ring-[var(--gold)]' : ''
               }`}
             >
