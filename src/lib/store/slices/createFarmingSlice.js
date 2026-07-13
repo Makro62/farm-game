@@ -1,15 +1,24 @@
+/**
+ * @fileoverview Farming Slice - Mengelola sistem pertanian
+ * State initialization dilakukan di store.js utama untuk menghindari duplikasi
+ */
+
 import { normalizePlots } from '../utils';
 
+/**
+ * Creates farming-related state and actions
+ * @param {Function} set - Zustand set function
+ * @param {Function} get - Zustand get function
+ * @returns {Object} Farming slice methods
+ */
 export const createFarmingSlice = (set, get) => ({
-  plots: Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    status: 'empty',
-    crop: null,
-    plantedAt: null,
-    growTime: null
-  })),
-  selectedSeed: null,
-
+  // Note: plots dan selectedSeed di-initialize di store.js initialState
+  // untuk menghindari duplikasi definisi
+  
+  /**
+   * Set seed yang dipilih untuk ditanam
+   * @param {string} seedId - ID bibit yang dipilih
+   */
   setSelectedSeed: (seedId) => set({ selectedSeed: seedId }),
 
   plant: (plotId, crop, growTime) => {

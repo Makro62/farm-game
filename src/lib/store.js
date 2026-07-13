@@ -3,12 +3,16 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+// Konstanta game
+import { GAME_CONSTANTS } from './constants';
+
 // Helpers and utilities for persist logic
 import { 
   normalizePlots, 
   normalizeAnimal, 
   migrateLegacyWorkers, 
-  safeCoins 
+  safeCoins,
+  rollMineralType
 } from './store/utils';
 
 // Slices
@@ -19,10 +23,40 @@ import { createPlayerSlice } from './store/slices/createPlayerSlice';
 import { createTownSlice } from './store/slices/createTownSlice';
 import { createSystemSlice } from './store/slices/createSystemSlice';
 
-// We extract initialState here so we can use it in resetGame,
-// and it exactly matches the structure expected by the app.
+const { PLOTS_COUNT, MINING_NODES_COUNT } = GAME_CONSTANTS;
+
+/**
+ * Membuat array plots dengan format default
+ * @returns {Array} Array plot objects
+ */
+const createDefaultPlots = () => 
+  Array.from({ length: PLOTS_COUNT }, (_, i) => ({
+    id: i,
+    status: 'empty',
+    crop: null,
+    plantedAt: null,
+    growTime: null
+  }));
+
+/**
+ * Membuat array mining nodes dengan tipe mineral acak
+ * Menggunakan fungsi rollMineralType untuk konsistensi
+ * @returns {Array} Array mining node objects
+ */
+const createDefaultMiningNodes = () =>
+  Array.from({ length: MINING_NODES_COUNT }, (_, i) => ({
+    id: i,
+    status: 'ready',
+    type: rollMineralType(1, false, null),
+    regenAt: null
+  }));
+
+/**
+ * Initial state - single source of truth untuk struktur state
+ * Hanya berisi struktur default, tidak ada logika bisnis
+ */
 const initialState = {
-  // Player stats
+  // ===== PLAYER STATS =====
   coins: 100,
   level: 1,
   xp: 0,
@@ -32,36 +66,30 @@ const initialState = {
   lastSavedAt: Date.now(),
   offlineReport: null,
   
-  // Farm
-  plots: Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    status: 'empty',
-    crop: null,
-    plantedAt: null,
-    growTime: null
-  })),
+  // ===== FARM =====
+  plots: createDefaultPlots(),
   
-  // Inventory
+  // ===== INVENTORY =====
   inventory: {},
   
-  // Animals
+  // ===== ANIMALS =====
   animals: [],
   
-  // Settings
+  // ===== SETTINGS =====
   soundEnabled: true,
   musicEnabled: true,
   notificationsEnabled: true,
   
-  // Market
+  // ===== MARKET =====
   todayPrices: {},
   marketTrend: {},
   
-  // Systems
+  // ===== SYSTEMS =====
   lastWheelSpin: null,
   coinMultiplier: 1,
   growthMultiplier: 1,
 
-  // Auto workers (hired with coins)
+  // ===== AUTO WORKERS =====
   workers: {
     farmer: false,
     rancher: false,
@@ -77,36 +105,32 @@ const initialState = {
   selectedMiningTool: null,
   selectedBait: null,
   
-  // UI Modals
+  // ===== UI MODALS =====
   modals: {
     prompt: { isOpen: false, title: '', msg: '', onConfirm: null },
     confirm: { isOpen: false, title: '', msg: '', onConfirm: null },
     npcGift: { isOpen: false, npcId: null }
   },
 
+  // ===== COMBO SYSTEM =====
   combo: {
     count: 0,
     multiplier: 1,
     lastAction: 0
   },
   
-  // Environment
+  // ===== ENVIRONMENT =====
   season: { current: 'spring', day: 1, tick: 0 },
   weather: { current: '☀️ Cerah', nextChangeIn: 300 },
   
-  // Mining
+  // ===== MINING =====
   mining: {
-    nodes: Array.from({ length: 30 }, (_, i) => ({
-      id: i,
-      status: 'ready',
-      type: Math.random() < 0.05 ? 'berlian' : Math.random() < 0.15 ? 'emas' : Math.random() < 0.3 ? 'besi' : Math.random() < 0.5 ? 'tembaga' : 'batu',
-      regenAt: null
-    })),
+    nodes: createDefaultMiningNodes(),
     pickaxeLevel: 1,
     lanternUntil: null
   },
   
-  // NPCs
+  // ===== NPCS =====
   npcs: {
     maria: { level: 1, points: 0 },
     botan: { level: 1, points: 0 },
@@ -114,16 +138,16 @@ const initialState = {
   },
   activeEvent: null,
   
-  // Quests
+  // ===== QUESTS =====
   dailyQuests: [],
   lastQuestDate: null,
   workerAutoMigrated: false,
   
-  // Crafting & Orders
+  // ===== CRAFTING & ORDERS =====
   craftingQueue: [],
   orders: [],
 
-  // Kota upgrades
+  // ===== KOTA UPGRADES =====
   buildings: {
     silo: false,
     greenhouse: false,
@@ -134,10 +158,10 @@ const initialState = {
 export const useGameStore = create(
   persist(
     (set, get) => ({
-      // Base State
+      // ===== BASE STATE (dari initialState) =====
       ...initialState,
       
-      // Feature Slices
+      // ===== FEATURE SLICES =====
       ...createFarmingSlice(set, get),
       ...createMiningSlice(set, get),
       ...createRanchingSlice(set, get),
@@ -145,9 +169,14 @@ export const useGameStore = create(
       ...createTownSlice(set, get),
       ...createSystemSlice(set, get),
 
-      // Reset override
+      // ===== RESET GAME =====
+      /**
+       * Reset game ke initial state dan hapus localStorage
+       * @returns {boolean} true jika berhasil
+       */
       resetGame: () => {
         set(initialState);
+        // SSR guard: hanya di browser
         if (typeof window !== 'undefined') {
           localStorage.removeItem('farm-game-storage');
           window.location.reload();
@@ -155,7 +184,7 @@ export const useGameStore = create(
         return true;
       },
       
-      // Dev override
+      // ===== DEV TOOLS (hanya di development) =====
       dev: {
         addCoins: (amount) => {
           if (process.env.NODE_ENV === 'development') {
@@ -176,6 +205,10 @@ export const useGameStore = create(
     }),
     {
       name: 'farm-game-storage',
+      /**
+       * SSR-safe storage adapter
+       * Menggunakan noop storage di server untuk menghindari error
+       */
       storage: createJSONStorage(() => 
         typeof window !== 'undefined' ? localStorage : {
           getItem: () => null,
@@ -183,45 +216,76 @@ export const useGameStore = create(
           removeItem: () => {}
         }
       ),
+      /**
+       * Filter state yang akan dipersist ke localStorage
+       * Hanya menyimpan data penting untuk mengurangi ukuran save
+       */
       partialize: (state) => ({
-        // Hanya simpan data penting (SAMA PERSIS DENGAN SEBELUMNYA)
+        // Player progress
         coins: state.coins,
         level: state.level,
         xp: state.xp,
         day: state.day,
         streak: state.streak,
         lastLogin: state.lastLogin,
+        
+        // Farm & Animals
         plots: state.plots,
-        inventory: state.inventory,
         animals: state.animals,
+        
+        // Settings
         soundEnabled: state.soundEnabled,
         musicEnabled: state.musicEnabled,
         notificationsEnabled: state.notificationsEnabled,
+        
+        // Market
         todayPrices: state.todayPrices,
         marketTrend: state.marketTrend,
+        
+        // Systems & Boosters
         lastWheelSpin: state.lastWheelSpin,
         coinMultiplier: state.coinMultiplier,
         growthMultiplier: state.growthMultiplier,
+        
+        // Workers
         workers: state.workers,
         autoFarmer: state.autoFarmer,
         autoRancher: state.autoRancher,
         autoFisher: state.autoFisher,
         autoMiner: state.autoMiner,
+        
+        // Selections
         selectedSeed: state.selectedSeed,
         selectedBait: state.selectedBait,
+        
+        // Environment
         season: state.season,
         weather: state.weather,
+        
+        // Mining
         mining: state.mining,
+        
+        // NPCs & Events
         npcs: state.npcs,
         activeEvent: state.activeEvent,
+        
+        // Quests
         dailyQuests: state.dailyQuests,
         lastQuestDate: state.lastQuestDate,
         workerAutoMigrated: state.workerAutoMigrated,
+        
+        // Timestamps
         lastSavedAt: state.lastSavedAt,
+        
+        // Crafting & Orders
         craftingQueue: state.craftingQueue,
         orders: state.orders,
+        
+        // Booster expiry
         coinMultiplierExpireAt: state.coinMultiplierExpireAt,
         growthMultiplierExpireAt: state.growthMultiplierExpireAt,
+        
+        // Kota upgrades
         buildings: state.buildings,
         decorations: state.decorations,
       }),

@@ -1,4 +1,14 @@
+/**
+ * @fileoverview Konstanta global untuk game Farm Tycoon
+ * Semua magic numbers harus direferensikan dari file ini
+ */
+
 export const GAME_CONSTANTS = {
+  // ===== KONFIGURASI DASAR =====
+  PLOTS_COUNT: 30,
+  MINING_NODES_COUNT: 30,
+  
+  // ===== BIAYA PEKERJA =====
   COSTS: {
     WORKER_FARMER: 5000,
     WORKER_RANCHER: 500,
@@ -7,13 +17,57 @@ export const GAME_CONSTANTS = {
     COIN_BOOSTER: 100,
     GROWTH_BOOSTER: 50,
   },
+  
+  // ===== MULTIPLIER =====
   MULTIPLIERS: {
     GROWTH_BOOSTER: 1.5,
     COIN_BOOSTER: 2,
+    COMBO_MIN_COUNT: 3,
+    COMBO_MAX_MULTIPLIER: 4.0,
+    COMBO_GROWTH_RATE: 0.25,
+    COMBO_TIMEOUT_MS: 2500,
   },
+  
+  // ===== TIMER SISTEM =====
   TIMERS: {
-    FARM_TICK_RATE: 1000, // interval in ms for farm plots
+    FARM_TICK_RATE: 1000,
+    WEATHER_CHANGE_INTERVAL: 300,
+    OFFLINE_PROGRESS_MIN_SECONDS: 60,
+    BOOSTER_DURATION_MS: 30 * 60 * 1000, // 30 menit
   },
+  
+  // ===== MEKANIK PERTANIAN =====
+  FARMING: {
+    BASE_XP_HARVEST: 10,
+    MIN_GROW_TIME_MS: 15000,
+  },
+  
+  // ===== MEKANIK PERTAMBANGAN =====
+  MINING: {
+    BASE_XP_MINE: 15,
+    REGEN_MS: {
+      PICKAXE_BASIC: 120000,
+      PICKAXE_BESI: 90000,
+      PICKAXE_EMAS: 60000,
+    },
+    LANTERN_DURATION_MS: 300000, // 5 menit
+    LANTERN_SPEED_MULT: 0.5,
+    PROBABILITIES: {
+      DIAMOND_BASE: 0.05,
+      GOLD_BASE: 0.15,
+      IRON_BASE: 0.3,
+      COPPER_BASE: 0.5,
+    },
+    EVENT_BONUS: 0.12,
+  },
+  
+  // ===== MEKANIK PETERNAKAN =====
+  RANCHING: {
+    BASE_XP_COLLECT: 8,
+    BASE_PRODUCE_TIME_MS: 20000,
+  },
+  
+  // ===== MEKANIK PERIKANAN =====
   FISHING: {
     WAIT_MIN_MS: 2000,
     WAIT_RANDOM_MS: 3000,
@@ -21,9 +75,29 @@ export const GAME_CONSTANTS = {
     MINIGAME_MAX_TIME_MS: 6000,
     WIN_THRESHOLD: 40,
     TICK_MS: 50,
+    AUTO_CATCH_CHANCE: 0.1,
+    XP_PER_CATCH: 15,
   },
+  
+  // ===== SISTEM LINGKUNGAN =====
   SYSTEM: {
     SEASON_TICKS_PER_DAY: 180,
+    SEASON_DAYS_COUNT: 7,
     RANDOM_EVENT_CHANCE: 0.3,
-  }
+    QUEST_COUNT_DAILY: 3,
+    ORDER_COUNT_MAX: 3,
+    CRAFTING_QUEUE_MAX_PER_TYPE: 3,
+  },
+  
+  // ===== LEVEL & XP =====
+  LEVEL: {
+    XP_BASE: 100,
+    UNLOCK_ORDER_LEVEL: 5,
+    UNLOCK_ORDER_TIER2_LEVEL: 10,
+  },
+  
+  // ===== STREAK REWARDS =====
+  STREAK: {
+    REWARDS: [100, 200, 300, 400, 500, 750, 1500],
+  },
 };
