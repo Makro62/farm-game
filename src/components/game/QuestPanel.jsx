@@ -7,7 +7,7 @@ export function QuestPanel() {
 
   return (
     <>
-      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
+      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-[#3E2723] mt-6">
         <span>📝</span> Quest Harian
       </div>
       
@@ -19,7 +19,7 @@ export function QuestPanel() {
           return (
             <div key={quest.id} className="glass-card rounded-xl p-3 mb-3 relative overflow-hidden">
               <div className="flex items-center justify-between text-sm mb-2">
-                <span className="font-medium text-white line-clamp-1 pr-2">
+                <span className="font-medium text-[#3E2723] line-clamp-1 pr-2">
                   {quest.action} {quest.required} {quest.targetName}
                 </span>
                 <span className="text-purple-300 font-bold whitespace-nowrap">{quest.count}/{quest.required}</span>
@@ -43,7 +43,7 @@ export function QuestPanel() {
                         toast.success('Hadiah quest berhasil diambil!');
                       }
                     }}
-                    className="text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1 rounded-md shadow-sm transition-colors animate-pulse"
+                    className="text-xs font-bold text-[#3E2723] bg-green-500 hover:bg-green-600 px-3 py-1 rounded-md shadow-sm transition-colors animate-pulse"
                   >
                     Klaim
                   </button>

@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
 import { StatusHeader } from './StatusHeader';
 import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
-import { CraftingWidget } from './ui/CraftingWidget';
 import { AnimalIcon } from './ui/AnimalIcon';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import { GAME_CONSTANTS } from '@/lib/constants';
@@ -175,7 +174,7 @@ export default function TabAnimal() {
               }`}
             >
               <div>
-                <div className="font-bold text-white text-sm">👩‍🌾 Peternak Siti</div>
+                <div className="font-bold text-[#3E2723] text-sm">👩‍🌾 Peternak Siti</div>
                 <div className="text-[10px] text-gray-500">Auto-Collect Products</div>
               </div>
               <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs whitespace-nowrap">
@@ -202,10 +201,10 @@ export default function TabAnimal() {
 
             <GameAreaHeader icon="🐔" title="Area Peternakan">
               <GameActionButton variant="edit" active={isEditMode} onClick={() => setIsEditMode(!isEditMode)}>
-                {isEditMode ? '💾 Selesai Edit' : '✏️ Edit Layout'}
+                {isEditMode ? 'Selesai Edit' : 'Edit Layout'}
               </GameActionButton>
               <GameActionButton variant="auto" active={autoFarm} onClick={handleToggleAuto}>
-                🧑‍🍳 Auto: {autoFarm ? 'ON' : 'OFF'}
+                Auto: {autoFarm ? 'ON' : 'OFF'}
               </GameActionButton>
             </GameAreaHeader>
 
@@ -214,12 +213,12 @@ export default function TabAnimal() {
               style={{ backgroundImage: "url('/img/backgrounds/animal_bg.png')" }}
             >
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30 pointer-events-none rounded-[22px]"></div>
-              <div className="game-plot-grid relative z-10">
-                {Array.from({ length: 30 }).map((_, i) => {
+              <div className="kandang-grid relative z-10 pt-4">
+                {Array.from({ length: 20 }).map((_, i) => {
                   const animal = animals[i];
                   if (!animal) {
                     return (
-                      <div key={`empty-${i}`} className="game-plot-cell bg-white/5 border-2 border-dashed border-white/20"></div>
+                      <div key={`empty-${i}`} className="kandang-empty-cell"></div>
                     );
                   }
                   
@@ -258,11 +257,9 @@ export default function TabAnimal() {
                         }
                         handleCollect(animal);
                       }}
-                      className={`group game-plot-cell border-2
-                        ${isEditMode ? 'cursor-grab hover:ring-4 ring-yellow-400' : ''}
-                        ${isReady
-                          ? 'bg-[#5a7a4a] border-yellow-300 ring-4 ring-yellow-400/50'
-                          : 'bg-[#4a6741]/95 border-[#3d5c35] hover:bg-[#567a4a]'}
+                      className={`group kandang-animal-cell
+                        ${isEditMode ? 'cursor-grab ring-2 ring-yellow-400' : ''}
+                        ${isReady ? 'ring-2 ring-yellow-400/80 animate-glow' : ''}
                       `}
                     >
                       <motion.div
@@ -273,8 +270,11 @@ export default function TabAnimal() {
                         <AnimalIcon type={animal.type} />
                       </motion.div>
                       {!isReady && (
-                        <div className="absolute bottom-1.5 left-1.5 right-1.5 h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/10">
-                          <div className="h-full bg-gradient-to-r from-[#ffe08a] to-[#f0b429]" style={{ width: `${progress}%` }} />
+                        <div className="absolute bottom-0 left-0 right-0 h-4 bg-black/60 overflow-hidden border-t border-white/10 z-20 flex items-center justify-center">
+                          <div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-[#ffe08a] to-[#f0b429]" style={{ width: `${progress}%` }} />
+                          <span className="relative z-10 text-[9px] font-black text-[#3E2723] drop-shadow-md tracking-wider">
+                            {Math.ceil((animal.produceTime - (currentTime - animal.lastCollected)) / 1000)}s ⚡
+                          </span>
                         </div>
                       )}
                       {isReady && (
@@ -308,12 +308,10 @@ export default function TabAnimal() {
         <div className="game-sidebar-right">
           <div className="glass-panel p-4 h-full">
             
-            {/* Inventory */}
             <InventoryWidget />
-
-            {/* Dapur Produksi */}
-            <CraftingWidget type="kitchen" title="Dapur Produksi" icon="🍳" />
-
+            <p className="text-[10px] text-center text-[var(--text-secondary)] font-medium mt-2">
+              Olah susu & telur di tab Restoran
+            </p>
           </div>
         </div>
 

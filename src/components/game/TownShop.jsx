@@ -16,11 +16,6 @@ export function TownShop() {
   const selectedBait = useGameStore((s) => s.selectedBait);
   const setSelectedBait = useGameStore((s) => s.setSelectedBait);
   const openConfirm = useGameStore((s) => s.openConfirm);
-  const spendCoins = useGameStore((s) => s.spendCoins);
-  const activateCoinBooster = useGameStore((s) => s.activateCoinBooster);
-  const buyGrowthBooster = useGameStore((s) => s.buyGrowthBooster);
-  const coinMultiplier = useGameStore((s) => s.coinMultiplier);
-  const growthMultiplier = useGameStore((s) => s.growthMultiplier);
   const buildings = useGameStore((s) => s.buildings);
   const decorations = useGameStore((s) => s.decorations);
   const buyBuilding = useGameStore((s) => s.buyBuilding);
@@ -39,7 +34,7 @@ export function TownShop() {
 
   const handleHireFisher = () => {
     if (workers?.fisher) {
-      toast('Pemancing Kota sudah disewa! Aktifkan Auto. 🎣', { icon: '✅' });
+      toast('Pemancing Kota sudah disewa! Aktifkan Auto.', { icon: '✅' });
       return;
     }
     openConfirm(
@@ -47,44 +42,7 @@ export function TownShop() {
       `Sewa Pemancing Kota (Auto-mancing) seharga ${GAME_CONSTANTS.COSTS.FISHER_WORKER} 💰?`,
       () => {
         if (hireWorker('fisher', GAME_CONSTANTS.COSTS.FISHER_WORKER)) {
-          toast.success('Pemancing Kota disewa! Auto mancing aktif. 🎣');
-        } else {
-          toast.error('Koin tidak cukup!');
-        }
-      }
-    );
-  };
-
-  const handleBuyGrowthBooster = () => {
-    if (growthMultiplier > 1) {
-      toast('Booster Growth sudah aktif!', { icon: '⚡' });
-      return;
-    }
-    openConfirm(
-      'Beli Booster Growth',
-      `Beli Booster Growth ×1.5 seharga ${GAME_CONSTANTS.COSTS.GROWTH_BOOSTER} 💰?`,
-      () => {
-        if (buyGrowthBooster(GAME_CONSTANTS.COSTS.GROWTH_BOOSTER)) {
-          toast.success('Booster Growth ×1.5 Aktif!', { icon: '🌱' });
-        } else {
-          toast.error('Koin tidak cukup!');
-        }
-      }
-    );
-  };
-
-  const handleBuyCoinBooster = () => {
-    if (coinMultiplier > 1) {
-      toast('Booster Koin sudah aktif!', { icon: '⚡' });
-      return;
-    }
-    openConfirm(
-      'Beli Booster Koin',
-      `Beli Booster Koin ×2 seharga ${GAME_CONSTANTS.COSTS.COIN_BOOSTER} 💰?`,
-      () => {
-        if (spendCoins(GAME_CONSTANTS.COSTS.COIN_BOOSTER)) {
-          activateCoinBooster();
-          toast.success('Booster Koin ×2 Aktif!', { icon: '💰' });
+          toast.success('Pemancing Kota disewa! Auto mancing aktif.');
         } else {
           toast.error('Koin tidak cukup!');
         }
@@ -114,7 +72,7 @@ export function TownShop() {
   return (
     <>
       <ShopSectionTitle icon="🎣">Shop Umpan</ShopSectionTitle>
-      <p className="text-[10px] text-[#d7e4c8]/80 mb-2 font-medium">
+      <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
         Pilih umpan sebelum mancing — seperti pilih bibit di ladang.
       </p>
       <div className="shop-grid mb-6">
@@ -138,7 +96,7 @@ export function TownShop() {
       <ShopSectionTitle icon="🪱">Umpan Siap Pakai</ShopSectionTitle>
       <div className="glass-card p-3 mb-6">
         {SHOP_BAIT.filter((b) => (inventory[b.id] || 0) > 0).length === 0 ? (
-          <div className="text-center text-sm text-[#d7e4c8]/70 font-bold py-2">
+          <div className="text-center text-sm text-[var(--text-secondary)] font-bold py-2">
             Belum ada umpan. Beli di atas dulu.
           </div>
         ) : (
@@ -149,15 +107,21 @@ export function TownShop() {
                 type="button"
                 onClick={() => setSelectedBait(selectedBait === bait.id ? null : bait.id)}
                 className={`p-2 glass-card flex flex-col items-center gap-1 transition-all border-2
-                  ${selectedBait === bait.id ? 'border-[var(--primary)] bg-[var(--primary)]/20 shadow-inner scale-105' : 'border-transparent hover:bg-black/20'}`}
+                  ${
+                    selectedBait === bait.id
+                      ? 'border-[var(--primary)] bg-[var(--primary)]/15 shadow-inner scale-105'
+                      : 'border-transparent hover:bg-black/5'
+                  }`}
               >
                 <span className="text-2xl relative drop-shadow-sm">
                   {bait.emoji}
-                  <span className="absolute -bottom-2 -right-2 bg-black text-[#f7f4e8] text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-white/20">
+                  <span className="absolute -bottom-2 -right-2 bg-[var(--gold)] text-[var(--text-primary)] text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-[#FFF1B8]">
                     {inventory[bait.id]}
                   </span>
                 </span>
-                <span className="text-[9px] text-[#d7e4c8] text-center leading-tight">{bait.name}</span>
+                <span className="text-[9px] text-[var(--text-secondary)] text-center leading-tight">
+                  {bait.name}
+                </span>
               </button>
             ))}
           </div>
@@ -175,17 +139,17 @@ export function TownShop() {
               disabled={owned}
               onClick={() => handleBuyBuilding(item)}
               className={`w-full glass-card p-2.5 flex justify-between items-center text-left transition-colors ${
-                owned ? 'opacity-60 cursor-default' : 'hover:bg-white/10'
+                owned ? 'opacity-60 cursor-default' : 'hover:brightness-105'
               }`}
             >
               <div>
-                <div className="font-bold text-[#f7f4e8] text-sm">
+                <div className="font-bold text-[var(--text-primary)] text-sm">
                   {item.emoji} {item.name}
                 </div>
-                <div className="text-[10px] text-[#d7e4c8]/80">{item.desc}</div>
+                <div className="text-[10px] text-[var(--text-secondary)]">{item.desc}</div>
               </div>
-              <span className="font-bold text-[#4a3208] bg-[#ffe08a] px-2 py-0.5 rounded text-xs whitespace-nowrap">
-                {owned ? '✅' : `${item.price}💰`}
+              <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-xl text-xs whitespace-nowrap border border-[#FFF1B8]">
+                {owned ? 'OK' : `${item.price}💰`}
               </span>
             </button>
           );
@@ -199,72 +163,49 @@ export function TownShop() {
               disabled={owned}
               onClick={() => handleBuyDecoration(item)}
               className={`w-full glass-card p-2.5 flex justify-between items-center text-left transition-colors ${
-                owned ? 'opacity-60 cursor-default' : 'hover:bg-white/10'
+                owned ? 'opacity-60 cursor-default' : 'hover:brightness-105'
               }`}
             >
               <div>
-                <div className="font-bold text-[#f7f4e8] text-sm">
+                <div className="font-bold text-[var(--text-primary)] text-sm">
                   {item.emoji} {item.name}
                 </div>
-                <div className="text-[10px] text-[#d7e4c8]/80">{item.desc}</div>
+                <div className="text-[10px] text-[var(--text-secondary)]">{item.desc}</div>
               </div>
-              <span className="font-bold text-[#4a3208] bg-[#ffe08a] px-2 py-0.5 rounded text-xs whitespace-nowrap">
-                {owned ? '✅' : `${item.price}💰`}
+              <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-xl text-xs whitespace-nowrap border border-[#FFF1B8]">
+                {owned ? 'OK' : `${item.price}💰`}
               </span>
             </button>
           );
         })}
       </div>
 
-      <ShopSectionTitle icon="⚡">Booster</ShopSectionTitle>
-      <button
-        type="button"
-        onClick={handleBuyGrowthBooster}
-        className={`w-full py-3 mb-2 flex justify-between items-center transition-transform ${
-          growthMultiplier > 1 ? 'btn-secondary cursor-default' : 'btn-primary'
-        }`}
-      >
-        <span className="font-bold">🌱 Growth ×1.5</span>
-        <span className="bg-black/20 px-2 py-0.5 rounded text-xs">
-          {growthMultiplier > 1 ? 'AKTIF' : `${GAME_CONSTANTS.COSTS.GROWTH_BOOSTER}💰`}
-        </span>
-      </button>
-      <button
-        type="button"
-        onClick={handleBuyCoinBooster}
-        className={`w-full py-3 mb-6 flex justify-between items-center transition-transform ${
-          coinMultiplier > 1 ? 'btn-secondary cursor-default' : 'btn-gold'
-        }`}
-      >
-        <span className="font-bold">💰 Coin ×2</span>
-        <span className="bg-black/20 px-2 py-0.5 rounded text-xs">
-          {coinMultiplier > 1 ? 'AKTIF' : `${GAME_CONSTANTS.COSTS.COIN_BOOSTER}💰`}
-        </span>
-      </button>
-
       <ShopSectionTitle icon="🧑‍🌾">Pekerja (Auto)</ShopSectionTitle>
       <button
         type="button"
         onClick={handleHireFisher}
         className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left mb-2 ${
-          workers?.fisher ? 'border-[#6fbf55] bg-white/10' : ''
+          workers?.fisher ? 'border-[var(--primary)] bg-[var(--primary)]/10' : ''
         }`}
       >
         <div>
-          <div className="font-bold text-[#f7f4e8] text-sm">🎣 Pemancing Kota</div>
-          <div className="text-[10px] text-[#d7e4c8]">Auto-mancing di danau</div>
+          <div className="font-bold text-[var(--text-primary)] text-sm">Pemancing Kota</div>
+          <div className="text-[10px] text-[var(--text-secondary)]">Auto-mancing di danau</div>
         </div>
-        <span className="font-bold text-[#4a3208] bg-[#ffe08a] px-2 py-0.5 rounded text-xs whitespace-nowrap">
-          {workers?.fisher ? '✅ Dimiliki' : `${GAME_CONSTANTS.COSTS.FISHER_WORKER}💰`}
+        <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-xl text-xs whitespace-nowrap border border-[#FFF1B8]">
+          {workers?.fisher ? 'Disewa' : `${GAME_CONSTANTS.COSTS.FISHER_WORKER}💰`}
         </span>
       </button>
       {workers?.fisher && (
-        <p className="text-[10px] text-[#d7e4c8]/70 mb-2 font-medium">
+        <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
           {autoFisher
-            ? '✅ Kurcaci aktif — mancing otomatis'
+            ? 'Kurcaci aktif — mancing otomatis'
             : 'Nyalakan tombol Auto di danau untuk mulai'}
         </p>
       )}
+      <p className="text-[10px] text-[var(--text-secondary)] font-medium mt-3">
+        Booster global ada di Topbar
+      </p>
     </>
   );
 }

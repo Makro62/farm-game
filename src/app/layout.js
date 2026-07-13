@@ -34,7 +34,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#2f6b3a'
+  themeColor: '#7BC47F'
 };
 
 export default function RootLayout({ children }) {
@@ -61,37 +61,37 @@ export default function RootLayout({ children }) {
             toastOptions={{
               duration: 2800,
               style: {
-                background: '#2a4630',
-                color: '#f4f7e8',
-                borderRadius: '16px',
-                border: '2px solid #5d8f4a',
+                background: '#FFF9EC',
+                color: '#4A3428',
+                borderRadius: '18px',
+                border: '3px solid #C4A574',
                 padding: '12px 16px',
                 fontSize: '14px',
                 fontWeight: '700',
-                boxShadow: '0 8px 24px rgba(20, 40, 20, 0.35)'
+                boxShadow: '0 6px 0 #A67C52, 0 10px 24px rgba(74, 52, 40, 0.15)'
               },
               success: {
                 duration: 2400,
                 iconTheme: {
-                  primary: '#7ec850',
-                  secondary: '#1f331f'
+                  primary: '#7BC47F',
+                  secondary: '#FFF9EC'
                 },
                 style: {
-                  background: '#2f5d34',
-                  color: '#f4f7e8',
-                  border: '2px solid #7ec850'
+                  background: '#E8F5D8',
+                  color: '#3D8B4F',
+                  border: '3px solid #7BC47F'
                 }
               },
               error: {
                 duration: 3000,
                 iconTheme: {
-                  primary: '#ff6b5a',
+                  primary: '#EF5350',
                   secondary: '#fff'
                 },
                 style: {
-                  background: '#5a2a28',
-                  color: '#fff',
-                  border: '2px solid #ff6b5a'
+                  background: '#FFEBEE',
+                  color: '#C62828',
+                  border: '3px solid #EF5350'
                 }
               }
             }}

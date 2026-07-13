@@ -8,10 +8,11 @@ export default function TabsNav() {
   const pathname = usePathname();
 
   const tabs = [
-    { id: 'pertanian', label: 'Pertanian', emoji: '🌱', color: 'from-[#6fbf55] to-[#2f6b3a]' },
-    { id: 'peternakan', label: 'Peternakan', emoji: '🐄', color: 'from-[#8fd3ff] to-[#3d8fd1]' },
-    { id: 'tambang', label: 'Tambang', emoji: '⛏️', color: 'from-[#c4b5a0] to-[#6b5b4a]' },
-    { id: 'kota', label: 'Kota', emoji: '🏪', color: 'from-[#ffe08a] to-[#d97706]' },
+    { id: 'pertanian', label: 'Pertanian', emoji: '🌱', color: 'from-[#A8E0A4] to-[#7BC47F]' },
+    { id: 'peternakan', label: 'Peternakan', emoji: '🐄', color: 'from-[#B8E4FF] to-[#7EB8E8]' },
+    { id: 'tambang', label: 'Tambang', emoji: '⛏️', color: 'from-[#E8D5B5] to-[#C4A574]' },
+    { id: 'kota', label: 'Kota', emoji: '🏪', color: 'from-[#FFE08A] to-[#F5C84C]' },
+    { id: 'restoran', label: 'Restoran', emoji: '🍰', color: 'from-[#FFB3AA] to-[#EF5350]' },
   ];
 
   return (
@@ -23,12 +24,12 @@ export default function TabsNav() {
             key={tab.id}
             href={`/${tab.id}`}
             className={`relative flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-full font-extrabold text-[11px] sm:text-sm transition-colors duration-300 min-w-[64px] sm:min-w-[112px]
-              ${isActive ? 'text-white' : 'text-[#f7f4e8]/65 hover:text-white hover:bg-white/5'}`}
+              ${isActive ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/40'}`}
           >
             {isActive && (
               <motion.div
                 layoutId="active-tab"
-                className={`absolute inset-0 bg-gradient-to-b ${tab.color} rounded-full shadow-lg border-2 border-white/25`}
+                className={`absolute inset-0 bg-gradient-to-b ${tab.color} rounded-full shadow-md border-2 border-white/60`}
                 transition={{ type: 'spring', stiffness: 420, damping: 30 }}
               />
             )}

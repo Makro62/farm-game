@@ -86,8 +86,8 @@ export default function Modals() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="glass-panel max-w-sm w-full"
             >
-              <h2 className="text-xl font-display font-bold text-[#f7f4e8] mb-2 drop-shadow-sm">{modals.confirm.title}</h2>
-              <p className="text-[#d7e4c8] mb-6 font-medium">{modals.confirm.msg}</p>
+              <h2 className="text-xl font-display font-bold text-[#3E2723] mb-2 drop-shadow-sm">{modals.confirm.title}</h2>
+              <p className="text-[#5D4037] mb-6 font-medium">{modals.confirm.msg}</p>
               <div className="flex justify-end gap-3">
                 <button 
                   onClick={closeModals}
@@ -116,14 +116,14 @@ export default function Modals() {
             >
               <div className="text-center mb-4">
                 <div className="text-4xl mb-2 drop-shadow-sm">🛒</div>
-                <h2 className="text-xl font-display font-bold text-[#f7f4e8] mb-1">{modals.prompt.title}</h2>
-                <p className="text-[#d7e4c8] text-sm font-medium">{modals.prompt.msg}</p>
+                <h2 className="text-xl font-display font-bold text-[#3E2723] mb-1">{modals.prompt.title}</h2>
+                <p className="text-[#5D4037] text-sm font-medium">{modals.prompt.msg}</p>
               </div>
               
               <div className="flex items-center justify-center gap-4 mb-6">
                 <button 
                   onClick={() => setPromptValue(Math.max(1, promptValue - 1))}
-                  className="w-11 h-11 rounded-xl bg-black/30 text-white font-black text-2xl flex items-center justify-center hover:bg-black/50 active:scale-95 transition-all border border-white/10"
+                  className="w-11 h-11 rounded-xl bg-black/30 text-[#3E2723] font-black text-2xl flex items-center justify-center hover:bg-black/50 active:scale-95 transition-all border border-white/10"
                 >
                   -
                 </button>
@@ -131,12 +131,12 @@ export default function Modals() {
                   type="number" 
                   value={promptValue}
                   onChange={(e) => setPromptValue(parseInt(e.target.value) || 1)}
-                  className="w-24 text-center text-3xl font-display font-bold bg-black/40 text-white border-2 border-[var(--primary)] rounded-xl py-2 focus:outline-none focus:border-[var(--primary-dark)]"
+                  className="w-24 text-center text-3xl font-display font-bold bg-black/40 text-[#3E2723] border-2 border-[var(--primary)] rounded-xl py-2 focus:outline-none focus:border-[var(--primary-dark)]"
                   min="1"
                 />
                 <button 
                   onClick={() => setPromptValue(promptValue + 1)}
-                  className="w-11 h-11 rounded-xl bg-black/30 text-white font-black text-2xl flex items-center justify-center hover:bg-black/50 active:scale-95 transition-all border border-white/10"
+                  className="w-11 h-11 rounded-xl bg-black/30 text-[#3E2723] font-black text-2xl flex items-center justify-center hover:bg-black/50 active:scale-95 transition-all border border-white/10"
                 >
                   +
                 </button>
@@ -170,14 +170,14 @@ export default function Modals() {
             >
               <div className="text-center mb-4">
                 <div className="text-6xl mb-2 drop-shadow-md">{targetNpc.emoji}</div>
-                <h2 className="text-2xl font-display font-black text-[#f7f4e8]">{targetNpc.name}</h2>
+                <h2 className="text-2xl font-display font-black text-[#3E2723]">{targetNpc.name}</h2>
                 <p className="text-[#ff9a5a] font-bold text-sm bg-black/30 inline-block px-3 py-1 rounded-full border border-[#ff9a5a]/30 mt-1">{targetNpc.role}</p>
-                <p className="text-[#d7e4c8] text-sm mt-3 font-medium">Pilih barang dari inventory Anda untuk diberikan sebagai hadiah.</p>
+                <p className="text-[#5D4037] text-sm mt-3 font-medium">Pilih barang dari inventory Anda untuk diberikan sebagai hadiah.</p>
               </div>
               
               <div className="grid grid-cols-5 gap-2 mb-6 max-h-[150px] overflow-y-auto p-3 glass-card rounded-xl">
                 {Object.keys(inventory).length === 0 && (
-                  <div className="col-span-5 text-center text-xs text-[#d7e4c8]/70 py-4 font-bold">Inventory kosong...</div>
+                  <div className="col-span-5 text-center text-xs text-[#5D4037]/70 py-4 font-bold">Inventory kosong...</div>
                 )}
                 {Object.entries(inventory).map(([item, amount]) => amount > 0 && (
                   <button 
@@ -188,7 +188,7 @@ export default function Modals() {
                     `}
                   >
                     <span className="text-2xl drop-shadow-sm">{getCropEmoji(item)}</span>
-                    <span className="absolute -bottom-2 -right-2 bg-black text-[#f7f4e8] text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-white/20">
+                    <span className="absolute -bottom-2 -right-2 bg-black text-[#3E2723] text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-white/20">
                       {amount}
                     </span>
                   </button>
@@ -205,10 +205,10 @@ export default function Modals() {
                 <button 
                   onClick={handleGiveGift}
                   disabled={!selectedGift}
-                  className={`btn py-3 text-white ${
+                  className={`btn py-3 text-[#3E2723] ${
                     selectedGift 
                       ? 'bg-gradient-to-b from-[#ff9a5a] to-[#e85d4c] shadow-[0_4px_0_#9c2b1e] border-2 border-[#ffc5a3] hover:brightness-105' 
-                      : 'bg-black/50 text-white/30 border-2 border-white/10 shadow-none'
+                      : 'bg-black/50 text-[#3E2723]/30 border-2 border-white/10 shadow-none'
                   }`}
                 >
                   Beri Hadiah 🎁

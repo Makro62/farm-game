@@ -62,11 +62,11 @@ export function SeedShop() {
     <>
       <ShopSectionTitle icon="🛒">Shop Bibit ({seasonLabel})</ShopSectionTitle>
       {buildings?.greenhouse && (
-        <p className="text-[10px] text-emerald-300 mb-2">🏠 Greenhouse aktif — semua musim tersedia</p>
+        <p className="text-[10px] text-[var(--primary-dark)] mb-2 font-bold">Greenhouse aktif — semua musim tersedia</p>
       )}
       <div className="shop-grid mb-6">
         {availableSeeds.length === 0 ? (
-          <div className="col-span-full text-center text-sm text-gray-400 italic py-2">
+          <div className="col-span-full text-center text-sm text-[var(--text-secondary)] italic py-2">
             Tidak ada bibit untuk musim ini.
           </div>
         ) : availableSeeds.map((seed) => {
@@ -89,7 +89,7 @@ export function SeedShop() {
       <ShopSectionTitle icon="🌱">Bibit Tanaman</ShopSectionTitle>
       <div className="glass-card p-3 mb-6">
         {SHOP_SEEDS.filter(s => inventory[s.id] > 0).length === 0 ? (
-          <div className="text-center text-sm text-[#d7e4c8]/70 font-bold py-2">Belum ada bibit di Inventory.</div>
+          <div className="text-center text-sm text-[var(--text-secondary)] font-bold py-2">Belum ada bibit di Inventory.</div>
         ) : (
           <div className="grid grid-cols-4 gap-2">
             {SHOP_SEEDS.filter(s => inventory[s.id] > 0).map(seed => (
@@ -97,11 +97,11 @@ export function SeedShop() {
                 key={`inv-${seed.id}`}
                 onClick={() => setSelectedInventoryItem(seed.id)}
                 className={`p-2 glass-card flex flex-col items-center gap-1 transition-all border-2
-                  ${selectedInventoryItem === seed.id ? 'border-[var(--primary)] bg-[var(--primary)]/20 shadow-inner scale-105' : 'border-transparent hover:bg-black/20'}`}
+                  ${selectedInventoryItem === seed.id ? 'border-[var(--primary)] bg-[var(--primary)]/20 shadow-inner scale-105' : 'border-transparent hover:bg-black/5'}`}
               >
                 <span className="text-2xl relative drop-shadow-sm">
                   <CropIcon itemId={seed.id} />
-                  <span className="absolute -bottom-2 -right-2 bg-black text-[#f7f4e8] text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-white/20">
+                  <span className="absolute -bottom-2 -right-2 bg-[var(--gold)] text-[var(--text-primary)] text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-[#FFF1B8]">
                     {inventory[seed.id]}
                   </span>
                 </span>
@@ -115,23 +115,23 @@ export function SeedShop() {
       <button
         onClick={handleHireFarmer}
         className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left mb-2 ${
-          workers?.farmer ? 'border-[#6fbf55] bg-white/10' : ''
+          workers?.farmer ? 'border-[var(--primary)] bg-[var(--primary)]/10' : ''
         }`}
       >
         <div>
-          <div className="font-bold text-[#f7f4e8] text-sm">👨‍🌾 Petani Budi</div>
-          <div className="text-[10px] text-[#d7e4c8]">Auto-Farm & Harvest</div>
+          <div className="font-bold text-[var(--text-primary)] text-sm">Petani Budi</div>
+          <div className="text-[10px] text-[var(--text-secondary)]">Auto-Farm & Harvest</div>
         </div>
-        <span className="font-bold text-[#4a3208] bg-[#ffe08a] px-2 py-0.5 rounded text-xs whitespace-nowrap">
-          {workers?.farmer ? '✅ Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_FARMER} 💰`}
+        <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-xl text-xs whitespace-nowrap border border-[#FFF1B8]">
+          {workers?.farmer ? 'Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_FARMER} 💰`}
         </span>
       </button>
       {workers?.farmer && (
-        <p className="text-[10px] text-[#d7e4c8]/70 mb-2 font-medium">
+        <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
           {autoFarm
             ? SHOP_SEEDS.some((s) => (inventory[s.id] || 0) > 0)
-              ? '✅ Kurcaci aktif — panen & tanam otomatis'
-              : '⚠️ Auto ON — beli bibit agar bisa menanam'
+              ? 'Kurcaci aktif — panen & tanam otomatis'
+              : 'Auto ON — beli bibit agar bisa menanam'
             : 'Nyalakan tombol Auto di atas untuk mulai'}
         </p>
       )}

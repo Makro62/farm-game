@@ -42,10 +42,10 @@ export default function OfflineProgressModal() {
               👋
             </div>
             
-            <h2 className="text-2xl font-display font-bold text-[#f7f4e8] text-center mb-1 drop-shadow-md">
+            <h2 className="text-2xl font-display font-bold text-[#3E2723] text-center mb-1 drop-shadow-md">
               Selamat Datang Kembali!
             </h2>
-            <p className="text-[#d7e4c8] text-sm mb-6 text-center font-medium">
+            <p className="text-[#5D4037] text-sm mb-6 text-center font-medium">
               Pekerja Anda telah bekerja keras selama Anda pergi ({timeAway}).
             </p>
 
@@ -55,7 +55,7 @@ export default function OfflineProgressModal() {
                 <div className="flex justify-between items-center glass-card px-4 py-3">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl drop-shadow-sm">👨‍🌾</span>
-                    <span className="font-bold text-[#f7f4e8] text-sm">Hasil Panen</span>
+                    <span className="font-bold text-[#3E2723] text-sm">Hasil Panen</span>
                   </div>
                   <span className="font-black text-[#6fbf55] drop-shadow-sm">+{harvestedCrops} item</span>
                 </div>
@@ -65,7 +65,7 @@ export default function OfflineProgressModal() {
                 <div className="flex justify-between items-center glass-card px-4 py-3">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl drop-shadow-sm">👩‍🌾</span>
-                    <span className="font-bold text-[#f7f4e8] text-sm">Hasil Ternak</span>
+                    <span className="font-bold text-[#3E2723] text-sm">Hasil Ternak</span>
                   </div>
                   <span className="font-black text-[#ff9a5a] drop-shadow-sm">+{collectedProducts} item</span>
                 </div>
@@ -75,7 +75,7 @@ export default function OfflineProgressModal() {
                 <div className="flex justify-between items-center glass-card px-4 py-3">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl drop-shadow-sm">🎣</span>
-                    <span className="font-bold text-[#f7f4e8] text-sm">Tangkapan Ikan</span>
+                    <span className="font-bold text-[#3E2723] text-sm">Tangkapan Ikan</span>
                   </div>
                   <span className="font-black text-cyan-400 drop-shadow-sm">+{caughtFishes} ekor</span>
                 </div>
@@ -85,7 +85,7 @@ export default function OfflineProgressModal() {
                 <div className="flex justify-between items-center glass-card px-4 py-3">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl drop-shadow-sm">⛏️</span>
-                    <span className="font-bold text-[#f7f4e8] text-sm">Hasil Tambang</span>
+                    <span className="font-bold text-[#3E2723] text-sm">Hasil Tambang</span>
                   </div>
                   <span className="font-black text-[#d8a8ff] drop-shadow-sm">+{minedGems} batu</span>
                 </div>
@@ -95,7 +95,7 @@ export default function OfflineProgressModal() {
                 <div className="flex justify-between items-center glass-card px-4 py-3">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl drop-shadow-sm">🌱</span>
-                    <span className="font-bold text-[#f7f4e8] text-sm">Tanaman Matang</span>
+                    <span className="font-bold text-[#3E2723] text-sm">Tanaman Matang</span>
                   </div>
                   <span className="font-black text-[#6fbf55] drop-shadow-sm">+{maturedCrops} petak</span>
                 </div>
@@ -105,7 +105,7 @@ export default function OfflineProgressModal() {
                 <div className="flex justify-between items-center glass-card px-4 py-3">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl drop-shadow-sm">🪨</span>
-                    <span className="font-bold text-[#f7f4e8] text-sm">Tambang Siap</span>
+                    <span className="font-bold text-[#3E2723] text-sm">Tambang Siap</span>
                   </div>
                   <span className="font-black text-[#d8a8ff] drop-shadow-sm">+{maturedNodes} petak</span>
                 </div>

@@ -70,6 +70,7 @@ export const CROP_DATA = {
   labu: { name: 'Labu', emoji: '🎃' },
   kentang: { name: 'Kentang', emoji: '🥔' },
   gandum: { name: 'Gandum', emoji: '🌾' },
+  tebu: { name: 'Tebu', emoji: '🎋' },
   tulip: { name: 'Tulip', emoji: '🌷' },
   apel: { name: 'Apel', emoji: '🍎' },
 };
@@ -81,6 +82,7 @@ export const SHOP_SEEDS = [
   { id: 'bibit_stroberi', cropId: 'stroberi', name: 'Bibit Stroberi', emoji: '🍓', price: 75, time: 120, season: 'spring' },
   { id: 'bibit_tulip', cropId: 'tulip', name: 'Bibit Tulip', emoji: '🌷', price: 100, time: 100, season: 'spring' },
   { id: 'bibit_gandum', cropId: 'gandum', name: 'Bibit Gandum', emoji: '🌾', price: 90, time: 135, season: 'autumn' },
+  { id: 'bibit_tebu', cropId: 'tebu', name: 'Bibit Tebu', emoji: '🎋', price: 110, time: 140, season: 'summer' },
   { id: 'bibit_semangka', cropId: 'semangka', name: 'Bibit Semangka', emoji: '🍉', price: 120, time: 150, season: 'summer' },
   { id: 'bibit_apel', cropId: 'apel', name: 'Bibit Apel', emoji: '🍎', price: 140, time: 180, season: 'autumn' },
   { id: 'bibit_labu', cropId: 'labu', name: 'Bibit Labu', emoji: '🎃', price: 160, time: 200, season: 'autumn' },
@@ -270,6 +272,17 @@ export function getItemSellPrice(itemId) {
 }
 
 /**
+ * Hasil yang boleh dijual lewat "Jual Semua" — exclude bibit, umpan, alat tambang.
+ */
+export function isSellableProduce(itemId) {
+  if (!itemId) return false;
+  if (SHOP_SEEDS.some((s) => s.id === itemId)) return false;
+  if (SHOP_BAIT.some((b) => b.id === itemId)) return false;
+  if (SHOP_MINING.some((m) => m.id === itemId)) return false;
+  return getItemSellPrice(itemId) != null;
+}
+
+/**
  * Nama tampilan item inventory
  */
 export function getItemDisplayName(itemId) {
@@ -431,7 +444,12 @@ export const RECIPES = [
   { id: 'sup_wortel', name: 'Sup Wortel', emoji: '🥣', type: 'kitchen', time: 180, price: 150, xp: 50, req: { wortel: 4 } },
   { id: 'tepung_jagung', name: 'Tepung Jagung', emoji: '🌾', type: 'kitchen', time: 180, price: 200, xp: 60, req: { jagung: 4 } },
   { id: 'keju', name: 'Keju', emoji: '🧀', type: 'kitchen', time: 300, price: 400, xp: 120, req: { susu: 3 } },
-  { id: 'kue_stroberi', name: 'Kue Stroberi', emoji: '🍰', type: 'kitchen', time: 600, price: 800, xp: 200, req: { stroberi: 3, telur: 2, susu: 1 } },
+  
+  // Restoran Dewi Hidangan
+  { id: 'kue_stroberi', name: 'Kue Stroberi', emoji: '🍰', type: 'restaurant', time: 600, price: 800, xp: 200, req: { stroberi: 3, telur: 2, susu: 1, tebu: 1 } },
+  { id: 'kue_wortel', name: 'Kue Wortel', emoji: '🥕', type: 'restaurant', time: 480, price: 600, xp: 150, req: { wortel: 3, gandum: 2, telur: 1, tebu: 1 } },
+  { id: 'kue_apel', name: 'Kue Apel', emoji: '🥧', type: 'restaurant', time: 540, price: 750, xp: 180, req: { apel: 3, gandum: 2, susu: 1, tebu: 1 } },
+  { id: 'kue_manis', name: 'Kue Manis', emoji: '🥮', type: 'restaurant', time: 400, price: 500, xp: 120, req: { gandum: 2, susu: 2, tebu: 2 } },
   
   // Dapur Ikan
   { id: 'sushi_mas', name: 'Sushi Ikan Mas', emoji: '🍣', type: 'fish_kitchen', time: 240, price: 300, xp: 100, req: { ikan_mas: 2, tomat: 2 } },

@@ -18,7 +18,7 @@ export function OrderBoard() {
 
   return (
     <>
-      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-white mt-6">
+      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-[#3E2723] mt-6">
         <span>📋</span> Papan Pesanan
       </div>
       
@@ -48,7 +48,7 @@ export function OrderBoard() {
                     const isEnough = has >= item.qty;
                     return (
                       <div key={item.id} className="flex justify-between items-center text-sm">
-                        <span className="text-white flex items-center gap-1">
+                        <span className="text-[#3E2723] flex items-center gap-1">
                           <span>{getCropEmoji(item.id)}</span> {item.id.replace('_', ' ')}
                         </span>
                         <span className={`font-bold px-2 py-0.5 rounded text-xs ${isEnough ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
@@ -66,7 +66,7 @@ export function OrderBoard() {
                   </div>
                   <button 
                     onClick={() => fulfillOrder(order.id)}
-                    className="bg-amber-500 hover:bg-amber-400 text-white font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-transform active:scale-95"
+                    className="bg-amber-500 hover:bg-amber-400 text-[#3E2723] font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-transform active:scale-95"
                   >
                     Penuhi
                   </button>

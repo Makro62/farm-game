@@ -1,4 +1,4 @@
-import { getItemSellPrice, RECIPES, ORDER_TEMPLATES, FISHES, SHOP_SEEDS } from '../../utils';
+import { getItemSellPrice, isSellableProduce, RECIPES, ORDER_TEMPLATES, FISHES, SHOP_SEEDS } from '../../utils';
 import { safeCoins, safePositiveNumber } from '../utils';
 import toast from 'react-hot-toast';
 
@@ -193,24 +193,22 @@ export const createPlayerSlice = (set, get) => ({
     Object.entries(newInventory).forEach(([itemId, amount]) => {
       const qty = Number(amount);
       if (!Number.isFinite(qty) || qty <= 0) return;
-      
+      if (!isSellableProduce(itemId)) return;
+
       let sellPrice = getItemSellPrice(itemId);
-      
+
       if (sellPrice != null && Number.isFinite(sellPrice)) {
-        // Apply market price if exists (crops only usually)
         if (todayPrices[itemId]) {
           sellPrice = todayPrices[itemId];
         }
 
-        // Apply event multipliers
-        if (activeEvent?.id === 'panen' && SHOP_SEEDS.some(s => s.cropId === itemId)) {
+        if (activeEvent?.id === 'panen' && SHOP_SEEDS.some((s) => s.cropId === itemId)) {
           sellPrice *= 2;
-        } else if (activeEvent?.id === 'bahari' && FISHES.some(f => f.id === itemId)) {
+        } else if (activeEvent?.id === 'bahari' && FISHES.some((f) => f.id === itemId)) {
           sellPrice *= 2;
         }
 
-        // Silo: bonus jual tanaman
-        if (state.buildings?.silo && SHOP_SEEDS.some(s => s.cropId === itemId)) {
+        if (state.buildings?.silo && SHOP_SEEDS.some((s) => s.cropId === itemId)) {
           sellPrice *= 1.15;
         }
 
@@ -410,13 +408,16 @@ export const createPlayerSlice = (set, get) => ({
   // ===== CRAFTING =====
   startCrafting: (recipeId) => {
     const state = get();
-    if (state.craftingQueue.length >= 5) {
-      toast.error("Antrean dapur penuh! Maksimal 5 antrean.");
+    const recipe = RECIPES.find((r) => r.id === recipeId);
+    if (!recipe) return false;
+
+    const typeQueue = (state.craftingQueue || []).filter(
+      (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === recipe.type
+    );
+    if (typeQueue.length >= 3) {
+      toast.error('Antrean dapur ini penuh! Maksimal 3 antrean per jenis.');
       return false;
     }
-
-    const recipe = RECIPES.find(r => r.id === recipeId);
-    if (!recipe) return false;
 
     const inv = { ...state.inventory };
     for (const [item, qty] of Object.entries(recipe.req)) {
@@ -433,11 +434,11 @@ export const createPlayerSlice = (set, get) => ({
 
     const id = Math.random().toString(36).substring(2, 9);
     const startTime = Date.now();
-    const duration = (recipe.time * 1000); 
+    const duration = recipe.time * 1000;
 
-    set(s => ({
+    set((s) => ({
       inventory: inv,
-      craftingQueue: [...s.craftingQueue, { id, recipeId, startTime, duration }]
+      craftingQueue: [...s.craftingQueue, { id, recipeId, startTime, duration }],
     }));
 
     toast.success(`Mulai membuat ${recipe.name}!`, { icon: '🍳' });
@@ -478,10 +479,13 @@ export const createPlayerSlice = (set, get) => ({
     for (let i = newQueue.length - 1; i >= 0; i--) {
       const item = newQueue[i];
       if (now - item.startTime >= item.duration) {
-        const recipe = RECIPES.find(r => r.id === item.recipeId);
+        const recipe = RECIPES.find((r) => r.id === item.recipeId);
         if (recipe) {
           inv[recipe.id] = (inv[recipe.id] || 0) + 1;
           xpGained += recipe.xp || 0;
+          if (recipe.type === 'restaurant') {
+            get().progressQuest?.('craft', recipe.id, 1);
+          }
         }
         newQueue.splice(i, 1);
         changed = true;

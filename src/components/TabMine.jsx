@@ -140,10 +140,10 @@ export default function TabMine() {
             <ShopSectionTitle icon="⛏️">Alat Aktif</ShopSectionTitle>
             <div className="glass-card p-3 mb-4 flex justify-between items-center border border-white/10">
               <div>
-                <div className="font-bold text-[#f7f4e8] text-sm drop-shadow-sm">{pickaxe.emoji} {pickaxe.name}</div>
-                <div className="text-[10px] text-[#d7e4c8]/80 font-medium mt-0.5">Regen: {pickaxe.regen}{lanternActive ? ' (senter aktif)' : ''}</div>
+                <div className="font-bold text-[#3E2723] text-sm drop-shadow-sm">{pickaxe.emoji} {pickaxe.name}</div>
+                <div className="text-[10px] text-[#5D4037]/80 font-medium mt-0.5">Regen: {pickaxe.regen}{lanternActive ? ' (senter aktif)' : ''}</div>
               </div>
-              <span className="bg-[#6fbf55]/30 border border-[#6fbf55]/50 text-[#f7f4e8] text-xs px-2 py-1 rounded-lg font-black">Lv {mining.pickaxeLevel}</span>
+              <span className="bg-[#6fbf55]/30 border border-[#6fbf55]/50 text-[#3E2723] text-xs px-2 py-1 rounded-lg font-black">Lv {mining.pickaxeLevel}</span>
             </div>
             {lanternActive && (
               <div className="glass-card p-2 mb-4 text-center text-xs text-yellow-200">
@@ -165,7 +165,7 @@ export default function TabMine() {
                 ownedTools.map(tool => (
                   <div key={tool.id} className="flex items-center justify-between gap-2 p-2 glass-card rounded-lg">
                     <div className="min-w-0 flex-1">
-                      <div className="font-bold text-white text-xs flex items-center gap-1">
+                      <div className="font-bold text-[#3E2723] text-xs flex items-center gap-1">
                         <span>{tool.emoji}</span>
                         <span className="truncate">{tool.name}</span>
                         <span className="text-yellow-300 shrink-0">×{inventory[tool.id]}</span>
@@ -177,8 +177,8 @@ export default function TabMine() {
                       onClick={() => handleUseTool(tool.id)}
                       className={`shrink-0 px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${
                         selectedMiningTool === tool.id
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-white/15 text-white hover:bg-white/25'
+                          ? 'bg-orange-500 text-[#3E2723]'
+                          : 'bg-white/15 text-[#3E2723] hover:bg-white/25'
                       }`}
                     >
                       {TARGET_TOOLS.has(tool.id) ? 'Pilih' : 'Pakai'}
@@ -205,7 +205,7 @@ export default function TabMine() {
               }`}
             >
               <div>
-                <div className="font-bold text-white text-sm">👷‍♂️ Penambang Tarjo</div>
+                <div className="font-bold text-[#3E2723] text-sm">👷‍♂️ Penambang Tarjo</div>
                 <div className="text-[10px] text-gray-500">Auto-Mine</div>
               </div>
               <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs whitespace-nowrap">
