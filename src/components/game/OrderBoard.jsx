@@ -31,7 +31,7 @@ export function OrderBoard() {
           orders.map((order, index) => {
             const timeLeft = Math.max(0, Math.floor((order.timer * 1000 - (now - order.createdAt)) / 1000));
             const m = Math.floor(timeLeft / 60);
-            const currentTime = now;
+            const s = timeLeft % 60;
             
             return (
               <div key={order.id} className="glass-card rounded-xl p-4 border-2 border-amber-200/30 flex flex-col hover:border-amber-400/50 transition-colors">
