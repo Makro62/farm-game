@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/lib/store';
 import { CropIcon } from '../ui/CropIcon';
 import { getCropEmoji, SHOP_SEEDS } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { GAME_CONSTANTS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 
 export function PlotGrid({ isEditMode }) {
@@ -17,13 +15,6 @@ export function PlotGrid({ isEditMode }) {
   const selectedInventoryItem = useGameStore(state => state.selectedSeed);
   const setSelectedInventoryItem = useGameStore(state => state.setSelectedSeed);
   
-  const [currentTime, setCurrentTime] = useState(Date.now());
-
-  useEffect(() => {
-    const interval = setInterval(() => setCurrentTime(Date.now()), GAME_CONSTANTS.TIMERS.FARM_TICK_RATE);
-    return () => clearInterval(interval);
-  }, []);
-
   const handlePlotClick = (plot) => {
     if (plot.status === 'empty') {
       if (!selectedInventoryItem) {
@@ -43,10 +34,19 @@ export function PlotGrid({ isEditMode }) {
         toast.error(`Anda kehabisan ${seedData.name}! Beli lagi di Shop.`);
         setSelectedInventoryItem(null);
       }
-    } else if (plot.status === 'ready' || (plot.status === 'growing' && currentTime - plot.plantedAt >= plot.growTime)) {
+    } else if (plot.status === 'ready') {
       const crop = harvest(plot.id);
       if (crop) {
         toast.success(`Panen ${getCropEmoji(crop)}!`);
+      }
+    } else if (plot.status === 'growing') {
+      // Just in case they click right as the background timer triggers
+      // We can check Date.now manually here to allow harvest
+      if (plot.plantedAt && Date.now() - plot.plantedAt >= plot.growTime) {
+        const crop = harvest(plot.id);
+        if (crop) {
+          toast.success(`Panen ${getCropEmoji(crop)}!`);
+        }
       }
     }
   };
@@ -62,15 +62,11 @@ export function PlotGrid({ isEditMode }) {
       <div className="game-plot-grid relative z-10">
         {plots.map((plot) => {
           const isGrowing = plot.status === 'growing';
-          let progress = 0;
-          let isReady = false;
-          if (isGrowing && plot.plantedAt) {
-            progress = Math.min(100, ((currentTime - plot.plantedAt) / plot.growTime) * 100);
-            isReady = progress >= 100;
-          } else if (plot.status === 'ready') {
-            isReady = true;
-            progress = 100;
-          }
+          const isReady = plot.status === 'ready';
+
+          // Ensure animation doesn't start in the future if there is a tiny desync
+          const timeElapsed = plot.plantedAt ? Math.max(0, Date.now() - plot.plantedAt) : 0;
+          
           return (
             <motion.button
               key={plot.id}
@@ -104,7 +100,7 @@ export function PlotGrid({ isEditMode }) {
                 }
                 handlePlotClick(plot);
               }}
-              className={cn("game-plot-cell",
+              className={cn("game-plot-cell overflow-hidden",
                 isEditMode && "cursor-grab hover:ring-4 ring-yellow-400",
                 plot.status === 'empty' && "bg-[#a06a38] border-b-4 border-[#7a4e28] hover:bg-[#b07843]",
                 isGrowing && !isReady && "bg-[#5c4033] border-b-4 border-[#3e2b22]",
@@ -115,7 +111,7 @@ export function PlotGrid({ isEditMode }) {
                 <AnimatePresence>
                   <motion.div
                     initial={{ scale: 0, y: 10 }}
-                    animate={{ scale: isReady ? 1.5 : 0.8 + (progress / 100) * 0.4, y: 0 }}
+                    animate={{ scale: isReady ? 1.5 : 0.8, y: 0 }}
                     className="z-10"
                   >
                     <CropIcon cropId={plot.crop} />
@@ -124,7 +120,16 @@ export function PlotGrid({ isEditMode }) {
               )}
               {isGrowing && !isReady && (
                 <div className="absolute bottom-1 left-1 right-1 h-1.5 bg-black/40 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-400" style={{ width: `${progress}%` }} />
+                  <div 
+                    className="h-full bg-green-400 origin-left" 
+                    style={{ 
+                      animationName: 'grow-progress', 
+                      animationDuration: `${plot.growTime}ms`, 
+                      animationTimingFunction: 'linear', 
+                      animationFillMode: 'forwards',
+                      animationDelay: `-${timeElapsed}ms`
+                    }} 
+                  />
                 </div>
               )}
             </motion.button>
