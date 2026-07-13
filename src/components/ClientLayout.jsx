@@ -71,7 +71,7 @@ export default function ClientLayout({ children }) {
       <Modals />
 
       {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 left-4 bg-red-500 text-[#3E2723] px-3 py-1 rounded-full text-xs font-bold shadow-lg z-50">
+        <div className="fixed bottom-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-50">
           DEV MODE
         </div>
       )}

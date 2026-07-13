@@ -18,7 +18,7 @@ export function OrderBoard() {
 
   return (
     <>
-      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-[#3E2723] mt-6">
+      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-[var(--wood-light)] pb-2 text-[var(--text-primary)] mt-6">
         <span>📋</span> Papan Pesanan
       </div>
       
@@ -31,13 +31,13 @@ export function OrderBoard() {
           orders.map((order, index) => {
             const timeLeft = Math.max(0, Math.floor((order.timer * 1000 - (now - order.createdAt)) / 1000));
             const m = Math.floor(timeLeft / 60);
-            const s = timeLeft % 60;
+            const currentTime = now;
             
             return (
               <div key={order.id} className="glass-card rounded-xl p-4 border-2 border-amber-200/30 flex flex-col hover:border-amber-400/50 transition-colors">
-                <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/10">
+                <div className="flex justify-between items-center mb-3 pb-2 border-b border-[var(--wood-light)]/50">
                   <span className="font-black text-amber-300">Pesanan #{index + 1}</span>
-                  <span className="text-xs font-bold bg-black/40 text-red-300 px-2 py-1 rounded-full flex items-center gap-1">
+                  <span className="text-xs font-bold bg-[#EF5350]/20 border border-[#EF5350]/40 text-[#C62828] px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
                     ⏰ {m}:{s.toString().padStart(2, '0')}
                   </span>
                 </div>
@@ -66,7 +66,7 @@ export function OrderBoard() {
                   </div>
                   <button 
                     onClick={() => fulfillOrder(order.id)}
-                    className="bg-amber-500 hover:bg-amber-400 text-[#3E2723] font-bold px-4 py-2 rounded-lg text-sm shadow-md transition-transform active:scale-95"
+                    className="btn-gold !px-4 !py-2 !text-sm"
                   >
                     Penuhi
                   </button>

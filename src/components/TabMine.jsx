@@ -175,10 +175,10 @@ export default function TabMine() {
                     <button
                       type="button"
                       onClick={() => handleUseTool(tool.id)}
-                      className={`shrink-0 px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                      className={`shrink-0 px-2 py-1 rounded-lg text-[10px] font-bold transition-colors border-2 ${
                         selectedMiningTool === tool.id
-                          ? 'bg-orange-500 text-[#3E2723]'
-                          : 'bg-white/15 text-[#3E2723] hover:bg-white/25'
+                          ? 'bg-[var(--gold)] text-[#4a3208] border-[var(--gold-deep)]'
+                          : 'bg-white/50 text-[var(--text-primary)] border-[var(--wood-light)] hover:bg-white'
                       }`}
                     >
                       {TARGET_TOOLS.has(tool.id) ? 'Pilih' : 'Pakai'}

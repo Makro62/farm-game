@@ -7,7 +7,7 @@ export function QuestPanel() {
 
   return (
     <>
-      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-white/20 pb-2 text-[#3E2723] mt-6">
+      <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-[var(--wood-light)] pb-2 text-[var(--text-primary)] mt-6">
         <span>📝</span> Quest Harian
       </div>
       
@@ -25,7 +25,7 @@ export function QuestPanel() {
                 <span className="text-purple-300 font-bold whitespace-nowrap">{quest.count}/{quest.required}</span>
               </div>
               
-              <div className="w-full bg-white/20 rounded-full h-2 mb-2">
+              <div className="w-full bg-[var(--wood)]/20 rounded-full h-2 mb-2 shadow-inner">
                 <div className="bg-purple-400 h-2 rounded-full transition-all" style={{width: `${percent}%`}}></div>
               </div>
               
@@ -35,7 +35,7 @@ export function QuestPanel() {
                 </div>
                 
                 {quest.claimed ? (
-                  <span className="text-xs font-bold text-gray-400 bg-white/10 px-2 py-1 rounded">Diambil</span>
+                  <span className="text-xs font-bold text-[var(--text-secondary)] bg-[var(--wood-light)]/20 px-2 py-1 rounded border border-[var(--wood-light)]">Diambil</span>
                 ) : isComplete ? (
                   <button 
                     onClick={() => {
@@ -43,7 +43,7 @@ export function QuestPanel() {
                         toast.success('Hadiah quest berhasil diambil!');
                       }
                     }}
-                    className="text-xs font-bold text-[#3E2723] bg-green-500 hover:bg-green-600 px-3 py-1 rounded-md shadow-sm transition-colors animate-pulse"
+                    className="text-xs font-bold text-white bg-[var(--primary)] hover:brightness-110 px-3 py-1 rounded-lg shadow-sm transition-colors animate-pulse border border-[var(--primary-dark)]"
                   >
                     Klaim
                   </button>

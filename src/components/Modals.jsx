@@ -119,24 +119,22 @@ export default function Modals() {
                 <h2 className="text-xl font-display font-bold text-[#3E2723] mb-1">{modals.prompt.title}</h2>
                 <p className="text-[#5D4037] text-sm font-medium">{modals.prompt.msg}</p>
               </div>
-              
               <div className="flex items-center justify-center gap-4 mb-6">
-                <button 
+                <button
                   onClick={() => setPromptValue(Math.max(1, promptValue - 1))}
-                  className="w-11 h-11 rounded-xl bg-black/30 text-[#3E2723] font-black text-2xl flex items-center justify-center hover:bg-black/50 active:scale-95 transition-all border border-white/10"
+                  className="w-11 h-11 rounded-xl bg-white border-2 border-[var(--wood-light)] text-[var(--text-primary)] font-black text-2xl flex items-center justify-center hover:bg-[var(--primary-light)] hover:text-[var(--primary-dark)] active:scale-95 transition-all shadow-sm"
                 >
                   -
                 </button>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   value={promptValue}
                   onChange={(e) => setPromptValue(parseInt(e.target.value) || 1)}
-                  className="w-24 text-center text-3xl font-display font-bold bg-black/40 text-[#3E2723] border-2 border-[var(--primary)] rounded-xl py-2 focus:outline-none focus:border-[var(--primary-dark)]"
-                  min="1"
+                  className="w-24 text-center text-3xl font-display font-bold bg-white text-[var(--text-primary)] border-2 border-[var(--primary)] rounded-xl py-2 focus:outline-none focus:ring-4 focus:ring-[var(--primary-light)]/50 shadow-inner"
                 />
-                <button 
+                <button
                   onClick={() => setPromptValue(promptValue + 1)}
-                  className="w-11 h-11 rounded-xl bg-black/30 text-[#3E2723] font-black text-2xl flex items-center justify-center hover:bg-black/50 active:scale-95 transition-all border border-white/10"
+                  className="w-11 h-11 rounded-xl bg-white border-2 border-[var(--wood-light)] text-[var(--text-primary)] font-black text-2xl flex items-center justify-center hover:bg-[var(--primary-light)] hover:text-[var(--primary-dark)] active:scale-95 transition-all shadow-sm"
                 >
                   +
                 </button>
@@ -170,8 +168,8 @@ export default function Modals() {
             >
               <div className="text-center mb-4">
                 <div className="text-6xl mb-2 drop-shadow-md">{targetNpc.emoji}</div>
-                <h2 className="text-2xl font-display font-black text-[#3E2723]">{targetNpc.name}</h2>
-                <p className="text-[#ff9a5a] font-bold text-sm bg-black/30 inline-block px-3 py-1 rounded-full border border-[#ff9a5a]/30 mt-1">{targetNpc.role}</p>
+                <h2 className="text-2xl font-display font-black text-[var(--text-primary)]">{targetNpc.name}</h2>
+                <p className="text-[var(--primary-dark)] font-bold text-sm bg-[var(--primary-light)]/30 inline-block px-3 py-1 rounded-full border border-[var(--primary)]/40 mt-1">{targetNpc.role}</p>
                 <p className="text-[#5D4037] text-sm mt-3 font-medium">Pilih barang dari inventory Anda untuk diberikan sebagai hadiah.</p>
               </div>
               
@@ -180,18 +178,18 @@ export default function Modals() {
                   <div className="col-span-5 text-center text-xs text-[#5D4037]/70 py-4 font-bold">Inventory kosong...</div>
                 )}
                 {Object.entries(inventory).map(([item, amount]) => amount > 0 && (
-                  <button 
-                    key={`gift-${item}`}
-                    onClick={() => setSelectedGift(item)}
-                    className={`rounded-xl p-2 flex flex-col items-center border-2 relative transition-all active:scale-95
-                      ${selectedGift === item ? 'bg-[#ff9a5a]/20 border-[#ff9a5a] shadow-inner scale-105' : 'bg-black/40 border-white/10 hover:bg-black/60'}
-                    `}
-                  >
-                    <span className="text-2xl drop-shadow-sm">{getCropEmoji(item)}</span>
-                    <span className="absolute -bottom-2 -right-2 bg-black text-[#3E2723] text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-white/20">
-                      {amount}
-                    </span>
-                  </button>
+                    <button
+                      key={item}
+                      onClick={() => setSelectedGift(item)}
+                      className={`relative w-16 h-16 rounded-xl flex items-center justify-center transition-all border-2
+                      ${selectedGift === item ? 'bg-[var(--gold)]/20 border-[var(--gold)] shadow-inner scale-105' : 'bg-white/50 border-[var(--wood-light)] hover:bg-white'}
+                      `}
+                    >
+                      <span className="text-3xl drop-shadow-md">{getCropEmoji(item)}</span>
+                      <span className="absolute -bottom-2 -right-2 bg-[var(--card)] text-[var(--text-primary)] text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm border-2 border-[var(--wood-light)]">
+                        {inventory[item]}
+                      </span>
+                    </button>
                 ))}
               </div>
               
@@ -205,10 +203,10 @@ export default function Modals() {
                 <button 
                   onClick={handleGiveGift}
                   disabled={!selectedGift}
-                  className={`btn py-3 text-[#3E2723] ${
-                    selectedGift 
-                      ? 'bg-gradient-to-b from-[#ff9a5a] to-[#e85d4c] shadow-[0_4px_0_#9c2b1e] border-2 border-[#ffc5a3] hover:brightness-105' 
-                      : 'bg-black/50 text-[#3E2723]/30 border-2 border-white/10 shadow-none'
+                  className={`btn py-3 text-[var(--text-primary)] ${
+                    selectedGift && (inventory[selectedGift] || 0) > 0
+                      ? 'bg-[var(--gold)] border-[var(--gold-deep)] hover:brightness-105 shadow-[0_4px_0_var(--wood)]'
+                      : 'bg-[var(--wood-light)]/30 text-[var(--text-secondary)] border-2 border-[var(--wood-light)]/50 shadow-none'
                   }`}
                 >
                   Beri Hadiah 🎁

@@ -272,7 +272,7 @@ export default function TabAnimal() {
                       {!isReady && (
                         <div className="absolute bottom-0 left-0 right-0 h-4 bg-black/60 overflow-hidden border-t border-white/10 z-20 flex items-center justify-center">
                           <div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-[#ffe08a] to-[#f0b429]" style={{ width: `${progress}%` }} />
-                          <span className="relative z-10 text-[9px] font-black text-[#3E2723] drop-shadow-md tracking-wider">
+                          <span className="relative z-10 text-[9px] font-black text-white drop-shadow-md tracking-wider">
                             {Math.ceil((animal.produceTime - (currentTime - animal.lastCollected)) / 1000)}s ⚡
                           </span>
                         </div>
