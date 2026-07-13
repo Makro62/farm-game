@@ -75,10 +75,10 @@ export default function TabMine() {
     }
     openConfirm(
       'Sewa Penambang Tarjo',
-      'Sewa Penambang Tarjo seharga 15.000 💰? Dia akan menambang otomatis untukmu!',
+      `Sewa Penambang Tarjo seharga ${GAME_CONSTANTS.COSTS.WORKER_MINER.toLocaleString()} 💰? Dia akan menambang otomatis untukmu!`,
       () => {
-        if (hireWorker('miner', 15000)) {
-          toast.success('Penambang Tarjo berhasil disewa! Auto tambang aktif. 👷‍♂️');
+        if (hireWorker('miner', GAME_CONSTANTS.COSTS.WORKER_MINER)) {
+          toast.success('Kurcaci Penambang berhasil disewa!', { icon: '👷' });
         } else {
           toast.error('Koin tidak cukup!');
         }

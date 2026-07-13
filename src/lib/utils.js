@@ -77,10 +77,25 @@ export const CROP_DATA = {
 export const SHOP_SEEDS = [
   { id: 'bibit_wortel', cropId: 'wortel', name: 'Bibit Wortel', emoji: '🥕', price: 10, time: 15, season: 'all' },
   { id: 'bibit_jagung', cropId: 'jagung', name: 'Bibit Jagung', emoji: '🌽', price: 20, time: 30, season: 'all' },
-  { id: 'bibit_tomat', cropId: 'tomat', name: 'Bibit Tomat', emoji: '🍅', price: 35, time: 60, season: 'all' },
-  { id: 'bibit_stroberi', cropId: 'stroberi', name: 'Bibit Stroberi', emoji: '🍓', price: 75, time: 120, season: 'all' },
-  { id: 'bibit_semangka', cropId: 'semangka', name: 'Bibit Semangka', emoji: '🍉', price: 120, time: 150, season: 'all' },
-  { id: 'bibit_jamur', cropId: 'jamur', name: 'Spora Jamur', emoji: '🍄', price: 500, time: 300, season: 'all' },
+  { id: 'bibit_tomat', cropId: 'tomat', name: 'Bibit Tomat', emoji: '🍅', price: 35, time: 60, season: 'summer' },
+  { id: 'bibit_stroberi', cropId: 'stroberi', name: 'Bibit Stroberi', emoji: '🍓', price: 75, time: 120, season: 'spring' },
+  { id: 'bibit_tulip', cropId: 'tulip', name: 'Bibit Tulip', emoji: '🌷', price: 100, time: 100, season: 'spring' },
+  { id: 'bibit_gandum', cropId: 'gandum', name: 'Bibit Gandum', emoji: '🌾', price: 90, time: 135, season: 'autumn' },
+  { id: 'bibit_semangka', cropId: 'semangka', name: 'Bibit Semangka', emoji: '🍉', price: 120, time: 150, season: 'summer' },
+  { id: 'bibit_apel', cropId: 'apel', name: 'Bibit Apel', emoji: '🍎', price: 140, time: 180, season: 'autumn' },
+  { id: 'bibit_labu', cropId: 'labu', name: 'Bibit Labu', emoji: '🎃', price: 160, time: 200, season: 'autumn' },
+  { id: 'bibit_jamur', cropId: 'jamur', name: 'Spora Jamur', emoji: '🍄', price: 500, time: 300, season: 'winter' },
+];
+
+export const SHOP_DECORATIONS = [
+  { id: 'bunga', name: 'Pot Bunga', emoji: '🪴', price: 300, desc: 'Hiasan halaman (+5 XP saat beli)' },
+  { id: 'air_mancur', name: 'Air Mancur', emoji: '⛲', price: 800, desc: 'Suasana kota lebih hidup' },
+  { id: 'patung', name: 'Patung Koin', emoji: '🗿', price: 1500, desc: 'Bonus prestige visual' },
+];
+
+export const SHOP_BUILDINGS = [
+  { id: 'silo', name: 'Silo', emoji: '🏚️', price: 2000, desc: 'Hasil jual tanaman +15%' },
+  { id: 'greenhouse', name: 'Greenhouse', emoji: '🏠', price: 5000, desc: 'Tanam bibit luar musim' },
 ];
 
 export const SHOP_ANIMALS = [

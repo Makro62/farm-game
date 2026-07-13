@@ -82,10 +82,10 @@ export default function TabAnimal() {
     }
     openConfirm(
       'Sewa Peternak Siti',
-      'Sewa Peternak Siti (Auto-Collect Products) seharga 500 💰?',
+      `Sewa Peternak Siti (Auto-Collect Products) seharga ${GAME_CONSTANTS.COSTS.WORKER_RANCHER} 💰?`,
       () => {
-        if (hireWorker('rancher', 500)) {
-          toast.success('Peternak Siti disewa! Auto collect sudah aktif. 👩‍🌾');
+        if (hireWorker('rancher', GAME_CONSTANTS.COSTS.WORKER_RANCHER)) {
+          toast.success('Peternak Siti berhasil disewa! Auto ternak aktif. 👩‍🌾');
         } else {
           toast.error('Koin tidak cukup!');
         }

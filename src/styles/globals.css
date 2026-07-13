@@ -192,8 +192,20 @@
   }
 
   .game-tab-grid {
-    @apply grid grid-cols-1 w-full;
+    @apply grid w-full;
+    grid-template-columns: 1fr;
     @apply gap-3 sm:gap-4 lg:gap-5 xl:gap-6;
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .game-tab-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .game-main {
+      grid-column: 1 / -1;
+    }
+    .game-sidebar-left { grid-column: 1 / 2; }
+    .game-sidebar-right { grid-column: 2 / 3; }
   }
 
   @media (min-width: 1024px) {

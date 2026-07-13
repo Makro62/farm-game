@@ -1,36 +1,44 @@
 'use client';
 
-export default function TabsNav({ activeTab, onTabChange }) {
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
+
+export default function TabsNav() {
+  const pathname = usePathname();
+  
   const tabs = [
-    { id: 'farm', label: 'Pertanian', emoji: '🌱' },
-    { id: 'animal', label: 'Peternakan', emoji: '🐄' },
-    { id: 'mine', label: 'Tambang', emoji: '⛏️' },
-    { id: 'town', label: 'Kota', emoji: '🏪' }
+    { id: 'pertanian', label: 'Pertanian', emoji: '🌱' },
+    { id: 'peternakan', label: 'Peternakan', emoji: '🐄' },
+    { id: 'tambang', label: 'Tambang', emoji: '⛏️' },
+    { id: 'kota', label: 'Kota', emoji: '🏪' }
   ];
 
   return (
-    <div className="game-container py-2 sm:py-3 bg-white/10 backdrop-blur-md border-b border-white/20 shadow-lg sticky top-[68px] sm:top-[76px] z-40">
-      <div className="flex gap-1.5 sm:gap-2 md:gap-3 w-full">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 sm:px-4 rounded-xl sm:rounded-2xl font-bold transition-all duration-300 ease-out shadow-sm border-b-4 min-h-[2.75rem] sm:min-h-[3rem]
-                ${isActive 
-                  ? 'btn-primary border-green-700 scale-[1.02] sm:scale-105' 
-                  : 'glass-card text-gray-100 hover:text-white'
-                }`}
-            >
-              <span className={`text-xl sm:text-2xl shrink-0 transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-md' : 'drop-shadow-sm'}`}>
-                {tab.emoji}
-              </span>
-              <span className="text-[11px] sm:text-sm md:text-base truncate">{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+    <div className="flex bg-black/40 backdrop-blur-xl rounded-full p-1 shadow-inner border border-white/10 overflow-x-auto hide-scrollbar flex-nowrap w-max mx-auto pointer-events-auto">
+      {tabs.map((tab) => {
+        const isActive = pathname?.startsWith(`/${tab.id}`);
+        return (
+          <Link
+            key={tab.id}
+            href={`/${tab.id}`}
+            className={`relative flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-bold text-[11px] sm:text-sm transition-colors duration-300 min-w-[60px] sm:min-w-[100px]
+              ${isActive ? 'text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            {isActive && (
+              <motion.div
+                layoutId="active-tab"
+                className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full shadow-lg"
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              />
+            )}
+            <span className={`relative z-10 text-sm sm:text-lg transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-md' : ''}`}>
+              {tab.emoji}
+            </span>
+            <span className="relative z-10 tracking-wide hidden md:inline-block">{tab.label}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 }

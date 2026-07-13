@@ -7,10 +7,12 @@ export function StatusHeader() {
   const season = useGameStore(state => state.season);
   const weather = useGameStore(state => state.weather);
   const activeEvent = useGameStore(state => state.activeEvent);
+  const combo = useGameStore(state => state.combo);
   
   const checkStreak = useGameStore(state => state.checkStreak);
   const resetGame = useGameStore(state => state.resetGame);
   const openConfirm = useGameStore(state => state.openConfirm);
+  const touchSaveTimestamp = useGameStore(state => state.touchSaveTimestamp);
 
   const handleClaimDaily = () => {
     const result = checkStreak();
@@ -22,7 +24,7 @@ export function StatusHeader() {
   };
 
   const handleSave = () => {
-    // Zustand persist menyimpan otomatis pada setiap perubahan; ini hanya feedback.
+    touchSaveTimestamp?.();
     toast.success('Game tersimpan! 💾');
   };
 
@@ -67,6 +69,13 @@ export function StatusHeader() {
             </span>
             <span className="text-[10px] sm:text-xs text-white/70 ml-2 font-mono">{weather.nextChangeIn}s</span>
           </div>
+          {combo?.count > 1 && (
+            <div className="flex items-center gap-2 bg-orange-500/40 px-3 py-1.5 rounded-lg shadow-sm border border-orange-300/40 animate-pulse">
+              <span className="font-bold text-xs sm:text-sm text-white">
+                🔥 Combo ×{combo.count} ({combo.multiplier.toFixed(2)}x)
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={handleClaimDaily} className="bg-gradient-to-r from-pink-400 to-rose-400 text-white px-3 py-1.5 rounded-lg font-bold text-xs sm:text-sm shadow-sm hover:scale-105 transition-transform">🎁 Daily</button>

@@ -2,6 +2,7 @@ import { Inter } from 'next/font/google';
 import '@/styles/globals.css';
 import { GameProvider } from '@/lib/store-provider';
 import { Toaster } from 'react-hot-toast';
+import ClientLayout from '@/components/ClientLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -36,7 +37,9 @@ export default function RootLayout({ children }) {
       </head>
       <body className={inter.className}>
         <GameProvider>
-          {children}
+          <ClientLayout>
+            {children}
+          </ClientLayout>
           <Toaster
             position="top-center"
             reverseOrder={false}

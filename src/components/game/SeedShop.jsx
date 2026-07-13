@@ -16,10 +16,21 @@ export function SeedShop() {
   const setSelectedInventoryItem = useGameStore(state => state.setSelectedSeed);
   const openConfirm = useGameStore(state => state.openConfirm);
   const currentSeason = useGameStore(state => state.season.current);
+  const buildings = useGameStore(state => state.buildings);
 
   const [shopAmounts, setShopAmounts] = useState({});
 
-  const availableSeeds = SHOP_SEEDS.filter(s => s.season === 'all' || s.season === currentSeason);
+  const availableSeeds = SHOP_SEEDS.filter((s) => {
+    if (buildings?.greenhouse) return true;
+    return s.season === 'all' || s.season === currentSeason;
+  });
+
+  const seasonLabel = {
+    spring: '🌸 Spring',
+    summer: '☀️ Summer',
+    autumn: '🍂 Autumn',
+    winter: '❄️ Winter',
+  }[currentSeason] || currentSeason;
 
   const handleHireFarmer = () => {
     if (workers?.farmer) {
@@ -49,15 +60,22 @@ export function SeedShop() {
 
   return (
     <>
-      <ShopSectionTitle icon="🛒">Shop Bibit</ShopSectionTitle>
+      <ShopSectionTitle icon="🛒">Shop Bibit ({seasonLabel})</ShopSectionTitle>
+      {buildings?.greenhouse && (
+        <p className="text-[10px] text-emerald-300 mb-2">🏠 Greenhouse aktif — semua musim tersedia</p>
+      )}
       <div className="shop-grid mb-6">
-        {availableSeeds.map((seed) => {
+        {availableSeeds.length === 0 ? (
+          <div className="col-span-full text-center text-sm text-gray-400 italic py-2">
+            Tidak ada bibit untuk musim ini.
+          </div>
+        ) : availableSeeds.map((seed) => {
           const amt = shopAmounts[seed.id] || 1;
           return (
             <ShopItemCard
               key={`shop-${seed.id}`}
               icon={<CropIcon itemId={seed.id} className="shop-item-icon" />}
-              name={seed.name}
+              name={`${seed.name}${seed.season !== 'all' ? ` · ${seed.season}` : ''}`}
               price={seed.price}
               amount={amt}
               onDecrease={() => setShopAmounts(p => ({ ...p, [seed.id]: Math.max(1, amt - 1) }))}

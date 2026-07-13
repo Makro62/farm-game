@@ -10,6 +10,7 @@ import { SeedShop } from './game/SeedShop';
 import { PlotGrid } from './game/PlotGrid';
 import { OrderBoard } from './game/OrderBoard';
 import { QuestPanel } from './game/QuestPanel';
+import { MarketBoard } from './game/MarketBoard';
 import toast from 'react-hot-toast';
 
 export default function TabFarm() {
@@ -74,6 +75,7 @@ export default function TabFarm() {
         <div className="game-sidebar-right">
           <div className="glass-panel p-4 h-full">
             <InventoryWidget />
+            <MarketBoard />
             <QuestPanel />
             <CraftingWidget type="kitchen" title="Dapur Produksi" icon="🍳" />
           </div>

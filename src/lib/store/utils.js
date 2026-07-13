@@ -1,0 +1,185 @@
+import { SHOP_SEEDS, SHOP_ANIMALS } from '../utils';
+
+export const MINING_REGEN_MS = { 1: 120000, 2: 90000, 3: 60000 };
+
+export function getMiningRegenMs(mining) {
+  let ms = MINING_REGEN_MS[mining?.pickaxeLevel] || MINING_REGEN_MS[1];
+  if (mining?.lanternUntil && mining.lanternUntil > Date.now()) {
+    ms = Math.floor(ms * 0.5);
+  }
+  return ms;
+}
+
+export function rollMineralType(pickaxeLevel = 1, lanternActive = false, eventId = null) {
+  let bonus = (lanternActive ? 0.05 : 0) + (pickaxeLevel >= 3 ? 0.08 : pickaxeLevel >= 2 ? 0.04 : 0);
+  // Event Demam Emas: peluang emas & berlian naik
+  if (eventId === 'tambang') bonus += 0.12;
+  const r = Math.random();
+  if (r < 0.05 + bonus) return 'berlian';
+  if (r < 0.15 + bonus) return 'emas';
+  if (r < 0.3 + (pickaxeLevel >= 2 ? 0.05 : 0)) return 'besi';
+  if (r < 0.5) return 'tembaga';
+  return 'batu';
+}
+
+export function pickAutoSeed(inventory, selectedSeed, season, hasGreenhouse = false) {
+  if (selectedSeed) {
+    const seed = SHOP_SEEDS.find((s) => s.id === selectedSeed);
+    if (seed && (inventory[selectedSeed] || 0) > 0) {
+      if (hasGreenhouse || seed.season === 'all' || seed.season === season) return seed;
+    }
+  }
+  const available = SHOP_SEEDS.filter(
+    (s) =>
+      (inventory[s.id] || 0) > 0 &&
+      (hasGreenhouse || s.season === 'all' || s.season === season)
+  );
+  if (available.length === 0) return null;
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+export function getGrowthMultiplier(state) {
+  let mult = state?.growthMultiplier > 0 ? state.growthMultiplier : 1;
+  const weather = state?.weather?.current;
+  
+  if (weather === '🌧️ Hujan') {
+    mult *= 1.5;
+  } else if (weather === '⛈️ Badai') {
+    mult *= 0.5;
+  }
+  
+  return mult;
+}
+
+export function consumeInventoryItem(inventory, itemId) {
+  const next = (inventory[itemId] || 0) - 1;
+  if (next <= 0) {
+    delete inventory[itemId];
+  } else {
+    inventory[itemId] = next;
+  }
+}
+
+export function safeCoins(value, fallback = 100) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : fallback;
+}
+
+export function safePositiveNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+export const WORKER_AUTO_KEYS = {
+  farmer: 'autoFarmer',
+  rancher: 'autoRancher',
+  fisher: 'autoFisher',
+  miner: 'autoMiner',
+};
+
+export function isWorkerActive(state, type) {
+  if (!state?.workers?.[type]) return false;
+  const autoKey = WORKER_AUTO_KEYS[type];
+  if (!autoKey) return false;
+  return state[autoKey] !== false;
+}
+
+export const PLOT_STATE_MAP = {
+  empty: 'empty',
+  growing: 'growing',
+  ready: 'ready',
+  grass: 'empty',
+  depleted: 'empty',
+};
+
+export function normalizePlot(plot, index = 0) {
+  if (!plot || typeof plot !== 'object') {
+    return { id: index, status: 'empty', crop: null, plantedAt: null, growTime: null };
+  }
+
+  const legacyState = plot.state;
+  const status = plot.status || (legacyState ? PLOT_STATE_MAP[legacyState] || legacyState : 'empty');
+
+  return {
+    id: plot.id ?? index,
+    status,
+    crop: plot.crop ?? null,
+    plantedAt: plot.plantedAt ?? null,
+    growTime: plot.growTime > 0 ? plot.growTime : null,
+  };
+}
+
+export function normalizePlots(plots) {
+  if (!Array.isArray(plots)) {
+    return Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      status: 'empty',
+      crop: null,
+      plantedAt: null,
+      growTime: null,
+    }));
+  }
+
+  const normalized = plots.map((p, i) => normalizePlot(p, i));
+  while (normalized.length < 30) {
+    normalized.push({
+      id: normalized.length,
+      status: 'empty',
+      crop: null,
+      plantedAt: null,
+      growTime: null,
+    });
+  }
+  return normalized.slice(0, 30);
+}
+
+export function normalizeAnimal(animal) {
+  if (!animal || typeof animal !== 'object') return animal;
+
+  const produceTime = animal.produceTime > 0 ? animal.produceTime : 20000;
+
+  if (animal.readyToCollect) {
+    return {
+      ...animal,
+      status: animal.status || 'producing',
+      lastCollected: 0,
+      produceTime,
+    };
+  }
+
+  return {
+    ...animal,
+    status: animal.status || 'producing',
+    lastCollected: animal.lastCollected ?? Date.now(),
+    produceTime,
+  };
+}
+
+export function migrateLegacyWorkers(merged) {
+  if (typeof window === 'undefined') return merged;
+
+  try {
+    const legacyRaw = localStorage.getItem('farmTycoonSave');
+    if (!legacyRaw) return merged;
+
+    const payload = JSON.parse(legacyRaw);
+    const dataStr = payload.data ?? legacyRaw;
+    const legacy = typeof dataStr === 'string' ? JSON.parse(dataStr) : dataStr;
+    if (!legacy || typeof legacy !== 'object') return merged;
+
+    merged.workers = {
+      farmer: !!(merged.workers?.farmer || legacy.gnomeFarmOwned),
+      rancher: !!(merged.workers?.rancher || legacy.gnomeAnimalOwned),
+      fisher: !!(merged.workers?.fisher || legacy.merchantOwned),
+      miner: !!merged.workers?.miner,
+    };
+
+    if (legacy.gnomeFarmOwned && legacy.gnomeFarmActive !== false) merged.autoFarmer = true;
+    if (legacy.gnomeAnimalOwned && legacy.gnomeAnimalActive !== false) merged.autoRancher = true;
+    if (legacy.merchantOwned && legacy.merchantActive !== false) merged.autoFisher = true;
+  } catch {
+    // abaikan save lama yang rusak
+  }
+
+  return merged;
+}

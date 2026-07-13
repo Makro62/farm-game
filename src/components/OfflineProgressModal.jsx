@@ -10,7 +10,7 @@ export default function OfflineProgressModal() {
 
   if (!offlineReport) return null;
 
-  const { deltaSeconds, harvestedCrops, collectedProducts, caughtFishes, minedGems, earnedCoins } = offlineReport;
+  const { deltaSeconds, harvestedCrops, collectedProducts, caughtFishes, minedGems, maturedCrops, maturedNodes, earnedCoins } = offlineReport;
 
   // Format time (e.g. 1h 30m)
   const hours = Math.floor(deltaSeconds / 3600);
@@ -93,6 +93,25 @@ export default function OfflineProgressModal() {
                 </div>
               )}
 
+              {maturedCrops > 0 && (
+                <div className="flex justify-between items-center bg-white/10 px-4 py-3 rounded-xl border border-white/5">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🌱</span>
+                    <span className="font-bold text-white text-sm">Tanaman Matang</span>
+                  </div>
+                  <span className="font-bold text-green-300">+{maturedCrops} petak</span>
+                </div>
+              )}
+
+              {maturedNodes > 0 && (
+                <div className="flex justify-between items-center bg-white/10 px-4 py-3 rounded-xl border border-white/5">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🪨</span>
+                    <span className="font-bold text-white text-sm">Tambang Siap</span>
+                  </div>
+                  <span className="font-bold text-purple-300">+{maturedNodes} petak</span>
+                </div>
+              )}
             </div>
 
             <button 

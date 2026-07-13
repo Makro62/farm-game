@@ -1,14 +1,55 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
-import { getCropEmoji, FISHES, RECIPES, NPC_LIST } from '@/lib/utils';
+import { getCropEmoji, FISHES, RECIPES, NPC_LIST, SHOP_DECORATIONS, SHOP_BUILDINGS } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { InventoryWidget } from './InventoryWidget';
 import { CraftingWidget } from './ui/CraftingWidget';
 import { StatusHeader } from './StatusHeader';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import toast from 'react-hot-toast';
+import { useFishingMinigame } from '@/lib/hooks/useFishingMinigame';
+import { GAME_CONSTANTS } from '@/lib/constants';
+
+function FishInventoryList({ inventory }) {
+  return (
+    <>
+      <div className="flex flex-wrap gap-2 mb-8">
+        {FISHES.map(fish => {
+          const count = inventory[fish.id] || 0;
+          if (count === 0) return null;
+          return (
+            <div key={`inv-${fish.id}`} className="glass-card border border-cyan-100/30 p-2 rounded-xl flex flex-col items-center justify-center bg-white/5 relative overflow-hidden w-[72px] sm:w-[84px] flex-shrink-0">
+              <motion.div 
+                className="text-3xl mb-1 origin-center"
+                animate={{ 
+                  rotate: [-15, 15, -15],
+                  x: [-5, 5, -5],
+                  y: [0, -8, 0] 
+                }}
+                transition={{ 
+                  repeat: Infinity, 
+                  duration: 2, 
+                  ease: "easeInOut" 
+                }}
+              >
+                {fish.emoji}
+              </motion.div>
+              <span className="text-cyan-100 font-bold text-[10px] sm:text-xs truncate w-full text-center">{fish.name}</span>
+              <span className="text-yellow-400 font-black text-xs">x{count}</span>
+            </div>
+          );
+        })}
+        {FISHES.every(f => !inventory[f.id]) && (
+          <div className="col-span-full glass-card p-3 rounded-xl border border-cyan-100/30 text-sm text-cyan-100 text-center italic opacity-70 w-full">
+            Belum ada ikan yang ditangkap.
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
 
 export default function TabTown() {
   const spinWheel = useGameStore(state => state.spinWheel);
@@ -31,118 +72,13 @@ export default function TabTown() {
   const openNpcGift = useGameStore(state => state.openNpcGift);
   const autoFisher = useGameStore(state => state.autoFisher);
   const toggleAutoFisher = useGameStore(state => state.toggleAutoFisher);
+  const buildings = useGameStore(state => state.buildings);
+  const decorations = useGameStore(state => state.decorations);
+  const buyBuilding = useGameStore(state => state.buyBuilding);
+  const buyDecoration = useGameStore(state => state.buyDecoration);
+  const addXP = useGameStore(state => state.addXP);
 
-  const [fishState, setFishState] = useState('idle'); // idle | waiting | bite | minigame
-  const [indicatorPos, setIndicatorPos] = useState(50);
-  const [score, setScore] = useState(0);
-  const [isHolding, setIsHolding] = useState(false);
-  
-  const holdingRef = useRef(false);
-
-  // Update ref when state changes so setInterval sees it
-  useEffect(() => {
-    holdingRef.current = isHolding;
-  }, [isHolding]);
-
-  // Handle waiting for bite
-  useEffect(() => {
-    if (fishState === 'waiting') {
-      const waitTime = 2000 + Math.random() * 3000;
-      const timer = setTimeout(() => {
-        setFishState('bite');
-      }, waitTime);
-      return () => clearTimeout(timer);
-    }
-  }, [fishState]);
-
-  // Handle bite window
-  useEffect(() => {
-    if (fishState === 'bite') {
-      const timer = setTimeout(() => {
-        toast.error('Yah, ikannya lepas! 🐟💨');
-        setFishState('idle');
-      }, 1500); // 1.5s to react
-      return () => clearTimeout(timer);
-    }
-  }, [fishState]);
-
-  // Handle minigame loop
-  useEffect(() => {
-    if (fishState !== 'minigame') return;
-    
-    let pos = 50;
-    let dir = 1;
-    let currentScore = 0;
-    const speed = 1.5 + Math.random() * 1.5;
-    
-    const interval = setInterval(() => {
-      pos += dir * speed;
-      if (pos >= 90) { pos = 90; dir = -1; }
-      if (pos <= 10) { pos = 10; dir = 1; }
-      
-      setIndicatorPos(pos);
-      
-      // Hit zone is between 30 and 70 (easier)
-      const inZone = pos >= 30 && pos <= 70;
-      if (inZone && holdingRef.current) {
-        currentScore += 1;
-        setScore(currentScore);
-      } else if (!inZone && holdingRef.current) {
-        currentScore -= 0.1; // Penalty for holding outside zone (reduced)
-        if (currentScore < 0) currentScore = 0;
-        setScore(currentScore);
-      }
-
-      if (currentScore >= 40) { // Easier to win
-        finishMinigame(true);
-      }
-    }, 50);
-
-    const timeout = setTimeout(() => {
-      finishMinigame(false);
-    }, 6000); // 6 seconds max
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
-  }, [fishState]);
-
-  const finishMinigame = (success) => {
-    setFishState('idle');
-    setIsHolding(false);
-    setScore(0);
-    
-    if (success) {
-      // Roll fish based on chance
-      const rand = Math.random();
-      let cumulative = 0;
-      let caughtFish = FISHES[0];
-      for (const fish of FISHES) {
-        cumulative += fish.chance;
-        if (rand <= cumulative) {
-          caughtFish = fish;
-          break;
-        }
-      }
-      
-      addItem(caughtFish.id, 1);
-      toast.success(`Berhasil menangkap ${caughtFish.emoji} ${caughtFish.name}!`, { duration: 4000 });
-    } else {
-      toast.error('Gagal menangkap ikan, kurang tarikan!');
-    }
-  };
-
-  const startFishing = () => {
-    setFishState('waiting');
-  };
-
-  const startMinigame = () => {
-    setFishState('minigame');
-    setScore(0);
-    setIndicatorPos(50);
-  };
-
+  const { fishState, indicatorPos, score, isHolding, setIsHolding, startFishing, startMinigame } = useFishingMinigame();
 
   const handleSpinWheel = () => {
     const result = spinWheel();
@@ -160,9 +96,9 @@ export default function TabTown() {
     }
     openConfirm(
       'Beli Booster Koin',
-      'Apakah Anda yakin ingin membeli Booster Koin x2 seharga 100 💰?',
+      `Apakah Anda yakin ingin membeli Booster Koin x2 seharga ${GAME_CONSTANTS.COSTS.COIN_BOOSTER} 💰?`,
       () => {
-        if (spendCoins(100)) {
+        if (spendCoins(GAME_CONSTANTS.COSTS.COIN_BOOSTER)) {
           activateCoinBooster();
           toast.success('Booster Koin x2 Aktif!', { icon: '💰' });
         } else {
@@ -179,9 +115,9 @@ export default function TabTown() {
     }
     openConfirm(
       'Beli Booster Growth',
-      'Beli Booster Growth x1.5 (Tumbuh lebih cepat) seharga 50 💰?',
+      `Beli Booster Growth x1.5 (Tumbuh lebih cepat) seharga ${GAME_CONSTANTS.COSTS.GROWTH_BOOSTER} 💰?`,
       () => {
-        if (buyGrowthBooster(50)) {
+        if (buyGrowthBooster(GAME_CONSTANTS.COSTS.GROWTH_BOOSTER)) {
           toast.success('Booster Growth x1.5 Aktif!', { icon: '🌱' });
         } else {
           toast.error('Koin tidak cukup!');
@@ -197,15 +133,34 @@ export default function TabTown() {
     }
     openConfirm(
       'Sewa Pemancing Kota',
-      'Sewa Pemancing Kota (Auto-mancing) seharga 12000 💰?',
+      `Sewa Pemancing Kota (Auto-mancing) seharga ${GAME_CONSTANTS.COSTS.FISHER_WORKER} 💰?`,
       () => {
-        if (hireWorker('fisher', 12000)) {
+        if (hireWorker('fisher', GAME_CONSTANTS.COSTS.FISHER_WORKER)) {
           toast.success('Pemancing Kota disewa! Auto mancing aktif. 🎣');
         } else {
           toast.error('Koin tidak cukup!');
         }
       }
     );
+  };
+
+  const handleBuyDecoration = (item) => {
+    const result = buyDecoration(item.id);
+    if (result.ok) {
+      addXP(5);
+      toast.success(result.message);
+    } else {
+      toast.error(result.message);
+    }
+  };
+
+  const handleBuyBuilding = (item) => {
+    const result = buyBuilding(item.id);
+    if (result.ok) {
+      toast.success(result.message);
+    } else {
+      toast.error(result.message);
+    }
   };
 
   const handleShopBuy = (item, amount) => {
@@ -215,8 +170,6 @@ export default function TabTown() {
       toast.error('Koin tidak cukup!');
     }
   };
-
-  const [currentTime, setCurrentTime] = useState(Date.now());
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -258,16 +211,58 @@ export default function TabTown() {
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-green-200 pb-2 text-green-100 mt-6">
               <span>🏡</span> DEKORASI
             </div>
-            <div className="glass-card p-3 rounded-xl border border-green-100/30 text-sm text-green-100 mb-6 text-center italic">
-              Shop dekorasi kosong.
+            <div className="grid grid-cols-1 gap-2 mb-6">
+              {SHOP_DECORATIONS.map((item) => {
+                const owned = (decorations || []).includes(item.id);
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    disabled={owned}
+                    onClick={() => handleBuyDecoration(item)}
+                    className={`w-full glass-card p-2 rounded-xl flex justify-between items-center text-left transition-colors ${
+                      owned ? 'opacity-60 cursor-default' : 'hover:bg-white/10'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-bold text-green-100 text-sm">{item.emoji} {item.name}</div>
+                      <div className="text-[10px] text-gray-400">{item.desc}</div>
+                    </div>
+                    <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs">
+                      {owned ? '✅' : `${item.price}💰`}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* 3. Bangunan */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-orange-200 pb-2 text-orange-100 mt-6">
               <span>🏗️</span> Bangunan
             </div>
-            <div className="glass-card p-3 rounded-xl border border-orange-100/30 text-sm text-orange-100 mb-6 text-center italic">
-              Area bangunan belum tersedia.
+            <div className="grid grid-cols-1 gap-2 mb-6">
+              {SHOP_BUILDINGS.map((item) => {
+                const owned = !!buildings?.[item.id];
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    disabled={owned}
+                    onClick={() => handleBuyBuilding(item)}
+                    className={`w-full glass-card p-2 rounded-xl flex justify-between items-center text-left transition-colors ${
+                      owned ? 'opacity-60 cursor-default' : 'hover:bg-white/10'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-bold text-orange-100 text-sm">{item.emoji} {item.name}</div>
+                      <div className="text-[10px] text-gray-400">{item.desc}</div>
+                    </div>
+                    <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs">
+                      {owned ? '✅' : `${item.price}💰`}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* 4. Booster */}
@@ -276,11 +271,11 @@ export default function TabTown() {
             </div>
             <button onClick={handleBuyGrowthBooster} className={`w-full p-2 rounded-xl shadow-sm mb-2 font-bold flex justify-between items-center transition-transform ${growthMultiplier > 1 ? 'bg-green-500 text-white cursor-default' : 'bg-gradient-to-r from-green-400 to-emerald-500 text-white hover:scale-105'}`}>
               <span>🌱 Growth ×1.5</span>
-              <span className="bg-black/20 px-2 py-0.5 rounded text-xs">{growthMultiplier > 1 ? 'AKTIF' : '50💰'}</span>
+              <span className="bg-black/20 px-2 py-0.5 rounded text-xs">{growthMultiplier > 1 ? 'AKTIF' : `${GAME_CONSTANTS.COSTS.GROWTH_BOOSTER}💰`}</span>
             </button>
             <button onClick={handleBuyBooster} className={`w-full p-2 rounded-xl shadow-sm mb-6 font-bold flex justify-between items-center transition-transform ${coinMultiplier > 1 ? 'bg-amber-600 text-white cursor-default' : 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white hover:scale-105'}`}>
               <span>💰 Coin ×2</span>
-              <span className="bg-black/20 px-2 py-0.5 rounded text-xs">{coinMultiplier > 1 ? 'AKTIF' : '100💰'}</span>
+              <span className="bg-black/20 px-2 py-0.5 rounded text-xs">{coinMultiplier > 1 ? 'AKTIF' : `${GAME_CONSTANTS.COSTS.COIN_BOOSTER}💰`}</span>
             </button>
 
             {/* 5. Roda Harian */}
@@ -304,7 +299,7 @@ export default function TabTown() {
                 <div className="text-[10px] text-gray-400">Auto-mancing & jual hasil</div>
               </div>
               <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs">
-                {workers?.fisher ? '✅ Disewa' : '12000💰'}
+                {workers?.fisher ? '✅ Disewa' : `${GAME_CONSTANTS.COSTS.FISHER_WORKER}💰`}
               </span>
             </button>
             {workers?.fisher && (
@@ -313,24 +308,20 @@ export default function TabTown() {
               </p>
             )}
 
-            {/* 7. Achievements */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-indigo-200/30 pb-2 text-indigo-100 mt-6">
-              <span>🏆</span> Achievements
-            </div>
-            <div className="text-sm font-bold text-white">0 / 12</div>
-
-            {/* Cheat Panel / Dev Menu */}
-            <div className="mt-8 border-t border-red-200/30 pt-4">
-               <div className="font-bold text-xs text-red-400 mb-2">🛠️ CHEAT MENU (DEV)</div>
-               <div className="flex gap-2">
-                  <button onClick={() => dev.addCoins(1000)} className="flex-1 bg-gray-800 text-green-400 text-xs py-1 rounded">
-                    +1000 💰
-                  </button>
-                  <button onClick={() => dev.setLevel(useGameStore.getState().level + 1)} className="flex-1 bg-gray-800 text-blue-400 text-xs py-1 rounded">
-                    +1 LVL
-                  </button>
-               </div>
-            </div>
+            {/* Cheat Panel / Dev Menu (Hanya tampil di development) */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-8 border-t border-red-200/30 pt-4">
+                 <div className="font-bold text-xs text-red-400 mb-2">🛠️ CHEAT MENU (DEV)</div>
+                 <div className="flex gap-2">
+                    <button onClick={() => dev.addCoins(1000)} className="flex-1 bg-gray-800 text-green-400 text-xs py-1 rounded">
+                      +1000 💰
+                    </button>
+                    <button onClick={() => dev.setLevel(useGameStore.getState().level + 1)} className="flex-1 bg-gray-800 text-blue-400 text-xs py-1 rounded">
+                      +1 LVL
+                    </button>
+                 </div>
+              </div>
+            )}
 
           </div>
         </div>
@@ -392,7 +383,7 @@ export default function TabTown() {
                   </div>
                   
                   <div className="w-full h-4 bg-gray-200 rounded-full mb-5 overflow-hidden shadow-inner border border-gray-300">
-                    <div className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 transition-all duration-100" style={{ width: `${(score / 50) * 100}%` }} />
+                    <div className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 transition-all duration-100" style={{ width: `${(score / GAME_CONSTANTS.FISHING.WIN_THRESHOLD) * 100}%` }} />
                   </div>
                   
                   <button 
@@ -405,23 +396,6 @@ export default function TabTown() {
                   </button>
                 </div>
               )}
-            </div>
-
-            {/* Pasar Ikan Kota */}
-            <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-teal-200/30 pb-2 text-teal-100 mt-8">
-              <span>🏪</span> Hasil Tangkapan (Inventory Ikan)
-            </div>
-            <div className="glass-card border-teal-100/30 p-4 min-h-[100px] flex flex-wrap gap-2 items-center justify-center">
-              {FISHES.every(f => !inventory[f.id]) && (
-                <span className="text-teal-200 text-sm font-medium italic">Belum ada ikan yang ditangkap.</span>
-              )}
-              {FISHES.map(f => inventory[f.id] > 0 && (
-                <div key={f.id} className="glass-card p-2 flex flex-col items-center">
-                  <span className="text-3xl mb-1">{f.emoji}</span>
-                  <span className="font-bold text-xs">{f.name}</span>
-                  <span className="text-[10px] bg-teal-900/50 px-2 py-0.5 rounded text-teal-200 font-bold mt-1">x{inventory[f.id]}</span>
-                </div>
-              ))}
             </div>
 
           </div>
@@ -437,38 +411,7 @@ export default function TabTown() {
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-cyan-200/30 pb-2 text-cyan-100 mt-6">
               <span>🏪</span> Hasil Tangkapan (Inventory Ikan)
             </div>
-            <div className="flex flex-wrap gap-2 mb-8">
-              {FISHES.map(fish => {
-                const count = inventory[fish.id] || 0;
-                if (count === 0) return null;
-                return (
-                  <div key={`inv-${fish.id}`} className="glass-card border border-cyan-100/30 p-2 rounded-xl flex flex-col items-center justify-center bg-white/5 relative overflow-hidden w-[72px] sm:w-[84px] flex-shrink-0">
-                    <motion.div 
-                      className="text-3xl mb-1 origin-center"
-                      animate={{ 
-                        rotate: [-15, 15, -15],
-                        x: [-5, 5, -5],
-                        y: [0, -8, 0] 
-                      }}
-                      transition={{ 
-                        repeat: Infinity, 
-                        duration: 2, 
-                        ease: "easeInOut" 
-                      }}
-                    >
-                      {fish.emoji}
-                    </motion.div>
-                    <span className="text-cyan-100 font-bold text-[10px] sm:text-xs truncate w-full text-center">{fish.name}</span>
-                    <span className="text-yellow-400 font-black text-xs">x{count}</span>
-                  </div>
-                );
-              })}
-              {FISHES.every(f => !inventory[f.id]) && (
-                <div className="col-span-full glass-card p-3 rounded-xl border border-cyan-100/30 text-sm text-cyan-100 text-center italic opacity-70">
-                  Belum ada ikan yang ditangkap.
-                </div>
-              )}
-            </div>
+            <FishInventoryList inventory={inventory} />
 
             {/* Warga Kota (NPCs) */}
             <div className="font-bold text-lg mb-3 flex items-center gap-2 border-b-2 border-pink-200/30 pb-2 text-pink-100 mt-6">
