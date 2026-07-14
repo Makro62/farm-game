@@ -1,6 +1,7 @@
 'use client';
 
-import { CROP_DATA, getCropEmojiById, getShopSeed } from '@/lib/utils';
+import { CROP_DATA } from '../../lib/data/crops';
+import { getCropEmojiById, getShopSeed } from '../../lib/data/item-helpers';
 
 /**
  * Ikon bibit / tanaman — selalu menampilkan emoji hasil panen yang sesuai.

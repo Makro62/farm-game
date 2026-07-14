@@ -20,68 +20,58 @@ Proyek ini menggunakan tumpukan teknologi modern berikut:
 - **Tailwind CSS** — Utility-first styling untuk membuat antarmuka responsif dengan cepat.
 - **Framer Motion** — Animasi deklaratif yang smooth dan Hardware Accelerated (seperti transisi panen tanaman).
 
-## 🕹️ Tata Letak (4 Tab)
+## 🕹️ Tata Letak
 
-Game dibagi menjadi empat area yang dapat dipindah lewat tab navigasi:
+Navigasi lewat **sidebar** (desktop) atau **bottom nav** (mobile):
 
-- **🌾 Pertanian** — kebun, shop bibit, pekerja kebun otomatis, papan pesanan, quest, dan dapur olahan tanaman.
-- **🐔 Peternakan** — beli & pelihara hewan (ayam, sapi, dll) serta pekerja peternak otomatis.
-- **⛏️ Tambang** — area untuk mendapatkan mineral berharga (batu, tembaga, emas, berlian) menggunakan pickaxe dan bom.
-- **🏘️ Kota & Fitur** — NPC (Maria, Botan, Hadi), sistem persahabatan, cuaca, dan setting game.
+- **🌾 Pertanian** — kebun, shop bibit, pekerja kebun otomatis, pasar, dan quest
+- **🐔 Peternakan** — beli & pelihara hewan serta pekerja peternak otomatis
+- **⛏️ Tambang** — mineral (batu, tembaga, emas, berlian) dengan pickaxe dan bom
+- **🏘️ Kota** — plaza, memancing, NPC, bangunan, dan papan pesanan
+- **🍽️ Restoran** — memasak hidangan dan koki otomatis
+- **🧑‍🌾 Profil** — stats pemain dan gudang (jual per-item / jual semua)
 
 ## 🚀 Fitur Unggulan
 
-- **Sistem Pertanian Real-Time:** Tanam bibit, tunggu progress bar animasi CSS selesai, dan panen. Semua tereksekusi di background lewat custom hook `useGameLoop`.
-- **Sistem Pekerja Otomatis (Auto):** Sewa kurcaci petani untuk secara otomatis menanam dan memanen tanpa campur tangan Anda.
-- **Siklus Cuaca & Musim Dinamis:** Mempengaruhi gameplay seperti kecepatan tumbuh tanaman dan keberadaan NPC.
-- **Auto-Save Fleksibel:** Progres tersimpan diam-diam (silent save) berkat *Zustand Persist Middleware*.
-- **PWA (Progressive Web App):** Dapat diinstal di HP atau desktop berkat dukungan `next-pwa`.
+- **Sistem Pertanian Real-Time:** Tanam bibit, siram, panen — loop game di `store-provider.js`
+- **Pekerja Otomatis:** Sewa kurcaci petani / peternak / penambang / pemancing / koki
+- **Cuaca & Musim:** Ditampilkan di sidebar; mempengaruhi pertumbuhan tanaman
+- **Auto-Save:** Zustand Persist ke LocalStorage
+- **PWA:** Dapat diinstal di HP atau desktop (`next-pwa`)
 
-## ⚙️ Cara Menjalankan Server Development
+## ⚙️ Cara Menjalankan
 
-Berbeda dengan versi lama, aplikasi ini berjalan menggunakan Node.js dan Next.js. Ikuti langkah berikut:
+1. `npm install`
+2. `npm run dev`
+3. Buka `http://localhost:3000`
 
-1. **Install Dependencies**
-   Pastikan Anda sudah menginstal NodeJS, lalu jalankan di root folder:
-   ```bash
-   npm install
-   ```
+## ☁️ Deployment (Vercel)
 
-2. **Jalankan Server Development**
-   ```bash
-   npm run dev
-   ```
-
-3. Buka **`http://localhost:3000`** di browser Anda.
-
-## ☁️ Deployment
-
-Proyek ini sangat dioptimalkan untuk di-deploy ke **Vercel**. 
-Cukup impor repositori ini di dashboard Vercel Anda, dan Vercel akan otomatis mengenali framework *Next.js* dan melakukan *build* tanpa memerlukan konfigurasi tambahan.
-
-*Catatan: GitHub Pages workflow (`deploy.yml`) versi lama telah dihapus untuk menghindari konflik build statis.*
+Impor repositori di dashboard Vercel — framework Next.js terdeteksi otomatis.
 
 ## 🗂️ Struktur Proyek
 
 ```
 farm-game/
-├── public/                 # PWA icons, gambar aset game, background music
+├── public/                 # PWA icons, aset gambar, musik
 ├── src/
-│   ├── app/                # Next.js App Router (layout.js, page.js)
-│   ├── components/         # Komponen UI (TabFarm, TabAnimal, dll)
-│   │   ├── game/           # Sub-komponen modular untuk setiap tab
-│   │   └── ui/             # Komponen UI reusable (GameAreaHeader, dll)
+│   ├── app/                # App Router (halaman per tab)
+│   ├── components/
+│   │   ├── game/           # PlotGrid, shops, boards
+│   │   └── ui/             # Button, TabPage, ShopItemCard, dll
 │   ├── lib/
-│   │   ├── store/          # Zustand slices dan orchestrator
-│   │   ├── hooks/          # Custom hooks (useFishingMinigame.js, dll)
-│   │   └── utils.js        # Fungsi helper dan data master (CROP_DATA, dll)
+│   │   ├── data/           # crops, shop, recipes, fishes, minerals, npcs
+│   │   ├── store/          # Zustand slices + initialState
+│   │   ├── hooks/          # useFishingMinigame, dll
+│   │   ├── nav.js          # NAV_TABS & SEASON_META
+│   │   └── utils.js        # Helper UI (cn, formatNumber)
 │   └── styles/
-│       └── globals.css     # CSS Global (Tailwind & Keyframes)
-├── next.config.js          # Pengaturan Next.js dan plugin PWA
-└── tailwind.config.js      # Tema dan warna Tailwind
+│       └── globals.css     # Design tokens + komponen CSS
+├── next.config.js
+└── tailwind.config.js
 ```
 
 ## 🐛 Laporkan Bug
 
-Menemukan bug atau punya saran fitur? [Silakan buka Issue baru](https://github.com/Makro62/farm-game/issues/new).
-Selamat bersenang-senang dan jadilah petani terkaya! 🌻💰
+Menemukan bug atau punya saran fitur? [Buka Issue baru](https://github.com/Makro62/farm-game/issues/new).
+Selamat bersenang-senang dan jadilah petani terkaya!

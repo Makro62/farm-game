@@ -1,10 +1,6 @@
 const withPWA = require('@ducanh2912/next-pwa').default({
   dest: 'public',
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
-  reloadOnOnline: true,
-  swcMinify: true,
-  disable: process.env.NODE_ENV === 'development', // disable in dev to avoid caching issues
+  disable: true, // matikan total dulu — SW lama sering bikin reload loop
   workboxOptions: {
     disableDevLogs: true,
   },
@@ -13,6 +9,8 @@ const withPWA = require('@ducanh2912/next-pwa').default({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   turbopack: {},
-}
+  // Strict Mode double-mount bisa terasa seperti refresh di provider hydrate
+  reactStrictMode: false,
+};
 
-module.exports = withPWA(nextConfig)
+module.exports = withPWA(nextConfig);

@@ -2,15 +2,16 @@
 
 import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
-import { SHOP_BAIT } from '@/lib/utils';
-import { InventoryWidget } from './InventoryWidget';
-import { StatusHeader } from './StatusHeader';
+import { SHOP_BAIT } from '@/lib/data/shop';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import { MarketBoard } from './game/MarketBoard';
 import { QuestPanel } from './game/QuestPanel';
 import { TownShop } from './game/TownShop';
 import { TownPlaza, FishingLake, FishCatchBoard } from './game/TownPlaza';
+import { OrderBoard } from './game/OrderBoard';
 import { useFishingMinigame } from '@/lib/hooks/useFishingMinigame';
+import TabPage, { GameStage } from './ui/TabPage';
+import SideDock from './ui/SideDock';
 import toast from 'react-hot-toast';
 
 export default function TabTown() {
@@ -19,7 +20,6 @@ export default function TabTown() {
   const toggleAutoFisher = useGameStore((s) => s.toggleAutoFisher);
   const selectedBait = useGameStore((s) => s.selectedBait);
   const inventory = useGameStore((s) => s.inventory);
-  const dev = useGameStore((s) => s.dev);
 
   const [area, setArea] = useState('plaza');
 
@@ -42,7 +42,7 @@ export default function TabTown() {
 
   const handleToggleAuto = () => {
     if (!workers?.fisher) {
-      toast('Sewa Pemancing Kota dulu di panel kiri!', { icon: '🎣' });
+      toast('Sewa Pemancing Kota dulu di toko samping!', { icon: '🎣' });
       return;
     }
     const next = !autoFisher;
@@ -53,44 +53,18 @@ export default function TabTown() {
   };
 
   return (
-    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="game-tab-grid">
-        <div className="game-sidebar-left">
-          <div className="glass-panel p-4">
-            <TownShop />
-
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-6 border-t border-red-200/30 pt-4">
-                <div className="font-bold text-xs text-red-400 mb-2">CHEAT MENU (DEV)</div>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => dev.addCoins(1000)} className="flex-1 btn-wood">
-                    +1000
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => dev.setLevel(useGameStore.getState().level + 1)}
-                    className="flex-1 btn-wood"
-                  >
-                    +1 LVL
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="game-main">
-          <div className="glass-panel p-4">
-            <StatusHeader />
-
+    <TabPage>
+      <GameStage
+        main={
+          <div className="glass-panel p-3 sm:p-4 stage-play-area">
             <GameAreaHeader
               icon={area === 'plaza' ? '🏛️' : '🎣'}
               title={area === 'plaza' ? 'Pusat Kota' : 'Danau Pemancingan'}
             >
-              <GameActionButton variant="edit" active={area === 'plaza'} onClick={() => setArea('plaza')}>
+              <GameActionButton variant="toggle" active={area === 'plaza'} onClick={() => setArea('plaza')}>
                 Pusat Kota
               </GameActionButton>
-              <GameActionButton variant="edit" active={area === 'lake'} onClick={() => setArea('lake')}>
+              <GameActionButton variant="toggle" active={area === 'lake'} onClick={() => setArea('lake')}>
                 Danau
               </GameActionButton>
               <GameActionButton variant="auto" active={autoFisher} onClick={handleToggleAuto}>
@@ -98,33 +72,46 @@ export default function TabTown() {
               </GameActionButton>
             </GameAreaHeader>
 
-            {area === 'plaza' ? (
-              <TownPlaza />
-            ) : (
-              <FishingLake
-                fishState={fishState}
-                indicatorPos={indicatorPos}
-                score={score}
-                isHolding={isHolding}
-                setIsHolding={setIsHolding}
-                startFishing={startFishing}
-                startMinigame={startMinigame}
-                activeBait={activeBait}
-                selectedBaitLabel={selectedBaitLabel}
-              />
-            )}
+            <div className="stage-play-frame flex flex-col gap-3">
+              {area === 'plaza' ? (
+                <TownPlaza />
+              ) : (
+                <FishingLake
+                  fishState={fishState}
+                  indicatorPos={indicatorPos}
+                  score={score}
+                  isHolding={isHolding}
+                  setIsHolding={setIsHolding}
+                  startFishing={startFishing}
+                  startMinigame={startMinigame}
+                  activeBait={activeBait}
+                  selectedBaitLabel={selectedBaitLabel}
+                />
+              )}
+              <OrderBoard />
+            </div>
           </div>
-        </div>
-
-        <div className="game-sidebar-right">
-          <div className="glass-panel p-4 h-full">
-            <InventoryWidget title="Tas Kota" />
-            <FishCatchBoard />
-            <MarketBoard />
-            <QuestPanel />
-          </div>
-        </div>
-      </div>
-    </div>
+        }
+        side={
+          <SideDock
+            tabs={[
+              { id: 'toko', label: 'Toko', emoji: '🏪', content: <TownShop /> },
+              {
+                id: 'info',
+                label: 'Info',
+                emoji: '📋',
+                content: (
+                  <>
+                    <FishCatchBoard />
+                    <MarketBoard />
+                    <QuestPanel />
+                  </>
+                ),
+              },
+            ]}
+          />
+        }
+      />
+    </TabPage>
   );
 }

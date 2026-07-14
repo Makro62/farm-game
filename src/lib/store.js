@@ -4,12 +4,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 // Helpers and utilities for persist logic
-import { 
-  normalizePlots, 
-  normalizeAnimal, 
-  migrateLegacyWorkers, 
-  safeCoins 
-} from './store/utils';
+import { normalizePlots, normalizeAnimal, migrateLegacyWorkers, safeCoins } from './store/utils';
 
 // Slices
 import { createFarmingSlice } from './store/slices/createFarmingSlice';
@@ -19,117 +14,7 @@ import { createPlayerSlice } from './store/slices/createPlayerSlice';
 import { createTownSlice } from './store/slices/createTownSlice';
 import { createSystemSlice } from './store/slices/createSystemSlice';
 
-// We extract initialState here so we can use it in resetGame,
-// and it exactly matches the structure expected by the app.
-const initialState = {
-  // Player stats
-  coins: 100,
-  level: 1,
-  xp: 0,
-  day: 1,
-  streak: 0,
-  lastLogin: null,
-  lastSavedAt: Date.now(),
-  offlineReport: null,
-  
-  // Farm
-  plots: Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    status: 'empty',
-    crop: null,
-    plantedAt: null,
-    growTime: null
-  })),
-  
-  // Inventory
-  inventory: {},
-  
-  // Animals
-  animals: [],
-  
-  // Settings
-  soundEnabled: true,
-  musicEnabled: true,
-  notificationsEnabled: true,
-  
-  // Market
-  todayPrices: {},
-  marketTrend: {},
-  
-  // Systems
-  lastWheelSpin: null,
-  coinMultiplier: 1,
-  growthMultiplier: 1,
-
-  // Auto workers (hired with coins)
-  workers: {
-    farmer: false,
-    rancher: false,
-    fisher: false,
-    miner: false,
-  },
-  
-  autoFarmer: false,
-  autoRancher: false,
-  autoFisher: false,
-  autoMiner: false,
-  selectedSeed: null,
-  selectedMiningTool: null,
-  selectedBait: null,
-  
-  // UI Modals
-  modals: {
-    prompt: { isOpen: false, title: '', msg: '', onConfirm: null },
-    confirm: { isOpen: false, title: '', msg: '', onConfirm: null },
-    npcGift: { isOpen: false, npcId: null }
-  },
-
-  combo: {
-    count: 0,
-    multiplier: 1,
-    lastAction: 0
-  },
-  
-  // Environment
-  season: { current: 'spring', day: 1, tick: 0 },
-  weather: { current: '☀️ Cerah', nextChangeIn: 300 },
-  
-  // Mining
-  mining: {
-    nodes: Array.from({ length: 30 }, (_, i) => ({
-      id: i,
-      status: 'ready',
-      type: Math.random() < 0.05 ? 'berlian' : Math.random() < 0.15 ? 'emas' : Math.random() < 0.3 ? 'besi' : Math.random() < 0.5 ? 'tembaga' : 'batu',
-      regenAt: null
-    })),
-    pickaxeLevel: 1,
-    lanternUntil: null
-  },
-  
-  // NPCs
-  npcs: {
-    maria: { level: 1, points: 0 },
-    botan: { level: 1, points: 0 },
-    hadi:  { level: 1, points: 0 }
-  },
-  activeEvent: null,
-  
-  // Quests
-  dailyQuests: [],
-  lastQuestDate: null,
-  workerAutoMigrated: false,
-  
-  // Crafting & Orders
-  craftingQueue: [],
-  orders: [],
-
-  // Kota upgrades
-  buildings: {
-    silo: false,
-    greenhouse: false,
-  },
-  decorations: [],
-};
+import { initialState } from './store/initialState';
 
 export const useGameStore = create(
   persist(
@@ -145,13 +30,21 @@ export const useGameStore = create(
       ...createTownSlice(set, get),
       ...createSystemSlice(set, get),
 
-      // Reset override
+      // Reset tanpa reload penuh — cegah loop refresh
       resetGame: () => {
-        set(initialState);
         if (typeof window !== 'undefined') {
           localStorage.removeItem('farm-game-storage');
-          window.location.reload();
         }
+        set({
+          ...initialState,
+          plots: initialState.plots.map((p) => ({ ...p })),
+          mining: {
+            ...initialState.mining,
+            nodes: initialState.mining.nodes.map((n) => ({ ...n })),
+          },
+          lastSavedAt: Date.now(),
+          offlineReport: null,
+        });
         return true;
       },
       
@@ -171,18 +64,37 @@ export const useGameStore = create(
           if (process.env.NODE_ENV === 'development') {
             set({ plots: initialState.plots });
           }
+        },
+        instantGrow: () => {
+          if (process.env.NODE_ENV === 'development') {
+            set((s) => ({
+              plots: s.plots.map(p => p.status === 'growing' ? { ...p, plantedAt: 0 } : p)
+            }));
+          }
+        },
+        unlockAll: () => {
+          if (process.env.NODE_ENV === 'development') {
+            set({
+              workers: { farmer: true, rancher: true, fisher: true, miner: true, chef: true },
+              buildings: { silo: true, greenhouse: true },
+            });
+          }
         }
       }
     }),
     {
       name: 'farm-game-storage',
-      storage: createJSONStorage(() => 
-        typeof window !== 'undefined' ? localStorage : {
-          getItem: () => null,
-          setItem: () => {},
-          removeItem: () => {}
+      skipHydration: true,
+      storage: createJSONStorage(() => {
+        if (typeof window === 'undefined') {
+          return {
+            getItem: () => null,
+            setItem: () => {},
+            removeItem: () => {},
+          };
         }
-      ),
+        return localStorage;
+      }),
       partialize: (state) => ({
         // Hanya simpan data penting (SAMA PERSIS DENGAN SEBELUMNYA)
         coins: state.coins,
@@ -207,8 +119,10 @@ export const useGameStore = create(
         autoRancher: state.autoRancher,
         autoFisher: state.autoFisher,
         autoMiner: state.autoMiner,
+        autoChef: state.autoChef,
         selectedSeed: state.selectedSeed,
         selectedBait: state.selectedBait,
+        selectedRecipe: state.selectedRecipe,
         season: state.season,
         weather: state.weather,
         mining: state.mining,
@@ -240,6 +154,7 @@ export const useGameStore = create(
           rancher: false,
           fisher: false,
           miner: false,
+          chef: false,
           ...(merged.workers || {}),
         };
 
@@ -281,6 +196,7 @@ export const useGameStore = create(
           if (merged.workers.rancher && merged.autoRancher === false) merged.autoRancher = true;
           if (merged.workers.fisher && merged.autoFisher === false) merged.autoFisher = true;
           if (merged.workers.miner && merged.autoMiner === false) merged.autoMiner = true;
+          if (merged.workers.chef && merged.autoChef === false) merged.autoChef = true;
           merged.workerAutoMigrated = true;
         }
 
@@ -312,11 +228,10 @@ export const useGameStore = create(
       onRehydrateStorage: () => (state, error) => {
         if (error) {
           console.error('Failed to rehydrate store:', error);
-        } else if (state) {
-          if (!Number.isFinite(state.coins)) {
-            useGameStore.setState({ coins: 100 });
-          }
-          console.log('✓ Game loaded from localStorage');
+          return;
+        }
+        if (state && !Number.isFinite(state.coins)) {
+          useGameStore.setState({ coins: 100 });
         }
       }
     }

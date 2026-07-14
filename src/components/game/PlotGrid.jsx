@@ -1,19 +1,17 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/lib/store';
 import { CropIcon } from '../ui/CropIcon';
-import { getCropEmoji, SHOP_SEEDS } from '@/lib/utils';
+import { getItemEmoji } from '@/lib/data/item-helpers';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export function PlotGrid({ isEditMode, farmTool = 'tanam' }) {
   const plots = useGameStore((state) => state.plots);
-  const plant = useGameStore((state) => state.plant);
+  const plantSeed = useGameStore((state) => state.plantSeed);
   const harvest = useGameStore((state) => state.harvest);
   const waterPlot = useGameStore((state) => state.waterPlot);
   const sellAllInventory = useGameStore((state) => state.sellAllInventory);
   const swapPlots = useGameStore((state) => state.swapPlots);
-  const removeItem = useGameStore((state) => state.removeItem);
-  const growthMultiplier = useGameStore((state) => state.growthMultiplier);
   const selectedInventoryItem = useGameStore((state) => state.selectedSeed);
   const setSelectedInventoryItem = useGameStore((state) => state.setSelectedSeed);
 
@@ -35,32 +33,25 @@ export function PlotGrid({ isEditMode, farmTool = 'tanam' }) {
     if (farmTool === 'panen') {
       if (plot.status === 'ready' || (plot.status === 'growing' && plot.plantedAt && Date.now() - plot.plantedAt >= plot.growTime)) {
         const crop = harvest(plot.id);
-        if (crop) toast.success(`Panen ${getCropEmoji(crop)}!`);
+        if (crop) toast.success(`Panen ${getItemEmoji(crop)}!`);
       } else {
         toast('Petak belum siap panen', { icon: '🌾' });
       }
       return;
     }
 
-    // tanam (default)
     if (plot.status === 'empty') {
       if (!selectedInventoryItem) {
-        toast('Pilih bibit dari panel kiri dulu!', { icon: '👆' });
+        toast('Pilih bibit dari toko samping dulu!', { icon: '👆' });
         return;
       }
 
-      const seedData = SHOP_SEEDS.find((s) => s.id === selectedInventoryItem);
-      if (!seedData) {
-        toast.error('Item ini tidak bisa ditanam!');
-        return;
-      }
-
-      if (removeItem(selectedInventoryItem, 1)) {
-        plant(plot.id, seedData.cropId, (seedData.time * 1000) / growthMultiplier);
-        toast.success(`Menanam ${seedData.name}`, { icon: '🌱', id: 'plant' });
+      const result = plantSeed(plot.id, selectedInventoryItem);
+      if (result.ok) {
+        toast.success(result.message, { icon: '🌱', id: 'plant' });
       } else {
-        toast.error(`Kehabisan ${seedData.name}!`);
-        setSelectedInventoryItem(null);
+        toast.error(result.message);
+        if (result.message?.includes('Kehabisan')) setSelectedInventoryItem(null);
       }
     } else if (plot.status === 'ready') {
       toast('Ganti ke mode Panen untuk memanen', { icon: '✋' });
@@ -72,7 +63,7 @@ export function PlotGrid({ isEditMode, farmTool = 'tanam' }) {
   return (
     <div
       className={cn(
-        'p-4 sm:p-6 field-frame relative overflow-hidden mb-4 transition-all bg-cover bg-center',
+        'p-3 sm:p-4 field-frame relative overflow-hidden transition-all bg-cover bg-center',
         isEditMode && 'ring-4 ring-yellow-400 border-dashed'
       )}
       style={{ backgroundImage: "url('/img/backgrounds/farm_bg.png')" }}

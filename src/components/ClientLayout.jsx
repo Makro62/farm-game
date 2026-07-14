@@ -1,80 +1,85 @@
 'use client';
 
 import { useEffect } from 'react';
-import Topbar from '@/components/Topbar';
-import Modals from '@/components/Modals';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useGameStore } from '@/lib/store';
+import { NAV_TABS } from '@/lib/nav';
+import GameSidebar from '@/components/GameSidebar';
+import Modals from '@/components/Modals';
+import { cn } from '@/lib/utils';
 
 export default function ClientLayout({ children }) {
-  // Hitung offline progress saat game pertama dimuat
+  const pathname = usePathname();
+
   useEffect(() => {
     useGameStore.getState().calculateOfflineProgress();
   }, []);
 
-  // Simpan timestamp hanya saat save nyata (bukan tiap tick)
   useEffect(() => {
     const touch = () => useGameStore.getState().touchSaveTimestamp?.();
-    const interval = setInterval(touch, 30000);
-
+    const id = setInterval(touch, 30000);
     const onHide = () => {
       if (document.hidden) touch();
     };
-    const onUnload = () => touch();
-
     document.addEventListener('visibilitychange', onHide);
-    window.addEventListener('beforeunload', onUnload);
-
+    window.addEventListener('beforeunload', touch);
     return () => {
-      clearInterval(interval);
+      clearInterval(id);
       document.removeEventListener('visibilitychange', onHide);
-      window.removeEventListener('beforeunload', onUnload);
+      window.removeEventListener('beforeunload', touch);
     };
   }, []);
 
-  // Development shortcuts
   useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return;
-
-    const handleKeyPress = (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'c') {
+    const onKey = (e) => {
+      if (!(e.ctrlKey && e.shiftKey)) return;
+      if (e.key === 'c') {
         e.preventDefault();
         useGameStore.getState().dev.addCoins(1000);
-        console.log('💰 +1000 coins (dev)');
       }
-
-      if (e.ctrlKey && e.shiftKey && e.key === 'l') {
+      if (e.key === 'l') {
         e.preventDefault();
-        const state = useGameStore.getState();
-        state.dev.setLevel(state.level + 1);
-        console.log(`⭐ Level ${state.level + 1} (dev)`);
+        const s = useGameStore.getState();
+        s.dev.setLevel(s.level + 1);
       }
-
-      if (e.ctrlKey && e.shiftKey && e.key === 'r') {
+      if (e.key === 'r') {
         e.preventDefault();
         useGameStore.getState().dev.resetPlots();
-        console.log('🔄 Plots reset (dev)');
       }
     };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   return (
-    <div id="app" className="min-h-screen flex flex-col">
-      <Topbar />
+    <div id="app" className="shell-app">
+      <GameSidebar />
 
-      <main id="main" className="flex-1 overflow-y-auto overflow-x-hidden pb-16 sm:pb-20 game-container min-h-0 py-3 sm:py-4">
-        {children}
-      </main>
+      <div className="shell-main">
+        <main id="main" className="shell-content">
+          <div className="game-container">{children}</div>
+        </main>
+      </div>
+
+      <nav className="shell-bottom lg:hidden" aria-label="Navigasi mobile">
+        {NAV_TABS.map((tab) => {
+          const active = pathname?.startsWith(`/${tab.id}`);
+          return (
+            <Link
+              key={tab.id}
+              href={tab.href}
+              className={cn('shell-bottom-link', active && 'shell-bottom-link--active')}
+            >
+              <span className="shell-bottom-emoji">{tab.emoji}</span>
+              <span>{tab.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
       <Modals />
-
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-50">
-          DEV MODE
-        </div>
-      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { getAnimalEmoji, getShopAnimal } from '@/lib/utils';
+import { getAnimalEmoji, getShopAnimal } from '../../lib/data/item-helpers';
 
 export function AnimalIcon({ type }) {
   const data = getShopAnimal(type);

@@ -1,27 +1,18 @@
-import { normalizePlots } from '../utils';
+import { SHOP_SEEDS } from '@/lib/data/crops';
 
 export const createFarmingSlice = (set, get) => ({
-  plots: Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    status: 'empty',
-    crop: null,
-    plantedAt: null,
-    growTime: null
-  })),
-  selectedSeed: null,
-
   setSelectedSeed: (seedId) => set({ selectedSeed: seedId }),
 
   plant: (plotId, crop, growTime) => {
     const state = get();
-    const plot = state.plots.find(p => p.id === plotId);
-    
+    const plot = state.plots.find((p) => p.id === plotId);
+
     if (!plot || plot.status !== 'empty') {
       return false;
     }
-    
+
     set((state) => ({
-      plots: state.plots.map(p =>
+      plots: state.plots.map((p) =>
         p.id === plotId
           ? {
               ...p,
@@ -35,6 +26,30 @@ export const createFarmingSlice = (set, get) => ({
       ),
     }));
     return true;
+  },
+
+  plantSeed: (plotId, seedId) => {
+    const seedData = SHOP_SEEDS.find((s) => s.id === seedId);
+    if (!seedData) return { ok: false, message: 'Item ini tidak bisa ditanam!' };
+
+    const state = get();
+    const season = state.season?.current;
+    const hasGreenhouse = !!state.buildings?.greenhouse;
+    if (!hasGreenhouse && seedData.season !== 'all' && seedData.season !== season) {
+      return { ok: false, message: 'Bibit ini tidak cocok musim ini (butuh Greenhouse).' };
+    }
+
+    if (!get().removeItem?.(seedId, 1)) {
+      return { ok: false, message: `Kehabisan ${seedData.name}!` };
+    }
+
+    const growthMultiplier = state.growthMultiplier > 0 ? state.growthMultiplier : 1;
+    const ok = get().plant(plotId, seedData.cropId, (seedData.time * 1000) / growthMultiplier);
+    if (!ok) {
+      get().addItem?.(seedId, 1);
+      return { ok: false, message: 'Petak tidak kosong.' };
+    }
+    return { ok: true, message: `Menanam ${seedData.name}`, seed: seedData };
   },
 
   waterPlot: (plotId) => {
@@ -60,10 +75,10 @@ export const createFarmingSlice = (set, get) => ({
     }));
     return { ok: true, message: 'Disiram! Tumbuh lebih cepat.' };
   },
-  
+
   harvest: (plotId) => {
     const state = get();
-    const plot = state.plots.find(p => p.id === plotId);
+    const plot = state.plots.find((p) => p.id === plotId);
 
     if (!plot || !plot.crop) {
       return null;
@@ -82,7 +97,7 @@ export const createFarmingSlice = (set, get) => ({
     const crop = plot.crop;
 
     set((state) => ({
-      plots: state.plots.map(p =>
+      plots: state.plots.map((p) =>
         p.id === plotId
           ? {
               id: p.id,
@@ -96,8 +111,8 @@ export const createFarmingSlice = (set, get) => ({
       ),
       inventory: {
         ...state.inventory,
-        [crop]: (state.inventory[crop] || 0) + 1
-      }
+        [crop]: (state.inventory[crop] || 0) + 1,
+      },
     }));
 
     get().addXP(10);
@@ -114,11 +129,7 @@ export const createFarmingSlice = (set, get) => ({
     const now = Date.now();
     let changed = false;
 
-    // Use normalizePlots from utils to ensure valid plots
-    const currentPlots = get().plots;
-    // Note: since normalizePlots and normalizePlot are in utils, we can use them here
-    // But since plots are usually already normalized on load, we can just map over them
-    const plots = currentPlots.map((p, index) => {
+    const plots = get().plots.map((p) => {
       const growTime = p.growTime > 0 ? p.growTime : null;
 
       if (
@@ -141,17 +152,15 @@ export const createFarmingSlice = (set, get) => ({
 
   updatePlotStatus: (plotId, status) => {
     set((state) => ({
-      plots: state.plots.map(p =>
-        p.id === plotId ? { ...p, status } : p
-      )
+      plots: state.plots.map((p) => (p.id === plotId ? { ...p, status } : p)),
     }));
   },
-  
+
   swapPlots: (id1, id2) => {
     set((state) => {
       const newPlots = [...state.plots];
-      const idx1 = newPlots.findIndex(p => p.id === id1);
-      const idx2 = newPlots.findIndex(p => p.id === id2);
+      const idx1 = newPlots.findIndex((p) => p.id === id1);
+      const idx2 = newPlots.findIndex((p) => p.id === id2);
       if (idx1 !== -1 && idx2 !== -1) {
         const temp = newPlots[idx1];
         newPlots[idx1] = newPlots[idx2];

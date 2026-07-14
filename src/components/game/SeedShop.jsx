@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
 import { CropIcon } from '../ui/CropIcon';
-import { SHOP_SEEDS } from '@/lib/utils';
+import { SHOP_SEEDS } from '../../lib/data/crops';
 import { ShopItemCard, ShopSectionTitle } from '../ui/ShopItemCard';
 import { GAME_CONSTANTS } from '@/lib/constants';
 import toast from 'react-hot-toast';

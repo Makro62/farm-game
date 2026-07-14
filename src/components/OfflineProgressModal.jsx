@@ -1,8 +1,9 @@
 'use client';
 
 import { useGameStore } from '@/lib/store';
-import { getCropEmoji } from '@/lib/utils';
+import { getCropEmoji } from '@/lib/data/item-helpers';
 import { motion, AnimatePresence } from 'framer-motion';
+import Button from './ui/Button';
 
 export default function OfflineProgressModal() {
   const offlineReport = useGameStore(state => state.offlineReport);
@@ -112,12 +113,9 @@ export default function OfflineProgressModal() {
               )}
             </div>
 
-            <button 
-              onClick={clearOfflineReport}
-              className="btn-primary w-full text-lg py-3"
-            >
+            <Button variant="primary" size="lg" className="w-full" onClick={clearOfflineReport}>
               Luar Biasa!
-            </button>
+            </Button>
           </div>
         </motion.div>
       </div>

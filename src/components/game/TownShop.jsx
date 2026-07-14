@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
-import { SHOP_BAIT, SHOP_BUILDINGS, SHOP_DECORATIONS } from '@/lib/utils';
+import { SHOP_BAIT, SHOP_BUILDINGS, SHOP_DECORATIONS } from '@/lib/data/shop';
 import { ShopItemCard, ShopSectionTitle } from '../ui/ShopItemCard';
+import { GameActionButton } from '../ui/GameAreaHeader';
 import { GAME_CONSTANTS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 
@@ -78,20 +79,22 @@ export function TownShop() {
   return (
     <>
       <div className="flex gap-1.5 mb-4">
-        <button
-          type="button"
+        <GameActionButton
+          variant="toggle"
+          active={shopTab === 'bangunan'}
           onClick={() => setShopTab('bangunan')}
-          className={`game-action-btn flex-1 ${shopTab === 'bangunan' ? 'game-action-btn--edit' : ''}`}
+          className="flex-1"
         >
           Bangunan
-        </button>
-        <button
-          type="button"
+        </GameActionButton>
+        <GameActionButton
+          variant="toggle"
+          active={shopTab === 'umpan'}
           onClick={() => setShopTab('umpan')}
-          className={`game-action-btn flex-1 ${shopTab === 'umpan' ? 'game-action-btn--edit' : ''}`}
+          className="flex-1"
         >
           Umpan
-        </button>
+        </GameActionButton>
       </div>
 
       {shopTab === 'bangunan' ? (

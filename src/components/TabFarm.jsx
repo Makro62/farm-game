@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
-import { InventoryWidget } from './InventoryWidget';
-import { StatusHeader } from './StatusHeader';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import { SeedShop } from './game/SeedShop';
 import { PlotGrid } from './game/PlotGrid';
-import { OrderBoard } from './game/OrderBoard';
 import { QuestPanel } from './game/QuestPanel';
 import { MarketBoard } from './game/MarketBoard';
+import TabPage, { GameStage } from './ui/TabPage';
+import SideDock from './ui/SideDock';
+import ToolChip from './ui/ToolChip';
 import toast from 'react-hot-toast';
 
 const FARM_TOOLS = [
@@ -31,7 +31,7 @@ export default function TabFarm() {
 
   const handleToggleAuto = () => {
     if (!workers?.farmer) {
-      toast('Sewa Petani Budi dulu di panel kiri!', { icon: '👨‍🌾' });
+      toast('Sewa Petani Budi dulu di toko samping!', { icon: '👨‍🌾' });
       return;
     }
     const next = !autoFarm;
@@ -47,24 +47,10 @@ export default function TabFarm() {
   };
 
   return (
-    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="game-tab-grid">
-        <div className="game-sidebar-left">
-          <div className="glass-panel p-4">
-            <SeedShop />
-            {(buildings?.greenhouse || buildings?.silo) && (
-              <p className="text-[10px] font-bold text-[var(--text-secondary)] mt-2">
-                {buildings?.greenhouse ? 'Greenhouse aktif · ' : ''}
-                {buildings?.silo ? 'Silo +15% jual tanaman' : ''}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="game-main">
-          <div className="glass-panel p-4">
-            <StatusHeader />
-
+    <TabPage>
+      <GameStage
+        main={
+          <div className="glass-panel p-3 sm:p-4 stage-play-area">
             <GameAreaHeader icon="🌾" title="Ladang">
               <GameActionButton variant="edit" active={isEditMode} onClick={() => setIsEditMode(!isEditMode)}>
                 {isEditMode ? 'Selesai Edit' : 'Edit Layout'}
@@ -74,12 +60,12 @@ export default function TabFarm() {
               </GameActionButton>
             </GameAreaHeader>
 
-            {/* Toolbar seperti mockup: Tanam / Siram / Panen / Jual */}
-            <div className="flex flex-wrap justify-center gap-2 mb-3 p-2 rounded-full bg-[var(--wood)]/90 border-2 border-[var(--wood-dark)] shadow-[0_4px_0_var(--wood-dark)]">
+            <div className="flex flex-wrap justify-center gap-2 mb-2 p-2 rounded-full bg-[var(--wood)]/90 border-2 border-[var(--wood-dark)] shadow-[0_4px_0_var(--wood-dark)]">
               {FARM_TOOLS.map((tool) => (
-                <button
+                <ToolChip
                   key={tool.id}
-                  type="button"
+                  emoji={tool.emoji}
+                  active={farmTool === tool.id && !isEditMode}
                   onClick={() => {
                     setIsEditMode(false);
                     setFarmTool(tool.id);
@@ -87,34 +73,51 @@ export default function TabFarm() {
                       toast('Klik petak mana saja untuk jual semua hasil', { icon: '💰' });
                     }
                   }}
-                  className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold transition-all border-2 ${
-                    farmTool === tool.id && !isEditMode
-                      ? 'bg-gradient-to-b from-[#FFE9A0] to-[var(--gold)] text-[var(--text-primary)] border-[#FFF1B8] shadow-md scale-105'
-                      : 'bg-[var(--wood-dark)]/40 text-[#FFF1D6] border-transparent hover:bg-white/10'
-                  }`}
                 >
-                  <span className="mr-1">{tool.emoji}</span>
                   {tool.label}
-                </button>
+                </ToolChip>
               ))}
             </div>
 
-            <PlotGrid isEditMode={isEditMode} farmTool={farmTool} />
-            <OrderBoard />
+            <div className="stage-play-frame">
+              <PlotGrid isEditMode={isEditMode} farmTool={farmTool} />
+            </div>
           </div>
-        </div>
-
-        <div className="game-sidebar-right">
-          <div className="glass-panel p-4 h-full">
-            <MarketBoard />
-            <QuestPanel />
-            <InventoryWidget title="Hasil Panen" />
-            <p className="text-[10px] text-center text-[var(--text-secondary)] font-medium mt-2">
-              Masak hasil di tab Restoran
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+        }
+        side={
+          <SideDock
+            tabs={[
+              {
+                id: 'toko',
+                label: 'Bibit',
+                emoji: '🌱',
+                content: (
+                  <>
+                    <SeedShop />
+                    {(buildings?.greenhouse || buildings?.silo) && (
+                      <p className="text-[10px] font-bold text-[var(--text-secondary)] mt-2">
+                        {buildings?.greenhouse ? 'Greenhouse aktif · ' : ''}
+                        {buildings?.silo ? 'Silo +15% jual tanaman' : ''}
+                      </p>
+                    )}
+                  </>
+                ),
+              },
+              {
+                id: 'info',
+                label: 'Info',
+                emoji: '📋',
+                content: (
+                  <>
+                    <MarketBoard />
+                    <QuestPanel />
+                  </>
+                ),
+              },
+            ]}
+          />
+        }
+      />
+    </TabPage>
   );
 }

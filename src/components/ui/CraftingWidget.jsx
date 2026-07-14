@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useGameStore } from '@/lib/store';
-import { RECIPES, getCropEmoji } from '@/lib/utils';
+import { RECIPES } from '@/lib/data/recipes';
+import { getCropEmoji } from '@/lib/data/item-helpers';
 import { motion, AnimatePresence } from 'framer-motion';
+import { GameActionButton } from './GameAreaHeader';
 
 const TYPE_TABS = [
   { id: 'kitchen', label: 'Dasar', icon: '🥣' },
@@ -54,14 +56,14 @@ export function CraftingWidget({
       {hub && (
         <div className="flex flex-wrap gap-1.5 mb-3">
           {TYPE_TABS.map((tab) => (
-            <button
+            <GameActionButton
               key={tab.id}
-              type="button"
+              variant="toggle"
+              active={activeType === tab.id}
               onClick={() => setActiveType(tab.id)}
-              className={`game-action-btn ${activeType === tab.id ? 'game-action-btn--edit' : ''}`}
             >
               {tab.icon} {tab.label}
-            </button>
+            </GameActionButton>
           ))}
         </div>
       )}
@@ -115,9 +117,9 @@ export function CraftingWidget({
                   Batal
                 </button>
               </div>
-              <div className="w-full bg-[var(--wood)]/25 rounded-full h-2.5 mt-2 relative z-10 overflow-hidden border border-[var(--wood)]/40">
+              <div className="w-full progress-bar mt-2 relative z-10">
                 <motion.div
-                  className="bg-gradient-to-r from-[var(--gold)] to-[var(--primary)] h-full rounded-full"
+                  className="progress-fill"
                   style={{ width: `${progress}%` }}
                   initial={false}
                 />

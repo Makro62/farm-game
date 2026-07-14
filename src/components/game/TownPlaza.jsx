@@ -2,7 +2,9 @@
 
 import { motion } from 'framer-motion';
 import { useGameStore } from '@/lib/store';
-import { FISHES, NPC_LIST, SHOP_BUILDINGS, SHOP_DECORATIONS } from '@/lib/utils';
+import { FISHES } from '@/lib/data/fishes';
+import { NPC_LIST } from '../../lib/data/npcs';
+import { SHOP_BUILDINGS, SHOP_DECORATIONS } from '../../lib/data/shop';
 import { GAME_CONSTANTS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 
@@ -102,7 +104,7 @@ export function TownPlaza() {
           <h4 className="font-bold text-sm text-[var(--text-primary)] mb-2">Kota Kamu</h4>
           {ownedBuildings.length === 0 && ownedDecor.length === 0 ? (
             <p className="text-xs text-[var(--text-secondary)] italic">
-              Belum ada bangunan/dekorasi. Beli di panel kiri untuk menghias kota.
+              Belum ada bangunan/dekorasi. Beli di toko samping untuk menghias kota.
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">

@@ -2,28 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import { useGameStore } from '@/lib/store';
-import { getAnimalEmoji, getShopAnimal, SHOP_ANIMALS } from '@/lib/utils';
+import { getAnimalEmoji, getShopAnimal } from '../lib/data/item-helpers';
+import { SHOP_ANIMALS } from '../lib/data/shop';
 import { motion } from 'framer-motion';
-import { InventoryWidget } from './InventoryWidget';
-import { StatusHeader } from './StatusHeader';
 import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
 import { AnimalIcon } from './ui/AnimalIcon';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import { MarketBoard } from './game/MarketBoard';
 import { QuestPanel } from './game/QuestPanel';
 import { GAME_CONSTANTS } from '@/lib/constants';
+import TabPage, { GameStage } from './ui/TabPage';
+import SideDock from './ui/SideDock';
 import toast from 'react-hot-toast';
 
 export default function TabAnimal() {
-  const animals = useGameStore(state => state.animals);
-  const collectAnimal = useGameStore(state => state.collectAnimal);
-  const swapAnimals = useGameStore(state => state.swapAnimals);
-  const openConfirm = useGameStore(state => state.openConfirm);
-  const buyMultipleAnimals = useGameStore(state => state.buyMultipleAnimals);
-  const workers = useGameStore(state => state.workers);
-  const hireWorker = useGameStore(state => state.hireWorker);
-  const autoFarm = useGameStore(state => state.autoRancher);
-  const toggleAutoFarm = useGameStore(state => state.toggleAutoRancher);
+  const animals = useGameStore((state) => state.animals);
+  const collectAnimal = useGameStore((state) => state.collectAnimal);
+  const swapAnimals = useGameStore((state) => state.swapAnimals);
+  const openConfirm = useGameStore((state) => state.openConfirm);
+  const buyMultipleAnimals = useGameStore((state) => state.buyMultipleAnimals);
+  const workers = useGameStore((state) => state.workers);
+  const hireWorker = useGameStore((state) => state.hireWorker);
+  const autoFarm = useGameStore((state) => state.autoRancher);
+  const toggleAutoFarm = useGameStore((state) => state.toggleAutoRancher);
   
   const [shopAmounts, setShopAmounts] = useState({});
 
@@ -37,11 +38,11 @@ export default function TabAnimal() {
   const [isEditMode, setIsEditMode] = useState(false);
 
 
-  // Global Game Loop (di page.js) sudah menangani auto-collect via store.runAutoWorkers()
+  // Auto-collect ditangani lewat store.runAutoWorkers()
 
   const handleToggleAuto = () => {
     if (!workers?.rancher) {
-      toast('Sewa Peternak Siti dulu di panel kiri! 🔒', { icon: '👩‍🌾' });
+      toast('Sewa Peternak Siti dulu di toko samping! 🔒', { icon: '👩‍🌾' });
       return;
     }
     const next = !autoFarm;
@@ -110,102 +111,10 @@ export default function TabAnimal() {
   };
 
   return (
-    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="game-tab-grid">
-        
-        {/* ================= LEFT COLUMN ================= */}
-        <div className="game-sidebar-left">
-          <div className="glass-panel p-4">
-            
-            <ShopSectionTitle icon="🐔">Shop Hewan Ternak</ShopSectionTitle>
-            <div className="shop-grid mb-6">
-              {SHOP_ANIMALS.map((animal) => {
-                const amt = shopAmounts[animal.id] || 1;
-                return (
-                  <ShopItemCard
-                    key={animal.id}
-                    icon={getAnimalEmoji(animal.id)}
-                    name={animal.name}
-                    price={animal.price}
-                    amount={amt}
-                    onDecrease={() => setShopAmounts(p => ({ ...p, [animal.id]: Math.max(1, amt - 1) }))}
-                    onIncrease={() => setShopAmounts(p => ({ ...p, [animal.id]: amt + 1 }))}
-                    onBuy={() => handleShopBuy(animal, amt)}
-                  />
-                );
-              })}
-            </div>
-
-            <ShopSectionTitle icon="🐾">Hewan Saya</ShopSectionTitle>
-            <div className="glass-card rounded-xl p-3 mb-6">
-              {animals.length === 0 ? (
-                <div className="text-center text-sm text-[var(--text-secondary)] italic font-bold">
-                  Belum ada hewan. Beli di atas dulu.
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {SHOP_ANIMALS.map((animal) => {
-                    const count = animals.filter((a) => {
-                      const data = getShopAnimal(a.type);
-                      return data?.id === animal.id;
-                    }).length;
-                    if (count === 0) return null;
-                    return (
-                      <div
-                        key={animal.id}
-                        className="p-2 glass-card flex flex-col items-center gap-1"
-                        title={animal.name}
-                      >
-                        <span className="text-2xl relative">
-                          <AnimalIcon type={animal.id} />
-                          <span className="absolute -bottom-1 -right-1 bg-[var(--gold)] text-[var(--text-primary)] text-[9px] font-black px-1.5 rounded-full border border-[#FFF1B8]">
-                            {count}
-                          </span>
-                        </span>
-                        <span className="text-[9px] text-[var(--text-secondary)] text-center leading-tight font-bold">
-                          {animal.name}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            <ShopSectionTitle icon="🧑‍🌾">Pekerja (Auto)</ShopSectionTitle>
-            <button
-              type="button"
-              onClick={handleHireWorker}
-              className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left mb-2 ${
-                workers?.rancher ? 'border-[var(--primary)] bg-[var(--primary)]/10' : ''
-              }`}
-            >
-              <div>
-                <div className="font-bold text-[var(--text-primary)] text-sm">Peternak Siti</div>
-                <div className="text-[10px] text-[var(--text-secondary)]">Auto-Collect Products</div>
-              </div>
-              <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-full text-xs whitespace-nowrap border border-[#FFF1B8]">
-                {workers?.rancher ? 'Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_RANCHER} 💰`}
-              </span>
-            </button>
-            {workers?.rancher && (
-              <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
-                {autoFarm
-                  ? animals.length > 0
-                    ? 'Kurcaci aktif — ambil hasil ternak otomatis'
-                    : 'Auto ON — beli hewan dulu'
-                  : 'Nyalakan tombol Auto di atas untuk mulai'}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* ================= CENTER COLUMN ================= */}
-        <div className="game-main">
-          <div className="glass-panel p-4">
-            
-            <StatusHeader />
-
+    <TabPage>
+      <GameStage
+        main={
+          <div className="glass-panel p-3 sm:p-4 stage-play-area">
             <GameAreaHeader icon="🐔" title="Area Peternakan">
               <GameActionButton variant="edit" active={isEditMode} onClick={() => setIsEditMode(!isEditMode)}>
                 {isEditMode ? 'Selesai Edit' : 'Edit Layout'}
@@ -215,20 +124,18 @@ export default function TabAnimal() {
               </GameActionButton>
             </GameAreaHeader>
 
-            <div 
-              className={`p-4 sm:p-6 field-frame relative min-h-[400px] transition-all bg-cover bg-center ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}
+            <div
+              className={`p-3 sm:p-4 field-frame relative stage-play-frame transition-all bg-cover bg-center ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}
               style={{ backgroundImage: "url('/img/backgrounds/animal_bg.png')" }}
             >
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30 pointer-events-none rounded-[22px]"></div>
-              <div className="kandang-grid relative z-10 pt-4">
-                {Array.from({ length: 20 }).map((_, i) => {
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30 pointer-events-none rounded-[22px]" />
+              <div className="kandang-grid relative z-10">
+                {Array.from({ length: 36 }).map((_, i) => {
                   const animal = animals[i];
                   if (!animal) {
-                    return (
-                      <div key={`empty-${i}`} className="kandang-empty-cell"></div>
-                    );
+                    return <div key={`empty-${i}`} className="kandang-empty-cell" />;
                   }
-                  
+
                   const animalData = getShopAnimal(animal.type);
                   const progress = Math.min(100, ((currentTime - animal.lastCollected) / animal.produceTime) * 100);
                   const isReady = progress >= 100;
@@ -277,8 +184,8 @@ export default function TabAnimal() {
                         <AnimalIcon type={animal.type} />
                       </motion.div>
                       {!isReady && (
-                        <div className="absolute bottom-0 left-0 right-0 h-4 bg-black/60 overflow-hidden border-t border-white/10 z-20 flex items-center justify-center">
-                          <div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-[#ffe08a] to-[#f0b429]" style={{ width: `${progress}%` }} />
+                        <div className="absolute bottom-0 left-0 right-0 h-4 progress-bar !rounded-none overflow-hidden border-t border-white/10 z-20 flex items-center justify-center">
+                          <div className="progress-fill absolute left-0 top-0 bottom-0" style={{ width: `${progress}%` }} />
                           <span className="relative z-10 text-[9px] font-black text-white drop-shadow-md tracking-wider">
                             {Math.ceil((animal.produceTime - (currentTime - animal.lastCollected)) / 1000)}s ⚡
                           </span>
@@ -289,8 +196,6 @@ export default function TabAnimal() {
                           {animalData?.productEmoji}
                         </div>
                       )}
-                      
-                      {/* Tombol Jual Hewan */}
                       {!isEditMode && (
                         <span
                           role="button"
@@ -309,22 +214,96 @@ export default function TabAnimal() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* ================= RIGHT COLUMN ================= */}
-        <div className="game-sidebar-right">
-          <div className="glass-panel p-4 h-full">
-            
-            <InventoryWidget />
-            <MarketBoard />
-            <QuestPanel />
-            <p className="text-[10px] text-center text-[var(--text-secondary)] font-medium mt-2">
-              Olah susu & telur di tab Restoran
-            </p>
-          </div>
-        </div>
-
-      </div>
-    </div>
+        }
+        side={
+          <SideDock
+            tabs={[
+              {
+                id: 'toko',
+                label: 'Toko',
+                emoji: '🐔',
+                content: (
+                  <>
+                    <ShopSectionTitle icon="🐔">Shop Hewan</ShopSectionTitle>
+                    <div className="shop-grid mb-3">
+                      {SHOP_ANIMALS.map((animal) => {
+                        const amt = shopAmounts[animal.id] || 1;
+                        return (
+                          <ShopItemCard
+                            key={animal.id}
+                            icon={getAnimalEmoji(animal.id)}
+                            name={animal.name}
+                            price={animal.price}
+                            amount={amt}
+                            onDecrease={() => setShopAmounts((p) => ({ ...p, [animal.id]: Math.max(1, amt - 1) }))}
+                            onIncrease={() => setShopAmounts((p) => ({ ...p, [animal.id]: amt + 1 }))}
+                            onBuy={() => handleShopBuy(animal, amt)}
+                          />
+                        );
+                      })}
+                    </div>
+                    <ShopSectionTitle icon="🧑‍🌾">Pekerja</ShopSectionTitle>
+                    <button
+                      type="button"
+                      onClick={handleHireWorker}
+                      className={`w-full glass-card p-2 flex justify-between items-center text-left ${
+                        workers?.rancher ? 'border-[var(--primary)] bg-[var(--primary)]/10' : ''
+                      }`}
+                    >
+                      <div>
+                        <div className="font-bold text-[var(--text-primary)] text-sm">Peternak Siti</div>
+                        <div className="text-[10px] text-[var(--text-secondary)]">Auto-Collect</div>
+                      </div>
+                      <span className="font-bold bg-[var(--gold)] px-2 py-0.5 rounded-full text-xs border border-[#FFF1B8]">
+                        {workers?.rancher ? 'Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_RANCHER} 💰`}
+                      </span>
+                    </button>
+                  </>
+                ),
+              },
+              {
+                id: 'info',
+                label: 'Info',
+                emoji: '📋',
+                content: (
+                  <>
+                    <ShopSectionTitle icon="🐾">Hewan Saya</ShopSectionTitle>
+                    <div className="glass-card rounded-xl p-3 mb-3">
+                      {animals.length === 0 ? (
+                        <div className="text-center text-sm text-[var(--text-secondary)] italic font-bold">
+                          Belum ada hewan.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-2">
+                          {SHOP_ANIMALS.map((animal) => {
+                            const count = animals.filter((a) => getShopAnimal(a.type)?.id === animal.id).length;
+                            if (count === 0) return null;
+                            return (
+                              <div key={animal.id} className="p-2 glass-card flex flex-col items-center gap-1">
+                                <span className="text-2xl relative">
+                                  <AnimalIcon type={animal.id} />
+                                  <span className="absolute -bottom-1 -right-1 bg-[var(--gold)] text-[var(--text-primary)] text-[9px] font-black px-1.5 rounded-full border border-[#FFF1B8]">
+                                    {count}
+                                  </span>
+                                </span>
+                                <span className="text-[9px] text-[var(--text-secondary)] text-center font-bold">
+                                  {animal.name}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    <MarketBoard />
+                    <QuestPanel />
+                  </>
+                ),
+              },
+            ]}
+          />
+        }
+      />
+    </TabPage>
   );
 }

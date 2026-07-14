@@ -1,4 +1,5 @@
-import { SHOP_SEEDS, SHOP_ANIMALS } from '../utils';
+import { SHOP_SEEDS } from '../data/crops';
+import { SHOP_ANIMALS } from '../data/shop';
 
 export const MINING_REGEN_MS = { 1: 120000, 2: 90000, 3: 60000 };
 
@@ -75,6 +76,7 @@ export const WORKER_AUTO_KEYS = {
   rancher: 'autoRancher',
   fisher: 'autoFisher',
   miner: 'autoMiner',
+  chef: 'autoChef',
 };
 
 export function isWorkerActive(state, type) {
@@ -172,6 +174,7 @@ export function migrateLegacyWorkers(merged) {
       rancher: !!(merged.workers?.rancher || legacy.gnomeAnimalOwned),
       fisher: !!(merged.workers?.fisher || legacy.merchantOwned),
       miner: !!merged.workers?.miner,
+      chef: !!merged.workers?.chef,
     };
 
     if (legacy.gnomeFarmOwned && legacy.gnomeFarmActive !== false) merged.autoFarmer = true;

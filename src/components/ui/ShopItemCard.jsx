@@ -1,5 +1,8 @@
 'use client';
 
+import QtyControl from './QtyControl';
+import Button from './Button';
+
 export function ShopSectionTitle({ icon, children }) {
   return (
     <h3 className="shop-section-title">
@@ -21,19 +24,13 @@ export function ShopItemCard({ icon, name, price, amount, onDecrease, onIncrease
       </div>
 
       <div className="shop-qty-control">
-        <button type="button" onClick={onDecrease} aria-label="Kurangi jumlah" className="btn-qty">
-          −
-        </button>
-        <span className="shop-qty-value">{amount}</span>
-        <button type="button" onClick={onIncrease} aria-label="Tambah jumlah" className="btn-qty">
-          +
-        </button>
+        <QtyControl value={amount} onDecrease={onDecrease} onIncrease={onIncrease} />
       </div>
 
-      <button type="button" onClick={onBuy} className="btn-shop">
+      <Button variant="shop" onClick={onBuy}>
         <span className="btn-shop-label">Beli</span>
         <span className="btn-shop-total">{total} 💰</span>
-      </button>
+      </Button>
     </article>
   );
 }

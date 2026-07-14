@@ -1,34 +1,12 @@
-import { getItemSellPrice, isSellableProduce, RECIPES, ORDER_TEMPLATES, FISHES, SHOP_SEEDS } from '../../utils';
+import { getItemSellPrice, isSellableProduce } from '../../data/item-helpers';
+import { RECIPES, ORDER_TEMPLATES } from '../../data/recipes';
+import { FISHES } from '../../data/fishes';
+import { SHOP_SEEDS } from '../../data/crops';
+import { GAME_CONSTANTS } from '../../constants';
 import { safeCoins, safePositiveNumber } from '../utils';
 import toast from 'react-hot-toast';
 
 export const createPlayerSlice = (set, get) => ({
-  // Core Stats
-  coins: 100,
-  level: 1,
-  xp: 0,
-  day: 1,
-  streak: 0,
-  lastLogin: null,
-  inventory: {},
-  coinMultiplier: 1,
-  growthMultiplier: 1,
-  
-  // Combo
-  combo: {
-    count: 0,
-    multiplier: 1,
-    lastAction: 0
-  },
-
-  // Quests
-  dailyQuests: [],
-  lastQuestDate: null,
-  
-  // Crafting & Orders
-  craftingQueue: [],
-  orders: [],
-
   // ===== COIN MANAGEMENT =====
   buyItem: (itemId, amount, unitPrice) => {
     const state = get();
@@ -230,16 +208,23 @@ export const createPlayerSlice = (set, get) => ({
 
   // ===== BOOSTERS =====
   activateCoinBooster: () => {
-    set({ coinMultiplier: 2, coinMultiplierExpireAt: Date.now() + 30 * 60 * 1000 });
+    set({
+      coinMultiplier: GAME_CONSTANTS.MULTIPLIERS.COIN_BOOSTER,
+      coinMultiplierExpireAt: Date.now() + 30 * 60 * 1000,
+    });
   },
 
-  buyGrowthBooster: (cost = 50) => {
+  buyGrowthBooster: (cost = GAME_CONSTANTS.COSTS.GROWTH_BOOSTER) => {
     const state = get();
-    const price = safePositiveNumber(cost, 50);
+    const price = safePositiveNumber(cost, GAME_CONSTANTS.COSTS.GROWTH_BOOSTER);
     if (state.growthMultiplier > 1) return false;
     const currentCoins = safeCoins(state.coins);
     if (currentCoins < price) return false;
-    set({ coins: currentCoins - price, growthMultiplier: 1.5, growthMultiplierExpireAt: Date.now() + 30 * 60 * 1000 });
+    set({
+      coins: currentCoins - price,
+      growthMultiplier: GAME_CONSTANTS.MULTIPLIERS.GROWTH_BOOSTER,
+      growthMultiplierExpireAt: Date.now() + 30 * 60 * 1000,
+    });
     return true;
   },
 

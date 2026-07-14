@@ -1,0 +1,232 @@
+'use client';
+
+import { useGameStore } from '@/lib/store';
+import { formatNumber } from '@/lib/utils';
+import { getItemEmoji, getItemDisplayName, getItemSellPrice } from '@/lib/data/item-helpers';
+import { SHOP_SEEDS } from '@/lib/data/crops';
+import { SHOP_ANIMALS, SHOP_BAIT, SHOP_MINING } from '@/lib/data/shop';
+import { FISHES } from '@/lib/data/fishes';
+import { MINERALS } from '@/lib/data/minerals';
+import { RECIPES } from '@/lib/data/recipes';
+import { SEASON_META } from '@/lib/nav';
+import TabPage from './ui/TabPage';
+import Button from './ui/Button';
+import { Coins, Star, Trophy, CalendarDays, Shield } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+export default function TabProfil() {
+  const inventory = useGameStore((state) => state.inventory);
+  const coins = useGameStore((state) => state.coins);
+  const level = useGameStore((state) => state.level);
+  const xp = useGameStore((state) => state.xp);
+  const day = useGameStore((state) => state.season?.day || 1);
+  const season = useGameStore((state) => state.season?.current || 'spring');
+  const sellItem = useGameStore((state) => state.sellItem);
+  const sellAllInventory = useGameStore((state) => state.sellAllInventory);
+  const coinMultiplier = useGameStore((state) => state.coinMultiplier);
+  const openConfirm = useGameStore((state) => state.openConfirm);
+
+  const xpNeeded = level * 100;
+  const seasonMeta = SEASON_META[season] || SEASON_META.spring;
+
+  const categorized = {
+    bibit: [],
+    pertanian: [],
+    peternakan: [],
+    tambang: [],
+    pancing: [],
+    dapur: [],
+    lainnya: [],
+  };
+
+  Object.entries(inventory).forEach(([itemId, qty]) => {
+    if (qty <= 0) return;
+
+    if (SHOP_SEEDS.some((s) => s.id === itemId)) {
+      categorized.bibit.push({ id: itemId, qty });
+    } else if (SHOP_SEEDS.some((s) => s.cropId === itemId)) {
+      categorized.pertanian.push({ id: itemId, qty });
+    } else if (SHOP_ANIMALS.some((a) => a.product === itemId)) {
+      categorized.peternakan.push({ id: itemId, qty });
+    } else if (MINERALS.some((m) => m.id === itemId) || SHOP_MINING.some((m) => m.id === itemId)) {
+      categorized.tambang.push({ id: itemId, qty });
+    } else if (FISHES.some((f) => f.id === itemId) || SHOP_BAIT.some((b) => b.id === itemId)) {
+      categorized.pancing.push({ id: itemId, qty });
+    } else if (RECIPES.some((r) => r.id === itemId)) {
+      categorized.dapur.push({ id: itemId, qty });
+    } else {
+      categorized.lainnya.push({ id: itemId, qty });
+    }
+  });
+
+  const categoriesConfig = [
+    { key: 'pertanian', title: 'Hasil Pertanian', icon: '🌱' },
+    { key: 'peternakan', title: 'Hasil Peternakan', icon: '🐄' },
+    { key: 'tambang', title: 'Bahan Tambang', icon: '⛏️' },
+    { key: 'pancing', title: 'Hasil Tangkapan', icon: '🎣' },
+    { key: 'dapur', title: 'Olahan Dapur', icon: '🍳' },
+    { key: 'bibit', title: 'Bibit Tanaman', icon: '🌰' },
+    { key: 'lainnya', title: 'Lainnya', icon: '📦' },
+  ];
+
+  const hasSellable = Object.entries(inventory).some(
+    ([id, qty]) => qty > 0 && getItemSellPrice(id) > 0
+  );
+
+  const handleSellItem = (itemId, name, qty) => {
+    const price = getItemSellPrice(itemId);
+    if (!price) {
+      toast.error('Barang ini tidak bisa dijual.');
+      return;
+    }
+    const total = price * qty;
+    openConfirm(
+      'Jual Barang',
+      `Jual semua ${qty}x ${name} seharga ${formatNumber(total)} 💰?`,
+      () => {
+        const earned = sellItem(itemId, qty);
+        if (earned > 0) {
+          toast.success(`Terjual seharga ${formatNumber(earned)} 💰`, { icon: '💰' });
+        }
+      }
+    );
+  };
+
+  const handleSellAll = () => {
+    openConfirm(
+      'Jual Semua Hasil',
+      'Jual semua hasil yang bisa dijual? Umpan & alat tidak ikut.',
+      () => {
+        const earned = sellAllInventory();
+        if (earned > 0) {
+          toast.success(
+            coinMultiplier > 1
+              ? `Terjual ${formatNumber(earned)} 💰 (×${coinMultiplier} booster!)`
+              : `Terjual semua hasil seharga ${formatNumber(earned)} 💰!`
+          );
+        } else {
+          toast.error('Tidak ada hasil yang bisa dijual.');
+        }
+      }
+    );
+  };
+
+  return (
+    <TabPage>
+      <div className="glass-panel p-3 sm:p-5 overflow-y-auto max-h-full">
+      <div className="flex items-center gap-2 mb-4 mt-1">
+        <h2 className="font-display text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+          <Shield className="w-6 h-6 text-[var(--primary-dark)]" />
+          Profil & Gudang
+        </h2>
+      </div>
+
+      <div className="glass-panel p-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white/40 p-3 rounded-2xl border-2 border-white/50 flex flex-col items-center justify-center text-center">
+          <div className="text-sm font-bold text-[var(--text-secondary)] mb-1">Level Pemain</div>
+          <div className="flex items-center gap-1 font-display text-2xl text-[var(--primary-dark)]">
+            <Star className="w-5 h-5 fill-current text-[var(--gold)]" />
+            {level}
+          </div>
+          <div className="text-[10px] font-black text-black/40 bg-black/5 px-2 py-0.5 rounded-full mt-1">
+            XP {formatNumber(xp)} / {formatNumber(xpNeeded)}
+          </div>
+        </div>
+
+        <div className="bg-white/40 p-3 rounded-2xl border-2 border-white/50 flex flex-col items-center justify-center text-center">
+          <div className="text-sm font-bold text-[var(--text-secondary)] mb-1">Total Koin</div>
+          <div className="flex items-center gap-1 font-display text-2xl text-amber-600">
+            <Coins className="w-5 h-5 fill-current" />
+            {formatNumber(coins)}
+          </div>
+        </div>
+
+        <div className="bg-white/40 p-3 rounded-2xl border-2 border-white/50 flex flex-col items-center justify-center text-center">
+          <div className="text-sm font-bold text-[var(--text-secondary)] mb-1">Musim & Hari</div>
+          <div className="flex items-center gap-1 font-display text-2xl text-emerald-700">
+            <CalendarDays className="w-5 h-5" />
+            Hari {day}
+          </div>
+          <div className="text-[10px] font-black text-black/40 bg-black/5 px-2 py-0.5 rounded-full mt-1">
+            {seasonMeta.emoji} {seasonMeta.label}
+          </div>
+        </div>
+
+        <div className="bg-white/40 p-3 rounded-2xl border-2 border-white/50 flex flex-col items-center justify-center text-center">
+          <div className="text-sm font-bold text-[var(--text-secondary)] mb-1">Pencapaian</div>
+          <div className="flex items-center gap-1 font-display text-2xl text-blue-600">
+            <Trophy className="w-5 h-5 fill-current" />
+            {Object.values(inventory).filter((q) => q > 0).length}
+          </div>
+          <div className="text-[10px] font-black text-black/40 bg-black/5 px-2 py-0.5 rounded-full mt-1">
+            Jenis Item Dimiliki
+          </div>
+        </div>
+      </div>
+
+      <div className="glass-panel p-4 sm:p-5 mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5 border-b-2 border-white/30 pb-2">
+          <h3 className="font-display font-bold text-lg text-[var(--text-primary)] flex items-center gap-2">
+            <span>🎒</span> Isi Tas / Gudang
+          </h3>
+          {hasSellable && (
+            <Button variant="danger" size="sm" onClick={handleSellAll}>
+              Jual Semua Hasil
+            </Button>
+          )}
+        </div>
+
+        {categoriesConfig.map(({ key, title, icon }) => {
+          const items = categorized[key];
+          if (items.length === 0) return null;
+
+          return (
+            <div key={key} className="mb-6 last:mb-0">
+              <h4 className="text-[13px] font-black text-[var(--text-secondary)] uppercase tracking-wider mb-3 flex items-center gap-2">
+                {icon} {title}
+                <span className="text-[10px] bg-[var(--wood)] text-[#FFE08A] px-2 py-0.5 rounded-full">
+                  {items.length} Jenis
+                </span>
+              </h4>
+
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
+                {items.map((item) => {
+                  const name = getItemDisplayName(item.id);
+                  const emoji = getItemEmoji(item.id);
+                  const price = getItemSellPrice(item.id);
+
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => handleSellItem(item.id, name, item.qty)}
+                      className="bg-[var(--card)] hover:bg-[#fff7e6] hover:-translate-y-1 transition-all cursor-pointer border-2 border-[var(--wood-light)] hover:border-[var(--gold)] rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center text-center relative shadow-sm group"
+                      title={price ? `Klik untuk jual\nHarga: ${price}💰/ea` : 'Tidak bisa dijual'}
+                    >
+                      <div className="text-3xl sm:text-4xl mb-1 drop-shadow-sm group-hover:scale-110 transition-transform">
+                        {emoji}
+                      </div>
+                      <div className="text-[9px] sm:text-[10px] font-bold text-[var(--text-primary)] leading-tight max-w-full truncate w-full">
+                        {name}
+                      </div>
+                      <div className="absolute -top-2 -right-2 bg-gradient-to-b from-[var(--gold)] to-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 min-w-[20px] rounded-full shadow-md border border-white">
+                        {item.qty}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
+        {Object.values(inventory).every((q) => !q) && (
+          <div className="text-center py-10 opacity-60">
+            <div className="text-4xl mb-2">🕸️</div>
+            <p className="font-bold text-[var(--text-secondary)]">Tas Anda masih kosong...</p>
+          </div>
+        )}
+      </div>
+      </div>
+    </TabPage>
+  );
+}

@@ -1,18 +1,6 @@
 import { getMiningRegenMs, rollMineralType, isWorkerActive } from '../utils';
 
 export const createMiningSlice = (set, get) => ({
-  mining: {
-    nodes: Array.from({ length: 30 }, (_, i) => ({
-      id: i,
-      status: 'ready',
-      type: Math.random() < 0.05 ? 'berlian' : Math.random() < 0.15 ? 'emas' : Math.random() < 0.3 ? 'besi' : Math.random() < 0.5 ? 'tembaga' : 'batu',
-      regenAt: null
-    })),
-    pickaxeLevel: 1,
-    lanternUntil: null
-  },
-  selectedMiningTool: null,
-
   setSelectedMiningTool: (toolId) => set({ selectedMiningTool: toolId }),
 
   mineNode: (nodeId) => {

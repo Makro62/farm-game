@@ -3,6 +3,7 @@ import '@/styles/globals.css';
 import { GameProvider } from '@/lib/store-provider';
 import { Toaster } from 'react-hot-toast';
 import ClientLayout from '@/components/ClientLayout';
+import ClearServiceWorker from '@/components/ClearServiceWorker';
 
 const display = Fredoka({
   subsets: ['latin'],
@@ -46,6 +47,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-title" content="Farm Tycoon" />
       </head>
       <body className="font-body">
+        <ClearServiceWorker />
         <GameProvider>
           <ClientLayout>
             {children}

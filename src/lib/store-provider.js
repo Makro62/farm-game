@@ -4,57 +4,61 @@ import { useEffect, useState } from 'react';
 import { useGameStore } from './store';
 
 export function GameProvider({ children }) {
-  const [isMounted, setIsMounted] = useState(false);
-  const [isStoreReady, setIsStoreReady] = useState(
-    () => useGameStore.persist.hasHydrated()
-  );
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
+    let alive = true;
 
-    if (useGameStore.persist.hasHydrated()) {
-      setIsStoreReady(true);
-      return;
-    }
+    (async () => {
+      try {
+        await useGameStore.persist.rehydrate();
+      } catch (err) {
+        console.error('Store hydrate failed:', err);
+      } finally {
+        if (alive) setReady(true);
+      }
+    })();
 
-    return useGameStore.persist.onFinishHydration(() => {
-      setIsStoreReady(true);
-    });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (!isStoreReady) return;
+    if (!ready) return;
 
-    const state = useGameStore.getState();
-    const streakResult = state.checkStreak();
-    if (streakResult.claimed) {
-      console.log(streakResult.message);
+    try {
+      const state = useGameStore.getState();
+      if (!state.todayPrices || Object.keys(state.todayPrices).length === 0) {
+        state.updateMarket?.();
+      }
+      state.generateDailyQuests?.();
+    } catch (err) {
+      console.error('Boot effect failed:', err);
     }
-
-    if (!state.todayPrices || Object.keys(state.todayPrices).length === 0) {
-      state.updateMarket();
-    }
-
-    state.generateDailyQuests();
-  }, [isStoreReady]);
+  }, [ready]);
 
   useEffect(() => {
-    if (!isStoreReady) return;
+    if (!ready) return;
 
-    const tick = () => useGameStore.getState().processGameTick();
-    tick();
+    const tick = () => {
+      try {
+        useGameStore.getState().processGameTick?.();
+      } catch (err) {
+        console.error('Game tick error:', err);
+      }
+    };
+
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [isStoreReady]);
+  }, [ready]);
 
-  if (!isMounted || !isStoreReady) {
+  if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--bg-dark)] to-[var(--bg-light)]">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#C8E8FF] to-[#9FD67F]">
         <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce">🌾</div>
-          <div className="text-xl font-bold text-white animate-pulse">
-            Loading Farm...
-          </div>
+          <div className="text-6xl mb-4">🌾</div>
+          <div className="text-xl font-bold text-[var(--text-primary)]">Loading Farm...</div>
         </div>
       </div>
     );

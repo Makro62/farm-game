@@ -1,54 +1,11 @@
-import { 
-  getMiningRegenMs, 
-  isWorkerActive, 
-  getGrowthMultiplier, 
-  normalizePlot, 
-  normalizePlots, 
-  normalizeAnimal, 
-  consumeInventoryItem, 
-  pickAutoSeed, 
-  safeCoins,
-  safePositiveNumber
-} from '../utils';
-import { SHOP_ANIMALS, FISHES } from '../../utils';
+import { getMiningRegenMs, isWorkerActive, getGrowthMultiplier, normalizePlot, normalizePlots, normalizeAnimal, consumeInventoryItem, pickAutoSeed, safeCoins, safePositiveNumber } from '../utils';
+import { SHOP_ANIMALS } from '../../data/shop';
+import { FISHES } from '../../data/fishes';
+import { RECIPES } from '../../data/recipes';
+import { GAME_CONSTANTS } from '../../constants';
 import toast from 'react-hot-toast';
 
 export const createSystemSlice = (set, get) => ({
-  // Settings
-  soundEnabled: true,
-  musicEnabled: true,
-  notificationsEnabled: true,
-  
-  // Modals
-  modals: {
-    prompt: { isOpen: false, title: '', msg: '', onConfirm: null },
-    confirm: { isOpen: false, title: '', msg: '', onConfirm: null },
-    npcGift: { isOpen: false, npcId: null }
-  },
-
-  // Environment
-  season: { current: 'spring', day: 1, tick: 0 },
-  weather: { current: '☀️ Cerah', nextChangeIn: 300 },
-
-  // Progress & Offline
-  lastSavedAt: Date.now(),
-  offlineReport: null,
-  
-  // Workers
-  workers: {
-    farmer: false,
-    rancher: false,
-    fisher: false,
-    miner: false,
-  },
-  autoFarmer: false,
-  autoRancher: false,
-  autoFisher: false,
-  autoMiner: false,
-  workerAutoMigrated: false,
-  
-  lastWheelSpin: null,
-
   // ===== UI MODALS =====
   openPrompt: (title, msg, onConfirm) => {
     set((state) => ({
@@ -97,6 +54,8 @@ export const createSystemSlice = (set, get) => ({
   toggleAutoRancher: () => set(state => ({ autoRancher: !state.autoRancher })),
   toggleAutoFisher: () => set(state => ({ autoFisher: !state.autoFisher })),
   toggleAutoMiner: () => set(state => ({ autoMiner: !state.autoMiner })),
+  toggleAutoChef: () => set(state => ({ autoChef: !state.autoChef })),
+  setSelectedRecipe: (recipeId) => set({ selectedRecipe: recipeId }),
 
   hireWorker: (type, cost) => {
     const state = get();
@@ -111,6 +70,7 @@ export const createSystemSlice = (set, get) => ({
       rancher: { autoRancher: true },
       fisher: { autoFisher: true },
       miner: { autoMiner: true },
+      chef: { autoChef: true },
     };
 
     set({
@@ -152,37 +112,38 @@ export const createSystemSlice = (set, get) => ({
 
   // ===== ENVIRONMENT & TICK =====
   advanceSeasonTick: () => {
+    const ticksPerDay = GAME_CONSTANTS.SYSTEM.SEASON_TICKS_PER_DAY;
+    const eventChanceThreshold = GAME_CONSTANTS.SYSTEM.RANDOM_EVENT_CHANCE;
+
     set((state) => {
       if (!state.season) return state;
       let { tick, day, current } = state.season;
       let activeEvent = state.activeEvent;
       tick += 1;
-      
-      if (tick >= 180) { // 3 real minutes per day for testing
+
+      if (tick >= ticksPerDay) {
         tick = 0;
         day += 1;
-        
-        // Random Event Check on new day
+
         const eventChance = Math.random();
-        if (eventChance < 0.3) {
+        if (eventChance < eventChanceThreshold) {
           const events = [
             { id: 'panen', name: '🎊 Festival Panen', desc: 'Harga jual semua tanaman x2 hari ini!' },
             { id: 'bahari', name: '🎣 Hari Bahari', desc: 'Ikan terjual dengan harga x2!' },
-            { id: 'tambang', name: '💎 Demam Emas', desc: 'Peluang mendapat Emas & Berlian meningkat!' }
+            { id: 'tambang', name: '💎 Demam Emas', desc: 'Peluang mendapat Emas & Berlian meningkat!' },
           ];
           activeEvent = events[Math.floor(Math.random() * events.length)];
         } else {
           activeEvent = null;
         }
 
-        if (day > 7) { // 7 days per season
+        if (day > 7) {
           day = 1;
           const seasons = ['spring', 'summer', 'autumn', 'winter'];
           const idx = seasons.indexOf(current);
           current = seasons[(idx + 1) % 4];
         }
 
-        // Refresh harga pasar tiap hari baru (async via setTimeout agar tidak nested set)
         setTimeout(() => get().updateMarket?.(), 0);
       }
       return { season: { current, day, tick }, activeEvent };
@@ -262,12 +223,14 @@ export const createSystemSlice = (set, get) => ({
     let plots = normalizePlots(state.plots);
     let animals = Array.isArray(state.animals) ? state.animals.map(normalizeAnimal) : [];
     let inventory = { ...state.inventory };
+    let craftingQueue = [...(state.craftingQueue || [])];
     let xpGain = 0;
     let harvested = 0;
     let planted = 0;
     let collected = 0;
     let plotsChanged = false;
     let animalsChanged = false;
+    let queueChanged = false;
     const questEntries = [];
 
     // --- 1. KURCACI PETANI ---
@@ -335,10 +298,11 @@ export const createSystemSlice = (set, get) => ({
       }
     }
 
-    if (plotsChanged || animalsChanged) {
+    if (plotsChanged || animalsChanged || queueChanged) {
       set({
         ...(plotsChanged ? { plots } : {}),
         ...(animalsChanged ? { animals } : {}),
+        ...(queueChanged ? { craftingQueue } : {}),
         inventory,
       });
       if (xpGain > 0) get().addXP(xpGain);
@@ -370,6 +334,40 @@ export const createSystemSlice = (set, get) => ({
         get().addXP(15);
         get().progressQuest('fish', caughtFish.id, 1);
         toast.success(`🎣 Nelayan Mamat mendapat ${caughtFish.emoji} ${caughtFish.name}!`, { id: 'auto-fisher', duration: 2000 });
+      }
+    }
+
+    // --- 4. KOKI JUNA (CHEF) ---
+    if (isWorkerActive(state, 'chef') && state.selectedRecipe) {
+      const recipe = RECIPES.find(r => r.id === state.selectedRecipe);
+      if (recipe) {
+        const typeQueue = craftingQueue.filter(
+          (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === recipe.type
+        );
+        
+        if (typeQueue.length < 3) {
+          let canCook = true;
+          for (const [item, qty] of Object.entries(recipe.req)) {
+            if ((inventory[item] || 0) < qty) {
+              canCook = false;
+              break;
+            }
+          }
+          
+          if (canCook) {
+            for (const [item, qty] of Object.entries(recipe.req)) {
+              inventory[item] -= qty;
+              if (inventory[item] <= 0) delete inventory[item];
+            }
+            const id = Math.random().toString(36).substring(2, 9);
+            const startTime = Date.now();
+            const duration = recipe.time * 1000;
+            
+            craftingQueue.push({ id, recipeId: recipe.id, startTime, duration });
+            queueChanged = true;
+            toast.success(`👨‍🍳 Koki Juna memasak ${recipe.name}!`, { id: 'auto-chef', duration: 2000 });
+          }
+        }
       }
     }
   },
@@ -498,28 +496,5 @@ export const createSystemSlice = (set, get) => ({
   },
 
   // ===== UTILITY =====
-  resetGame: () => {
-    // Requires access to initialState which we will handle in store.js
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('farm-game-storage');
-      window.location.reload();
-    }
-    return true;
-  },
-
-  dev: {
-    addCoins: (amount) => {
-      if (process.env.NODE_ENV === 'development') {
-        set((s) => ({ coins: s.coins + amount }));
-      }
-    },
-    setLevel: (level) => {
-      if (process.env.NODE_ENV === 'development') {
-        set({ level, xp: 0 });
-      }
-    },
-    resetPlots: () => {
-      // Handled in store.js
-    }
-  }
+  // resetGame & dev di-override di store.js
 });

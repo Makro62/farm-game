@@ -1,5 +1,5 @@
 import { useGameStore } from '@/lib/store';
-import { getCropEmoji } from '@/lib/utils';
+import { getCropEmoji } from '../../lib/data/item-helpers';
 import { useState, useEffect } from 'react';
 
 export function OrderBoard() {

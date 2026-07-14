@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { FISHES, SHOP_BAIT } from '@/lib/utils';
+import { FISHES } from '../data/fishes';
+import { SHOP_BAIT } from '../data/shop';
 import { useGameStore } from '@/lib/store';
 import { GAME_CONSTANTS } from '@/lib/constants';
 

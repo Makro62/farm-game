@@ -1,6 +1,4 @@
 export const createRanchingSlice = (set, get) => ({
-  animals: [],
-
   buyAnimal: (animalType, produceTime) => {
     set((state) => ({
       animals: [
