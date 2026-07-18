@@ -618,4 +618,16 @@ export const createPlayerSlice = (set, get) => ({
       }
     }
   },
+
+  // ===== TUTORIAL =====
+  completeTutorialStep: (step) => {
+    const state = get();
+    if (state.tutorialStep === step) {
+      set({ tutorialStep: step + 1 });
+    }
+  },
+  
+  skipTutorial: () => {
+    set({ tutorialStep: -1 });
+  },
 });

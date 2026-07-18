@@ -105,4 +105,5 @@ export const initialState = {
     greenhouse: false,
   },
   decorations: [],
+  tutorialStep: 0,
 };

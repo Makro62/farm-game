@@ -338,7 +338,7 @@ Antarmuka menggunakan arsitektur modular yang dibalut `ClientLayout` dan `GameSi
 - [x] PWA support, Responsive layout, Auto-save
 
 ### 🚧 Dalam Pengembangan / Tertunda
-- [ ] Order Board (papan pesanan dinamik)
+- [x] Order Board (papan pesanan dinamik)
 - [ ] Mini-game memancing interaktif
 - [ ] Tutorial system untuk new players
 

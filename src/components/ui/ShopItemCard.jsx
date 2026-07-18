@@ -12,11 +12,11 @@ export function ShopSectionTitle({ icon, children }) {
   );
 }
 
-export function ShopItemCard({ icon, name, price, amount, onDecrease, onIncrease, onBuy }) {
+export function ShopItemCard({ icon, name, price, amount, onDecrease, onIncrease, onBuy, dataTutorial }) {
   const total = price * amount;
 
   return (
-    <article className="shop-item-card">
+    <article className="shop-item-card" data-tutorial={dataTutorial}>
       <div className="shop-item-info">
         <span className="shop-item-icon" aria-hidden>{icon}</span>
         <span className="shop-item-name">{name}</span>

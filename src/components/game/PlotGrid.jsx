@@ -113,6 +113,13 @@ export function PlotGrid({ isEditMode, farmTool = 'tanam' }) {
                 }
                 handlePlotClick(plot);
               }}
+              data-tutorial={
+                plot.status === 'empty' 
+                  ? 'farm-plot' 
+                  : plot.status === 'ready' 
+                    ? 'farm-plot-ready' 
+                    : undefined
+              }
               className={cn(
                 'game-plot-cell overflow-hidden',
                 isEditMode && 'cursor-grab hover:ring-4 ring-yellow-400',
