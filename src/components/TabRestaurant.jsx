@@ -36,7 +36,7 @@ function MenuBoard() {
 }
 
 function KitchenSlots() {
-  const craftingQueue = useGameStore((s) => s.craftingQueue);
+  const craftingQueue = useGameStore((s) => s.craftingQueue || []);
   const slots = Array.from({ length: 3 }, (_, i) => craftingQueue[i] || null);
 
   return (
@@ -75,7 +75,9 @@ function TableGrid() {
   const activeCustomers = useGameStore((s) => s.activeCustomers || []);
   const totalTables = useGameStore((s) => s.totalTables || 4);
   const serveCustomer = useGameStore((s) => s.serveCustomer);
-  const tables = Array.from({ length: totalTables }, (_, i) => i);
+  const upgradeTables = useGameStore((s) => s.upgradeTables);
+  const openConfirm = useGameStore((s) => s.openConfirm);
+  const tables = Array.from({ length: 9 }, (_, i) => i);
 
   // Force re-render for progress bar animation
   const [, setTick] = useState(0);
@@ -84,10 +86,40 @@ function TableGrid() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleUpgrade = () => {
+    const cost = totalTables * 1000;
+    openConfirm(
+      'Beli Meja Baru',
+      `Beli meja baru seharga ${cost} 💰?`,
+      () => {
+        upgradeTables();
+      }
+    );
+  };
+
   return (
     <div className="grid grid-cols-3 gap-3 w-full max-w-lg mx-auto mb-6 mt-2">
       {tables.map(tableId => {
+        const isLocked = tableId >= totalTables;
         const customer = activeCustomers.find(c => c.tableId === tableId);
+        
+        if (isLocked) {
+          return (
+            <div 
+              key={tableId} 
+              onClick={tableId === totalTables ? handleUpgrade : undefined}
+              className={`relative aspect-[3/2] bg-[#7a4629] rounded-xl border-4 border-[#5c331a] shadow-[inset_0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center opacity-70 ${tableId === totalTables ? 'cursor-pointer hover:opacity-100 hover:scale-105 transition-transform' : 'cursor-not-allowed'}`}
+            >
+              <div className="text-3xl opacity-50">🔒</div>
+              {tableId === totalTables && (
+                <div className="absolute -bottom-2 bg-[var(--gold)] text-black text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white/20 whitespace-nowrap shadow-sm hover:scale-110 transition-transform">
+                  Beli {totalTables * 1000}💰
+                </div>
+              )}
+            </div>
+          );
+        }
+
         return (
           <div key={tableId} className="relative aspect-[3/2] bg-[#a86540] rounded-xl border-4 border-[#7a4629] shadow-[inset_0_4px_8px_rgba(0,0,0,0.3)] flex items-center justify-center">
             {/* Table detail */}
@@ -145,7 +177,7 @@ export default function TabRestaurant() {
     menuFilter === 'all' ? RECIPES : RECIPES.filter((r) => r.type === menuFilter);
 
   const canCook = (recipe) =>
-    Object.entries(recipe.req).every(([item, qty]) => (inventory[item] || 0) >= qty);
+    Object.entries(recipe.req || {}).every(([item, qty]) => (inventory[item] || 0) >= qty);
 
   const handleCook = (recipeId) => {
     if (startCrafting(recipeId)) {

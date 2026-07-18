@@ -26,4 +26,8 @@ export const SHOP_SEEDS = [
   { id: 'bibit_apel', cropId: 'apel', name: 'Bibit Apel', emoji: '🍎', price: 140, time: 180, season: 'autumn' },
   { id: 'bibit_labu', cropId: 'labu', name: 'Bibit Labu', emoji: '🎃', price: 160, time: 200, season: 'autumn' },
   { id: 'bibit_jamur', cropId: 'jamur', name: 'Spora Jamur', emoji: '🍄', price: 500, time: 300, season: 'winter' },
+  // ===== Crop yang sebelumnya ada di CROP_DATA tapi tidak bisa dibeli =====
+  { id: 'bibit_nanas', cropId: 'nanas', name: 'Bibit Nanas', emoji: '🍍', price: 200, time: 220, season: 'summer' },
+  { id: 'bibit_kentang', cropId: 'kentang', name: 'Bibit Kentang', emoji: '🥔', price: 180, time: 190, season: 'autumn' },
 ];
+

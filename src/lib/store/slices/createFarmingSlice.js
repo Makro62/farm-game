@@ -49,12 +49,30 @@ export const createFarmingSlice = (set, get) => ({
     }
 
     const growthMultiplier = state.growthMultiplier > 0 ? state.growthMultiplier : 1;
-    const ok = get().plant(plotId, seedData.cropId, (seedData.time * 1000) / growthMultiplier);
+    let baseGrowTime = (seedData.time * 1000) / growthMultiplier;
+
+    // ===== Auto-pakai Pupuk Kandang jika ada (Ternak → Ladang) =====
+    let usedFertilizer = false;
+    if ((get().inventory.pupuk_kandang || 0) > 0) {
+      get().removeItem?.('pupuk_kandang', 1);
+      baseGrowTime = Math.floor(baseGrowTime * 0.85); // -15% grow time
+      usedFertilizer = true;
+    }
+
+    const ok = get().plant(plotId, seedData.cropId, baseGrowTime);
     if (!ok) {
       get().addItem?.(seedId, 1);
+      if (usedFertilizer) get().addItem?.('pupuk_kandang', 1); // refund
       return { ok: false, message: 'Petak tidak kosong.' };
     }
-    return { ok: true, message: `Menanam ${seedData.name}`, seed: seedData };
+    return {
+      ok: true,
+      message: usedFertilizer
+        ? `Menanam ${seedData.name} 🌿 (+Pupuk, tumbuh lebih cepat!)`
+        : `Menanam ${seedData.name}`,
+      seed: seedData,
+      usedFertilizer,
+    };
   },
 
   waterPlot: (plotId) => {

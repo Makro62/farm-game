@@ -1,3 +1,5 @@
+import toast from 'react-hot-toast';
+
 export const createRanchingSlice = (set, get) => ({
   buyAnimal: (animalType, produceTime) => {
     set((state) => ({
@@ -22,7 +24,10 @@ export const createRanchingSlice = (set, get) => ({
     if (!get().consumeEnergy(1)) {
       return false; // UI handles toast
     }
-    
+
+    // ===== Drop Pupuk Kandang 15% chance (Ternak → Ladang) =====
+    const dropsFertilizer = Math.random() < 0.15;
+
     set((state) => ({
       animals: state.animals.map(a => 
         a.id === animalId 
@@ -31,7 +36,8 @@ export const createRanchingSlice = (set, get) => ({
       ),
       inventory: {
         ...state.inventory,
-        [productType]: (state.inventory[productType] || 0) + 1
+        [productType]: (state.inventory[productType] || 0) + 1,
+        ...(dropsFertilizer ? { pupuk_kandang: (state.inventory.pupuk_kandang || 0) + 1 } : {}),
       }
     }));
 
@@ -40,6 +46,10 @@ export const createRanchingSlice = (set, get) => ({
     const combo = get().registerCombo?.();
     if (combo?.count >= 3) {
       get().addCoins?.(Math.floor(4 * combo.multiplier));
+    }
+
+    if (dropsFertilizer) {
+      toast('🌿 Dapat Pupuk Kandang! Otomatis dipakai saat tanam.', { duration: 2500 });
     }
 
     return true;
@@ -59,3 +69,4 @@ export const createRanchingSlice = (set, get) => ({
     });
   },
 });
+

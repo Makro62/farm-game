@@ -1,4 +1,6 @@
 import { getMiningRegenMs, rollMineralType, isWorkerActive } from '../utils';
+import toast from 'react-hot-toast';
+import { SHOP_MINING } from '@/lib/data/shop';
 
 export const createMiningSlice = (set, get) => ({
   setSelectedMiningTool: (toolId) => set({ selectedMiningTool: toolId }),
@@ -14,6 +16,9 @@ export const createMiningSlice = (set, get) => ({
 
     const regenTime = getMiningRegenMs(state.mining);
     
+    // ===== Drop cacing saat menambang Batu (Tambang → Memancing) =====
+    const dropsWorm = node.type === 'batu' && Math.random() < 0.2;
+
     set((state) => ({
       mining: {
         ...state.mining,
@@ -23,12 +28,16 @@ export const createMiningSlice = (set, get) => ({
       },
       inventory: {
         ...state.inventory,
-        [node.type]: (state.inventory[node.type] || 0) + 1
+        [node.type]: (state.inventory[node.type] || 0) + 1,
+        ...(dropsWorm ? { cacing: (state.inventory.cacing || 0) + 1 } : {}),
       }
     }));
 
     get().addXP(15);
     get().progressQuest('mine', node.type, 1);
+    if (dropsWorm) {
+      toast('🪱 Dapat Cacing Tanah! Bisa jadi umpan pancing.', { duration: 2500 });
+    }
     const combo = get().registerCombo?.();
     if (combo?.count >= 3) {
       get().addCoins?.(Math.floor(5 * combo.multiplier));
@@ -46,11 +55,40 @@ export const createMiningSlice = (set, get) => ({
     const mining = state.mining;
     const lanternActive = mining.lanternUntil && mining.lanternUntil > Date.now();
 
+    // ===== Cek mineralReq sebelum pakai pickaxe/upgrade (Tambang → syarat material) =====
+    const checkMineralReq = (shopItemId) => {
+      const shopItem = SHOP_MINING.find(m => m.id === shopItemId);
+      if (!shopItem?.mineralReq) return null;
+      const inv = get().inventory;
+      for (const [mineral, qty] of Object.entries(shopItem.mineralReq)) {
+        if ((inv[mineral] || 0) < qty) {
+          return `Butuh ${qty}x ${mineral} untuk memakai ini!`;
+        }
+      }
+      return null;
+    };
+
+    const consumeMineralReq = (shopItemId) => {
+      const shopItem = SHOP_MINING.find(m => m.id === shopItemId);
+      if (!shopItem?.mineralReq) return;
+      set(s => {
+        const newInv = { ...s.inventory };
+        for (const [mineral, qty] of Object.entries(shopItem.mineralReq)) {
+          newInv[mineral] = (newInv[mineral] || 0) - qty;
+          if (newInv[mineral] <= 0) delete newInv[mineral];
+        }
+        return { inventory: newInv };
+      });
+    };
+
     if (itemId === 'pickaxe_besi') {
       if (mining.pickaxeLevel >= 2) {
         return { ok: false, message: 'Pickaxe ini sudah terpasang atau ada yang lebih baik.' };
       }
+      const reqError = checkMineralReq('pickaxe_besi');
+      if (reqError) return { ok: false, message: reqError };
       if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+      consumeMineralReq('pickaxe_besi');
       set({ mining: { ...get().mining, pickaxeLevel: 2 }, selectedMiningTool: null });
       return { ok: true, message: '⛏️ Pickaxe Besi terpasang! Regen tambang 90 detik.' };
     }
@@ -59,7 +97,10 @@ export const createMiningSlice = (set, get) => ({
       if (mining.pickaxeLevel >= 3) {
         return { ok: false, message: 'Pickaxe Emas sudah terpasang.' };
       }
+      const reqError = checkMineralReq('pickaxe_emas');
+      if (reqError) return { ok: false, message: reqError };
       if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+      consumeMineralReq('pickaxe_emas');
       set({ mining: { ...get().mining, pickaxeLevel: 3 }, selectedMiningTool: null });
       return { ok: true, message: '🛠️ Pickaxe Emas terpasang! Regen 60 detik + bonus mineral langka.' };
     }
@@ -78,7 +119,10 @@ export const createMiningSlice = (set, get) => ({
       if (readyNodes.length === 0) {
         return { ok: false, message: 'Tidak ada petak siap ditambang.' };
       }
+      const reqError = checkMineralReq('bom_besar');
+      if (reqError) return { ok: false, message: reqError };
       if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+      consumeMineralReq('bom_besar');
       const regenTime = getMiningRegenMs(get().mining);
       const newInventory = { ...get().inventory };
       let mined = 0;

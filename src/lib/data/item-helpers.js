@@ -1,5 +1,5 @@
 import { SHOP_SEEDS, CROP_DATA } from './crops';
-import { SHOP_ANIMALS, SHOP_BAIT, SHOP_MINING } from './shop';
+import { SHOP_ANIMALS, SHOP_BAIT, SHOP_MINING, SPECIAL_ITEMS } from './shop';
 import { RECIPES } from './recipes';
 import { FISHES } from './fishes';
 import { MINERALS } from './minerals';
@@ -55,6 +55,10 @@ export function getItemEmoji(itemId) {
 
   const bait = SHOP_BAIT.find((b) => b.id === itemId);
   if (bait) return bait.emoji;
+
+  // Item lintas-sistem (cacing, pupuk_kandang)
+  const specialItem = SPECIAL_ITEMS[itemId];
+  if (specialItem) return specialItem.emoji;
 
   return '📦';
 }
@@ -141,6 +145,10 @@ export function getItemDisplayName(itemId) {
 
   const miningTool = SHOP_MINING.find((m) => m.id === itemId);
   if (miningTool) return miningTool.name;
+
+  // Item lintas-sistem
+  const specialItem = SPECIAL_ITEMS[itemId];
+  if (specialItem) return specialItem.name;
 
   return itemId;
 }

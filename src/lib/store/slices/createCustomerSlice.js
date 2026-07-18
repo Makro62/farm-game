@@ -9,7 +9,22 @@ export const createCustomerSlice = (set, get) => ({
   activeCustomers: [],
   
   // Total tables available in the restaurant (can be upgraded later)
-  totalTables: 9,
+  totalTables: 4,
+
+  upgradeTables: () => {
+    const state = get();
+    if (state.totalTables >= 9) return false;
+    
+    const cost = state.totalTables * 1000;
+    if (state.coins < cost) {
+      toast.error('Koin tidak cukup untuk beli meja baru!');
+      return false;
+    }
+    
+    set({ coins: state.coins - cost, totalTables: state.totalTables + 1 });
+    toast.success('Meja baru berhasil ditambahkan!');
+    return true;
+  },
 
   spawnCustomer: () => {
     const state = get();
