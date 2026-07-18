@@ -1,6 +1,6 @@
 const withPWA = require('@ducanh2912/next-pwa').default({
   dest: 'public',
-  disable: true, // matikan total dulu — SW lama sering bikin reload loop
+  disable: process.env.NODE_ENV === 'development', // aktif saat production/build agar bisa diinstal di HP
   workboxOptions: {
     disableDevLogs: true,
   },

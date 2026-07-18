@@ -146,16 +146,18 @@ export default function TabProfil() {
             </div>
             
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-              <div>
-                <h4 className="text-xs font-black text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1"><Zap className="w-4 h-4"/> Mode Developer (Cheat)</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="shop" size="sm" onClick={() => { dev.addCoins(10000); toast.success('+10.000 Koin!'); }}>+10.000 Koin</Button>
-                  <Button variant="shop" size="sm" onClick={() => { dev.addEnergy(100); toast.success('+100 Energy!'); }}>Max Energy</Button>
-                  <Button variant="shop" size="sm" onClick={() => { dev.instantGrow(); toast.success('Semua tanaman langsung panen!'); }}>Panen Instan</Button>
-                  <Button variant="shop" size="sm" onClick={() => { dev.unlockAll(); toast.success('Semua pekerja & bangunan terbuka!'); }}>Unlock Semua</Button>
-                  <Button variant="shop" size="sm" onClick={() => { dev.setLevel(50); toast.success('Level Maksimal!'); }}>Max Level (50)</Button>
+              {process.env.NODE_ENV === 'development' && (
+                <div>
+                  <h4 className="text-xs font-black text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1"><Zap className="w-4 h-4"/> Mode Developer (Cheat)</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="shop" size="sm" onClick={() => { dev.addCoins(10000); toast.success('+10.000 Koin!'); }}>+10.000 Koin</Button>
+                    <Button variant="shop" size="sm" onClick={() => { dev.addEnergy(100); toast.success('+100 Energy!'); }}>Max Energy</Button>
+                    <Button variant="shop" size="sm" onClick={() => { dev.instantGrow(); toast.success('Semua tanaman langsung panen!'); }}>Panen Instan</Button>
+                    <Button variant="shop" size="sm" onClick={() => { dev.unlockAll(); toast.success('Semua pekerja & bangunan terbuka!'); }}>Unlock Semua</Button>
+                    <Button variant="shop" size="sm" onClick={() => { dev.setLevel(50); toast.success('Level Maksimal!'); }}>Max Level (50)</Button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <hr className="border-t-2 border-black/5" />
 

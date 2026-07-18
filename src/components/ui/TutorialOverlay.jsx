@@ -3,19 +3,19 @@ import { useGameStore } from '@/lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
+const steps = [
+  { id: 0, text: "Selamat datang! Langkah 1: Beli Bibit Wortel di Toko.", target: '[data-tutorial="shop-seed"]' },
+  { id: 1, text: "Langkah 2: Buka tab Pertanian, lalu klik petak tanah kosong untuk menanam.", target: '[data-tutorial="farm-plot"]' },
+  { id: 2, text: "Langkah 3: Tunggu hingga siap, lalu klik untuk panen!", target: '[data-tutorial="farm-plot-ready"]' },
+  { id: 3, text: "Hebat! Anda siap mengelola pertanian Anda.", target: null },
+];
+
 export default function TutorialOverlay() {
   const tutorialStep = useGameStore(state => state.tutorialStep);
   const completeTutorialStep = useGameStore(state => state.completeTutorialStep);
   const skipTutorial = useGameStore(state => state.skipTutorial);
   
   const [targetRect, setTargetRect] = useState(null);
-
-  const steps = [
-    { id: 0, text: "Selamat datang! Langkah 1: Beli Bibit Wortel di Toko.", target: '[data-tutorial="shop-seed"]' },
-    { id: 1, text: "Langkah 2: Buka tab Pertanian, lalu klik petak tanah kosong untuk menanam.", target: '[data-tutorial="farm-plot"]' },
-    { id: 2, text: "Langkah 3: Tunggu hingga siap, lalu klik untuk panen!", target: '[data-tutorial="farm-plot-ready"]' },
-    { id: 3, text: "Hebat! Anda siap mengelola pertanian Anda.", target: null },
-  ];
 
   const currentStep = steps.find(s => s.id === tutorialStep);
 
@@ -28,7 +28,14 @@ export default function TutorialOverlay() {
     const updateRect = () => {
       const el = document.querySelector(currentStep.target);
       if (el) {
-        setTargetRect(el.getBoundingClientRect());
+        const rect = el.getBoundingClientRect();
+        setTargetRect(prev => {
+          if (!prev) return rect;
+          if (prev.top === rect.top && prev.left === rect.left && prev.width === rect.width && prev.height === rect.height) {
+            return prev;
+          }
+          return rect;
+        });
       } else {
         setTargetRect(null);
       }

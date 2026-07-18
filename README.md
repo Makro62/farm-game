@@ -37,7 +37,7 @@ Navigasi lewat **sidebar** (desktop) atau **bottom nav** (mobile):
 - **Pekerja Otomatis:** Sewa kurcaci petani / peternak / penambang / pemancing / koki
 - **Cuaca & Musim:** Ditampilkan di sidebar; mempengaruhi pertumbuhan tanaman
 - **Auto-Save:** Zustand Persist ke LocalStorage
-- **PWA:** Dapat diinstal di HP atau desktop (`next-pwa`)
+- **PWA:** *(Dalam tahap perbaikan Service Worker)*. Fitur instalasi PWA dinonaktifkan sementara.
 
 ## ⚙️ Cara Menjalankan
 
