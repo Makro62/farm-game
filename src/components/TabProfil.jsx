@@ -11,8 +11,9 @@ import { RECIPES } from '@/lib/data/recipes';
 import { SEASON_META } from '@/lib/nav';
 import TabPage from './ui/TabPage';
 import Button from './ui/Button';
-import { Coins, Star, Trophy, CalendarDays, Shield } from 'lucide-react';
+import { Coins, Star, Trophy, CalendarDays, Shield, Settings, X, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useState } from 'react';
 
 export default function TabProfil() {
   const inventory = useGameStore((state) => state.inventory);
@@ -25,6 +26,10 @@ export default function TabProfil() {
   const sellAllInventory = useGameStore((state) => state.sellAllInventory);
   const coinMultiplier = useGameStore((state) => state.coinMultiplier);
   const openConfirm = useGameStore((state) => state.openConfirm);
+  const resetGame = useGameStore((state) => state.resetGame);
+  const dev = useGameStore((state) => state.dev);
+
+  const [showSettings, setShowSettings] = useState(false);
 
   const xpNeeded = level * 100;
   const seasonMeta = SEASON_META[season] || SEASON_META.spring;
@@ -114,12 +119,66 @@ export default function TabProfil() {
   return (
     <TabPage>
       <div className="glass-panel p-3 sm:p-5 overflow-y-auto max-h-full">
-      <div className="flex items-center gap-2 mb-4 mt-1">
+      <div className="flex items-center justify-between gap-2 mb-4 mt-1">
         <h2 className="font-display text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
           <Shield className="w-6 h-6 text-[var(--primary-dark)]" />
           Profil & Gudang
         </h2>
+        <button 
+          onClick={() => setShowSettings(true)}
+          className="bg-white/50 hover:bg-white p-2 rounded-xl border-2 border-white/60 transition-colors shadow-sm"
+        >
+          <Settings className="w-5 h-5 text-[var(--text-secondary)]" />
+        </button>
       </div>
+
+      {/* SETTINGS / CHEAT MODAL */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-[#FFFDF7] border-4 border-[var(--wood)] rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative">
+            <div className="bg-[var(--wood)] px-4 py-3 flex items-center justify-between">
+              <h3 className="font-display font-bold text-white text-lg flex items-center gap-2">
+                <Settings className="w-5 h-5" /> Pengaturan & Cheat
+              </h3>
+              <button onClick={() => setShowSettings(false)} className="text-white/80 hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+              <div>
+                <h4 className="text-xs font-black text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1"><Zap className="w-4 h-4"/> Mode Developer (Cheat)</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="shop" size="sm" onClick={() => { dev.addCoins(10000); toast.success('+10.000 Koin!'); }}>+10.000 Koin</Button>
+                  <Button variant="shop" size="sm" onClick={() => { dev.addEnergy(100); toast.success('+100 Energy!'); }}>Max Energy</Button>
+                  <Button variant="shop" size="sm" onClick={() => { dev.instantGrow(); toast.success('Semua tanaman langsung panen!'); }}>Panen Instan</Button>
+                  <Button variant="shop" size="sm" onClick={() => { dev.unlockAll(); toast.success('Semua pekerja & bangunan terbuka!'); }}>Unlock Semua</Button>
+                  <Button variant="shop" size="sm" onClick={() => { dev.setLevel(50); toast.success('Level Maksimal!'); }}>Max Level (50)</Button>
+                </div>
+              </div>
+
+              <hr className="border-t-2 border-black/5" />
+
+              <div>
+                <h4 className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-wider mb-2">Sistem</h4>
+                <Button 
+                  variant="danger" 
+                  className="w-full"
+                  onClick={() => {
+                    openConfirm('Reset Game', 'Apakah Anda yakin ingin menghapus SEMUA data permainan? Ini tidak bisa dikembalikan!', () => {
+                      resetGame();
+                      toast.success('Game telah direset!');
+                      setShowSettings(false);
+                    });
+                  }}
+                >
+                  Reset Ulang Game
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="glass-panel p-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white/40 p-3 rounded-2xl border-2 border-white/50 flex flex-col items-center justify-center text-center">

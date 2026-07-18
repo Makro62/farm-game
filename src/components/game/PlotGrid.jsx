@@ -123,11 +123,12 @@ export function PlotGrid({ isEditMode, farmTool = 'tanam' }) {
               )}
             >
               {plot.crop && (
-                <AnimatePresence>
+                <AnimatePresence mode="popLayout">
                   <motion.div
                     initial={{ scale: 0, y: 10 }}
                     animate={{ scale: isReady ? 1.5 : 0.8, y: 0 }}
-                    className="z-10"
+                    exit={{ scale: 2.5, y: -80, opacity: 0, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))', transition: { duration: 0.6, ease: "easeOut" } }}
+                    className={cn("z-10", isReady && "animate-breathe")}
                   >
                     <CropIcon cropId={plot.crop} />
                   </motion.div>

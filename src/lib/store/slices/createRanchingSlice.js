@@ -17,8 +17,11 @@ export const createRanchingSlice = (set, get) => ({
   collectAnimal: (animalId, productType) => {
     const state = get();
     const animal = state.animals.find(a => a.id === animalId);
-    
     if (!animal) return false;
+    
+    if (!get().consumeEnergy(1)) {
+      return false; // UI handles toast
+    }
     
     set((state) => ({
       animals: state.animals.map(a => 

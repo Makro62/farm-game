@@ -1,0 +1,42 @@
+export const CUSTOMERS = [
+  {
+    id: 'bapak_kumis',
+    name: 'Bapak Kumis',
+    emoji: '🧔',
+    basePatience: 45000,
+    tipMultiplier: 1.2,
+    preferences: ['sup_wortel', 'roti_gandum'],
+  },
+  {
+    id: 'gadis_kecil',
+    name: 'Gadis Kecil',
+    emoji: '👧',
+    basePatience: 30000,
+    tipMultiplier: 1.0,
+    preferences: ['susu_stroberi', 'kue_stroberi', 'pancake'],
+  },
+  {
+    id: 'nenek',
+    name: 'Nenek',
+    emoji: '👵',
+    basePatience: 60000,
+    tipMultiplier: 1.5,
+    preferences: ['sup_wortel', 'nasi_jamur', 'tepung_jagung'],
+  },
+  {
+    id: 'petani_tetangga',
+    name: 'Tetangga',
+    emoji: '🧑‍🌾',
+    basePatience: 40000,
+    tipMultiplier: 1.1,
+    preferences: ['keju', 'sushi_emas', 'jus_tomat'],
+  },
+  {
+    id: 'pengusaha',
+    name: 'Boss Besar',
+    emoji: '🕴️',
+    basePatience: 25000,
+    tipMultiplier: 2.5,
+    preferences: ['kue_stroberi', 'sushi_emas', 'pancake'],
+  },
+];

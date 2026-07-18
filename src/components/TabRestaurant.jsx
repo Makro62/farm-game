@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/lib/store';
 import { RECIPES } from '../lib/data/recipes';
 import { getCropEmoji } from '../lib/data/item-helpers';
@@ -67,6 +68,62 @@ function KitchenSlots() {
         Slot antrean dapur · maks 3 per jenis menu
       </p>
     </>
+  );
+}
+
+function TableGrid() {
+  const activeCustomers = useGameStore((s) => s.activeCustomers || []);
+  const totalTables = useGameStore((s) => s.totalTables || 4);
+  const serveCustomer = useGameStore((s) => s.serveCustomer);
+  const tables = Array.from({ length: totalTables }, (_, i) => i);
+
+  // Force re-render for progress bar animation
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="grid grid-cols-3 gap-3 w-full max-w-lg mx-auto mb-6 mt-2">
+      {tables.map(tableId => {
+        const customer = activeCustomers.find(c => c.tableId === tableId);
+        return (
+          <div key={tableId} className="relative aspect-[3/2] bg-[#a86540] rounded-xl border-4 border-[#7a4629] shadow-[inset_0_4px_8px_rgba(0,0,0,0.3)] flex items-center justify-center">
+            {/* Table detail */}
+            <div className="absolute inset-1.5 bg-[#8b5233] rounded pointer-events-none border border-[#9b6343]" />
+             
+            <AnimatePresence>
+              {customer && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.5, y: -20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.5, y: -20 }}
+                  onClick={() => serveCustomer(customer.id)}
+                  className="relative cursor-pointer hover:scale-105 transition-transform z-10"
+                >
+                  <span className="text-4xl drop-shadow-lg">{customer.emoji}</span>
+                  
+                  {/* Speech bubble */}
+                  <div className="absolute -top-10 -right-6 bg-white rounded-xl p-1.5 shadow-lg border-2 border-gray-200 animate-bounce flex flex-col items-center">
+                    <span className="text-xl leading-none">{RECIPES.find(r => r.id === customer.recipeId)?.emoji}</span>
+                    <div className="w-1.5 h-1.5 bg-white border-r-2 border-b-2 border-gray-200 absolute -bottom-1 left-3 rotate-45" />
+                  </div>
+                  
+                  {/* Patience bar */}
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-14 h-2 bg-black/40 rounded-full overflow-hidden border border-white/20">
+                    <div 
+                      className={`h-full transition-all duration-1000 ease-linear ${customer.patience / customer.maxPatience > 0.5 ? 'bg-[#7BC47F]' : customer.patience / customer.maxPatience > 0.25 ? 'bg-[#FFE08A]' : 'bg-red-400'}`}
+                      style={{ width: `${Math.max(0, (customer.patience / customer.maxPatience) * 100)}%` }} 
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -164,10 +221,11 @@ export default function TabRestaurant() {
                 <p className="font-display font-bold text-xl text-[var(--text-primary)]">
                   Dapur Dewi Hidangan
                 </p>
-                <p className="text-sm text-[var(--text-secondary)] font-medium max-w-md">
+                <p className="text-sm text-[var(--text-secondary)] font-medium max-w-md mb-2">
                   Pilih menu di panel samping untuk memasak.
-                  {serviceOn ? ' Layanan menerima pesanan.' : ' Mode atur meja aktif.'}
+                  {serviceOn ? ' Sajikan ke pelanggan dengan mengkliknya!' : ' Mode atur meja aktif.'}
                 </p>
+                <TableGrid />
                 <KitchenSlots />
               </div>
             </div>

@@ -43,6 +43,11 @@ export const createFarmingSlice = (set, get) => ({
       return { ok: false, message: `Kehabisan ${seedData.name}!` };
     }
 
+    if (!get().consumeEnergy(1)) {
+      get().addItem?.(seedId, 1);
+      return { ok: false, message: 'Energy tidak cukup!' };
+    }
+
     const growthMultiplier = state.growthMultiplier > 0 ? state.growthMultiplier : 1;
     const ok = get().plant(plotId, seedData.cropId, (seedData.time * 1000) / growthMultiplier);
     if (!ok) {
@@ -61,6 +66,11 @@ export const createFarmingSlice = (set, get) => ({
     if (plot.watered) {
       return { ok: false, message: 'Petak ini sudah disiram.' };
     }
+
+    if (!get().consumeEnergy(1)) {
+      return { ok: false, message: 'Energy tidak cukup!' };
+    }
+
     const boost = Math.floor((plot.growTime || 0) * 0.18);
     set((s) => ({
       plots: s.plots.map((p) =>
@@ -92,6 +102,10 @@ export const createFarmingSlice = (set, get) => ({
 
     if (!isReady) {
       return null;
+    }
+
+    if (!get().consumeEnergy(1)) {
+      return null; // Silent fail or handle via UI
     }
 
     const crop = plot.crop;

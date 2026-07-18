@@ -5,6 +5,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 // Helpers and utilities for persist logic
 import { normalizePlots, normalizeAnimal, migrateLegacyWorkers, safeCoins } from './store/utils';
+import { logger } from './logger';
 
 // Slices
 import { createFarmingSlice } from './store/slices/createFarmingSlice';
@@ -13,6 +14,7 @@ import { createRanchingSlice } from './store/slices/createRanchingSlice';
 import { createPlayerSlice } from './store/slices/createPlayerSlice';
 import { createTownSlice } from './store/slices/createTownSlice';
 import { createSystemSlice } from './store/slices/createSystemSlice';
+import { createCustomerSlice } from './store/slices/createCustomerSlice';
 
 import { initialState } from './store/initialState';
 
@@ -29,6 +31,7 @@ export const useGameStore = create(
       ...createPlayerSlice(set, get),
       ...createTownSlice(set, get),
       ...createSystemSlice(set, get),
+      ...createCustomerSlice(set, get),
 
       // Reset tanpa reload penuh — cegah loop refresh
       resetGame: () => {
@@ -48,37 +51,30 @@ export const useGameStore = create(
         return true;
       },
       
-      // Dev override
+      // Dev override (Cheats)
       dev: {
         addCoins: (amount) => {
-          if (process.env.NODE_ENV === 'development') {
-            set((s) => ({ coins: s.coins + amount }));
-          }
+          set((s) => ({ coins: s.coins + amount }));
+        },
+        addEnergy: (amount) => {
+          set((s) => ({ energy: Math.min(s.energy + amount, s.maxEnergy) }));
         },
         setLevel: (level) => {
-          if (process.env.NODE_ENV === 'development') {
-            set({ level, xp: 0 });
-          }
+          set({ level, xp: 0 });
         },
         resetPlots: () => {
-          if (process.env.NODE_ENV === 'development') {
-            set({ plots: initialState.plots });
-          }
+          set({ plots: initialState.plots });
         },
         instantGrow: () => {
-          if (process.env.NODE_ENV === 'development') {
-            set((s) => ({
-              plots: s.plots.map(p => p.status === 'growing' ? { ...p, plantedAt: 0 } : p)
-            }));
-          }
+          set((s) => ({
+            plots: s.plots.map(p => p.status === 'growing' ? { ...p, plantedAt: 0 } : p)
+          }));
         },
         unlockAll: () => {
-          if (process.env.NODE_ENV === 'development') {
-            set({
-              workers: { farmer: true, rancher: true, fisher: true, miner: true, chef: true },
-              buildings: { silo: true, greenhouse: true },
-            });
-          }
+          set({
+            workers: { farmer: true, rancher: true, fisher: true, miner: true, chef: true },
+            buildings: { silo: true, greenhouse: true },
+          });
         }
       }
     }),
@@ -100,6 +96,8 @@ export const useGameStore = create(
         coins: state.coins,
         level: state.level,
         xp: state.xp,
+        energy: state.energy,
+        maxEnergy: state.maxEnergy,
         day: state.day,
         streak: state.streak,
         lastLogin: state.lastLogin,
@@ -138,6 +136,7 @@ export const useGameStore = create(
         growthMultiplierExpireAt: state.growthMultiplierExpireAt,
         buildings: state.buildings,
         decorations: state.decorations,
+        activeCustomers: state.activeCustomers,
       }),
       merge: (persistedState, currentState) => {
         let merged = { ...currentState, ...persistedState };
@@ -178,6 +177,9 @@ export const useGameStore = create(
           merged.coinMultiplier = 1;
         }
 
+        if (merged.energy == null) merged.energy = 100;
+        if (merged.maxEnergy == null) merged.maxEnergy = 100;
+
         merged.buildings = {
           silo: false,
           greenhouse: false,
@@ -189,6 +191,10 @@ export const useGameStore = create(
 
         if (Array.isArray(merged.animals) && merged.animals.length > 0) {
           merged.animals = merged.animals.map(normalizeAnimal);
+        }
+
+        if (!Array.isArray(merged.activeCustomers)) {
+          merged.activeCustomers = [];
         }
 
         if (!merged.workerAutoMigrated) {
@@ -227,7 +233,7 @@ export const useGameStore = create(
       },
       onRehydrateStorage: () => (state, error) => {
         if (error) {
-          console.error('Failed to rehydrate store:', error);
+          logger.error('Failed to rehydrate store:', error);
           return;
         }
         if (state && !Number.isFinite(state.coins)) {

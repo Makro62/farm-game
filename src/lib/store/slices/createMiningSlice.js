@@ -8,6 +8,10 @@ export const createMiningSlice = (set, get) => ({
     const node = state.mining.nodes.find(n => n.id === nodeId);
     if (!node || node.status !== 'ready') return null;
 
+    if (!get().consumeEnergy(2)) {
+      return null;
+    }
+
     const regenTime = getMiningRegenMs(state.mining);
     
     set((state) => ({

@@ -81,6 +81,7 @@ export const createPlayerSlice = (set, get) => ({
     set((state) => {
       let newXP = state.xp + amount;
       let newLevel = state.level;
+      let newMaxEnergy = state.maxEnergy || 100;
 
       // Check level up
       while (newXP >= newLevel * 100) {
@@ -88,13 +89,35 @@ export const createPlayerSlice = (set, get) => ({
         newLevel++;
       }
 
+      if (newLevel > state.level) {
+        newMaxEnergy = 100 + (newLevel - 1) * 10;
+        if (newMaxEnergy > 200) newMaxEnergy = 200; // Cap at 200 (Level 11)
+      }
+
       return {
         xp: newXP,
-        level: newLevel
+        level: newLevel,
+        maxEnergy: newMaxEnergy,
+        ...(newLevel > state.level ? { energy: newMaxEnergy } : {}) // Refill on level up
       };
     });
 
-    return get().level > prevLevel;
+    if (get().level > prevLevel) {
+      toast.success(`Level Up! Level ${get().level} 🌟\nEnergy Maksimal naik!`, { icon: '🎉', duration: 4000 });
+      return true;
+    }
+    return false;
+  },
+
+  // ===== ENERGY =====
+  consumeEnergy: (amount) => {
+    const state = get();
+    if (state.energy >= amount) {
+      set({ energy: state.energy - amount });
+      return true;
+    }
+    toast.error('Energy tidak cukup! Tunggu besok atau makan sesuatu.', { icon: '😴' });
+    return false;
   },
 
   // ===== INVENTORY =====
@@ -464,16 +487,18 @@ export const createPlayerSlice = (set, get) => ({
     for (let i = newQueue.length - 1; i >= 0; i--) {
       const item = newQueue[i];
       if (now - item.startTime >= item.duration) {
-        const recipe = RECIPES.find((r) => r.id === item.recipeId);
-        if (recipe) {
-          inv[recipe.id] = (inv[recipe.id] || 0) + 1;
-          xpGained += recipe.xp || 0;
-          if (recipe.type === 'restaurant') {
-            get().progressQuest?.('craft', recipe.id, 1);
+        if (state.autoChef) {
+          const recipe = RECIPES.find((r) => r.id === item.recipeId);
+          if (recipe) {
+            inv[recipe.id] = (inv[recipe.id] || 0) + 1;
+            xpGained += recipe.xp || 0;
+            if (recipe.type === 'restaurant') {
+              get().progressQuest?.('craft', recipe.id, 1);
+            }
           }
+          newQueue.splice(i, 1);
+          changed = true;
         }
-        newQueue.splice(i, 1);
-        changed = true;
       }
     }
 
@@ -481,6 +506,36 @@ export const createPlayerSlice = (set, get) => ({
       set({ craftingQueue: newQueue, inventory: inv });
       if (xpGained > 0) get().addXP(xpGained);
     }
+  },
+
+  collectCraftedItem: (queueId) => {
+    const state = get();
+    const index = state.craftingQueue.findIndex(q => q.id === queueId);
+    if (index === -1) return false;
+
+    const item = state.craftingQueue[index];
+    if (Date.now() - item.startTime < item.duration) return false;
+
+    const recipe = RECIPES.find((r) => r.id === item.recipeId);
+    if (!recipe) {
+        const newQueue = [...state.craftingQueue];
+        newQueue.splice(index, 1);
+        set({ craftingQueue: newQueue });
+        return false;
+    }
+
+    const inv = { ...state.inventory };
+    inv[recipe.id] = (inv[recipe.id] || 0) + 1;
+    
+    const newQueue = [...state.craftingQueue];
+    newQueue.splice(index, 1);
+
+    set({ craftingQueue: newQueue, inventory: inv });
+    get().addXP(recipe.xp || 0);
+    if (recipe.type === 'restaurant') {
+      get().progressQuest?.('craft', recipe.id, 1);
+    }
+    return true;
   },
 
   // ===== ORDERS =====

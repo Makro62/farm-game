@@ -1,6 +1,7 @@
 'use client';
 
 import { Howl, Howler } from 'howler';
+import { logger } from './logger';
 
 // ─── Types ────────────────────────────────────────────────────────
 export interface AudioConfig {
@@ -249,7 +250,7 @@ class AudioManager {
       this.masterGain.gain.setValueAtTime(this.config.volume, this.audioCtx.currentTime);
       this.masterGain.connect(this.audioCtx.destination);
     } catch (e) {
-      console.warn('Web Audio API not available:', e);
+      logger.warn('Web Audio API not available:', e);
     }
   }
 
@@ -292,7 +293,7 @@ class AudioManager {
       try {
         synthFn(this.audioCtx, this.masterGain);
       } catch (e) {
-        console.warn(`SFX error [${name}]:`, e);
+        logger.warn(`SFX error [${name}]:`, e);
       }
     }
   }

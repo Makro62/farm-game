@@ -24,6 +24,8 @@ export const initialState = {
   coins: 100,
   level: 1,
   xp: 0,
+  energy: 100,
+  maxEnergy: 100,
   day: 1,
   streak: 0,
   lastLogin: null,

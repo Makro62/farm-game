@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '@/lib/store';
 import { getAnimalEmoji, getShopAnimal } from '../lib/data/item-helpers';
 import { SHOP_ANIMALS } from '../lib/data/shop';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
 import { AnimalIcon } from './ui/AnimalIcon';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
@@ -173,7 +173,7 @@ export default function TabAnimal() {
                       }}
                       className={`group kandang-animal-cell
                         ${isEditMode ? 'cursor-grab ring-2 ring-yellow-400' : ''}
-                        ${isReady ? 'ring-2 ring-yellow-400/80 animate-glow' : ''}
+                        ${isReady ? 'ring-2 ring-yellow-400/80 animate-breathe' : ''}
                       `}
                     >
                       <motion.div
@@ -191,11 +191,18 @@ export default function TabAnimal() {
                           </span>
                         </div>
                       )}
-                      {isReady && (
-                        <div className="absolute -top-2 -right-2 text-xl sm:text-2xl animate-bounce drop-shadow-lg z-20">
-                          {animalData?.productEmoji}
-                        </div>
-                      )}
+                      <AnimatePresence mode="popLayout">
+                        {isReady && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 2.5, y: -80, opacity: 0, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))', transition: { duration: 0.6, ease: "easeOut" } }}
+                            className="absolute -top-2 -right-2 text-xl sm:text-2xl animate-bounce drop-shadow-lg z-20"
+                          >
+                            {animalData?.productEmoji}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                       {!isEditMode && (
                         <span
                           role="button"

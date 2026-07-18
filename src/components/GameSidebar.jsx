@@ -37,6 +37,8 @@ function useSidebarChrome() {
   const coins = useGameStore((s) => s.coins);
   const level = useGameStore((s) => s.level);
   const xp = useGameStore((s) => s.xp);
+  const energy = useGameStore((s) => s.energy) || 0;
+  const maxEnergy = useGameStore((s) => s.maxEnergy) || 100;
   const streak = useGameStore((s) => s.streak);
   const soundEnabled = useGameStore((s) => s.soundEnabled);
   const season = useGameStore((s) => s.season);
@@ -72,6 +74,7 @@ function useSidebarChrome() {
   };
 
   const xpProgress = Math.min(100, (xp / Math.max(level * 100, 1)) * 100);
+  const energyProgress = Math.min(100, Math.max(0, (energy / maxEnergy) * 100));
   const seasonMeta = SEASON_META[season?.current] || SEASON_META.spring;
   const boostActive = coinMultiplier > 1 || growthMultiplier > 1;
 
@@ -95,6 +98,9 @@ function useSidebarChrome() {
     growthMultiplier,
     boostActive,
     xpProgress,
+    energyProgress,
+    energy,
+    maxEnergy,
     seasonMeta,
   };
 }
@@ -140,7 +146,11 @@ function ShellPanel({ collapsed, onCollapse, chrome, forceExpanded = false }) {
     boostActive,
     coinMultiplier,
     growthMultiplier,
+    xp,
     xpProgress,
+    energyProgress,
+    energy,
+    maxEnergy,
     seasonMeta,
   } = chrome;
 
@@ -242,8 +252,16 @@ function ShellPanel({ collapsed, onCollapse, chrome, forceExpanded = false }) {
               <Star className="w-3.5 h-3.5 fill-current shrink-0" />
               <span className="font-black text-sm">Level {level}</span>
             </div>
-            <div className="shell-xp" aria-hidden>
+            <div className="shell-xp" title={`XP: ${xp} / ${level * 100}`} aria-hidden>
               <div className="shell-xp-fill" style={{ width: `${xpProgress}%` }} />
+            </div>
+            
+            <div className="shell-player-row mt-1" style={{ color: '#86efac' }}>
+              <Zap className="w-3.5 h-3.5 fill-current shrink-0" />
+              <span className="font-black text-sm">Energy {Math.floor(energy)}/{maxEnergy}</span>
+            </div>
+            <div className="shell-energy" title={`Energy: ${Math.floor(energy)} / ${maxEnergy}`} aria-hidden>
+              <div className="shell-energy-fill" style={{ width: `${energyProgress}%` }} />
             </div>
           </div>
           <div className="shell-meta">
@@ -313,26 +331,6 @@ function ShellPanel({ collapsed, onCollapse, chrome, forceExpanded = false }) {
           </button>
         </div>
 
-        {process.env.NODE_ENV === 'development' && !narrow && (
-          <div className="shell-dev">
-            <span>DEV</span>
-            <button type="button" onClick={() => useGameStore.getState().dev.addCoins(10000)}>
-              +10K
-            </button>
-            <button type="button" onClick={() => useGameStore.getState().dev.setLevel(useGameStore.getState().level + 1)}>
-              +LVL
-            </button>
-            <button type="button" onClick={() => useGameStore.getState().dev?.instantGrow?.()}>
-              Grow
-            </button>
-            <button type="button" onClick={() => useGameStore.getState().dev?.unlockAll?.()}>
-              All
-            </button>
-            <button type="button" onClick={() => useGameStore.getState().dev.resetPlots()}>
-              Farm
-            </button>
-          </div>
-        )}
       </footer>
     </div>
   );

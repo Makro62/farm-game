@@ -4,6 +4,7 @@ import { FISHES } from '../../data/fishes';
 import { RECIPES } from '../../data/recipes';
 import { GAME_CONSTANTS } from '../../constants';
 import toast from 'react-hot-toast';
+import { logger } from '../../logger';
 
 export const createSystemSlice = (set, get) => ({
   // ===== UI MODALS =====
@@ -145,6 +146,7 @@ export const createSystemSlice = (set, get) => ({
         }
 
         setTimeout(() => get().updateMarket?.(), 0);
+        return { season: { current, day, tick }, activeEvent, energy: state.maxEnergy || 100 };
       }
       return { season: { current, day, tick }, activeEvent };
     });
@@ -179,6 +181,10 @@ export const createSystemSlice = (set, get) => ({
       () => get().processCraftingQueue(),
       () => get().checkOrders(),
       () => {
+        get().tickCustomers(1000);
+        if (Math.random() < 0.1) get().spawnCustomer(); // 10% chance to spawn every second
+      },
+      () => {
         const state = get();
         const now = Date.now();
         let changed = false;
@@ -211,7 +217,7 @@ export const createSystemSlice = (set, get) => ({
       try {
         action();
       } catch (error) {
-        console.error('Game tick error:', error);
+        logger.error('Game tick error:', error);
       }
     }
   },

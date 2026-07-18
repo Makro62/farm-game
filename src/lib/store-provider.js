@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useGameStore } from './store';
+import { logger } from './logger';
 
 export function GameProvider({ children }) {
   const [ready, setReady] = useState(false);
@@ -13,7 +14,7 @@ export function GameProvider({ children }) {
       try {
         await useGameStore.persist.rehydrate();
       } catch (err) {
-        console.error('Store hydrate failed:', err);
+        logger.error('Store hydrate failed:', err);
       } finally {
         if (alive) setReady(true);
       }
@@ -34,7 +35,7 @@ export function GameProvider({ children }) {
       }
       state.generateDailyQuests?.();
     } catch (err) {
-      console.error('Boot effect failed:', err);
+      logger.error('Boot effect failed:', err);
     }
   }, [ready]);
 
@@ -45,7 +46,7 @@ export function GameProvider({ children }) {
       try {
         useGameStore.getState().processGameTick?.();
       } catch (err) {
-        console.error('Game tick error:', err);
+        logger.error('Game tick error:', err);
       }
     };
 
