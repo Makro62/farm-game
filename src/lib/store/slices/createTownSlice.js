@@ -87,6 +87,10 @@ export const createTownSlice = (set, get) => ({
       },
     });
 
+    // ===== Stats & Achievement tracking =====
+    set(s => ({ stats: { ...s.stats, totalGiftsGiven: (s.stats?.totalGiftsGiven || 0) + 1 } }));
+    get().checkAchievements?.();
+
     return { leveledUp, newLevel, pointsGained };
   },
 });

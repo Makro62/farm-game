@@ -169,6 +169,7 @@ export default function TabRestaurant() {
   const selectedRecipe = useGameStore((state) => state.selectedRecipe);
   const setSelectedRecipe = useGameStore((state) => state.setSelectedRecipe);
   const openConfirm = useGameStore((state) => state.openConfirm);
+  const level = useGameStore((state) => state.level || 1);
 
   const [menuFilter, setMenuFilter] = useState('all'); // all | kitchen | fish_kitchen | restaurant
   const [serviceOn, setServiceOn] = useState(true);
@@ -295,23 +296,39 @@ export default function TabRestaurant() {
                     </div>
                     <div className="shop-grid mb-3">
                       {recipes.map((recipe) => {
-                        const ready = canCook(recipe);
+                        const isUnlocked = level >= (recipe.unlockLevel || 1);
+                        const ready = isUnlocked && canCook(recipe);
                         const isSelected = selectedRecipe === recipe.id;
                         return (
                           <div key={recipe.id} className="relative group">
                             <button
                               type="button"
-                              onClick={() => handleCook(recipe.id)}
-                              disabled={!ready}
-                              className={`shop-item-card text-left w-full ${
-                                ready ? 'ring-2 ring-[var(--primary)]' : 'opacity-75'
+                              onClick={() => {
+                                if (!isUnlocked) {
+                                  toast.error(`Resep ini butuh Level ${recipe.unlockLevel}!`, { icon: '🔒' });
+                                  return;
+                                }
+                                handleCook(recipe.id);
+                              }}
+                              disabled={!ready && isUnlocked}
+                              className={`shop-item-card text-left w-full ${!isUnlocked ? 'filter grayscale opacity-60 cursor-not-allowed' : ''} ${
+                                ready ? 'ring-2 ring-[var(--primary)]' : (isUnlocked ? 'opacity-75' : '')
                               } ${isSelected ? 'ring-4 ring-yellow-400 !border-yellow-500 bg-yellow-50' : ''}`}
                             >
-                              <div className="shop-item-info">
+                              <div className="shop-item-info relative">
                                 <span className="shop-item-icon">{recipe.emoji}</span>
                                 <span className="shop-item-name">{recipe.name}</span>
                                 <span className="shop-item-price">{recipe.price} 💰</span>
-                                <div className="flex flex-wrap gap-0.5 justify-center mt-1">
+                                
+                                {!isUnlocked && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded backdrop-blur-[1px]">
+                                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-md border border-white/50">
+                                      🔒 Lv {recipe.unlockLevel}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                <div className={`flex flex-wrap gap-0.5 justify-center mt-1 ${!isUnlocked ? 'opacity-0' : ''}`}>
                                   {Object.entries(recipe.req).map(([item, qty]) => (
                                     <span
                                       key={item}
@@ -328,7 +345,7 @@ export default function TabRestaurant() {
                                 </div>
                               </div>
                             </button>
-                            {workers?.chef && (
+                            {workers?.chef && isUnlocked && (
                               <button
                                 type="button"
                                 onClick={(e) => {

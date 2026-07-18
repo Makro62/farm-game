@@ -3,10 +3,21 @@ import { SHOP_ANIMALS } from '../data/shop';
 
 export const MINING_REGEN_MS = { 1: 120000, 2: 90000, 3: 60000 };
 
-export function getMiningRegenMs(mining) {
+export function getMiningRegenMs(mining, weatherEffects = null) {
   let ms = MINING_REGEN_MS[mining?.pickaxeLevel] || MINING_REGEN_MS[1];
   if (mining?.lanternUntil && mining.lanternUntil > Date.now()) {
     ms = Math.floor(ms * 0.5);
+  }
+  if (weatherEffects && weatherEffects.miningRegen) {
+    ms = Math.floor(ms / weatherEffects.miningRegen);
+  }
+  return ms;
+}
+
+export function getAnimalProduceTime(animal, weatherEffects = null) {
+  let ms = animal.produceTime || 60000;
+  if (weatherEffects && weatherEffects.animalProduce) {
+    ms = Math.floor(ms / weatherEffects.animalProduce);
   }
   return ms;
 }
@@ -41,12 +52,9 @@ export function pickAutoSeed(inventory, selectedSeed, season, hasGreenhouse = fa
 
 export function getGrowthMultiplier(state) {
   let mult = state?.growthMultiplier > 0 ? state.growthMultiplier : 1;
-  const weather = state?.weather?.current;
   
-  if (weather === '🌧️ Hujan') {
-    mult *= 1.5;
-  } else if (weather === '⛈️ Badai') {
-    mult *= 0.5;
+  if (state?.weatherEffects?.cropGrowth) {
+    mult *= state.weatherEffects.cropGrowth;
   }
   
   return mult;

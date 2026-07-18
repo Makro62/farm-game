@@ -1,4 +1,4 @@
-import { getMiningRegenMs, isWorkerActive, getGrowthMultiplier, normalizePlot, normalizePlots, normalizeAnimal, consumeInventoryItem, pickAutoSeed, safeCoins, safePositiveNumber } from '../utils';
+import { getMiningRegenMs, isWorkerActive, getGrowthMultiplier, normalizePlot, normalizePlots, normalizeAnimal, consumeInventoryItem, pickAutoSeed, safeCoins, safePositiveNumber, getAnimalProduceTime } from '../utils';
 import { SHOP_ANIMALS } from '../../data/shop';
 import { FISHES } from '../../data/fishes';
 import { RECIPES } from '../../data/recipes';
@@ -153,17 +153,59 @@ export const createSystemSlice = (set, get) => ({
   },
 
   changeWeather: () => {
-    set((state) => {
-      if (!state.weather) return state;
-      let { nextChangeIn } = state.weather;
-      nextChangeIn -= 1;
-      if (nextChangeIn <= 0) {
-        const weathers = ['☀️ Cerah', '⛅ Berawan', '🌧️ Hujan', '⛈️ Badai', '💨 Berangin'];
-        const randomWeather = weathers[Math.floor(Math.random() * weathers.length)];
-        return { weather: { current: randomWeather, nextChangeIn: 300 } };
+    const state = get();
+    if (!state.weather) return;
+    
+    let { nextChangeIn } = state.weather;
+    nextChangeIn -= 1;
+    
+    if (nextChangeIn <= 0) {
+      const season = state.season?.current || 'spring';
+      
+      let weathers = ['☀️ Cerah', '⛅ Berawan', '🌧️ Hujan', '⛈️ Badai', '🌫️ Berkabut', '🌬️ Berangin'];
+      if (season === 'winter') {
+        weathers = ['☀️ Cerah', '⛅ Berawan', '☃️ Bersalju', '🌬️ Berangin', '🌫️ Berkabut'];
       }
-      return { weather: { ...state.weather, nextChangeIn } };
-    });
+      
+      const newWeather = weathers[Math.floor(Math.random() * weathers.length)];
+      
+      // Tentukan efek yang akan di-cache dan digunakan oleh slice lain
+      const effects = {
+        cropGrowth: newWeather === '🌬️ Berangin' ? 1.1 : 1.0,
+        miningRegen: newWeather === '⛈️ Badai' ? 0.5 : 1.0,
+        animalProduce: newWeather === '⛈️ Badai' ? 0.8 : 1.0,
+        fishingRare: newWeather === '🌧️ Hujan' ? 1.15 : (newWeather === '🌫️ Berkabut' ? 0.7 : 1.0),
+        customerRate: newWeather === '🌫️ Berkabut' ? 1.2 : 1.0,
+      };
+      
+      // Efek Instan: Hujan -> Siram tanaman
+      if (newWeather === '🌧️ Hujan' || newWeather === '⛈️ Badai') {
+        const plots = state.plots || [];
+        const wateredPlots = plots.map(p => ({ ...p, watered: true }));
+        set({ plots: wateredPlots });
+        setTimeout(() => toast('Cuaca memburuk! Semua tanaman tersiram otomatis 🌧️', { icon: '☔' }), 0);
+      }
+      
+      // Efek Instan: Salju -> Tanaman layu (kecuali ready)
+      if (newWeather === '☃️ Bersalju') {
+        const plots = state.plots || [];
+        const deadPlots = plots.map(p => {
+          if (p.crop && p.status === 'growing') {
+            return { ...p, status: 'dead', growTime: null };
+          }
+          return p;
+        });
+        set({ plots: deadPlots });
+        setTimeout(() => toast('Salju turun! Tanaman yang tumbuh menjadi layu ❄️', { icon: '⛄' }), 0);
+      }
+      
+      set({ 
+        weather: { current: newWeather, nextChangeIn: 300 },
+        weatherEffects: effects
+      });
+    } else {
+      set({ weather: { ...state.weather, nextChangeIn } });
+    }
   },
 
   touchSaveTimestamp: () => {
@@ -182,7 +224,7 @@ export const createSystemSlice = (set, get) => ({
       () => get().checkOrders(),
       () => {
         get().tickCustomers(1000);
-        if (Math.random() < 0.1) get().spawnCustomer(); // 10% chance to spawn every second
+        if (Math.random() < 0.1 * (get().weatherEffects?.customerRate || 1)) get().spawnCustomer(); // 10% chance * multiplier to spawn every second
       },
       () => {
         const state = get();
@@ -291,7 +333,8 @@ export const createSystemSlice = (set, get) => ({
       for (let i = 0; i < animals.length; i++) {
         const a = normalizeAnimal(animals[i]);
         const data = SHOP_ANIMALS.find((s) => s.id === a.type);
-        if (data && a.status === 'producing' && now - a.lastCollected >= a.produceTime) {
+        const produceTime = getAnimalProduceTime(a, state.weatherEffects);
+        if (data && a.status === 'producing' && now - a.lastCollected >= produceTime) {
           animals[i] = { ...a, lastCollected: now };
           inventory[data.product] = (inventory[data.product] || 0) + 1;
           collected++;
@@ -423,7 +466,7 @@ export const createSystemSlice = (set, get) => ({
         const a = newAnimals[i];
         const data = SHOP_ANIMALS.find(s => s.id === a.type);
         if (data && a.status === 'producing') {
-          const produceTimeSecs = a.produceTime / 1000;
+          const produceTimeSecs = getAnimalProduceTime(a, state.weatherEffects) / 1000;
           const cycles = Math.floor(deltaSeconds / produceTimeSecs);
           if (cycles > 0) {
             newInventory[data.product] = (newInventory[data.product] || 0) + cycles;
@@ -452,7 +495,7 @@ export const createSystemSlice = (set, get) => ({
     let minedGems = 0;
     let maturedNodes = 0;
     
-    const mineInterval = getMiningRegenMs(state.mining) / 1000;
+    const mineInterval = getMiningRegenMs(state.mining, state.weatherEffects) / 1000;
     const mineAttempts = Math.floor(deltaSeconds / mineInterval);
     
     if (isWorkerActive(state, 'miner')) {

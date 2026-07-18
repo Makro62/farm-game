@@ -424,6 +424,16 @@ export const createPlayerSlice = (set, get) => ({
     if (recipe.type === 'restaurant') {
       get().progressQuest?.('craft', recipe.id, 1);
     }
+    // ===== Stats & Achievement tracking =====
+    set(s => ({
+      stats: {
+        ...s.stats,
+        totalCooked: (s.stats?.totalCooked || 0) + 1,
+        ...(recipe.id === 'sushi_emas' ? { totalSushiEmasMade: (s.stats?.totalSushiEmasMade || 0) + 1 } : {}),
+      }
+    }));
+    get().markSessionAction?.('cooked');
+    get().checkAchievements?.();
     return true;
   },
 
@@ -477,6 +487,9 @@ export const createPlayerSlice = (set, get) => ({
     updatedOrders.splice(orderIndex, 1);
     
     set({ inventory: inv, orders: updatedOrders });
+    // ===== Stats & Achievement tracking =====
+    set(s => ({ stats: { ...s.stats, totalOrdersFulfilled: (s.stats?.totalOrdersFulfilled || 0) + 1 } }));
+    get().checkAchievements?.();
     toast.success(`Pesanan selesai! +${order.coins} 💰`, { icon: '📦' });
     return true;
   },

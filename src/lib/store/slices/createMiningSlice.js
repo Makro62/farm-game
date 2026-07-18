@@ -14,7 +14,7 @@ export const createMiningSlice = (set, get) => ({
       return null;
     }
 
-    const regenTime = getMiningRegenMs(state.mining);
+    const regenTime = getMiningRegenMs(state.mining, state.weatherEffects);
     
     // ===== Drop cacing saat menambang Batu (Tambang → Memancing) =====
     const dropsWorm = node.type === 'batu' && Math.random() < 0.2;
@@ -35,6 +35,18 @@ export const createMiningSlice = (set, get) => ({
 
     get().addXP(15);
     get().progressQuest('mine', node.type, 1);
+    // ===== Stats & Achievement tracking =====
+    set(s => {
+      const newStats = {
+        ...s.stats,
+        totalMined: (s.stats?.totalMined || 0) + 1,
+        ...(node.type === 'berlian' ? { totalDiamondsMined: (s.stats?.totalDiamondsMined || 0) + 1 } : {}),
+        ...(dropsWorm ? { totalWormsFound: (s.stats?.totalWormsFound || 0) + 1 } : {}),
+      };
+      return { stats: newStats };
+    });
+    get().markSessionAction?.('mined');
+    get().checkAchievements?.();
     if (dropsWorm) {
       toast('🪱 Dapat Cacing Tanah! Bisa jadi umpan pancing.', { duration: 2500 });
     }
@@ -123,7 +135,7 @@ export const createMiningSlice = (set, get) => ({
       if (reqError) return { ok: false, message: reqError };
       if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
       consumeMineralReq('bom_besar');
-      const regenTime = getMiningRegenMs(get().mining);
+      const regenTime = getMiningRegenMs(get().mining, get().weatherEffects);
       const newInventory = { ...get().inventory };
       let mined = 0;
       const newNodes = get().mining.nodes.map(n => {
@@ -151,7 +163,7 @@ export const createMiningSlice = (set, get) => ({
 
     if (itemId === 'bom_kecil') {
       if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
-      const regenTime = getMiningRegenMs(get().mining);
+      const regenTime = getMiningRegenMs(get().mining, get().weatherEffects);
       const newInventory = { ...get().inventory };
 
       if (node.status === 'ready') {
@@ -235,7 +247,7 @@ export const createMiningSlice = (set, get) => ({
         const nodeToMine = readyNodes[0];
         const minedType = nodeToMine.type;
         const lanternActive = state.mining.lanternUntil && state.mining.lanternUntil > Date.now();
-        const regenTime = getMiningRegenMs(state.mining);
+        const regenTime = getMiningRegenMs(state.mining, state.weatherEffects);
         const eventId = state.activeEvent?.id || null;
 
         newNodes = newNodes.map(n =>

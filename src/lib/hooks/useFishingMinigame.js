@@ -26,6 +26,7 @@ export function useFishingMinigame() {
   const progressQuest = useGameStore((state) => state.progressQuest);
   const selectedBait = useGameStore((state) => state.selectedBait);
   const inventory = useGameStore((state) => state.inventory);
+  const weatherEffects = useGameStore((state) => state.weatherEffects);
 
   const [fishState, setFishState] = useState('idle');
   const [indicatorPos, setIndicatorPos] = useState(50);
@@ -121,7 +122,8 @@ export function useFishingMinigame() {
     setActiveBait(null);
 
     if (success) {
-      const caughtFish = rollFish(bait?.rareBonus || 0);
+      const weatherRareBonus = weatherEffects?.fishingRare ? (weatherEffects.fishingRare - 1) : 0;
+      const caughtFish = rollFish((bait?.rareBonus || 0) + weatherRareBonus);
       addItem(caughtFish.id, 1);
       addXP(15 + (bait ? 5 : 0));
       progressQuest('fish', caughtFish.id, 1);

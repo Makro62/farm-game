@@ -57,6 +57,8 @@ export const createFarmingSlice = (set, get) => ({
       get().removeItem?.('pupuk_kandang', 1);
       baseGrowTime = Math.floor(baseGrowTime * 0.85); // -15% grow time
       usedFertilizer = true;
+      // Track fertilizer usage for achievements
+      set(s => ({ stats: { ...s.stats, totalFertilizerUsed: (s.stats?.totalFertilizerUsed || 0) + 1 } }));
     }
 
     const ok = get().plant(plotId, seedData.cropId, baseGrowTime);
@@ -149,6 +151,10 @@ export const createFarmingSlice = (set, get) => ({
 
     get().addXP(10);
     get().progressQuest('harvest', crop, 1);
+    // ===== Stats & Achievement tracking =====
+    set(s => ({ stats: { ...s.stats, totalHarvested: (s.stats?.totalHarvested || 0) + 1 } }));
+    get().markSessionAction?.('harvested');
+    get().checkAchievements?.();
     const combo = get().registerCombo?.();
     if (combo?.count >= 3) {
       get().addCoins?.(Math.floor(3 * combo.multiplier));

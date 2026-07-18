@@ -8,6 +8,7 @@ import { SHOP_ANIMALS, SHOP_BAIT, SHOP_MINING } from '@/lib/data/shop';
 import { FISHES } from '@/lib/data/fishes';
 import { MINERALS } from '@/lib/data/minerals';
 import { RECIPES } from '@/lib/data/recipes';
+import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES } from '@/lib/data/achievements';
 import { SEASON_META } from '@/lib/nav';
 import TabPage from './ui/TabPage';
 import Button from './ui/Button';
@@ -97,6 +98,7 @@ export default function TabProfil() {
   const xp = useGameStore((state) => state.xp);
   const day = useGameStore((state) => state.season?.day || 1);
   const season = useGameStore((state) => state.season?.current || 'spring');
+  const achievements = useGameStore((state) => state.achievements || {});
   const sellItem = useGameStore((state) => state.sellItem);
   const sellAllInventory = useGameStore((state) => state.sellAllInventory);
   const coinMultiplier = useGameStore((state) => state.coinMultiplier);
@@ -301,6 +303,48 @@ export default function TabProfil() {
             </div>
           </div>
         </div>
+
+        {/* ================= ACHIEVEMENT SECTION ================= */}
+        <div className="glass-panel p-4 sm:p-5 mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5 border-b-2 border-white/30 pb-2">
+            <h3 className="font-display font-bold text-lg text-[var(--text-primary)] flex items-center gap-2">
+              <span>🏆</span> Pencapaian (Achievements)
+            </h3>
+            <div className="text-sm font-bold bg-blue-100 text-blue-800 px-3 py-1 rounded-full shadow-inner">
+              {Object.keys(achievements).length} / {ACHIEVEMENTS.length} Terbuka
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {ACHIEVEMENTS.map(ach => {
+              const isUnlocked = achievements[ach.id]?.unlocked;
+              const isSecret = ach.secret && !isUnlocked;
+              return (
+                <div key={ach.id} className={`p-3 rounded-2xl border-2 flex items-start gap-3 transition-all ${isUnlocked ? 'bg-[#fff7e6] border-[var(--gold)] shadow-sm' : 'bg-black/5 border-black/10 opacity-70 grayscale'}`}>
+                  <div className="text-3xl flex-shrink-0 drop-shadow-sm">
+                    {isSecret ? '❓' : ach.emoji}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-[var(--text-primary)] leading-tight">
+                      {isSecret ? 'Pencapaian Rahasia' : ach.name}
+                    </h4>
+                    <p className="text-xs text-[var(--text-secondary)] mt-1 leading-snug">
+                      {isSecret ? 'Selesaikan kondisinya untuk membuka.' : ach.desc}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      <span className="text-[9px] font-black uppercase bg-black/10 text-black/60 px-1.5 py-0.5 rounded-full">
+                        {ACHIEVEMENT_CATEGORIES[ach.category]?.label || 'Spesial'}
+                      </span>
+                      {ach.rewardXp > 0 && <span className="text-[9px] font-black text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full">+{ach.rewardXp} XP</span>}
+                      {ach.rewardCoins > 0 && <span className="text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">+{ach.rewardCoins} 💰</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
 
         <div className="glass-panel p-4 sm:p-5 mb-8">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-5 border-b-2 border-white/30 pb-2">

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '@/lib/store';
 import { getAnimalEmoji, getShopAnimal } from '../lib/data/item-helpers';
-import { SHOP_ANIMALS } from '../lib/data/shop';
+import { SHOP_ANIMALS, ANIMAL_FEED } from '../lib/data/shop';
+import { getAnimalProduceTime } from '@/lib/store/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
 import { AnimalIcon } from './ui/AnimalIcon';
@@ -17,14 +18,17 @@ import toast from 'react-hot-toast';
 
 export default function TabAnimal() {
   const animals = useGameStore((state) => state.animals);
+  const feedAnimal = useGameStore((state) => state.feedAnimal);
   const collectAnimal = useGameStore((state) => state.collectAnimal);
   const swapAnimals = useGameStore((state) => state.swapAnimals);
-  const openConfirm = useGameStore((state) => state.openConfirm);
-  const buyMultipleAnimals = useGameStore((state) => state.buyMultipleAnimals);
+  const inventory = useGameStore((state) => state.inventory);
   const workers = useGameStore((state) => state.workers);
   const hireWorker = useGameStore((state) => state.hireWorker);
   const autoFarm = useGameStore((state) => state.autoRancher);
   const toggleAutoFarm = useGameStore((state) => state.toggleAutoRancher);
+  const openConfirm = useGameStore((state) => state.openConfirm);
+  const buyMultipleAnimals = useGameStore((state) => state.buyMultipleAnimals);
+  const weatherEffects = useGameStore((state) => state.weatherEffects);
   
   const [shopAmounts, setShopAmounts] = useState({});
 
@@ -103,10 +107,21 @@ export default function TabAnimal() {
   const handleCollect = (animal) => {
     const animalData = getShopAnimal(animal.type);
     if (!animalData) return;
-    if (currentTime - animal.lastCollected >= animal.produceTime) {
+    const produceTime = getAnimalProduceTime(animal, weatherEffects);
+    if (currentTime - animal.lastCollected >= produceTime) {
       if (collectAnimal(animal.id, animalData.product)) {
-        toast.success(`Mengambil ${animalData.productEmoji}!`);
+        toast.success(`Berhasil memanen dari ternak!`, { icon: '✨', id: `harvest-${animal.id}` });
       }
+    }
+  };
+
+  const handleFeed = (e, animal) => {
+    e.stopPropagation();
+    const result = feedAnimal(animal.id);
+    if (result.ok) {
+      toast.success(result.message, { icon: '🌽' });
+    } else {
+      toast.error(result.message, { icon: '😢' });
     }
   };
 
@@ -137,7 +152,8 @@ export default function TabAnimal() {
                   }
 
                   const animalData = getShopAnimal(animal.type);
-                  const progress = Math.min(100, ((currentTime - animal.lastCollected) / animal.produceTime) * 100);
+                  const produceTime = getAnimalProduceTime(animal, weatherEffects);
+                  const progress = Math.min(100, ((currentTime - animal.lastCollected) / produceTime) * 100);
                   const isReady = progress >= 100;
                   return (
                     <motion.button
@@ -187,7 +203,13 @@ export default function TabAnimal() {
                         <div className="absolute bottom-0 left-0 right-0 h-4 progress-bar !rounded-none overflow-hidden border-t border-white/10 z-20 flex items-center justify-center">
                           <div className="progress-fill absolute left-0 top-0 bottom-0" style={{ width: `${progress}%` }} />
                           <span className="relative z-10 text-[9px] font-black text-white drop-shadow-md tracking-wider">
-                            {Math.ceil((animal.produceTime - (currentTime - animal.lastCollected)) / 1000)}s ⚡
+                            {isReady ? (
+                              <span className="text-white drop-shadow-md">Siap Diambil! ✨</span>
+                            ) : (
+                              <span className="text-white drop-shadow-md">
+                                {Math.ceil((produceTime - (currentTime - animal.lastCollected)) / 1000)}s ⚡
+                              </span>
+                            )}
                           </span>
                         </div>
                       )}
@@ -204,17 +226,34 @@ export default function TabAnimal() {
                         )}
                       </AnimatePresence>
                       {!isEditMode && (
-                        <span
-                          role="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSellAnimal(animal);
-                          }}
-                          className="absolute -top-2 -left-2 bg-[#ff7a6b] text-[#3b120c] rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-30 cursor-pointer hover:brightness-110 border border-[#ffb3aa]"
-                        >
-                          ✕
-                        </span>
+                        <>
+                          {/* Tombol Jual */}
+                          <span
+                            role="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSellAnimal(animal);
+                            }}
+                            className="absolute -top-2 -left-2 bg-[#ff7a6b] text-[#3b120c] rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-30 cursor-pointer hover:brightness-110 border border-[#ffb3aa]"
+                          >
+                            ✕
+                          </span>
+                          {/* Tombol Beri Makan */}
+                          <span
+                            role="button"
+                            title={animal.fed ? 'Sudah kenyang' : `Beri makan (butuh ${ANIMAL_FEED[animal.type]?.feedQty ?? '?'}x ${ANIMAL_FEED[animal.type]?.feedItem ?? '?'})`}
+                            onClick={(e) => handleFeed(e, animal)}
+                            className={`absolute -bottom-2 -right-2 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md z-30 border transition-all ${
+                              animal.fed
+                                ? 'bg-green-400 border-green-200 opacity-80 cursor-default'
+                                : 'bg-yellow-300 border-yellow-100 opacity-0 group-hover:opacity-100 cursor-pointer hover:brightness-110'
+                            }`}
+                          >
+                            {animal.fed ? '🟢' : '🌽'}
+                          </span>
+                        </>
                       )}
+
                     </motion.button>
                   );
                 })}

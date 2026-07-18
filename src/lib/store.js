@@ -16,6 +16,7 @@ import { createPlayerSlice } from './store/slices/createPlayerSlice';
 import { createTownSlice } from './store/slices/createTownSlice';
 import { createSystemSlice } from './store/slices/createSystemSlice';
 import { createCustomerSlice } from './store/slices/createCustomerSlice';
+import { createAchievementSlice } from './store/slices/createAchievementSlice';
 
 import { initialState } from './store/initialState';
 
@@ -34,6 +35,7 @@ export const useGameStore = create(
       ...createTownSlice(set, get),
       ...createSystemSlice(set, get),
       ...createCustomerSlice(set, get),
+      ...createAchievementSlice(set, get),
 
       // Reset tanpa reload penuh — cegah loop refresh
       resetGame: () => {
@@ -139,6 +141,10 @@ export const useGameStore = create(
         buildings: state.buildings,
         decorations: state.decorations,
         activeCustomers: state.activeCustomers,
+        achievements: state.achievements,
+        stats: state.stats,
+        sessionActions: state.sessionActions,
+        weatherEffects: state.weatherEffects,
       }),
       merge: (persistedState, currentState) => {
         let merged = { ...currentState, ...persistedState };
@@ -230,8 +236,44 @@ export const useGameStore = create(
             type: legacyAnimalTypes[a.type] || a.type,
           }));
         }
+
+        // MIGRATION: achievements, stats, sessionActions (new fields)
+        if (!merged.achievements || typeof merged.achievements !== 'object') {
+          merged.achievements = {};
+        }
+        if (!merged.stats || typeof merged.stats !== 'object') {
+          merged.stats = {};
+        }
+        // Ensure all stat keys exist
+        const defaultStats = {
+          totalHarvested: 0, totalMined: 0, totalFished: 0, totalCooked: 0,
+          totalServed: 0, totalCollected: 0, totalOrdersFulfilled: 0,
+          totalGiftsGiven: 0, totalFertilizerUsed: 0, totalFertilizerDropped: 0,
+          totalAnimalsFed: 0, totalAnimalsOwned: 0, totalWormsFound: 0,
+          totalWormBaitUsed: 0, totalDiamondsMined: 0, totalSushiEmasMade: 0,
+        };
+        merged.stats = { ...defaultStats, ...merged.stats };
+        merged.sessionActions = merged.sessionActions || {};
+        merged.weatherEffects = merged.weatherEffects || {
+          cropGrowth: 1.0,
+          miningRegen: 1.0,
+          animalProduce: 1.0,
+          fishingRare: 1.0,
+          customerRate: 1.0,
+        };
+
+        // MIGRATION: NPC baru (bejo, dodi) — jika save lama tidak punya
+        merged.npcs = {
+          maria: { level: 1, points: 0 },
+          botan: { level: 1, points: 0 },
+          hadi: { level: 1, points: 0 },
+          bejo: { level: 1, points: 0 },
+          dodi: { level: 1, points: 0 },
+          ...(merged.npcs || {}),
+        };
         
         return merged;
+
       },
       onRehydrateStorage: () => (state, error) => {
         if (error) {

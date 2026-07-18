@@ -50,3 +50,17 @@ export const SPECIAL_ITEMS = {
   pupuk_kandang: { id: 'pupuk_kandang', name: 'Pupuk Kandang', emoji: '🌿', desc: 'Drop dari ternak · mempercepat pertumbuhan tanaman 15%' },
 };
 
+// ===== Sistem Pakan Hewan (Fase B) =====
+// Memberi makan hewan = opsional, tapi memberikan bonus produksi
+// feedItem: ID crop yang dipakai sebagai pakan
+// feedQty: jumlah yang dikonsumsi per sesi makan
+export const ANIMAL_FEED = {
+  ayam:  { feedItem: 'jagung',  feedQty: 2, bonusDesc: '+25% chance bonus telur' },
+  bebek: { feedItem: 'jagung',  feedQty: 2, bonusDesc: '+25% chance bonus telur bebek' },
+  sapi:  { feedItem: 'gandum',  feedQty: 2, bonusDesc: '+25% chance bonus susu' },
+  domba: { feedItem: 'gandum',  feedQty: 2, bonusDesc: '+25% chance bonus bulu' },
+  babi:  { feedItem: 'wortel',  feedQty: 2, bonusDesc: '+25% chance bonus truffle' },
+  kuda:  { feedItem: 'wortel',  feedQty: 3, bonusDesc: '+25% chance bonus tapal' },
+};
+
+

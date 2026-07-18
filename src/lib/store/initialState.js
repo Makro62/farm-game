@@ -90,6 +90,8 @@ export const initialState = {
     maria: { level: 1, points: 0 },
     botan: { level: 1, points: 0 },
     hadi: { level: 1, points: 0 },
+    bejo: { level: 1, points: 0 },
+    dodi: { level: 1, points: 0 },
   },
   activeEvent: null,
 
@@ -106,4 +108,34 @@ export const initialState = {
   },
   decorations: [],
   tutorialStep: 0,
+
+  // ===== Achievement & Stats System =====
+  achievements: {},
+  sessionActions: {},
+  weatherEffects: {
+    cropGrowth: 1.0,
+    miningRegen: 1.0,
+    animalProduce: 1.0,
+    fishingRare: 1.0,
+    customerRate: 1.0,
+  },
+  stats: {
+    totalHarvested: 0,
+    totalMined: 0,
+    totalFished: 0,
+    totalCooked: 0,
+    totalServed: 0,
+    totalCollected: 0,
+    totalOrdersFulfilled: 0,
+    totalGiftsGiven: 0,
+    totalFertilizerUsed: 0,
+    totalFertilizerDropped: 0,
+    totalAnimalsFed: 0,
+    totalAnimalsOwned: 0,
+    totalWormsFound: 0,
+    totalWormBaitUsed: 0,
+    totalDiamondsMined: 0,
+    totalSushiEmasMade: 0,
+  },
+  activeCustomers: [],
 };
