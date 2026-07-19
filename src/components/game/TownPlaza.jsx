@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useGameStore } from '@/lib/store';
+import { useGameStore, useInventory } from '@/lib/store';
 import { FISHES } from '@/lib/data/fishes';
 import { NPC_LIST } from '../../lib/data/npcs';
 import { SHOP_BUILDINGS, SHOP_DECORATIONS } from '../../lib/data/shop';
@@ -225,7 +225,7 @@ export function FishingLake({
 }
 
 export function FishCatchBoard() {
-  const inventory = useGameStore((s) => s.inventory);
+  const inventory = useInventory();
   const sellItem = useGameStore((s) => s.sellItem);
   const activeEvent = useGameStore((s) => s.activeEvent);
   const bahari = activeEvent?.id === 'bahari';

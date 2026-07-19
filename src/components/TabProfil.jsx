@@ -1,6 +1,6 @@
 'use client';
 
-import { useGameStore } from '@/lib/store';
+import { useGameStore, useInventory } from '@/lib/store';
 import { formatNumber } from '@/lib/utils';
 import { getItemEmoji, getItemDisplayName, getItemSellPrice } from '@/lib/data/item-helpers';
 import { SHOP_SEEDS } from '@/lib/data/crops';
@@ -21,7 +21,7 @@ function ActionWidget() {
   const activeCustomers = useGameStore((s) => s.activeCustomers || []);
   const craftingQueue = useGameStore((s) => s.craftingQueue || []);
   const orders = useGameStore((s) => s.orders || []);
-  const inventory = useGameStore((s) => s.inventory || {});
+  const inventory = useInventory();
 
   const now = Date.now();
   const hints = [];

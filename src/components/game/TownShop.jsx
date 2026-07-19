@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useGameStore } from '@/lib/store';
+import { useGameStore, useInventory } from '@/lib/store';
 import { SHOP_BAIT, SHOP_BUILDINGS, SHOP_DECORATIONS } from '@/lib/data/shop';
 import { ShopItemCard, ShopSectionTitle } from '../ui/ShopItemCard';
 import { GameActionButton } from '../ui/GameAreaHeader';
@@ -9,11 +9,10 @@ import { GAME_CONSTANTS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 
 export function TownShop() {
-  const inventory = useGameStore((s) => s.inventory);
+  const inventory = useInventory();
   const buyItem = useGameStore((s) => s.buyItem);
   const workers = useGameStore((s) => s.workers);
   const hireWorker = useGameStore((s) => s.hireWorker);
-  const autoFisher = useGameStore((s) => s.autoFisher);
   const selectedBait = useGameStore((s) => s.selectedBait);
   const setSelectedBait = useGameStore((s) => s.setSelectedBait);
   const openConfirm = useGameStore((s) => s.openConfirm);
@@ -228,7 +227,7 @@ export function TownShop() {
       </button>
       {workers?.fisher && (
         <p className="text-[10px] text-[var(--text-secondary)] font-medium">
-          {autoFisher ? 'Kurcaci aktif — mancing otomatis' : 'Nyalakan Auto di Pusat Kota'}
+          {workers?.fisher?.isAutoMode ? 'Kurcaci aktif — mancing otomatis' : 'Nyalakan Auto di Pusat Kota'}
         </p>
       )}
     </>

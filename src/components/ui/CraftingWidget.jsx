@@ -47,9 +47,6 @@ export function CraftingWidget({
   );
   const slotsLeft = Math.max(0, 3 - activeQueues.length);
 
-  const canCook = (recipe) =>
-    Object.entries(recipe.req).every(([item, qty]) => (inventory[item] || 0) >= qty);
-
   const readyCount = recipes.filter(canCook).length;
 
   return (
@@ -168,19 +165,20 @@ export function CraftingWidget({
               </div>
               <div className="flex justify-between items-center text-xs">
                 <div className="flex gap-1.5 flex-wrap">
-                  {Object.entries(recipe.req).map(([item, qty]) => {
-                    const has = inventory[item] || 0;
+                  {Object.entries(recipe.req).map(([key, qty]) => {
+                    const [cat, itemId] = key.split('.');
+                    const has = invByCat?.[cat]?.[itemId]?.qty || 0;
                     const isEnough = has >= qty;
                     return (
                       <span
-                        key={item}
+                        key={key}
                         className={`px-1.5 py-0.5 rounded-lg flex items-center gap-1 border text-[10px] font-bold ${
                           isEnough
                             ? 'bg-[var(--primary-light)]/40 text-[var(--primary-dark)] border-[var(--primary)]/40'
                             : 'bg-[#FFCDD2]/60 text-[#C62828] border-[#EF9A9A]'
                         }`}
                       >
-                        {getCropEmoji(item)} {has}/{qty}
+                        {getCropEmoji(itemId)} {has}/{qty}
                       </span>
                     );
                   })}
