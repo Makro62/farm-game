@@ -1,4 +1,4 @@
-import { getItemSellPrice, isSellableProduce } from '../../data/item-helpers';
+import { getItemSellPrice, isSellableProduce, getItemCategory } from '../../data/item-helpers';
 import { RECIPES, ORDER_TEMPLATES } from '../../data/recipes';
 import { FISHES } from '../../data/fishes';
 import { SHOP_SEEDS } from '../../data/crops';
@@ -108,13 +108,28 @@ export const createPlayerSlice = (set, get) => ({
   },
 
   // ===== INVENTORY =====
-  addItem: (itemId, quantity = 1) => {
-    set((state) => ({
-      inventory: {
-        ...state.inventory,
-        [itemId]: (state.inventory[itemId] || 0) + quantity
+  addItem: (itemId, quantity = 1, category = null) => {
+    const resolvedCategory = category || getItemCategory(itemId);
+    set((state) => {
+      const updates = {
+        inventory: {
+          ...state.inventory,
+          [itemId]: (state.inventory[itemId] || 0) + quantity
+        }
+      };
+      // Also update category-indexed inventory
+      if (resolvedCategory) {
+        const cat = state.inventoryByCategory?.[resolvedCategory] || {};
+        updates.inventoryByCategory = {
+          ...state.inventoryByCategory,
+          [resolvedCategory]: {
+            ...cat,
+            [itemId]: (cat[itemId]?.quantity || 0) + quantity
+          }
+        };
       }
-    }));
+      return updates;
+    });
   },
   
   removeItem: (itemId, quantity = 1) => {
@@ -125,6 +140,8 @@ export const createPlayerSlice = (set, get) => ({
       return false;
     }
     
+    const category = getItemCategory(itemId);
+    
     set((state) => {
       const newInventory = { ...state.inventory };
       const next = current - quantity;
@@ -133,7 +150,25 @@ export const createPlayerSlice = (set, get) => ({
       } else {
         newInventory[itemId] = next;
       }
-      return { inventory: newInventory };
+      
+      const updates = { inventory: newInventory };
+      
+      // Also update category-indexed inventory
+      if (category && state.inventoryByCategory?.[category]) {
+        const cat = { ...state.inventoryByCategory[category] };
+        const catNext = (cat[itemId]?.quantity || 0) - quantity;
+        if (catNext <= 0) {
+          delete cat[itemId];
+        } else {
+          cat[itemId] = { ...cat[itemId], quantity: catNext };
+        }
+        updates.inventoryByCategory = {
+          ...state.inventoryByCategory,
+          [category]: cat
+        };
+      }
+      
+      return updates;
     });
     
     return true;

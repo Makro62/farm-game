@@ -1,17 +1,124 @@
 export const CROP_DATA = {
-  wortel: { name: 'Wortel', emoji: '🥕' },
-  jagung: { name: 'Jagung', emoji: '🌽' },
-  tomat: { name: 'Tomat', emoji: '🍅' },
-  stroberi: { name: 'Stroberi', emoji: '🍓' },
-  semangka: { name: 'Semangka', emoji: '🍉' },
-  jamur: { name: 'Jamur', emoji: '🍄' },
-  nanas: { name: 'Nanas', emoji: '🍍' },
-  labu: { name: 'Labu', emoji: '🎃' },
-  kentang: { name: 'Kentang', emoji: '🥔' },
-  gandum: { name: 'Gandum', emoji: '🌾' },
-  tebu: { name: 'Tebu', emoji: '🎋' },
-  tulip: { name: 'Tulip', emoji: '🌷' },
-  apel: { name: 'Apel', emoji: '🍎' },
+  wortel: {
+    id: 'wortel', name: 'Wortel', emoji: '🥕',
+    growthTime: 15, baseSellPrice: 25,
+    preferredSeason: 'all',
+    seasonBonus: { spring: 1.1 },
+    weatherEffects: { sunny: 1.0, rainy: 1.2, drought: 0.5 },
+    usedInRecipes: ['sup_wortel', 'kue_wortel'],
+    usedAsFeed: ['kuda', 'kelinci'],
+    seed: { id: 'bibit_wortel', buyPrice: 10, unlockLevel: 1 }
+  },
+  jagung: {
+    id: 'jagung', name: 'Jagung', emoji: '🌽',
+    growthTime: 30, baseSellPrice: 40,
+    preferredSeason: 'summer',
+    seasonBonus: { summer: 1.3, winter: 0.3 },
+    weatherEffects: { sunny: 1.0, rainy: 1.1, drought: 0.6 },
+    usedInRecipes: ['tepung_jagung', 'lele_bakar'],
+    usedAsFeed: ['ayam', 'bebek'],
+    seed: { id: 'bibit_jagung', buyPrice: 20, unlockLevel: 1 }
+  },
+  tomat: {
+    id: 'tomat', name: 'Tomat', emoji: '🍅',
+    growthTime: 60, baseSellPrice: 50,
+    preferredSeason: 'summer',
+    seasonBonus: { summer: 1.2, winter: 0.2 },
+    weatherEffects: { sunny: 1.1, rainy: 1.0, drought: 0.4 },
+    usedInRecipes: ['saus_tomat', 'sushi_mas', 'nasi_goreng'],
+    seed: { id: 'bibit_tomat', buyPrice: 35, unlockLevel: 2 }
+  },
+  stroberi: {
+    id: 'stroberi', name: 'Stroberi', emoji: '🍓',
+    growthTime: 120, baseSellPrice: 80,
+    preferredSeason: 'spring',
+    seasonBonus: { spring: 1.3, autumn: 0.5 },
+    weatherEffects: { sunny: 1.2, rainy: 0.8, drought: 0.3 },
+    usedInRecipes: ['kue_stroberi'],
+    seed: { id: 'bibit_stroberi', buyPrice: 75, unlockLevel: 5 }
+  },
+  semangka: {
+    id: 'semangka', name: 'Semangka', emoji: '🍉',
+    growthTime: 150, baseSellPrice: 120,
+    preferredSeason: 'summer',
+    seasonBonus: { summer: 1.3, winter: 0.1 },
+    weatherEffects: { sunny: 1.3, rainy: 0.7, drought: 0.2 },
+    usedInRecipes: [],
+    seed: { id: 'bibit_semangka', buyPrice: 120, unlockLevel: 8 }
+  },
+  jamur: {
+    id: 'jamur', name: 'Jamur', emoji: '🍄',
+    growthTime: 300, baseSellPrice: 200,
+    preferredSeason: 'winter',
+    seasonBonus: { winter: 1.4, summer: 0.1 },
+    weatherEffects: { sunny: 0.3, rainy: 1.4, drought: 0.1 },
+    usedInRecipes: ['nasi_jamur'],
+    seed: { id: 'bibit_jamur', buyPrice: 500, unlockLevel: 12 }
+  },
+  nanas: {
+    id: 'nanas', name: 'Nanas', emoji: '🍍',
+    growthTime: 220, baseSellPrice: 180,
+    preferredSeason: 'summer',
+    seasonBonus: { summer: 1.2 },
+    weatherEffects: { sunny: 1.1, rainy: 0.9, drought: 0.5 },
+    usedInRecipes: [],
+    seed: { id: 'bibit_nanas', buyPrice: 200, unlockLevel: 10 }
+  },
+  labu: {
+    id: 'labu', name: 'Labu', emoji: '🎃',
+    growthTime: 200, baseSellPrice: 150,
+    preferredSeason: 'autumn',
+    seasonBonus: { autumn: 1.3, spring: 0.5 },
+    weatherEffects: { sunny: 1.0, rainy: 1.1, drought: 0.4 },
+    usedInRecipes: [],
+    seed: { id: 'bibit_labu', buyPrice: 160, unlockLevel: 8 }
+  },
+  kentang: {
+    id: 'kentang', name: 'Kentang', emoji: '🥔',
+    growthTime: 190, baseSellPrice: 100,
+    preferredSeason: 'autumn',
+    seasonBonus: { autumn: 1.2 },
+    weatherEffects: { sunny: 1.0, rainy: 1.2, drought: 0.5 },
+    usedInRecipes: [],
+    seed: { id: 'bibit_kentang', buyPrice: 180, unlockLevel: 6 }
+  },
+  gandum: {
+    id: 'gandum', name: 'Gandum', emoji: '🌾',
+    growthTime: 135, baseSellPrice: 70,
+    preferredSeason: 'autumn',
+    seasonBonus: { autumn: 1.2, summer: 0.7 },
+    weatherEffects: { sunny: 1.1, rainy: 1.0, drought: 0.5 },
+    usedInRecipes: ['roti_gandum', 'nasi_goreng', 'pancake', 'kue_apel'],
+    usedAsFeed: ['sapi', 'domba'],
+    seed: { id: 'bibit_gandum', buyPrice: 90, unlockLevel: 3 }
+  },
+  tebu: {
+    id: 'tebu', name: 'Tebu', emoji: '🎋',
+    growthTime: 140, baseSellPrice: 90,
+    preferredSeason: 'summer',
+    seasonBonus: { summer: 1.2 },
+    weatherEffects: { sunny: 1.2, rainy: 0.8, drought: 0.3 },
+    usedInRecipes: ['gula'],
+    seed: { id: 'bibit_tebu', buyPrice: 110, unlockLevel: 4 }
+  },
+  tulip: {
+    id: 'tulip', name: 'Tulip', emoji: '🌷',
+    growthTime: 100, baseSellPrice: 110,
+    preferredSeason: 'spring',
+    seasonBonus: { spring: 1.3 },
+    weatherEffects: { sunny: 1.2, rainy: 0.9, drought: 0.6 },
+    usedInRecipes: [],
+    seed: { id: 'bibit_tulip', buyPrice: 100, unlockLevel: 3 }
+  },
+  apel: {
+    id: 'apel', name: 'Apel', emoji: '🍎',
+    growthTime: 180, baseSellPrice: 130,
+    preferredSeason: 'autumn',
+    seasonBonus: { autumn: 1.2, spring: 0.6 },
+    weatherEffects: { sunny: 1.1, rainy: 1.0, drought: 0.4 },
+    usedInRecipes: ['kue_apel', 'es_teh'],
+    seed: { id: 'bibit_apel', buyPrice: 140, unlockLevel: 7 }
+  },
 };
 
 export const SHOP_SEEDS = [

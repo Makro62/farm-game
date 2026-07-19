@@ -1,4 +1,5 @@
-import { SHOP_SEEDS } from '@/lib/data/crops';
+import { SHOP_SEEDS, CROP_DATA } from '@/lib/data/crops';
+import { rollCropQuality } from '@/lib/data/item-helpers';
 import { GAME_CONSTANTS } from '@/lib/constants';
 
 export const createFarmingSlice = (set, get) => ({
@@ -22,6 +23,9 @@ export const createFarmingSlice = (set, get) => ({
               plantedAt: Date.now(),
               growTime,
               watered: false,
+              fertilizer: null,
+              quality: null,
+              pestInfestation: false,
             }
           : p
       ),
@@ -126,33 +130,54 @@ export const createFarmingSlice = (set, get) => ({
     }
 
     if (!get().consumeEnergy(1)) {
-      return null; // Silent fail or handle via UI
+      return null;
     }
 
     const crop = plot.crop;
+    const weather = state.weather?.current?.replace(/[^a-zA-Z]/g, '').toLowerCase() || 'sunny';
+    const quality = rollCropQuality(weather, plot.fertilizer);
+    const quantity = 1;
 
-    set((state) => ({
-      plots: state.plots.map((p) =>
-        p.id === plotId
-          ? {
-              id: p.id,
-              status: 'empty',
-              crop: null,
-              plantedAt: null,
-              growTime: null,
-              watered: false,
-            }
-          : p
-      ),
-      inventory: {
-        ...state.inventory,
-        [crop]: (state.inventory[crop] || 0) + 1,
-      },
-    }));
+    set((state) => {
+      const newInv = { ...state.inventory };
+      const cropKey = `${crop}_${quality}`;
+      newInv[crop] = (newInv[crop] || 0) + quantity;
+      newInv[cropKey] = (newInv[cropKey] || 0) + quantity;
+
+      // Update category inventory
+      const updates = {
+        inventory: newInv,
+        plots: state.plots.map((p) =>
+          p.id === plotId
+            ? {
+                id: p.id,
+                status: 'empty',
+                crop: null,
+                plantedAt: null,
+                growTime: null,
+                watered: false,
+                fertilizer: null,
+                quality: null,
+                pestInfestation: false,
+              }
+            : p
+        ),
+      };
+
+      // Sync to inventoryByCategory
+      const cat = { ...(state.inventoryByCategory?.crops || {}) };
+      const existing = cat[crop] || { quantity: 0, quality: null };
+      cat[crop] = { quantity: existing.quantity + quantity, quality };
+      updates.inventoryByCategory = {
+        ...state.inventoryByCategory,
+        crops: cat,
+      };
+
+      return updates;
+    });
 
     get().addXP(GAME_CONSTANTS.XP.HARVEST);
     get().progressQuest('harvest', crop, 1);
-    // ===== Stats & Achievement tracking =====
     set(s => ({ stats: { ...s.stats, totalHarvested: (s.stats?.totalHarvested || 0) + 1 } }));
     get().markSessionAction?.('harvested');
     get().checkAchievements?.();

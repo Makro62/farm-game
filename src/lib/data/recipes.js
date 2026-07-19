@@ -1,11 +1,9 @@
 export const RECIPES = [
   // ===== TIER 1 (Level 1+) =====
   { id: 'sup_wortel', name: 'Sup Wortel', emoji: '🥣', type: 'kitchen', time: 180, price: 150, xp: 50, req: { wortel: 4 }, unlockLevel: 1 },
-  { id: 'sup_wortel', name: 'Sup Wortel', emoji: '🥣', type: 'kitchen', time: 180, price: 150, xp: 50, req: { wortel: 4 }, unlockLevel: 1 },
   { id: 'tepung_jagung', name: 'Tepung Jagung', emoji: '🌾', type: 'processing', time: 120, price: 200, xp: 60, req: { jagung: 4 }, unlockLevel: 1 },
   { id: 'gula', name: 'Gula', emoji: '🍬', type: 'processing', time: 120, price: 150, xp: 40, req: { tebu: 2 }, unlockLevel: 1 },
   { id: 'saus_tomat', name: 'Saus Tomat', emoji: '🥫', type: 'processing', time: 120, price: 180, xp: 50, req: { tomat: 3 }, unlockLevel: 1 },
-  { id: 'lele_bakar', name: 'Lele Bakar', emoji: '🍢', type: 'fish_kitchen', time: 300, price: 400, xp: 150, req: { lele: 2, jagung: 1 }, unlockLevel: 1 },
   { id: 'lele_bakar', name: 'Lele Bakar', emoji: '🍢', type: 'fish_kitchen', time: 300, price: 400, xp: 150, req: { lele: 2, jagung: 1 }, unlockLevel: 1 },
 
   // ===== TIER 2 (Level 5+) =====

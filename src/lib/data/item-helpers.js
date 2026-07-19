@@ -4,6 +4,90 @@ import { RECIPES } from './recipes';
 import { FISHES } from './fishes';
 import { MINERALS } from './minerals';
 
+// ===== ITEM CATEGORY SYSTEM =====
+// Maps every item ID to its inventory category
+// Used for structured inventory access and cross-system validation
+export const ITEM_CATEGORY = {};
+
+// Seeds -> crops mapping
+SHOP_SEEDS.forEach(s => {
+  ITEM_CATEGORY[s.id] = 'seeds';        // bibit_wortel -> seeds
+  ITEM_CATEGORY[s.cropId] = 'crops';     // wortel -> crops
+});
+
+// Animal products
+SHOP_ANIMALS.forEach(a => {
+  ITEM_CATEGORY[a.id] = 'animals';
+  ITEM_CATEGORY[a.product] = 'animalProducts';  // telur, susu, etc
+});
+
+// Minerals
+MINERALS.forEach(m => {
+  ITEM_CATEGORY[m.id] = 'minerals';
+});
+
+// Fish
+FISHES.forEach(f => {
+  ITEM_CATEGORY[f.id] = 'fish';
+});
+
+// Cooked/processed items from recipes
+RECIPES.forEach(r => {
+  if (r.type === 'processing') {
+    ITEM_CATEGORY[r.id] = 'processed';
+  } else {
+    ITEM_CATEGORY[r.id] = 'cooked';
+  }
+});
+
+// Shop items
+SHOP_BAIT.forEach(b => {
+  ITEM_CATEGORY[b.id] = 'bait';
+});
+SHOP_MINING.forEach(mt => {
+  ITEM_CATEGORY[mt.id] = 'tools';
+});
+
+// Special items
+Object.keys(SPECIAL_ITEMS).forEach(si => {
+  ITEM_CATEGORY[si] = 'collectibles';
+});
+
+export function getItemCategory(itemId) {
+  return ITEM_CATEGORY[itemId] || null;
+}
+
+// ===== QUALITY SYSTEM =====
+export const QUALITY_MULTIPLIERS = {
+  normal: 1.0,
+  silver: 1.2,
+  gold: 1.5,
+  iridium: 2.0,
+};
+
+export function rollCropQuality(weather, fertilizer) {
+  let score = Math.random();
+  if (fertilizer === 'premium') score += 0.3;
+  if (fertilizer === 'organic') score += 0.2;
+  if (weather === 'rainy') score += 0.1;
+  if (score > 0.95) return 'iridium';
+  if (score > 0.85) return 'gold';
+  if (score > 0.70) return 'silver';
+  return 'normal';
+}
+
+export function rollFishSize(fishId) {
+  const fish = FISHES.find(f => f.id === fishId);
+  if (!fish?.sizeTiers) return 'normal';
+  const rand = Math.random();
+  let cumulative = 0;
+  for (const [size, data] of Object.entries(fish.sizeTiers)) {
+    cumulative += data.chance;
+    if (rand <= cumulative) return size;
+  }
+  return 'normal';
+}
+
 const LEGACY_ANIMAL_MAP = {
   chicken: 'ayam',
   duck: 'bebek',
@@ -75,12 +159,35 @@ export function getAnimalEmoji(animal) {
   return data?.emoji || '🐾';
 }
 
-export function getItemSellPrice(itemId) {
+export function getItemSellPrice(itemId, options = {}) {
+  const { season, quality, buildings } = options;
+
+  // Seeds are not sellable directly
   const seedData = SHOP_SEEDS.find((s) => s.id === itemId);
   if (seedData) return Math.floor(seedData.price * 0.5);
 
-  const cropData = SHOP_SEEDS.find((s) => s.cropId === itemId);
-  if (cropData) return Math.floor(cropData.price * 1.5);
+  // Crops: use CROP_DATA baseSellPrice with season/quality modifiers
+  const cropData = CROP_DATA[itemId];
+  if (cropData) {
+    let price = cropData.baseSellPrice;
+    // Quality multiplier
+    if (quality && QUALITY_MULTIPLIERS[quality]) {
+      price *= QUALITY_MULTIPLIERS[quality];
+    }
+    // Season multiplier
+    if (season && cropData.seasonBonus?.[season]) {
+      price *= cropData.seasonBonus[season];
+    }
+    // Building bonus (Silo)
+    if (buildings?.silo) {
+      price *= 1.15;
+    }
+    return Math.floor(price);
+  }
+
+  // Legacy: SHOP_SEEDS cropId fallback
+  const seedCropData = SHOP_SEEDS.find((s) => s.cropId === itemId);
+  if (seedCropData) return Math.floor(seedCropData.price * 1.5);
 
   const animalProduct = SHOP_ANIMALS.find((a) => a.product === itemId);
   if (animalProduct) return Math.floor(animalProduct.price * 0.5);

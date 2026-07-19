@@ -11,6 +11,7 @@ export const partializeState = (state) => ({
   lastLogin: state.lastLogin,
   plots: state.plots,
   inventory: state.inventory,
+  inventoryByCategory: state.inventoryByCategory,
   animals: state.animals,
   soundEnabled: state.soundEnabled,
   musicEnabled: state.musicEnabled,
@@ -146,6 +147,15 @@ export const migrateState = (persistedState, currentState) => {
       ...a,
       type: legacyAnimalTypes[a.type] || a.type,
     }));
+  }
+
+  // MIGRATION: inventoryByCategory (new structured field)
+  if (!merged.inventoryByCategory || typeof merged.inventoryByCategory !== 'object') {
+    merged.inventoryByCategory = {
+      crops: {}, animalProducts: {}, minerals: {}, fish: {},
+      processed: {}, cooked: {}, seeds: {}, tools: {},
+      bait: {}, collectibles: {}, decorations: {}, animals: {},
+    };
   }
 
   // MIGRATION: achievements, stats, sessionActions (new fields)

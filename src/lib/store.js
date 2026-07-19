@@ -118,6 +118,11 @@ export const useDay = () => useGameStore((s) => s.day);
 export const useStreak = () => useGameStore((s) => s.streak);
 export const usePlots = () => useGameStore((s) => s.plots);
 export const useInventory = () => useGameStore((s) => s.inventory);
+export const useInventoryByCategory = () => useGameStore((s) => s.inventoryByCategory);
+export const useCropsInventory = () => useGameStore((s) => s.inventoryByCategory?.crops || {});
+export const useAnimalProductsInventory = () => useGameStore((s) => s.inventoryByCategory?.animalProducts || {});
+export const useMineralsInventory = () => useGameStore((s) => s.inventoryByCategory?.minerals || {});
+export const useFishInventory = () => useGameStore((s) => s.inventoryByCategory?.fish || {});
 export const useSettings = () => useGameStore((s) => ({
   soundEnabled: s.soundEnabled,
   musicEnabled: s.musicEnabled,

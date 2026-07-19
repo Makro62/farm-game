@@ -33,7 +33,26 @@ export const initialState = {
   offlineReport: null,
 
   plots: createEmptyPlots(),
+
+  // ===== STRUCTURED INVENTORY =====
+  // Flat keys retained for backward compatibility
+  // Category keys for structured access
   inventory: {},
+  inventoryByCategory: {
+    crops: {},
+    animalProducts: {},
+    minerals: {},
+    fish: {},
+    processed: {},
+    cooked: {},
+    seeds: {},
+    tools: {},
+    bait: {},
+    collectibles: {},
+    decorations: {},
+    animals: {},
+  },
+
   animals: [],
 
   soundEnabled: true,

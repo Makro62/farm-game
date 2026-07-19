@@ -411,10 +411,15 @@ export const createSystemSlice = (set, get) => ({
             break;
           }
         }
-        set((s) => ({
-          inventory: { ...s.inventory, [caughtFish.id]: (s.inventory[caughtFish.id] || 0) + 1 },
-          stats: { ...s.stats, totalFished: (s.stats?.totalFished || 0) + 1 },
-        }));
+        set((s) => {
+          const fishCat = { ...(s.inventoryByCategory?.fish || {}) };
+          fishCat[caughtFish.id] = { quantity: (fishCat[caughtFish.id]?.quantity || 0) + 1 };
+          return {
+            inventory: { ...s.inventory, [caughtFish.id]: (s.inventory[caughtFish.id] || 0) + 1 },
+            inventoryByCategory: { ...s.inventoryByCategory, fish: fishCat },
+            stats: { ...s.stats, totalFished: (s.stats?.totalFished || 0) + 1 },
+          };
+        });
         get().addXP(GAME_CONSTANTS.XP.FISH);
         get().progressQuest('fish', caughtFish.id, 1);
         get().markSessionAction?.('fished');

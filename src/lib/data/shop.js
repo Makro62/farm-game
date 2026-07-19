@@ -1,3 +1,5 @@
+import { SHOP_SEEDS } from './crops';
+
 export const SHOP_DECORATIONS = [
   { id: 'bunga', name: 'Pot Bunga', emoji: '🪴', price: 300, desc: 'Hiasan halaman (+5 XP saat beli)' },
   { id: 'air_mancur', name: 'Air Mancur', emoji: '⛲', price: 800, desc: 'Suasana kota lebih hidup' },
@@ -41,6 +43,63 @@ export const PICKAXE_LABELS = {
   2: { name: 'Pickaxe Besi', emoji: '⛏️', regen: '90 detik' },
   3: { name: 'Pickaxe Emas', emoji: '🛠️', regen: '60 detik' },
 };
+
+// ===== UNIFIED SHOP OBJECT =====
+export const SHOP = {
+  seeds: {
+    icon: '🌱', unlockLevel: 1,
+    items: Object.fromEntries(SHOP_SEEDS.map(s => [s.id, {
+      id: s.id, name: s.name, emoji: s.emoji,
+      price: s.price, cropId: s.cropId, season: s.season,
+      stock: Infinity, maxPurchasePerDay: null,
+    }])),
+  },
+  animals: {
+    icon: '🐔', unlockLevel: 5,
+    items: Object.fromEntries(SHOP_ANIMALS.map(a => [a.id, {
+      id: a.id, name: a.name, emoji: a.emoji,
+      price: a.price, product: a.product, productEmoji: a.productEmoji,
+      produceTime: a.time, stock: 10,
+    }])),
+  },
+  bait: {
+    icon: '🪱', unlockLevel: 1,
+    items: Object.fromEntries(SHOP_BAIT.map(b => [b.id, {
+      id: b.id, name: b.name, emoji: b.emoji,
+      price: b.price, waitMult: b.waitMult, rareBonus: b.rareBonus,
+      craftable: b.craftable, mineralReq: b.mineralReq,
+    }])),
+  },
+  tools: {
+    icon: '⛏️', unlockLevel: 1,
+    items: Object.fromEntries(SHOP_MINING.map(mt => [mt.id, {
+      id: mt.id, name: mt.name, emoji: mt.emoji,
+      price: mt.price, desc: mt.desc,
+      mineralReq: mt.mineralReq,
+    }])),
+  },
+  buildings: {
+    icon: '🏗️', unlockLevel: 5,
+    items: Object.fromEntries(SHOP_BUILDINGS.map(b => [b.id, {
+      id: b.id, name: b.name, emoji: b.emoji,
+      price: b.price, desc: b.desc,
+    }])),
+  },
+  decorations: {
+    icon: '🪴', unlockLevel: 3,
+    items: Object.fromEntries(SHOP_DECORATIONS.map(d => [d.id, {
+      id: d.id, name: d.name, emoji: d.emoji,
+      price: d.price, desc: d.desc,
+    }])),
+  },
+};
+
+export function getShopItem(itemId) {
+  for (const category of Object.values(SHOP)) {
+    if (category.items?.[itemId]) return category.items[itemId];
+  }
+  return null;
+}
 
 // ===== Item Lintas-Sistem: tidak dijual di toko, tapi eksis dalam ekosistem game =====
 // cacing: drop dari Tambang (batu) → dipakai untuk crafting umpan_cacing

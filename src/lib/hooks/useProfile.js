@@ -1,12 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
 import { formatNumber } from '@/lib/utils';
-import { getItemSellPrice } from '@/lib/data/item-helpers';
-import { SHOP_SEEDS } from '@/lib/data/crops';
-import { SHOP_ANIMALS, SHOP_BAIT, SHOP_MINING } from '@/lib/data/shop';
-import { FISHES } from '@/lib/data/fishes';
-import { MINERALS } from '@/lib/data/minerals';
-import { RECIPES } from '@/lib/data/recipes';
+import { getItemSellPrice, ITEM_CATEGORY } from '@/lib/data/item-helpers';
 import { SEASON_META } from '@/lib/nav';
 
 export function useProfile() {
@@ -29,34 +24,23 @@ export function useProfile() {
   const xpNeeded = level * 100;
   const seasonMeta = SEASON_META[season] || SEASON_META.spring;
 
+  const CATEGORY_LABELS = {
+    seeds: 'bibit', crops: 'pertanian', animalProducts: 'peternakan',
+    minerals: 'tambang', tools: 'tambang', fish: 'pancing',
+    bait: 'pancing', processed: 'dapur', cooked: 'dapur',
+    collectibles: 'lainnya',
+  };
+
   const categorized = {
-    bibit: [],
-    pertanian: [],
-    peternakan: [],
-    tambang: [],
-    pancing: [],
-    dapur: [],
-    lainnya: [],
+    bibit: [], pertanian: [], peternakan: [],
+    tambang: [], pancing: [], dapur: [], lainnya: [],
   };
 
   Object.entries(inventory).forEach(([itemId, qty]) => {
     if (qty <= 0) return;
-
-    if (SHOP_SEEDS.some((s) => s.id === itemId)) {
-      categorized.bibit.push({ id: itemId, qty });
-    } else if (SHOP_SEEDS.some((s) => s.cropId === itemId)) {
-      categorized.pertanian.push({ id: itemId, qty });
-    } else if (SHOP_ANIMALS.some((a) => a.product === itemId)) {
-      categorized.peternakan.push({ id: itemId, qty });
-    } else if (MINERALS.some((m) => m.id === itemId) || SHOP_MINING.some((m) => m.id === itemId)) {
-      categorized.tambang.push({ id: itemId, qty });
-    } else if (FISHES.some((f) => f.id === itemId) || SHOP_BAIT.some((b) => b.id === itemId)) {
-      categorized.pancing.push({ id: itemId, qty });
-    } else if (RECIPES.some((r) => r.id === itemId)) {
-      categorized.dapur.push({ id: itemId, qty });
-    } else {
-      categorized.lainnya.push({ id: itemId, qty });
-    }
+    const category = ITEM_CATEGORY[itemId];
+    const label = CATEGORY_LABELS[category] || 'lainnya';
+    categorized[label].push({ id: itemId, qty });
   });
 
   const hasSellable = Object.entries(inventory).some(

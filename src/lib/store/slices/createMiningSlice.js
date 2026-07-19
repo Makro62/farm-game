@@ -18,19 +18,44 @@ export const createMiningSlice = (set, get) => ({
     
     const dropsWorm = node.type === 'batu' && Math.random() < GAME_CONSTANTS.CHANCES.WORM_DROP;
 
-    set((state) => ({
-      mining: {
-        ...state.mining,
-        nodes: state.mining.nodes.map(n => 
-          n.id === nodeId ? { ...n, status: 'cooldown', regenAt: Date.now() + regenTime } : n
-        )
-      },
-      inventory: {
+    set((state) => {
+      const newInv = {
         ...state.inventory,
         [node.type]: (state.inventory[node.type] || 0) + 1,
         ...(dropsWorm ? { cacing: (state.inventory.cacing || 0) + 1 } : {}),
+      };
+
+      // Sync to inventoryByCategory
+      const mineralCat = { ...(state.inventoryByCategory?.minerals || {}) };
+      mineralCat[node.type] = { quantity: (mineralCat[node.type]?.quantity || 0) + 1 };
+
+      const updates = {
+        inventoryByCategory: {
+          ...state.inventoryByCategory,
+          minerals: mineralCat,
+        }
+      };
+
+      if (dropsWorm) {
+        const colCat = { ...(state.inventoryByCategory?.collectibles || {}) };
+        colCat.cacing = { quantity: (colCat.cacing?.quantity || 0) + 1 };
+        updates.inventoryByCategory = {
+          ...updates.inventoryByCategory,
+          collectibles: colCat,
+        };
       }
-    }));
+
+      return {
+        mining: {
+          ...state.mining,
+          nodes: state.mining.nodes.map(n => 
+            n.id === nodeId ? { ...n, status: 'cooldown', regenAt: Date.now() + regenTime } : n
+          )
+        },
+        inventory: newInv,
+        ...updates,
+      };
+    });
 
     get().addXP(GAME_CONSTANTS.XP.MINE);
     get().progressQuest('mine', node.type, 1);

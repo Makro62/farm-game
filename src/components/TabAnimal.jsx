@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
 import { getAnimalEmoji, getShopAnimal } from '../lib/data/item-helpers';
 import { SHOP_ANIMALS, ANIMAL_FEED } from '../lib/data/shop';
