@@ -17,7 +17,6 @@ const FARM_TOOLS = [
   { id: 'tanam', label: 'Tanam', emoji: '🌱' },
   { id: 'siram', label: 'Siram', emoji: '💧' },
   { id: 'panen', label: 'Panen', emoji: '🌾' },
-  { id: 'jual', label: 'Jual', emoji: '💰' },
 ];
 
 export default function TabFarm() {
@@ -49,9 +48,6 @@ export default function TabFarm() {
                   onClick={() => {
                     setIsEditMode(false);
                     setFarmTool(tool.id);
-                    if (tool.id === 'jual') {
-                      enqueueNotification('Klik petak mana saja untuk jual semua hasil', { icon: '💰', type: 'info' });
-                    }
                   }}
                 >
                   {tool.label}

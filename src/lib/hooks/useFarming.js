@@ -33,12 +33,6 @@ export function useFarming() {
   };
 
   const handlePlotClick = (plot, farmTool) => {
-    if (farmTool === 'jual') {
-      const earned = sellAllInventory();
-      if (earned > 0) enqueueNotification(`Hasil terjual +${earned} 💰`, { type: 'success' });
-      else enqueueNotification('Tidak ada hasil untuk dijual.', { type: 'error' });
-      return;
-    }
 
     if (farmTool === 'siram') {
       const result = waterPlot(plot.id);

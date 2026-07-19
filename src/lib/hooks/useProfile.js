@@ -102,6 +102,38 @@ export function useProfile() {
     );
   };
 
+  const handleSellCategory = (categoryKey, itemsList) => {
+    openConfirm(
+      'Jual Kategori',
+      `Jual semua barang yang bisa dijual di kategori ini?`,
+      () => {
+        let totalEarned = 0;
+        let soldCount = 0;
+        itemsList.forEach((item) => {
+          const price = getItemSellPrice(item.id);
+          if (price > 0 && item.qty > 0) {
+            const earned = sellItem(item.id, item.qty);
+            if (earned > 0) {
+              totalEarned += earned;
+              soldCount++;
+            }
+          }
+        });
+
+        if (totalEarned > 0) {
+          enqueueNotification(
+            coinMultiplier > 1
+              ? `Terjual ${soldCount} jenis barang seharga ${formatNumber(totalEarned)} 💰 (×${coinMultiplier} booster!)`
+              : `Terjual ${soldCount} jenis barang seharga ${formatNumber(totalEarned)} 💰!`,
+            { type: 'success' }
+          );
+        } else {
+          enqueueNotification('Tidak ada barang yang bisa dijual di kategori ini.', { type: 'error' });
+        }
+      }
+    );
+  };
+
   return {
     inventory,
     coins,
@@ -119,6 +151,7 @@ export function useProfile() {
     setShowSettings,
     handleSellItem,
     handleSellAll,
+    handleSellCategory,
     enqueueNotification
   };
 }

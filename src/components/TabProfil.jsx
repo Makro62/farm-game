@@ -13,8 +13,7 @@ import { SEASON_META } from '@/lib/nav';
 import TabPage from './ui/TabPage';
 import Button from './ui/Button';
 import { Coins, Star, Trophy, CalendarDays, Shield, Settings, X, Zap, AlertCircle } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { useState } from 'react';
+import { useProfile } from '@/lib/hooks/useProfile';
 // ===== Widget lintas-sistem: membaca semua slice sekaligus =====
 function ActionWidget() {
   const plots = useGameStore((s) => s.plots || []);
@@ -92,53 +91,26 @@ function ActionWidget() {
 }
 
 export default function TabProfil() {
-  const inventory = useGameStore((state) => state.inventory);
-  const coins = useGameStore((state) => state.coins);
-  const level = useGameStore((state) => state.level);
-  const xp = useGameStore((state) => state.xp);
-  const day = useGameStore((state) => state.season?.day || 1);
-  const season = useGameStore((state) => state.season?.current || 'spring');
-  const achievements = useGameStore((state) => state.achievements || {});
-  const sellItem = useGameStore((state) => state.sellItem);
-  const sellAllInventory = useGameStore((state) => state.sellAllInventory);
-  const coinMultiplier = useGameStore((state) => state.coinMultiplier);
-  const openConfirm = useGameStore((state) => state.openConfirm);
-  const resetGame = useGameStore((state) => state.resetGame);
-  const dev = useGameStore((state) => state.dev);
-
-  const [showSettings, setShowSettings] = useState(false);
-  const xpNeeded = level * 100;
-  const seasonMeta = SEASON_META[season] || SEASON_META.spring;
-
-  const categorized = {
-    bibit: [],
-    pertanian: [],
-    peternakan: [],
-    tambang: [],
-    pancing: [],
-    dapur: [],
-    lainnya: [],
-  };
-
-  Object.entries(inventory).forEach(([itemId, qty]) => {
-    if (qty <= 0) return;
-
-    if (SHOP_SEEDS.some((s) => s.id === itemId)) {
-      categorized.bibit.push({ id: itemId, qty });
-    } else if (SHOP_SEEDS.some((s) => s.cropId === itemId)) {
-      categorized.pertanian.push({ id: itemId, qty });
-    } else if (SHOP_ANIMALS.some((a) => a.product === itemId)) {
-      categorized.peternakan.push({ id: itemId, qty });
-    } else if (MINERALS.some((m) => m.id === itemId) || SHOP_MINING.some((m) => m.id === itemId)) {
-      categorized.tambang.push({ id: itemId, qty });
-    } else if (FISHES.some((f) => f.id === itemId) || SHOP_BAIT.some((b) => b.id === itemId)) {
-      categorized.pancing.push({ id: itemId, qty });
-    } else if (RECIPES.some((r) => r.id === itemId)) {
-      categorized.dapur.push({ id: itemId, qty });
-    } else {
-      categorized.lainnya.push({ id: itemId, qty });
-    }
-  });
+  const {
+    inventory,
+    coins,
+    level,
+    xp,
+    day,
+    achievements,
+    dev,
+    showSettings,
+    xpNeeded,
+    seasonMeta,
+    categorized,
+    hasSellable,
+    resetGame,
+    setShowSettings,
+    handleSellItem,
+    handleSellAll,
+    handleSellCategory,
+    enqueueNotification
+  } = useProfile();
 
   const categoriesConfig = [
     { key: 'pertanian', title: 'Hasil Pertanian', icon: '🌱' },
@@ -150,55 +122,13 @@ export default function TabProfil() {
     { key: 'lainnya', title: 'Lainnya', icon: '📦' },
   ];
 
-  const hasSellable = Object.entries(inventory).some(
-    ([id, qty]) => qty > 0 && getItemSellPrice(id) > 0
-  );
-
-  const handleSellItem = (itemId, name, qty) => {
-    const price = getItemSellPrice(itemId);
-    if (!price) {
-      toast.error('Barang ini tidak bisa dijual.');
-      return;
-    }
-    const total = price * qty;
-    openConfirm(
-      'Jual Barang',
-      `Jual semua ${qty}x ${name} seharga ${formatNumber(total)} 💰?`,
-      () => {
-        const earned = sellItem(itemId, qty);
-        if (earned > 0) {
-          toast.success(`Terjual seharga ${formatNumber(earned)} 💰`, { icon: '💰' });
-        }
-      }
-    );
-  };
-
-  const handleSellAll = () => {
-    openConfirm(
-      'Jual Semua Hasil',
-      'Jual semua hasil yang bisa dijual? Umpan & alat tidak ikut.',
-      () => {
-        const earned = sellAllInventory();
-        if (earned > 0) {
-          toast.success(
-            coinMultiplier > 1
-              ? `Terjual ${formatNumber(earned)} 💰 (×${coinMultiplier} booster!)`
-              : `Terjual semua hasil seharga ${formatNumber(earned)} 💰!`
-          );
-        } else {
-          toast.error('Tidak ada hasil yang bisa dijual.');
-        }
-      }
-    );
-  };
-
   return (
     <TabPage>
       <div className="glass-panel p-3 sm:p-5 overflow-y-auto max-h-full">
         <div className="flex items-center justify-between gap-2 mb-4 mt-1">
           <h2 className="font-display text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
             <Shield className="w-6 h-6 text-[var(--primary-dark)]" />
-            Profil & Gudang
+            Gudang & Profil
           </h2>
           <button
             onClick={() => setShowSettings(true)}
@@ -229,11 +159,11 @@ export default function TabProfil() {
                   <div>
                     <h4 className="text-xs font-black text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1"><Zap className="w-4 h-4" /> Mode Developer (Cheat)</h4>
                     <div className="grid grid-cols-2 gap-2">
-                      <Button variant="shop" size="sm" onClick={() => { dev.addCoins(10000); toast.success('+10.000 Koin!'); }}>+10.000 Koin</Button>
-                      <Button variant="shop" size="sm" onClick={() => { dev.addEnergy(100); toast.success('+100 Energy!'); }}>Max Energy</Button>
-                      <Button variant="shop" size="sm" onClick={() => { dev.instantGrow(); toast.success('Semua tanaman langsung panen!'); }}>Panen Instan</Button>
-                      <Button variant="shop" size="sm" onClick={() => { dev.unlockAll(); toast.success('Semua pekerja & bangunan terbuka!'); }}>Unlock Semua</Button>
-                      <Button variant="shop" size="sm" onClick={() => { dev.setLevel(50); toast.success('Level Maksimal!'); }}>Max Level (50)</Button>
+                      <Button variant="shop" size="sm" onClick={() => { dev.addCoins(10000); enqueueNotification('+10.000 Koin!', { type: 'success' }); }}>+10.000 Koin</Button>
+                      <Button variant="shop" size="sm" onClick={() => { dev.addEnergy(100); enqueueNotification('+100 Energy!', { type: 'success' }); }}>Max Energy</Button>
+                      <Button variant="shop" size="sm" onClick={() => { dev.instantGrow(); enqueueNotification('Semua tanaman langsung panen!', { type: 'success' }); }}>Panen Instan</Button>
+                      <Button variant="shop" size="sm" onClick={() => { dev.unlockAll(); enqueueNotification('Semua pekerja & bangunan terbuka!', { type: 'success' }); }}>Unlock Semua</Button>
+                      <Button variant="shop" size="sm" onClick={() => { dev.setLevel(50); enqueueNotification('Level Maksimal!', { type: 'success' }); }}>Max Level (50)</Button>
                     </div>
                   </div>
                 )}
@@ -246,9 +176,14 @@ export default function TabProfil() {
                     variant="danger"
                     className="w-full"
                     onClick={() => {
-                      openConfirm('Reset Game', 'Apakah Anda yakin ingin menghapus SEMUA data permainan? Ini tidak bisa dikembalikan!', () => {
+                      // Note: openConfirm will dispatch the action, resetGame will clear, but we need to pass a callback.
+                      // Since we don't have access to openConfirm here directly without store, and it's fetched from useProfile
+                      // actually it's exposed from useProfile.
+                      // Wait, we DO have openConfirm because it's handled in TabProfil... wait, it's not exported from useProfile!
+                      // I need to use openConfirm from useGameStore!
+                      useGameStore.getState().openConfirm('Reset Game', 'Apakah Anda yakin ingin menghapus SEMUA data permainan? Ini tidak bisa dikembalikan!', () => {
                         resetGame();
-                        toast.success('Game telah direset!');
+                        enqueueNotification('Game telah direset!', { type: 'success' });
                         setShowSettings(false);
                       });
                     }}
@@ -364,12 +299,17 @@ export default function TabProfil() {
 
             return (
               <div key={key} className="mb-6 last:mb-0">
-                <h4 className="text-[13px] font-black text-[var(--text-secondary)] uppercase tracking-wider mb-3 flex items-center gap-2">
-                  {icon} {title}
-                  <span className="text-[10px] bg-[var(--wood)] text-[#FFE08A] px-2 py-0.5 rounded-full">
-                    {items.length} Jenis
-                  </span>
-                </h4>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-[13px] font-black text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-2">
+                    {icon} {title}
+                    <span className="text-[10px] bg-[var(--wood)] text-[#FFE08A] px-2 py-0.5 rounded-full">
+                      {items.length} Jenis
+                    </span>
+                  </h4>
+                  <Button variant="shop" size="sm" onClick={() => handleSellCategory(key, items)}>
+                    Jual Kategori Ini
+                  </Button>
+                </div>
 
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
                   {items.map((item) => {
