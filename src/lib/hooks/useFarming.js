@@ -2,18 +2,18 @@ import { useGameStore } from '@/lib/store';
 import { getItemEmoji } from '@/lib/data/item-helpers';
 
 export function useFarming() {
-  const workers = useGameStore((state) => state.workers);
+  const workers = useGameStore((state) => state?.workers);
   const farmer = workers?.farmer;
-  const toggleAutoFarmer = useGameStore((state) => state.toggleAutoMode);
-  const seeds = useGameStore((state) => state.inventoryByCategory?.seeds || {});
+  const toggleAutoFarmer = useGameStore((state) => state?.toggleAutoMode);
+  const seeds = useGameStore((state) => state?.inventoryByCategory?.seeds || {});
 
-  const plantSeed = useGameStore((state) => state.plantSeed);
-  const harvest = useGameStore((state) => state.harvest);
-  const waterPlot = useGameStore((state) => state.waterPlot);
-  const sellAllInventory = useGameStore((state) => state.sellAllInventory);
-  const selectedInventoryItem = useGameStore((state) => state.selectedSeed);
-  const setSelectedInventoryItem = useGameStore((state) => state.setSelectedSeed);
-  const enqueueNotification = useGameStore((state) => state.enqueueNotification);
+  const plantSeed = useGameStore((state) => state?.plantSeed);
+  const harvest = useGameStore((state) => state?.harvest);
+  const waterPlot = useGameStore((state) => state?.waterPlot);
+  const sellAllInventory = useGameStore((state) => state?.sellAllInventory);
+  const selectedInventoryItem = useGameStore((state) => state?.selectedSeed);
+  const setSelectedInventoryItem = useGameStore((state) => state?.setSelectedSeed);
+  const enqueueNotification = useGameStore((state) => state?.enqueueNotification);
 
   const handleToggleAuto = () => {
     if (!farmer?.hired) {

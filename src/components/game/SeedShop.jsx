@@ -116,7 +116,7 @@ export function SeedShop() {
       <button
         onClick={handleHireFarmer}
         className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left mb-2 ${
-          workers?.farmer ? 'border-[var(--primary)] bg-[var(--primary)]/10' : ''
+          farmer ? 'border-[var(--primary)] bg-[var(--primary)]/10' : ''
         }`}
       >
         <div>
@@ -124,7 +124,7 @@ export function SeedShop() {
           <div className="text-[10px] text-[var(--text-secondary)]">Auto-Farm & Harvest</div>
         </div>
         <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-xl text-xs whitespace-nowrap border border-[#FFF1B8]">
-          {workers?.farmer ? 'Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_FARMER} 💰`}
+          {farmer ? 'Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_FARMER} 💰`}
         </span>
       </button>
       {farmer?.hired && (

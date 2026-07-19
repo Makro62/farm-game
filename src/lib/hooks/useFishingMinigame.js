@@ -21,9 +21,9 @@ function rollFish(rareBonus = 0) {
 }
 
 export function useFishingMinigame() {
-  const selectedBait = useGameStore((state) => state.selectedBait);
-  const baitInv = useGameStore((state) => state.inventoryByCategory?.bait || {});
-  const weatherEffects = useGameStore((state) => state.weatherEffects);
+  const selectedBait = useGameStore((state) => state?.selectedBait);
+  const baitInv = useGameStore((state) => state?.inventoryByCategory?.bait || {});
+  const weatherEffects = useGameStore((state) => state?.weatherEffects);
 
   const [fishState, setFishState] = useState('idle');
   const [indicatorPos, setIndicatorPos] = useState(50);

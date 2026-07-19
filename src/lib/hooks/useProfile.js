@@ -5,20 +5,20 @@ import { getItemSellPrice } from '@/lib/data/item-helpers';
 import { SEASON_META } from '@/lib/nav';
 
 export function useProfile() {
-  const inventoryByCategory = useGameStore((state) => state.inventoryByCategory);
-  const coins = useGameStore((state) => state.coins);
-  const level = useGameStore((state) => state.level);
-  const xp = useGameStore((state) => state.xp);
-  const day = useGameStore((state) => state.season?.day || 1);
-  const season = useGameStore((state) => state.season?.current || 'spring');
-  const achievements = useGameStore((state) => state.achievements || {});
-  const sellItem = useGameStore((state) => state.sellItem);
-  const sellAllInventory = useGameStore((state) => state.sellAllInventory);
-  const coinMultiplier = useGameStore((state) => state.coinMultiplier);
-  const openConfirm = useGameStore((state) => state.openConfirm);
-  const resetGame = useGameStore((state) => state.resetGame);
-  const dev = useGameStore((state) => state.dev);
-  const enqueueNotification = useGameStore((state) => state.enqueueNotification);
+  const inventoryByCategory = useGameStore((state) => state?.inventoryByCategory);
+  const coins = useGameStore((state) => state?.coins);
+  const level = useGameStore((state) => state?.level);
+  const xp = useGameStore((state) => state?.xp);
+  const day = useGameStore((state) => state?.season?.day || 1);
+  const season = useGameStore((state) => state?.season?.current || 'spring');
+  const achievements = useGameStore((state) => state?.achievements || {});
+  const sellItem = useGameStore((state) => state?.sellItem);
+  const sellAllInventory = useGameStore((state) => state?.sellAllInventory);
+  const coinMultiplier = useGameStore((state) => state?.coinMultiplier);
+  const openConfirm = useGameStore((state) => state?.openConfirm);
+  const resetGame = useGameStore((state) => state?.resetGame);
+  const dev = useGameStore((state) => state?.dev);
+  const enqueueNotification = useGameStore((state) => state?.enqueueNotification);
 
   const [showSettings, setShowSettings] = useState(false);
   const xpNeeded = level * 100;

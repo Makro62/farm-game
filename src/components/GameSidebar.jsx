@@ -34,19 +34,19 @@ function useSidebarChrome() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [boostOpen, setBoostOpen] = useState(false);
 
-  const coins = useGameStore((s) => s.coins);
-  const level = useGameStore((s) => s.level);
-  const xp = useGameStore((s) => s.xp);
-  const energy = useGameStore((s) => s.energy) || 0;
-  const maxEnergy = useGameStore((s) => s.maxEnergy) || 100;
-  const streak = useGameStore((s) => s.streak);
-  const soundEnabled = useGameStore((s) => s.soundEnabled);
-  const season = useGameStore((s) => s.season);
-  const weather = useGameStore((s) => s.weather);
-  const activeEvent = useGameStore((s) => s.activeEvent);
-  const combo = useGameStore((s) => s.combo);
-  const coinMultiplier = useGameStore((s) => s.coinMultiplier);
-  const growthMultiplier = useGameStore((s) => s.growthMultiplier);
+  const coins = useGameStore((s) => s?.coins ?? 0);
+  const level = useGameStore((s) => s?.level ?? 1);
+  const xp = useGameStore((s) => s?.xp ?? 0);
+  const energy = useGameStore((s) => s?.energy ?? 0);
+  const maxEnergy = useGameStore((s) => s?.maxEnergy ?? 100);
+  const streak = useGameStore((s) => s?.streak ?? 0);
+  const soundEnabled = useGameStore((s) => s?.soundEnabled ?? true);
+  const season = useGameStore((s) => s?.season ?? { current: 'spring' });
+  const weather = useGameStore((s) => s?.weather ?? { current: '☀️ Cerah' });
+  const activeEvent = useGameStore((s) => s?.activeEvent ?? null);
+  const combo = useGameStore((s) => s?.combo ?? { count: 0 });
+  const coinMultiplier = useGameStore((s) => s?.coinMultiplier ?? 1);
+  const growthMultiplier = useGameStore((s) => s?.growthMultiplier ?? 1);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -104,11 +104,11 @@ function useSidebarChrome() {
 }
 
 function useAreaBadges() {
-  const plots = useGameStore((s) => s.plots);
-  const animals = useGameStore((s) => s.animals);
-  const mining = useGameStore((s) => s.mining);
-  const orders = useGameStore((s) => s.orders);
-  const crafting = useGameStore((s) => s.craftingQueue);
+  const plots = useGameStore((s) => s?.plots ?? []);
+  const animals = useGameStore((s) => s?.animals ?? []);
+  const mining = useGameStore((s) => s?.mining ?? null);
+  const orders = useGameStore((s) => s?.orders ?? []);
+  const crafting = useGameStore((s) => s?.craftingQueue ?? []);
   return {
     pertanian: plots?.some(p => p.status === 'ready'),
     peternakan: animals?.some(a => a.status === 'producing' && Date.now() - a.lastCollected >= (a.produceTime || 60000)),
@@ -147,11 +147,11 @@ function ShellNav({ pathname, narrow }) {
 }
 
 function SummaryTicker({ narrow }) {
-  const plots = useGameStore((s) => s.plots);
-  const animals = useGameStore((s) => s.animals);
-  const mining = useGameStore((s) => s.mining);
-  const crafting = useGameStore((s) => s.craftingQueue);
-  const orders = useGameStore((s) => s.orders);
+  const plots = useGameStore((s) => s?.plots ?? []);
+  const animals = useGameStore((s) => s?.animals ?? []);
+  const mining = useGameStore((s) => s?.mining ?? null);
+  const crafting = useGameStore((s) => s?.craftingQueue ?? []);
+  const orders = useGameStore((s) => s?.orders ?? []);
 
   const summary = [];
   const readyPlots = plots?.filter(p => p.status === 'ready').length || 0;

@@ -5,19 +5,19 @@ import { SHOP_MINING, PICKAXE_LABELS } from '@/lib/data/shop';
 import { GAME_CONSTANTS } from '@/lib/constants';
 
 export function useMining() {
-  const mining = useGameStore((state) => state.mining);
-  const toolsInv = useGameStore((state) => state.inventoryByCategory?.tools || {});
-  const mineNode = useGameStore((state) => state.mineNode);
-  const useMiningTool = useGameStore((state) => state.useMiningTool);
-  const setSelectedMiningTool = useGameStore((state) => state.setSelectedMiningTool);
-  const selectedMiningTool = useGameStore((state) => state.selectedMiningTool);
-  const hireWorker = useGameStore((state) => state.hireWorker);
-  const workers = useGameStore((state) => state.workers);
+  const mining = useGameStore((state) => state?.mining);
+  const toolsInv = useGameStore((state) => state?.inventoryByCategory?.tools || {});
+  const mineNode = useGameStore((state) => state?.mineNode);
+  const useMiningTool = useGameStore((state) => state?.useMiningTool);
+  const setSelectedMiningTool = useGameStore((state) => state?.setSelectedMiningTool);
+  const selectedMiningTool = useGameStore((state) => state?.selectedMiningTool);
+  const hireWorker = useGameStore((state) => state?.hireWorker);
+  const workers = useGameStore((state) => state?.workers);
   const miner = workers?.miner;
-  const toggleAutoMode = useGameStore((state) => state.toggleAutoMode);
-  const openConfirm = useGameStore((state) => state.openConfirm);
-  const buyItem = useGameStore((state) => state.buyItem);
-  const enqueueNotification = useGameStore((state) => state.enqueueNotification);
+  const toggleAutoMode = useGameStore((state) => state?.toggleAutoMode);
+  const openConfirm = useGameStore((state) => state?.openConfirm);
+  const buyItem = useGameStore((state) => state?.buyItem);
+  const enqueueNotification = useGameStore((state) => state?.enqueueNotification);
 
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [shopAmounts, setShopAmounts] = useState({});
@@ -27,7 +27,7 @@ export function useMining() {
     return () => clearInterval(interval);
   }, []);
 
-  const pickaxe = PICKAXE_LABELS[mining.pickaxeLevel] || PICKAXE_LABELS[1];
+  const pickaxe = PICKAXE_LABELS[mining?.pickaxeLevel] || PICKAXE_LABELS[1];
   const lanternActive = mining.lanternUntil && mining.lanternUntil > currentTime;
   const lanternSecs = lanternActive ? Math.ceil((mining.lanternUntil - currentTime) / 1000) : 0;
   const ownedTools = SHOP_MINING.filter((t) => (toolsInv[t.id]?.qty || 0) > 0);

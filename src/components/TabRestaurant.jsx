@@ -182,6 +182,7 @@ export default function TabRestaurant() {
 
   const restaurant = useGameStore((s) => s.restaurant);
   const totalServed = useGameStore((s) => s.stats?.totalServed || 0);
+  const activeCustomers = useGameStore((s) => s.activeCustomers || []);
 
   return (
     <TabPage>

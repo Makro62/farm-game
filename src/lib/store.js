@@ -88,7 +88,6 @@ export const useGameStore = create(
     }),
     {
       name: 'farm-game-storage',
-      skipHydration: true,
       storage: createJSONStorage(() => {
         if (typeof window === 'undefined') {
           return {
