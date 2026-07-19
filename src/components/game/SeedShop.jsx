@@ -7,11 +7,11 @@ import { GAME_CONSTANTS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 
 export function SeedShop() {
-  const inventory = useGameStore(state => state.inventory);
+  const seeds = useGameStore(state => state.inventoryByCategory?.seeds || {});
   const buyItem = useGameStore(state => state.buyItem);
-  const workers = useGameStore(state => state.workers);
+  const farmer = useGameStore(state => state.workers?.farmer);
   const hireWorker = useGameStore(state => state.hireWorker);
-  const autoFarm = useGameStore(state => state.autoFarmer);
+  const toggleAutoMode = useGameStore(state => state.toggleWorkerAutoMode);
   const selectedInventoryItem = useGameStore(state => state.selectedSeed);
   const setSelectedInventoryItem = useGameStore(state => state.setSelectedSeed);
   const openConfirm = useGameStore(state => state.openConfirm);
@@ -33,16 +33,16 @@ export function SeedShop() {
   }[currentSeason] || currentSeason;
 
   const handleHireFarmer = () => {
-    if (workers?.farmer) {
-      toast('Petani Budi sudah dimiliki! Aktifkan Auto. 👨‍🌾', { icon: '✅' });
+    if (farmer?.hired) {
+      toast(`Kurcaci Budi siap! ${farmer.isAutoMode ? 'Auto aktif' : 'Nyalakan Auto dulu'} 👨‍🌾`, { icon: '✅' });
       return;
     }
     openConfirm(
-      'Sewa Petani Budi',
-      `Sewa Petani Budi (Auto-Farm & Harvest) seharga ${GAME_CONSTANTS.COSTS.WORKER_FARMER} 💰?`,
+      'Sewa Kurcaci Budi',
+      `Sewa Kurcaci Budi (Auto-Farm & Harvest) seharga ${GAME_CONSTANTS.COSTS.WORKER_FARMER} 💰?`,
       () => {
         if (hireWorker('farmer', GAME_CONSTANTS.COSTS.WORKER_FARMER)) {
-          toast.success('Petani Budi disewa! Auto farm sudah aktif. 👨‍🌾');
+          toast.success('Kurcaci Budi disewa! Auto farm sudah aktif. 👨‍🌾');
         } else {
           toast.error('Koin tidak cukup!');
         }
@@ -89,11 +89,11 @@ export function SeedShop() {
 
       <ShopSectionTitle icon="🌱">Bibit Tanaman</ShopSectionTitle>
       <div className="glass-card p-3 mb-6">
-        {SHOP_SEEDS.filter(s => inventory[s.id] > 0).length === 0 ? (
+        {SHOP_SEEDS.filter(s => seeds[s.id]?.qty > 0).length === 0 ? (
           <div className="text-center text-sm text-[var(--text-secondary)] font-bold py-2">Belum ada bibit di Inventory.</div>
         ) : (
           <div className="grid grid-cols-4 gap-2">
-            {SHOP_SEEDS.filter(s => inventory[s.id] > 0).map(seed => (
+            {SHOP_SEEDS.filter(s => seeds[s.id]?.qty > 0).map(seed => (
               <button
                 key={`inv-${seed.id}`}
                 onClick={() => setSelectedInventoryItem(seed.id)}
@@ -103,7 +103,7 @@ export function SeedShop() {
                 <span className="text-2xl relative drop-shadow-sm">
                   <CropIcon itemId={seed.id} />
                   <span className="absolute -bottom-2 -right-2 bg-[var(--gold)] text-[var(--text-primary)] text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-[#FFF1B8]">
-                    {inventory[seed.id]}
+                    {seeds[seed.id]?.qty || 0}
                   </span>
                 </span>
               </button>
@@ -127,13 +127,13 @@ export function SeedShop() {
           {workers?.farmer ? 'Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_FARMER} 💰`}
         </span>
       </button>
-      {workers?.farmer && (
+      {farmer?.hired && (
         <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
-          {autoFarm
-            ? SHOP_SEEDS.some((s) => (inventory[s.id] || 0) > 0)
+          {farmer.isAutoMode
+            ? SHOP_SEEDS.some((s) => (seeds[s.id]?.qty || 0) > 0)
               ? 'Kurcaci aktif — panen & tanam otomatis'
               : 'Auto ON — beli bibit agar bisa menanam'
-            : 'Nyalakan tombol Auto di atas untuk mulai'}
+            : 'Nyalakan tombol Auto Kurcaci untuk mulai'}
         </p>
       )}
     </>

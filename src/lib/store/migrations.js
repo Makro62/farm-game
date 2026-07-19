@@ -1,4 +1,4 @@
-import { normalizePlots, normalizeAnimal, migrateLegacyWorkers, safeCoins } from './utils';
+import { normalizePlots, normalizeAnimal, safeCoins } from './utils';
 
 export const partializeState = (state) => ({
   coins: state.coins,
@@ -10,7 +10,6 @@ export const partializeState = (state) => ({
   streak: state.streak,
   lastLogin: state.lastLogin,
   plots: state.plots,
-  inventory: state.inventory,
   inventoryByCategory: state.inventoryByCategory,
   animals: state.animals,
   soundEnabled: state.soundEnabled,
@@ -22,20 +21,12 @@ export const partializeState = (state) => ({
   coinMultiplier: state.coinMultiplier,
   growthMultiplier: state.growthMultiplier,
   workers: state.workers,
-  autoFarmer: state.autoFarmer,
-  autoRancher: state.autoRancher,
-  autoFisher: state.autoFisher,
-  autoMiner: state.autoMiner,
-  autoChef: state.autoChef,
   selectedSeed: state.selectedSeed,
   selectedBait: state.selectedBait,
   selectedRecipe: state.selectedRecipe,
   season: state.season,
   weather: state.weather,
-  mining: state.mining ? {
-    ...state.mining,
-    nodes: state.mining.nodes,
-  } : state.mining,
+  mining: state.mining ? { ...state.mining, nodes: state.mining.nodes } : state.mining,
   npcs: state.npcs,
   activeEvent: state.activeEvent,
   dailyQuests: state.dailyQuests,
@@ -59,9 +50,24 @@ export const partializeState = (state) => ({
   tutorialStep: state.tutorialStep,
 });
 
+function migrateLegacyWorker(val) {
+  if (!val) return null;
+  if (typeof val === 'object' && val.hired) return val;
+  const templates = {
+    farmer: { name: 'Kurcaci Budi', role: 'farmer', skills: { farming: 1, harvesting: 1, watering: 1 } },
+    rancher: { name: 'Kurcaci Siti', role: 'rancher', skills: { ranching: 1, collecting: 1, feeding: 1 } },
+    fisher: { name: 'Kurcaci Mamat', role: 'fisher', skills: { fishing: 1, baiting: 1 } },
+    miner: { name: 'Kurcaci Tarjo', role: 'miner', skills: { mining: 1, blasting: 1 } },
+    chef: { name: 'Kurcaci Juna', role: 'chef', skills: { cooking: 1, baking: 1, prep: 1 } },
+  };
+  const role = typeof val === 'object' ? val.role || val.type : null;
+  const t = role ? templates[role] : null;
+  if (!t) return null;
+  return { hired: true, ...t, level: val.level || 1, xp: val.xp || 0, xpToNext: 200, stamina: val.stamina ?? 100, maxStamina: val.maxStamina ?? 100, staminaRegenPerHour: 10, happiness: val.happiness ?? 80, maxHappiness: 100, wagePerDay: 50, daysEmployed: val.daysEmployed || 0, totalWagesPaid: val.totalWagesPaid || 0, loyalty: val.loyalty ?? 60, isWorking: val.isWorking ?? true, isAutoMode: val.isAutoMode ?? true, schedule: { workStart: 6, workEnd: 18, lunchBreak: 12, sleepStart: 22, sleepEnd: 5 } };
+}
+
 export const migrateState = (persistedState, currentState) => {
   let merged = { ...currentState, ...persistedState };
-  
   merged.plots = normalizePlots(merged.plots);
 
   if (merged.mining) {
@@ -75,35 +81,35 @@ export const migrateState = (persistedState, currentState) => {
     }
   }
 
+  // Migrate workers from old format (boolean, {hired: true}, etc.)
   const oldWorkers = merged.workers || {};
   merged.workers = {
-    farmer: typeof oldWorkers.farmer === 'object' ? oldWorkers.farmer : oldWorkers.farmer ? { hired: true, name: 'Petani Budi', level: 1, stamina: 100, maxStamina: 100, happiness: 80, skills: { farming: 1, harvesting: 1, watering: 1 } } : null,
-    rancher: typeof oldWorkers.rancher === 'object' ? oldWorkers.rancher : oldWorkers.rancher ? { hired: true, name: 'Peternak Siti', level: 1, stamina: 100, maxStamina: 100, happiness: 80, skills: { ranching: 1, collecting: 1, feeding: 1 } } : null,
-    fisher: typeof oldWorkers.fisher === 'object' ? oldWorkers.fisher : oldWorkers.fisher ? { hired: true, name: 'Nelayan Mamat', level: 1, stamina: 100, maxStamina: 100, happiness: 80, skills: { fishing: 1, baiting: 1 } } : null,
-    miner: typeof oldWorkers.miner === 'object' ? oldWorkers.miner : oldWorkers.miner ? { hired: true, name: 'Penambang Tarjo', level: 1, stamina: 100, maxStamina: 100, happiness: 80, skills: { mining: 1, blasting: 1 } } : null,
-    chef: typeof oldWorkers.chef === 'object' ? oldWorkers.chef : oldWorkers.chef ? { hired: true, name: 'Koki Juna', level: 1, stamina: 100, maxStamina: 100, happiness: 80, skills: { cooking: 1, baking: 1, prep: 1 } } : null,
+    farmer: migrateLegacyWorker(oldWorkers.farmer),
+    rancher: migrateLegacyWorker(oldWorkers.rancher),
+    fisher: migrateLegacyWorker(oldWorkers.fisher),
+    miner: migrateLegacyWorker(oldWorkers.miner),
+    chef: migrateLegacyWorker(oldWorkers.chef),
   };
 
-  merged = migrateLegacyWorkers(merged);
+  // Ensure isAutoMode is set from old auto* flags
+  if (merged.autoFarmer !== undefined && merged.workers.farmer) merged.workers.farmer.isAutoMode = !!merged.autoFarmer;
+  if (merged.autoRancher !== undefined && merged.workers.rancher) merged.workers.rancher.isAutoMode = !!merged.autoRancher;
+  if (merged.autoFisher !== undefined && merged.workers.fisher) merged.workers.fisher.isAutoMode = !!merged.autoFisher;
+  if (merged.autoMiner !== undefined && merged.workers.miner) merged.workers.miner.isAutoMode = !!merged.autoMiner;
+  if (merged.autoChef !== undefined && merged.workers.chef) merged.workers.chef.isAutoMode = !!merged.autoChef;
 
-  if (!Array.isArray(merged.dailyQuests)) {
-    merged.dailyQuests = [];
-  }
+  // Clean up legacy fields
+  delete merged.autoFarmer;
+  delete merged.autoRancher;
+  delete merged.autoFisher;
+  delete merged.autoMiner;
+  delete merged.autoChef;
 
-  if (!merged.growthMultiplier || merged.growthMultiplier <= 0) {
-    merged.growthMultiplier = 1;
-  }
-
-  if (!Number.isFinite(Number(merged.coins))) {
-    merged.coins = 100;
-  } else {
-    merged.coins = safeCoins(merged.coins);
-  }
-
-  if (!Number.isFinite(Number(merged.coinMultiplier)) || merged.coinMultiplier <= 0) {
-    merged.coinMultiplier = 1;
-  }
-
+  if (!Array.isArray(merged.dailyQuests)) merged.dailyQuests = [];
+  if (!merged.growthMultiplier || merged.growthMultiplier <= 0) merged.growthMultiplier = 1;
+  if (!Number.isFinite(Number(merged.coins))) merged.coins = 100;
+  else merged.coins = safeCoins(merged.coins);
+  if (!Number.isFinite(Number(merged.coinMultiplier)) || merged.coinMultiplier <= 0) merged.coinMultiplier = 1;
   if (merged.energy == null) merged.energy = 100;
   if (merged.maxEnergy == null) merged.maxEnergy = 100;
 
@@ -117,97 +123,64 @@ export const migrateState = (persistedState, currentState) => {
     coop: oldBuildings.coop || { unlocked: false, level: 0, maxLevel: 3, capacity: 0 },
     barn: oldBuildings.barn || { unlocked: false, level: 0, maxLevel: 3, capacity: 0 },
   };
-  if (!Array.isArray(merged.decorations)) {
-    merged.decorations = [];
-  }
-
-  if (Array.isArray(merged.animals) && merged.animals.length > 0) {
-    merged.animals = merged.animals.map(normalizeAnimal);
-  }
-
-  if (!Array.isArray(merged.activeCustomers)) {
-    merged.activeCustomers = [];
-  }
-
-  if (!Number.isFinite(merged.totalTables) || merged.totalTables < 4) {
-    merged.totalTables = 4;
-  }
-
-  if (!merged.workerAutoMigrated) {
-    if (merged.workers.farmer && merged.autoFarmer === false) merged.autoFarmer = true;
-    if (merged.workers.rancher && merged.autoRancher === false) merged.autoRancher = true;
-    if (merged.workers.fisher && merged.autoFisher === false) merged.autoFisher = true;
-    if (merged.workers.miner && merged.autoMiner === false) merged.autoMiner = true;
-    if (merged.workers.chef && merged.autoChef === false) merged.autoChef = true;
-    merged.workerAutoMigrated = true;
-  }
+  if (!Array.isArray(merged.decorations)) merged.decorations = [];
+  if (Array.isArray(merged.animals) && merged.animals.length > 0) merged.animals = merged.animals.map(normalizeAnimal);
+  if (!Array.isArray(merged.activeCustomers)) merged.activeCustomers = [];
+  if (!Number.isFinite(merged.totalTables) || merged.totalTables < 4) merged.totalTables = 4;
 
   if (merged.mining && merged.mining.nodes && merged.mining.nodes.length < 30) {
     const newNodes = [...merged.mining.nodes];
     while (newNodes.length < 30) {
-      newNodes.push({
-        id: newNodes.length, status: 'ready', regenAt: null,
-        type: 'batu',
-      });
+      newNodes.push({ id: newNodes.length, status: 'ready', regenAt: null, type: 'batu' });
     }
     merged.mining.nodes = newNodes;
   }
 
-  // MIGRATION: normalisasi tipe hewan dari save lama (chicken -> ayam)
-  const legacyAnimalTypes = {
-    chicken: 'ayam', duck: 'bebek', cow: 'sapi',
-    sheep: 'domba', pig: 'babi', horse: 'kuda',
-  };
+  const legacyAnimalTypes = { chicken: 'ayam', duck: 'bebek', cow: 'sapi', sheep: 'domba', pig: 'babi', horse: 'kuda' };
   if (Array.isArray(merged.animals) && merged.animals.length > 0) {
-    merged.animals = merged.animals.map((a) => ({
-      ...a,
-      type: legacyAnimalTypes[a.type] || a.type,
-    }));
+    merged.animals = merged.animals.map((a) => ({ ...a, type: legacyAnimalTypes[a.type] || a.type }));
   }
 
-  // MIGRATION: inventoryByCategory (new structured field)
-  if (!merged.inventoryByCategory || typeof merged.inventoryByCategory !== 'object') {
-    merged.inventoryByCategory = {
-      crops: {}, animalProducts: {}, minerals: {}, fish: {},
-      processed: {}, cooked: {}, seeds: {}, tools: {},
-      bait: {}, collectibles: {}, decorations: {}, animals: {},
-    };
+  // Migrate flat inventory to inventoryByCategory
+  if (merged.inventory && !merged.inventoryByCategory) {
+    const cat = { crops: {}, animalProducts: {}, minerals: {}, fish: {}, processed: {}, cooked: {}, seeds: {}, tools: {}, bait: {}, collectibles: {} };
+    for (const [itemId, qty] of Object.entries(merged.inventory)) {
+      if (qty <= 0) continue;
+      const c = getItemCategory(itemId);
+      if (c) cat[c][itemId] = { qty, quality: 'normal', acquiredAt: Date.now() };
+      else cat.collectibles[itemId] = { qty, quality: 'normal', acquiredAt: Date.now() };
+    }
+    merged.inventoryByCategory = cat;
+  } else if (!merged.inventoryByCategory || typeof merged.inventoryByCategory !== 'object') {
+    merged.inventoryByCategory = { crops: {}, animalProducts: {}, minerals: {}, fish: {}, processed: {}, cooked: {}, seeds: {}, tools: {}, bait: {}, collectibles: {} };
   }
+  delete merged.inventory;
 
-  // MIGRATION: achievements, stats, sessionActions (new fields)
-  if (!merged.achievements || typeof merged.achievements !== 'object') {
-    merged.achievements = {};
-  }
-  if (!merged.stats || typeof merged.stats !== 'object') {
-    merged.stats = {};
-  }
-  // Ensure all stat keys exist
-  const defaultStats = {
-    totalHarvested: 0, totalMined: 0, totalFished: 0, totalCooked: 0,
-    totalServed: 0, totalCollected: 0, totalOrdersFulfilled: 0,
-    totalGiftsGiven: 0, totalFertilizerUsed: 0, totalFertilizerDropped: 0,
-    totalAnimalsFed: 0, totalAnimalsOwned: 0, totalWormsFound: 0,
-    totalWormBaitUsed: 0, totalDiamondsMined: 0, totalSushiEmasMade: 0,
-  };
+  if (!merged.achievements || typeof merged.achievements !== 'object') merged.achievements = {};
+  if (!merged.stats || typeof merged.stats !== 'object') merged.stats = {};
+  const defaultStats = { totalHarvested: 0, totalMined: 0, totalFished: 0, totalCooked: 0, totalServed: 0, totalCollected: 0, totalOrdersFulfilled: 0, totalGiftsGiven: 0, totalFertilizerUsed: 0, totalFertilizerDropped: 0, totalAnimalsFed: 0, totalAnimalsOwned: 0, totalWormsFound: 0, totalWormBaitUsed: 0, totalDiamondsMined: 0, totalSushiEmasMade: 0 };
   merged.stats = { ...defaultStats, ...merged.stats };
   merged.sessionActions = merged.sessionActions || {};
-  merged.weatherEffects = merged.weatherEffects || {
-    cropGrowth: 1.0,
-    miningRegen: 1.0,
-    animalProduce: 1.0,
-    fishingRare: 1.0,
-    customerRate: 1.0,
-  };
+  merged.weatherEffects = merged.weatherEffects || { cropGrowth: 1.0, miningRegen: 1.0, animalProduce: 1.0, fishingRare: 1.0, customerRate: 1.0 };
+  merged.npcs = { maria: { level: 1, points: 0 }, botan: { level: 1, points: 0 }, hadi: { level: 1, points: 0 }, bejo: { level: 1, points: 0 }, dodi: { level: 1, points: 0 }, ...(merged.npcs || {}) };
 
-  // MIGRATION: NPC baru (bejo, dodi) — jika save lama tidak punya
-  merged.npcs = {
-    maria: { level: 1, points: 0 },
-    botan: { level: 1, points: 0 },
-    hadi: { level: 1, points: 0 },
-    bejo: { level: 1, points: 0 },
-    dodi: { level: 1, points: 0 },
-    ...(merged.npcs || {}),
-  };
-  
   return merged;
 };
+
+function getItemCategory(itemId) {
+  const catMap = {
+    wortel: 'crops', jagung: 'crops', tomat: 'crops', stroberi: 'crops',
+    semangka: 'crops', jamur: 'crops', nanas: 'crops', labu: 'crops',
+    kentang: 'crops', gandum: 'crops', tebu: 'crops', tulip: 'crops', apel: 'crops',
+    telur: 'animalProducts', susu: 'animalProducts', bulu: 'animalProducts',
+    truffle: 'animalProducts', tapal: 'animalProducts', telur_bebek: 'animalProducts',
+    batu: 'minerals', tembaga: 'minerals', besi: 'minerals', emas: 'minerals', berlian: 'minerals',
+    ikan_mas: 'fish', lele: 'fish', ikan_badut: 'fish', cumi: 'fish', gurita: 'fish',
+    tepung_jagung: 'processed', gula: 'processed', saus_tomat: 'processed', keju: 'processed',
+    sup_wortel: 'cooked', nasi_goreng: 'cooked', roti_gandum: 'cooked', es_teh: 'cooked',
+    kue_wortel: 'cooked', sushi_mas: 'cooked', kue_manis: 'cooked', pancake: 'cooked',
+    takoyaki: 'cooked', nasi_jamur: 'cooked', kue_apel: 'cooked', kue_stroberi: 'cooked',
+    sushi_emas: 'cooked', lele_bakar: 'cooked',
+  };
+  return catMap[itemId] || null;
+}

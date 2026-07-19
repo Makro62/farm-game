@@ -25,6 +25,17 @@ function createMiningNodes(count = 30) {
   }));
 }
 
+function createDefaultWorker(type) {
+  const templates = {
+    farmer:  { name: 'Kurcaci Budi',   role: 'farmer',  level: 1, xp: 0, xpToNext: 200, stamina: 100, maxStamina: 100, staminaRegenPerHour: 10, happiness: 80, maxHappiness: 100, wagePerDay: 50, daysEmployed: 0, totalWagesPaid: 0, loyalty: 60, skills: { farming: 1, harvesting: 1, watering: 1 }, specialTrait: null, isWorking: true, isAutoMode: true, schedule: { workStart: 6, workEnd: 18, lunchBreak: 12, sleepStart: 22, sleepEnd: 5 } },
+    rancher: { name: 'Kurcaci Siti',   role: 'rancher', level: 1, xp: 0, xpToNext: 200, stamina: 100, maxStamina: 100, staminaRegenPerHour: 10, happiness: 80, maxHappiness: 100, wagePerDay: 50, daysEmployed: 0, totalWagesPaid: 0, loyalty: 60, skills: { ranching: 1, collecting: 1, feeding: 1 }, specialTrait: null, isWorking: true, isAutoMode: true, schedule: { workStart: 6, workEnd: 18, lunchBreak: 12, sleepStart: 22, sleepEnd: 5 } },
+    fisher:  { name: 'Kurcaci Mamat',  role: 'fisher',  level: 1, xp: 0, xpToNext: 200, stamina: 100, maxStamina: 100, staminaRegenPerHour: 10, happiness: 80, maxHappiness: 100, wagePerDay: 50, daysEmployed: 0, totalWagesPaid: 0, loyalty: 60, skills: { fishing: 1, baiting: 1 }, specialTrait: null, isWorking: true, isAutoMode: true, schedule: { workStart: 6, workEnd: 18, lunchBreak: 12, sleepStart: 22, sleepEnd: 5 } },
+    miner:   { name: 'Kurcaci Tarjo',  role: 'miner',   level: 1, xp: 0, xpToNext: 200, stamina: 100, maxStamina: 100, staminaRegenPerHour: 10, happiness: 80, maxHappiness: 100, wagePerDay: 50, daysEmployed: 0, totalWagesPaid: 0, loyalty: 60, skills: { mining: 1, blasting: 1 }, specialTrait: null, isWorking: true, isAutoMode: true, schedule: { workStart: 6, workEnd: 18, lunchBreak: 12, sleepStart: 22, sleepEnd: 5 } },
+    chef:    { name: 'Kurcaci Juna',   role: 'chef',    level: 1, xp: 0, xpToNext: 200, stamina: 100, maxStamina: 100, staminaRegenPerHour: 10, happiness: 80, maxHappiness: 100, wagePerDay: 50, daysEmployed: 0, totalWagesPaid: 0, loyalty: 60, skills: { cooking: 1, baking: 1, prep: 1 }, specialTrait: null, isWorking: true, isAutoMode: true, schedule: { workStart: 6, workEnd: 18, lunchBreak: 12, sleepStart: 22, sleepEnd: 5 } },
+  };
+  return templates[type] || null;
+}
+
 export const initialState = {
   coins: 100,
   level: 1,
@@ -39,7 +50,6 @@ export const initialState = {
 
   plots: createEmptyPlots(),
 
-  inventory: {},
   inventoryByCategory: {
     crops: {},
     animalProducts: {},
@@ -50,9 +60,7 @@ export const initialState = {
     seeds: {},
     tools: {},
     bait: {},
-    collectibles: {},
-    decorations: {},
-    animals: {},
+    collectibles: {}
   },
 
   animals: [],
@@ -68,6 +76,7 @@ export const initialState = {
   coinMultiplier: 1,
   growthMultiplier: 1,
 
+  // Workers — full lifecycle
   workers: {
     farmer: null,
     rancher: null,
@@ -76,11 +85,6 @@ export const initialState = {
     chef: null,
   },
 
-  autoFarmer: false,
-  autoRancher: false,
-  autoFisher: false,
-  autoMiner: false,
-  autoChef: false,
   selectedSeed: null,
   selectedMiningTool: null,
   selectedBait: null,

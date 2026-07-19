@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
 import { formatNumber } from '@/lib/utils';
-import { getItemSellPrice, ITEM_CATEGORY } from '@/lib/data/item-helpers';
+import { getItemSellPrice } from '@/lib/data/item-helpers';
 import { SEASON_META } from '@/lib/nav';
 
 export function useProfile() {
-  const inventory = useGameStore((state) => state.inventory);
+  const inventoryByCategory = useGameStore((state) => state.inventoryByCategory);
   const coins = useGameStore((state) => state.coins);
   const level = useGameStore((state) => state.level);
   const xp = useGameStore((state) => state.xp);
@@ -24,6 +24,14 @@ export function useProfile() {
   const xpNeeded = level * 100;
   const seasonMeta = SEASON_META[season] || SEASON_META.spring;
 
+  // Build flat inventory for display
+  const inventory = {};
+  for (const items of Object.values(inventoryByCategory || {})) {
+    for (const [id, data] of Object.entries(items)) {
+      inventory[id] = (inventory[id] || 0) + (data.qty || 0);
+    }
+  }
+
   const CATEGORY_LABELS = {
     seeds: 'bibit', crops: 'pertanian', animalProducts: 'peternakan',
     minerals: 'tambang', tools: 'tambang', fish: 'pancing',
@@ -38,7 +46,7 @@ export function useProfile() {
 
   Object.entries(inventory).forEach(([itemId, qty]) => {
     if (qty <= 0) return;
-    const category = ITEM_CATEGORY[itemId];
+    const category = null; // TODO: map from item data
     const label = CATEGORY_LABELS[category] || 'lainnya';
     categorized[label].push({ id: itemId, qty });
   });
@@ -103,7 +111,6 @@ export function useProfile() {
             }
           }
         });
-
         if (totalEarned > 0) {
           enqueueNotification(
             coinMultiplier > 1

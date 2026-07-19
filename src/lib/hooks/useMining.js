@@ -6,15 +6,15 @@ import { GAME_CONSTANTS } from '@/lib/constants';
 
 export function useMining() {
   const mining = useGameStore((state) => state.mining);
-  const inventory = useGameStore((state) => state.inventory);
+  const toolsInv = useGameStore((state) => state.inventoryByCategory?.tools || {});
   const mineNode = useGameStore((state) => state.mineNode);
   const useMiningTool = useGameStore((state) => state.useMiningTool);
   const setSelectedMiningTool = useGameStore((state) => state.setSelectedMiningTool);
   const selectedMiningTool = useGameStore((state) => state.selectedMiningTool);
   const hireWorker = useGameStore((state) => state.hireWorker);
   const workers = useGameStore((state) => state.workers);
-  const autoMiner = useGameStore((state) => state.autoMiner);
-  const toggleAutoMiner = useGameStore((state) => state.toggleAutoMiner);
+  const miner = workers?.miner;
+  const toggleAutoMode = useGameStore((state) => state.toggleAutoMode);
   const openConfirm = useGameStore((state) => state.openConfirm);
   const buyItem = useGameStore((state) => state.buyItem);
   const enqueueNotification = useGameStore((state) => state.enqueueNotification);
@@ -30,7 +30,7 @@ export function useMining() {
   const pickaxe = PICKAXE_LABELS[mining.pickaxeLevel] || PICKAXE_LABELS[1];
   const lanternActive = mining.lanternUntil && mining.lanternUntil > currentTime;
   const lanternSecs = lanternActive ? Math.ceil((mining.lanternUntil - currentTime) / 1000) : 0;
-  const ownedTools = SHOP_MINING.filter((t) => (inventory[t.id] || 0) > 0);
+  const ownedTools = SHOP_MINING.filter((t) => (toolsInv[t.id]?.qty || 0) > 0);
 
   const handleUseTool = (toolId, nodeId = null) => {
     const result = useMiningTool(toolId, nodeId);
@@ -59,13 +59,13 @@ export function useMining() {
   };
 
   const handleHireMiner = () => {
-    if (workers.miner) {
-      enqueueNotification('Penambang Tarjo sudah bekerja! Aktifkan Auto jika perlu.', { icon: '✅', type: 'info' });
+    if (miner?.hired) {
+      enqueueNotification('Kurcaci Tarjo sudah bekerja! Aktifkan Auto jika perlu.', { icon: '✅', type: 'info' });
       return;
     }
     openConfirm(
-      'Sewa Penambang Tarjo',
-      `Sewa Penambang Tarjo seharga ${GAME_CONSTANTS.COSTS.WORKER_MINER.toLocaleString()} 💰?`,
+      'Sewa Kurcaci Tarjo',
+      `Sewa Kurcaci Tarjo seharga ${GAME_CONSTANTS.COSTS.WORKER_MINER.toLocaleString()} 💰?`,
       () => {
         if (hireWorker('miner', GAME_CONSTANTS.COSTS.WORKER_MINER)) {
           enqueueNotification('Kurcaci Penambang berhasil disewa!', { icon: '👷', type: 'success' });
@@ -77,11 +77,15 @@ export function useMining() {
   };
 
   const handleToggleAuto = () => {
-    if (!workers.miner) {
-      enqueueNotification('Sewa Penambang Tarjo dulu di tab Alat!', { icon: '👷‍♂️', type: 'error' });
+    if (!miner?.hired) {
+      enqueueNotification('Sewa Kurcaci Tarjo dulu di tab Alat!', { icon: '👷‍♂️', type: 'error' });
       return;
     }
-    toggleAutoMiner();
+    toggleAutoMode('miner');
+    enqueueNotification(
+      !miner.isAutoMode ? 'Kurcaci tambang aktif!' : 'Kurcaci tambang istirahat.',
+      { id: 'auto-miner-toggle', type: 'success' }
+    );
   };
 
   const handleShopBuy = (item, amount) => {
@@ -102,10 +106,10 @@ export function useMining() {
 
   return {
     mining,
-    inventory,
+    inventory: toolsInv,
     selectedMiningTool,
     workers,
-    autoMiner,
+    autoMiner: miner?.isAutoMode || false,
     shopAmounts,
     setShopAmounts,
     pickaxe,

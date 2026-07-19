@@ -6,41 +6,25 @@ import { logger } from './logger';
 
 export function GameProvider({ children }) {
   const [ready, setReady] = useState(false);
-  const [error, setError] = useState(false);
 
   useEffect(() => {
     let alive = true;
-
-    const timeout = setTimeout(() => {
-      if (!ready) {
-        setError(true);
-        setReady(true);
-      }
-    }, 15000);
 
     (async () => {
       try {
         await useGameStore.persist.rehydrate();
       } catch (err) {
         logger.error('Store hydrate failed:', err);
-        if (alive) {
-          setError(true);
-          setReady(true);
-          return;
-        }
       } finally {
         if (alive) setReady(true);
       }
     })();
 
-    return () => {
-      alive = false;
-      clearTimeout(timeout);
-    };
+    return () => { alive = false; };
   }, []);
 
   useEffect(() => {
-    if (!ready || error) return;
+    if (!ready) return;
 
     try {
       const state = useGameStore.getState();
@@ -51,10 +35,10 @@ export function GameProvider({ children }) {
     } catch (err) {
       logger.error('Boot effect failed:', err);
     }
-  }, [ready, error]);
+  }, [ready]);
 
   useEffect(() => {
-    if (!ready || error) return;
+    if (!ready) return;
 
     const tick = () => {
       try {
@@ -66,7 +50,7 @@ export function GameProvider({ children }) {
 
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [ready, error]);
+  }, [ready]);
 
   if (!ready) {
     return (
@@ -74,28 +58,6 @@ export function GameProvider({ children }) {
         <div className="text-center">
           <div className="text-6xl mb-4">🌾</div>
           <div className="text-xl font-bold text-[var(--text-primary)]">Loading Farm...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#C8E8FF] to-[#9FD67F]">
-        <div className="text-center">
-          <div className="text-6xl mb-4">⚠️</div>
-          <div className="text-xl font-bold text-[var(--text-primary)] mb-2">Gagal memuat data game</div>
-          <p className="text-sm text-[var(--text-secondary)] mb-4">Mungkin ada masalah dengan penyimpanan lokal.</p>
-          <button
-            type="button"
-            onClick={() => {
-              try { localStorage.clear(); } catch { /* ignore */ }
-              window.location.reload();
-            }}
-            className="btn-gold btn-size-sm"
-          >
-            Reset & Reload
-          </button>
         </div>
       </div>
     );

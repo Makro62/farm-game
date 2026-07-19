@@ -9,9 +9,9 @@ export function useRanching() {
   const feedAnimal = useGameStore((state) => state.feedAnimal);
   const collectAnimal = useGameStore((state) => state.collectAnimal);
   const workers = useGameStore((state) => state.workers);
+  const rancher = workers?.rancher;
   const hireWorker = useGameStore((state) => state.hireWorker);
-  const autoFarm = useGameStore((state) => state.autoRancher);
-  const toggleAutoFarm = useGameStore((state) => state.toggleAutoRancher);
+  const toggleAutoMode = useGameStore((state) => state.toggleAutoMode);
   const openConfirm = useGameStore((state) => state.openConfirm);
   const buyMultipleAnimals = useGameStore((state) => state.buyMultipleAnimals);
   const weatherEffects = useGameStore((state) => state.weatherEffects);
@@ -25,14 +25,13 @@ export function useRanching() {
   }, []);
 
   const handleToggleAuto = () => {
-    if (!workers?.rancher) {
-      enqueueNotification('Sewa Peternak Siti dulu di toko samping! 🔒', { icon: '👩‍🌾', type: 'error' });
+    if (!rancher?.hired) {
+      enqueueNotification('Sewa Kurcaci Siti dulu di toko samping! 🔒', { icon: '👩‍🌾', type: 'error' });
       return;
     }
-    const next = !autoFarm;
-    toggleAutoFarm();
+    toggleAutoMode('rancher');
     enqueueNotification(
-      next ? 'Kurcaci peternak aktif!' : 'Kurcaci peternak istirahat.',
+      !rancher.isAutoMode ? 'Kurcaci peternak aktif!' : 'Kurcaci peternak istirahat.',
       { id: 'auto-rancher-toggle', type: 'success' }
     );
   };
@@ -40,10 +39,7 @@ export function useRanching() {
   const handleSellAnimal = (animal) => {
     const animalData = getShopAnimal(animal.type);
     if (!animalData) return;
-    
-    // Asumsikan harga jual hewan adalah setengah dari harga beli
     const sellPrice = Math.floor(animalData.price / 2);
-    
     openConfirm(
       'Jual Hewan',
       `Apakah Anda yakin ingin menjual ${animalData.name} seharga ${sellPrice} 💰?`,
@@ -57,16 +53,16 @@ export function useRanching() {
   };
 
   const handleHireWorker = () => {
-    if (workers.rancher) {
-      enqueueNotification('Peternak Siti sudah dimiliki! Aktifkan Auto. 👩‍🌾', { icon: '✅', type: 'info' });
+    if (rancher?.hired) {
+      enqueueNotification('Kurcaci Siti sudah dimiliki! Aktifkan Auto. 👩‍🌾', { icon: '✅', type: 'info' });
       return;
     }
     openConfirm(
-      'Sewa Peternak Siti',
-      `Sewa Peternak Siti (Auto-Collect Products) seharga ${GAME_CONSTANTS.COSTS.WORKER_RANCHER} 💰?`,
+      'Sewa Kurcaci Siti',
+      `Sewa Kurcaci Siti (Auto-Collect Products) seharga ${GAME_CONSTANTS.COSTS.WORKER_RANCHER} 💰?`,
       () => {
         if (hireWorker('rancher', GAME_CONSTANTS.COSTS.WORKER_RANCHER)) {
-          enqueueNotification('Peternak Siti berhasil disewa! Auto ternak aktif. 👩‍🌾', { type: 'success' });
+          enqueueNotification('Kurcaci Siti berhasil disewa! Auto ternak aktif. 👩‍🌾', { type: 'success' });
         } else {
           enqueueNotification('Koin tidak cukup!', { type: 'error' });
         }
@@ -105,7 +101,7 @@ export function useRanching() {
 
   return {
     animals,
-    autoFarm,
+    autoFarm: rancher?.isAutoMode || false,
     currentTime,
     workers,
     weatherEffects,

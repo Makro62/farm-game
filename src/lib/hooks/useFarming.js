@@ -3,10 +3,10 @@ import { getItemEmoji } from '@/lib/data/item-helpers';
 
 export function useFarming() {
   const workers = useGameStore((state) => state.workers);
-  const autoFarm = useGameStore((state) => state.autoFarmer);
-  const toggleAutoFarm = useGameStore((state) => state.toggleAutoFarmer);
-  const inventory = useGameStore((state) => state.inventory);
-  
+  const farmer = workers?.farmer;
+  const toggleAutoFarmer = useGameStore((state) => state.toggleAutoMode);
+  const seeds = useGameStore((state) => state.inventoryByCategory?.seeds || {});
+
   const plantSeed = useGameStore((state) => state.plantSeed);
   const harvest = useGameStore((state) => state.harvest);
   const waterPlot = useGameStore((state) => state.waterPlot);
@@ -16,14 +16,14 @@ export function useFarming() {
   const enqueueNotification = useGameStore((state) => state.enqueueNotification);
 
   const handleToggleAuto = () => {
-    if (!workers?.farmer) {
-      enqueueNotification('Sewa Petani Budi dulu di toko samping!', { icon: '👨‍🌾', type: 'error' });
+    if (!farmer?.hired) {
+      enqueueNotification('Sewa Kurcaci Budi dulu di toko samping!', { icon: '👨‍🌾', type: 'error' });
       return;
     }
-    const next = !autoFarm;
-    toggleAutoFarm();
+    const next = !farmer.isAutoMode;
+    toggleAutoFarmer('farmer');
     if (next) {
-      const hasSeeds = Object.values(inventory).some((val) => val > 0);
+      const hasSeeds = Object.values(seeds).some((val) => val.qty > 0);
       if (!hasSeeds) {
         enqueueNotification('Auto ON — beli bibit dulu agar kurcaci bisa menanam!', { icon: '👨‍🌾', type: 'error' });
       } else {
@@ -33,7 +33,6 @@ export function useFarming() {
   };
 
   const handlePlotClick = (plot, farmTool) => {
-
     if (farmTool === 'siram') {
       const result = waterPlot(plot.id);
       if (result.ok) enqueueNotification(result.message, { icon: '💧', type: 'success' });
@@ -56,7 +55,6 @@ export function useFarming() {
         enqueueNotification('Pilih bibit dari toko samping dulu!', { icon: '👆', type: 'info' });
         return;
       }
-
       const result = plantSeed(plot.id, selectedInventoryItem);
       if (result.ok) {
         enqueueNotification(result.message, { icon: '🌱', id: 'plant', type: 'success' });
@@ -72,7 +70,7 @@ export function useFarming() {
   };
 
   return {
-    autoFarm,
+    autoFarm: farmer?.isAutoMode || false,
     handleToggleAuto,
     handlePlotClick
   };

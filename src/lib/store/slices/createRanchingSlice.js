@@ -9,23 +9,12 @@ export const createRanchingSlice = (set, get) => ({
     if (safeCoins(state.coins) < price) return false;
     set((state) => ({
       coins: safeCoins(state.coins) - price,
-      animals: [
-        ...state.animals,
-        {
-          id: Date.now() + Math.random().toString(36).substr(2, 5),
-          type: animalType,
-          status: 'producing',
-          lastCollected: Date.now(),
-          produceTime,
-          fed: false,
-        }
-      ],
+      animals: [...state.animals, { id: Date.now() + Math.random().toString(36).substr(2, 5), type: animalType, status: 'producing', lastCollected: Date.now(), produceTime, fed: false }],
       stats: { ...state.stats, totalAnimalsOwned: (state.stats?.totalAnimalsOwned || 0) + 1 },
     }));
     return true;
   },
 
-  // ===== Fase B: Sistem Pakan Hewan (Pertanian → Ternak) =====
   feedAnimal: (animalId) => {
     const state = get();
     const animal = state.animals.find(a => a.id === animalId);
@@ -36,38 +25,36 @@ export const createRanchingSlice = (set, get) => ({
     if (!feedData) return { ok: false, message: 'Tidak ada data pakan untuk hewan ini.' };
 
     const { feedItem, feedQty } = feedData;
-    const have = state.inventory[feedItem] || 0;
+    const catForFeed = (() => {
+      if (['gandum', 'jagung', 'wortel', 'kentang', 'tebu'].includes(feedItem)) return 'crops';
+      if (['apel'].includes(feedItem)) return 'crops';
+      return 'crops';
+    })();
+    const have = state.inventoryByCategory?.[catForFeed]?.[feedItem]?.qty || 0;
     if (have < feedQty) {
-      return {
-        ok: false,
-        message: `Butuh ${feedQty}x ${feedItem} untuk memberi makan ${animal.type}. Kamu hanya punya ${have}.`,
-      };
+      return { ok: false, message: `Butuh ${feedQty}x ${feedItem} untuk memberi makan ${animal.type}. Kamu hanya punya ${have}.` };
     }
 
-    // Deduct feed from inventory and mark animal as fed
-    get().removeItem?.(feedItem, feedQty);
-    set(s => ({
-      animals: s.animals.map(a =>
-        a.id === animalId ? { ...a, fed: true } : a
-      ),
-      stats: { ...s.stats, totalAnimalsFed: (s.stats?.totalAnimalsFed || 0) + 1 },
-    }));
+    set(draft => {
+      if (draft.inventoryByCategory[catForFeed]?.[feedItem]) {
+        draft.inventoryByCategory[catForFeed][feedItem].qty -= feedQty;
+        if (draft.inventoryByCategory[catForFeed][feedItem].qty <= 0) {
+          delete draft.inventoryByCategory[catForFeed][feedItem];
+        }
+      }
+      draft.animals = draft.animals.map(a => a.id === animalId ? { ...a, fed: true } : a);
+      draft.stats.totalAnimalsFed = (draft.stats.totalAnimalsFed || 0) + 1;
+    });
     get().checkAchievements?.();
-
     return { ok: true, message: `${animal.type} kenyang! +25% chance bonus produksi saat panen.` };
   },
-
 
   collectAnimal: (animalId, productType) => {
     const state = get();
     const animal = state.animals.find(a => a.id === animalId);
     if (!animal) return false;
-    
-    if (!get().consumeEnergy(1)) {
-      return false; // UI handles toast
-    }
+    if (!get().consumeEnergy(1)) return false;
 
-    // ===== Hewan harus diberi makan untuk produksi =====
     if (!animal.fed) {
       const feedData = ANIMAL_FEED[animal.type];
       const feedName = feedData?.feedItem || 'pakan';
@@ -76,63 +63,49 @@ export const createRanchingSlice = (set, get) => ({
     }
 
     const dropsFertilizer = Math.random() < GAME_CONSTANTS.CHANCES.FERTILIZER_DROP;
-
-    // ===== Bonus produksi jika hewan sudah diberi makan =====
     const wasFed = animal.fed === true;
     const bonusDrop = wasFed && Math.random() < GAME_CONSTANTS.CHANCES.FEED_BONUS;
+    const totalDrop = 1 + (bonusDrop ? 1 : 0);
+    const productCat = ['telur', 'susu', 'bulu', 'truffle', 'tapal', 'telur_bebek'].includes(productType) ? 'animalProducts' : 'collectibles';
 
     set((state) => ({
-      animals: state.animals.map(a => 
-        a.id === animalId 
-          ? { ...a, lastCollected: Date.now(), fed: false } // reset fed status
-          : a
-      ),
-      inventory: {
-        ...state.inventory,
-        [productType]: (state.inventory[productType] || 0) + 1 + (bonusDrop ? 1 : 0),
-        ...(dropsFertilizer ? { pupuk_kandang: (state.inventory.pupuk_kandang || 0) + 1 } : {}),
-      }
+      animals: state.animals.map(a => a.id === animalId ? { ...a, lastCollected: Date.now(), fed: false } : a),
+      inventoryByCategory: (() => {
+        const cat = { ...(state.inventoryByCategory?.[productCat] || {}) };
+        const existing = cat[productType] || { qty: 0, quality: 'normal', acquiredAt: Date.now() };
+        cat[productType] = { ...existing, qty: existing.qty + totalDrop };
+        const updates = { ...state.inventoryByCategory, [productCat]: cat };
+        if (dropsFertilizer) {
+          const col = { ...(updates.collectibles || {}) };
+          const f = col.pupuk_kandang || { qty: 0, quality: 'normal', acquiredAt: Date.now() };
+          col.pupuk_kandang = { ...f, qty: f.qty + 1 };
+          updates.collectibles = col;
+        }
+        return updates;
+      })(),
     }));
 
     get().addXP(GAME_CONSTANTS.XP.COLLECT + (wasFed ? GAME_CONSTANTS.XP.FEED_BONUS : 0));
-    get().progressQuest('collect', productType, 1 + (bonusDrop ? 1 : 0));
+    get().progressQuest('collect', productType, totalDrop);
     const combo = get().registerCombo?.();
-    if (combo?.count >= 3) {
-      get().addCoins?.(Math.floor(4 * combo.multiplier));
-    }
+    if (combo?.count >= 3) get().addCoins?.(Math.floor(4 * combo.multiplier));
 
-    // ===== Stats & Achievement tracking =====
-    set(s => ({
-      stats: {
-        ...s.stats,
-        totalCollected: (s.stats?.totalCollected || 0) + 1,
-        ...(dropsFertilizer ? { totalFertilizerDropped: (s.stats?.totalFertilizerDropped || 0) + 1 } : {}),
-      }
-    }));
+    set(s => ({ stats: { ...s.stats, totalCollected: (s.stats?.totalCollected || 0) + 1, ...(dropsFertilizer ? { totalFertilizerDropped: (s.stats?.totalFertilizerDropped || 0) + 1 } : {}) } }));
     get().markSessionAction?.('collected');
     get().checkAchievements?.();
 
-    if (dropsFertilizer) {
-      get().enqueueNotification('🌿 Dapat Pupuk Kandang! Otomatis dipakai saat tanam.', { duration: 2500 });
-    }
-    if (bonusDrop) {
-      get().enqueueNotification(`🌟 Bonus produksi! ${animal.type} yang kenyang menghasilkan ekstra!`, { duration: 2500 });
-    }
-
+    if (dropsFertilizer) get().enqueueNotification('🌿 Dapat Pupuk Kandang! Otomatis dipakai saat tanam.', { duration: 2500 });
+    if (bonusDrop) get().enqueueNotification(`🌟 Bonus produksi! ${animal.type} yang kenyang menghasilkan ekstra!`, { duration: 2500 });
     return true;
   },
 
-  
   sellAnimal: (animalId) => {
     const state = get();
     const animal = state.animals.find(a => a.id === animalId);
     if (!animal) return 0;
     const animalData = getShopAnimal(animal.type);
     const sellPrice = animalData ? Math.floor(animalData.price / 2) : 0;
-    set((s) => ({
-      animals: s.animals.filter(a => a.id !== animalId),
-      coins: safeCoins(s.coins) + sellPrice,
-    }));
+    set((s) => ({ animals: s.animals.filter(a => a.id !== animalId), coins: safeCoins(s.coins) + sellPrice }));
     return sellPrice;
   },
 
@@ -141,11 +114,8 @@ export const createRanchingSlice = (set, get) => ({
       const newAnimals = [...state.animals];
       const idx1 = newAnimals.findIndex(a => a.id === id1);
       const idx2 = newAnimals.findIndex(a => a.id === id2);
-      if (idx1 !== -1 && idx2 !== -1) {
-        [newAnimals[idx1], newAnimals[idx2]] = [newAnimals[idx2], newAnimals[idx1]];
-      }
+      if (idx1 !== -1 && idx2 !== -1) [newAnimals[idx1], newAnimals[idx2]] = [newAnimals[idx2], newAnimals[idx1]];
       return { animals: newAnimals };
     });
   },
 });
-

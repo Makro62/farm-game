@@ -22,7 +22,7 @@ function rollFish(rareBonus = 0) {
 
 export function useFishingMinigame() {
   const selectedBait = useGameStore((state) => state.selectedBait);
-  const inventory = useGameStore((state) => state.inventory);
+  const baitInv = useGameStore((state) => state.inventoryByCategory?.bait || {});
   const weatherEffects = useGameStore((state) => state.weatherEffects);
 
   const [fishState, setFishState] = useState('idle');
@@ -132,10 +132,11 @@ export function useFishingMinigame() {
     const store = useGameStore.getState();
     let bait = null;
 
-    if (selectedBait && (inventory[selectedBait] || 0) > 0) {
+    if (selectedBait && (baitInv[selectedBait]?.qty || 0) > 0) {
       bait = SHOP_BAIT.find((b) => b.id === selectedBait) || null;
       if (bait && store.removeItem(selectedBait, 1)) {
-        if ((useGameStore.getState().inventory[selectedBait] || 0) <= 0) {
+        const remaining = useGameStore.getState().inventoryByCategory?.bait?.[selectedBait]?.qty || 0;
+        if (remaining <= 0) {
           store.setSelectedBait(null);
         }
       } else {

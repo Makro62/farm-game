@@ -26,121 +26,49 @@ export const RECIPES = [
   { id: 'sushi_emas', name: 'Sushi Emas', emoji: '✨🍣', type: 'fish_kitchen', time: 480, price: 1200, xp: 350, req: { 'fish.ikan_mas': 2, 'minerals.emas': 1 }, unlockLevel: 15 },
 ];
 
-// Legacy mapping: auto-convert unprefixed IDs to category-prefixed format
-function normalizeIngredient(ingredient) {
-  if (ingredient.includes('.')) return ingredient;
-  const legacyMap = {
-    wortel: 'crops.wortel', jagung: 'crops.jagung', tomat: 'crops.tomat',
-    stroberi: 'crops.stroberi', semangka: 'crops.semangka', jamur: 'crops.jamur',
-    nanas: 'crops.nanas', labu: 'crops.labu', kentang: 'crops.kentang',
-    gandum: 'crops.gandum', tebu: 'crops.tebu', tulip: 'crops.tulip',
-    apel: 'crops.apel',
-    telur: 'animalProducts.telur', susu: 'animalProducts.susu',
-    bulu: 'animalProducts.bulu', truffle: 'animalProducts.truffle',
-    tapal: 'animalProducts.tapal', telur_bebek: 'animalProducts.telur_bebek',
-    batu: 'minerals.batu', tembaga: 'minerals.tembaga',
-    besi: 'minerals.besi', emas: 'minerals.emas', berlian: 'minerals.berlian',
-    ikan_mas: 'fish.ikan_mas', lele: 'fish.lele',
-    ikan_badut: 'fish.ikan_badut', cumi: 'fish.cumi', gurita: 'fish.gurita',
-    tepung_jagung: 'processed.tepung_jagung', gula: 'processed.gula',
-    saus_tomat: 'processed.saus_tomat',
-    keju: 'processed.keju',
-  };
-  return legacyMap[ingredient] || ingredient;
-}
-
-function normalizeRecipe(recipe) {
-  const normalizedReq = {};
-  for (const [ing, qty] of Object.entries(recipe.req)) {
-    normalizedReq[normalizeIngredient(ing)] = qty;
-  }
-  return { ...recipe, req: normalizedReq };
-}
-
-export const NORMALIZED_RECIPES = RECIPES.map(normalizeRecipe);
-
-// Legacy accessor for backward compat — resolves unprefixed IDs
-export function getRecipeIngredient(recipeId) {
-  const recipe = NORMALIZED_RECIPES.find(r => r.id === recipeId);
-  if (!recipe) return {};
-  return recipe.req;
-}
-
-// ===== VALIDATION: Check if player can cook a recipe =====
-export function canCook(recipeId, inventoryByCategory, inventory) {
-  const recipe = NORMALIZED_RECIPES.find(r => r.id === recipeId);
-  if (!recipe) return { canCook: false, reason: 'Recipe not found' };
-
-  const missing = [];
-  for (const [ingredient, amount] of Object.entries(recipe.req)) {
-    const parts = ingredient.split('.');
-    if (parts.length === 2) {
-      const [cat, itemId] = parts;
-      const available = inventoryByCategory?.[cat]?.[itemId]?.quantity || 0;
-      if (available < amount) {
-        missing.push({ ingredient: itemId, required: amount, available });
-      }
-    } else {
-      // Fallback to flat inventory
-      const available = inventory?.[ingredient] || 0;
-      if (available < amount) {
-        missing.push({ ingredient, required: amount, available });
-      }
-    }
-  }
-
-  return {
-    canCook: missing.length === 0,
-    missing: missing.length > 0 ? missing : null,
-  };
-}
-
-// ===== CONSUME ingredients for cooking =====
-export function consumeIngredients(recipeId, inventoryByCategory, inventory) {
-  const recipe = NORMALIZED_RECIPES.find(r => r.id === recipeId);
-  if (!recipe) return false;
-
-  const newCat = { ...inventoryByCategory };
-  const newInv = { ...inventory };
+export function canCraft(recipeId, inventoryByCategory) {
+  const recipe = RECIPES.find(r => r.id === recipeId);
+  if (!recipe) return { canCraft: false, reason: 'Recipe not found' };
 
   for (const [ingredient, amount] of Object.entries(recipe.req)) {
-    const parts = ingredient.split('.');
-    if (parts.length === 2) {
-      const [cat, itemId] = parts;
-      if (newCat[cat]?.[itemId]) {
-        const updated = { ...newCat[cat] };
-        const next = (updated[itemId]?.quantity || 0) - amount;
-        if (next <= 0) {
-          delete updated[itemId];
-        } else {
-          updated[itemId] = { ...updated[itemId], quantity: next };
-        }
-        newCat[cat] = updated;
-      }
-    } else {
-      const next = (newInv[ingredient] || 0) - amount;
-      if (next <= 0) {
-        delete newInv[ingredient];
-      } else {
-        newInv[ingredient] = next;
-      }
+    const [cat, itemId] = ingredient.split('.');
+    const available = inventoryByCategory?.[cat]?.[itemId]?.qty || 0;
+    if (available < amount) {
+      return { canCraft: false, missing: ingredient };
     }
   }
-
-  return { inventoryByCategory: newCat, inventory: newInv };
+  return { canCraft: true };
 }
 
-export const ORDER_TEMPLATES = [
-  { tier: 1, timer: 600, items: [{ id: 'wortel', qty: 5 }, { id: 'jagung', qty: 3 }], coins: 200, xp: 100 },
-  { tier: 1, timer: 600, items: [{ id: 'tomat', qty: 4 }, { id: 'telur', qty: 2 }], coins: 250, xp: 120 },
-  { tier: 2, timer: 900, items: [{ id: 'stroberi', qty: 5 }, { id: 'susu', qty: 2 }], coins: 600, xp: 250 },
-  { tier: 2, timer: 900, items: [{ id: 'semangka', qty: 2 }, { id: 'ikan_mas', qty: 2 }], coins: 800, xp: 300 },
-  { tier: 2, timer: 900, items: [{ id: 'tembaga', qty: 5 }, { id: 'ikan_mas', qty: 2 }], coins: 700, xp: 280 },
-  { tier: 2, timer: 900, items: [{ id: 'besi', qty: 3 }, { id: 'stroberi', qty: 3 }], coins: 650, xp: 260 },
-  { tier: 3, timer: 1200, items: [{ id: 'keju', qty: 1 }, { id: 'sup_wortel', qty: 2 }], coins: 1500, xp: 600 },
-  { tier: 3, timer: 1200, items: [{ id: 'sushi_mas', qty: 2 }, { id: 'takoyaki', qty: 1 }], coins: 2500, xp: 1000 },
-  { tier: 3, timer: 1500, items: [{ id: 'emas', qty: 2 }, { id: 'sushi_emas', qty: 1 }], coins: 3500, xp: 1200 },
-];
+export function hasRequirements(requirements, inventoryByCategory) {
+  for (const [key, amount] of Object.entries(requirements)) {
+    const [cat, itemId] = key.split('.');
+    if ((inventoryByCategory?.[cat]?.[itemId]?.qty || 0) < amount) return false;
+  }
+  return true;
+}
+
+export function consumeRequirements(requirements, inventoryByCategory) {
+  for (const [key, amount] of Object.entries(requirements)) {
+    const [cat, itemId] = key.split('.');
+    if ((inventoryByCategory?.[cat]?.[itemId]?.qty || 0) < amount) return false;
+  }
+  const newCat = {};
+  for (const [cat, items] of Object.entries(inventoryByCategory)) {
+    newCat[cat] = { ...items };
+    for (const [itemId] of Object.entries(items)) {
+      newCat[cat][itemId] = { ...items[itemId] };
+    }
+  }
+  for (const [key, amount] of Object.entries(requirements)) {
+    const [cat, itemId] = key.split('.');
+    newCat[cat][itemId].qty -= amount;
+    if (newCat[cat][itemId].qty <= 0) {
+      delete newCat[cat][itemId];
+    }
+  }
+  return newCat;
+}
 
 export function getItemCategory(itemId) {
   const catMap = {
@@ -159,3 +87,20 @@ export function getItemCategory(itemId) {
   };
   return catMap[itemId] || null;
 }
+
+export const getRecipeIngredient = (recipeId) => {
+  const recipe = RECIPES.find(r => r.id === recipeId);
+  return recipe?.req || {};
+};
+
+export const ORDER_TEMPLATES = [
+  { tier: 1, timer: 600, items: [{ id: 'crops.wortel', qty: 5 }, { id: 'crops.jagung', qty: 3 }], coins: 200, xp: 100 },
+  { tier: 1, timer: 600, items: [{ id: 'crops.tomat', qty: 4 }, { id: 'animalProducts.telur', qty: 2 }], coins: 250, xp: 120 },
+  { tier: 2, timer: 900, items: [{ id: 'crops.stroberi', qty: 5 }, { id: 'animalProducts.susu', qty: 2 }], coins: 600, xp: 250 },
+  { tier: 2, timer: 900, items: [{ id: 'crops.semangka', qty: 2 }, { id: 'fish.ikan_mas', qty: 2 }], coins: 800, xp: 300 },
+  { tier: 2, timer: 900, items: [{ id: 'minerals.tembaga', qty: 5 }, { id: 'fish.ikan_mas', qty: 2 }], coins: 700, xp: 280 },
+  { tier: 2, timer: 900, items: [{ id: 'minerals.besi', qty: 3 }, { id: 'crops.stroberi', qty: 3 }], coins: 650, xp: 260 },
+  { tier: 3, timer: 1200, items: [{ id: 'processed.keju', qty: 1 }, { id: 'cooked.sup_wortel', qty: 2 }], coins: 1500, xp: 600 },
+  { tier: 3, timer: 1200, items: [{ id: 'cooked.sushi_mas', qty: 2 }, { id: 'cooked.takoyaki', qty: 1 }], coins: 2500, xp: 1000 },
+  { tier: 3, timer: 1500, items: [{ id: 'minerals.emas', qty: 2 }, { id: 'cooked.sushi_emas', qty: 1 }], coins: 3500, xp: 1200 },
+];

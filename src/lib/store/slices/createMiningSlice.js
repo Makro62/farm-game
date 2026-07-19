@@ -9,95 +9,61 @@ export const createMiningSlice = (set, get) => ({
     const state = get();
     const node = state.mining.nodes.find(n => n.id === nodeId);
     if (!node || node.status !== 'ready') return null;
-
-    if (!get().consumeEnergy(2)) {
-      return null;
-    }
+    if (!get().consumeEnergy(2)) return null;
 
     const regenTime = getMiningRegenMs(state.mining, state.weatherEffects);
-    
     const dropsWorm = node.type === 'batu' && Math.random() < GAME_CONSTANTS.CHANCES.WORM_DROP;
 
     set((state) => {
-      const newInv = {
-        ...state.inventory,
-        [node.type]: (state.inventory[node.type] || 0) + 1,
-        ...(dropsWorm ? { cacing: (state.inventory.cacing || 0) + 1 } : {}),
-      };
-
-      // Sync to inventoryByCategory
       const mineralCat = { ...(state.inventoryByCategory?.minerals || {}) };
-      mineralCat[node.type] = { quantity: (mineralCat[node.type]?.quantity || 0) + 1 };
+      const existing = mineralCat[node.type] || { qty: 0, quality: 'normal', acquiredAt: Date.now() };
+      mineralCat[node.type] = { ...existing, qty: existing.qty + 1 };
 
-      const updates = {
-        inventoryByCategory: {
-          ...state.inventoryByCategory,
-          minerals: mineralCat,
-        }
-      };
+      const updates = { inventoryByCategory: { ...state.inventoryByCategory, minerals: mineralCat } };
 
       if (dropsWorm) {
         const colCat = { ...(state.inventoryByCategory?.collectibles || {}) };
-        colCat.cacing = { quantity: (colCat.cacing?.quantity || 0) + 1 };
-        updates.inventoryByCategory = {
-          ...updates.inventoryByCategory,
-          collectibles: colCat,
-        };
+        const w = colCat.cacing || { qty: 0, quality: 'normal', acquiredAt: Date.now() };
+        colCat.cacing = { ...w, qty: w.qty + 1 };
+        updates.inventoryByCategory = { ...updates.inventoryByCategory, collectibles: colCat };
       }
 
       return {
-        mining: {
-          ...state.mining,
-          nodes: state.mining.nodes.map(n => 
-            n.id === nodeId ? { ...n, status: 'cooldown', regenAt: Date.now() + regenTime } : n
-          )
-        },
-        inventory: newInv,
+        mining: { ...state.mining, nodes: state.mining.nodes.map(n => n.id === nodeId ? { ...n, status: 'cooldown', regenAt: Date.now() + regenTime } : n) },
         ...updates,
       };
     });
 
     get().addXP(GAME_CONSTANTS.XP.MINE);
     get().progressQuest('mine', node.type, 1);
-    // ===== Stats & Achievement tracking =====
-    set(s => {
-      const newStats = {
-        ...s.stats,
-        totalMined: (s.stats?.totalMined || 0) + 1,
+    set(s => ({
+      stats: {
+        ...s.stats, totalMined: (s.stats?.totalMined || 0) + 1,
         ...(node.type === 'berlian' ? { totalDiamondsMined: (s.stats?.totalDiamondsMined || 0) + 1 } : {}),
         ...(dropsWorm ? { totalWormsFound: (s.stats?.totalWormsFound || 0) + 1 } : {}),
-      };
-      return { stats: newStats };
-    });
+      }
+    }));
     get().markSessionAction?.('mined');
     get().checkAchievements?.();
-    if (dropsWorm) {
-      get().enqueueNotification('🪱 Dapat Cacing Tanah! Bisa jadi umpan pancing.', { duration: 2500 });
-    }
+    if (dropsWorm) get().enqueueNotification('🪱 Dapat Cacing Tanah! Bisa jadi umpan pancing.', { duration: 2500 });
     const combo = get().registerCombo?.();
-    if (combo?.count >= 3) {
-      get().addCoins?.(Math.floor(5 * combo.multiplier));
-    }
+    if (combo?.count >= 3) get().addCoins?.(Math.floor(5 * combo.multiplier));
     return node.type;
   },
 
   useMiningTool: (itemId, nodeId = null) => {
     const state = get();
-    const count = state.inventory[itemId] || 0;
-    if (count <= 0) {
-      return { ok: false, message: 'Kamu tidak punya alat ini. Beli di shop kanan.' };
-    }
+    const count = state.inventoryByCategory?.tools?.[itemId]?.qty || 0;
+    if (count <= 0) return { ok: false, message: 'Kamu tidak punya alat ini. Beli di shop kanan.' };
 
     const mining = state.mining;
     const lanternActive = mining.lanternUntil && mining.lanternUntil > Date.now();
 
-    // ===== Cek mineralReq sebelum pakai pickaxe/upgrade (Tambang → syarat material) =====
     const checkMineralReq = (shopItemId) => {
       const shopItem = SHOP_MINING.find(m => m.id === shopItemId);
       if (!shopItem?.mineralReq) return null;
-      const inv = get().inventory;
       for (const [mineral, qty] of Object.entries(shopItem.mineralReq)) {
-        if ((inv[mineral] || 0) < qty) {
+        if ((state.inventoryByCategory?.minerals?.[mineral]?.qty || 0) < qty) {
           return `Butuh ${qty}x ${mineral} untuk memakai ini!`;
         }
       }
@@ -107,72 +73,73 @@ export const createMiningSlice = (set, get) => ({
     const consumeMineralReq = (shopItemId) => {
       const shopItem = SHOP_MINING.find(m => m.id === shopItemId);
       if (!shopItem?.mineralReq) return;
-      set(s => {
-        const newInv = { ...s.inventory };
+      set(draft => {
         for (const [mineral, qty] of Object.entries(shopItem.mineralReq)) {
-          newInv[mineral] = (newInv[mineral] || 0) - qty;
-          if (newInv[mineral] <= 0) delete newInv[mineral];
+          if (draft.inventoryByCategory.minerals[mineral]) {
+            draft.inventoryByCategory.minerals[mineral].qty -= qty;
+            if (draft.inventoryByCategory.minerals[mineral].qty <= 0) {
+              delete draft.inventoryByCategory.minerals[mineral];
+            }
+          }
         }
-        return { inventory: newInv };
+      });
+    };
+
+    const removeTool = () => {
+      set(draft => {
+        if (draft.inventoryByCategory.tools[itemId]) {
+          draft.inventoryByCategory.tools[itemId].qty -= 1;
+          if (draft.inventoryByCategory.tools[itemId].qty <= 0) {
+            delete draft.inventoryByCategory.tools[itemId];
+          }
+        }
       });
     };
 
     if (itemId === 'pickaxe_besi') {
-      if (mining.pickaxeLevel >= 2) {
-        return { ok: false, message: 'Pickaxe ini sudah terpasang atau ada yang lebih baik.' };
-      }
+      if (mining.pickaxeLevel >= 2) return { ok: false, message: 'Pickaxe ini sudah terpasang atau ada yang lebih baik.' };
       const reqError = checkMineralReq('pickaxe_besi');
       if (reqError) return { ok: false, message: reqError };
-      if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+      removeTool();
       consumeMineralReq('pickaxe_besi');
       set({ mining: { ...get().mining, pickaxeLevel: 2 }, selectedMiningTool: null });
       return { ok: true, message: '⛏️ Pickaxe Besi terpasang! Regen tambang 90 detik.' };
     }
 
     if (itemId === 'pickaxe_emas') {
-      if (mining.pickaxeLevel >= 3) {
-        return { ok: false, message: 'Pickaxe Emas sudah terpasang.' };
-      }
+      if (mining.pickaxeLevel >= 3) return { ok: false, message: 'Pickaxe Emas sudah terpasang.' };
       const reqError = checkMineralReq('pickaxe_emas');
       if (reqError) return { ok: false, message: reqError };
-      if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+      removeTool();
       consumeMineralReq('pickaxe_emas');
       set({ mining: { ...get().mining, pickaxeLevel: 3 }, selectedMiningTool: null });
       return { ok: true, message: '🛠️ Pickaxe Emas terpasang! Regen 60 detik + bonus mineral langka.' };
     }
 
     if (itemId === 'senter') {
-      if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
-      set({
-        mining: { ...get().mining, lanternUntil: Date.now() + GAME_CONSTANTS.MINING.LANTERN_DURATION_MS },
-        selectedMiningTool: null
-      });
+      removeTool();
+      set({ mining: { ...get().mining, lanternUntil: Date.now() + GAME_CONSTANTS.MINING.LANTERN_DURATION_MS }, selectedMiningTool: null });
       return { ok: true, message: '🔦 Senter aktif 5 menit! Regen 2× lebih cepat + bonus ore.' };
     }
 
     if (itemId === 'bom_besar') {
       const readyNodes = mining.nodes.filter(n => n.status === 'ready');
-      if (readyNodes.length === 0) {
-        return { ok: false, message: 'Tidak ada petak siap ditambang.' };
-      }
+      if (readyNodes.length === 0) return { ok: false, message: 'Tidak ada petak siap ditambang.' };
       const reqError = checkMineralReq('bom_besar');
       if (reqError) return { ok: false, message: reqError };
-      if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+      removeTool();
       consumeMineralReq('bom_besar');
       const regenTime = getMiningRegenMs(get().mining, get().weatherEffects);
-      const newInventory = { ...get().inventory };
       let mined = 0;
       const newNodes = get().mining.nodes.map(n => {
         if (n.status !== 'ready') return n;
-        newInventory[n.type] = (newInventory[n.type] || 0) + 1;
         mined++;
         get().progressQuest('mine', n.type, 1);
         return { ...n, status: 'cooldown', regenAt: Date.now() + regenTime };
       });
-      set({
-        mining: { ...get().mining, nodes: newNodes },
-        inventory: newInventory,
-        selectedMiningTool: null
+      set(draft => {
+        draft.mining.nodes = newNodes;
+        draft.selectedMiningTool = null;
       });
       get().addXP(mined * 15);
       return { ok: true, message: `💣 Bom Besar meledak! ${mined} petak ditambang sekaligus.` };
@@ -186,56 +153,33 @@ export const createMiningSlice = (set, get) => ({
     if (!node) return { ok: false, message: 'Petak tidak ditemukan.' };
 
     if (itemId === 'bom_kecil') {
-      if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+      removeTool();
       const regenTime = getMiningRegenMs(get().mining, get().weatherEffects);
-      const newInventory = { ...get().inventory };
-
       if (node.status === 'ready') {
-        newInventory[node.type] = (newInventory[node.type] || 0) + 2;
         get().progressQuest('mine', node.type, 1);
         set({
-          mining: {
-            ...get().mining,
-            nodes: get().mining.nodes.map(n =>
-              n.id === nodeId ? { ...n, status: 'cooldown', regenAt: Date.now() + regenTime } : n
-            )
-          },
-          inventory: newInventory,
+          mining: { ...get().mining, nodes: get().mining.nodes.map(n => n.id === nodeId ? { ...n, status: 'cooldown', regenAt: Date.now() + regenTime } : n) },
           selectedMiningTool: null
         });
         get().addXP(20);
         return { ok: true, message: '🧨 Bom Kecil! Hasil tambang ×2 dari petak ini.' };
       }
-
-      // Ledakkan batuan yang masih cooldown → langsung siap
       const eventId = get().activeEvent?.id || null;
       const newType = rollMineralType(mining.pickaxeLevel, lanternActive, eventId);
       set({
-        mining: {
-          ...get().mining,
-          nodes: get().mining.nodes.map(n =>
-            n.id === nodeId ? { ...n, status: 'ready', regenAt: null, type: newType } : n
-          )
-        },
+        mining: { ...get().mining, nodes: get().mining.nodes.map(n => n.id === nodeId ? { ...n, status: 'ready', regenAt: null, type: newType } : n) },
         selectedMiningTool: null
       });
       return { ok: true, message: '🧨 Bom Kecil membuka petak yang tertutup!' };
     }
 
     if (itemId === 'tali') {
-      if (node.status === 'ready') {
-        return { ok: false, message: 'Petak ini sudah siap — tidak perlu tali.' };
-      }
-      if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
+      if (node.status === 'ready') return { ok: false, message: 'Petak ini sudah siap — tidak perlu tali.' };
+      removeTool();
       const eventId = get().activeEvent?.id || null;
       const newType = rollMineralType(mining.pickaxeLevel, lanternActive, eventId);
       set({
-        mining: {
-          ...get().mining,
-          nodes: get().mining.nodes.map(n =>
-            n.id === nodeId ? { ...n, status: 'ready', regenAt: null, type: newType } : n
-          )
-        },
+        mining: { ...get().mining, nodes: get().mining.nodes.map(n => n.id === nodeId ? { ...n, status: 'ready', regenAt: null, type: newType } : n) },
         selectedMiningTool: null
       });
       return { ok: true, message: '🪢 Tali mempercepat pemulihan petak tambang!' };
@@ -249,18 +193,12 @@ export const createMiningSlice = (set, get) => ({
     const state = get();
     if (!state.mining) return;
     let changed = false;
-    
     let newNodes = state.mining.nodes.map(n => {
       if ((n.status === 'cooldown' || n.status === 'depleted') && n.regenAt && now >= n.regenAt) {
         changed = true;
         const lanternActive = state.mining.lanternUntil && state.mining.lanternUntil > Date.now();
         const eventId = state.activeEvent?.id || null;
-        return { 
-          ...n, 
-          status: 'ready', 
-          regenAt: null,
-          type: rollMineralType(state.mining.pickaxeLevel, lanternActive, eventId)
-        };
+        return { ...n, status: 'ready', regenAt: null, type: rollMineralType(state.mining.pickaxeLevel, lanternActive, eventId) };
       }
       return n;
     });
@@ -270,28 +208,16 @@ export const createMiningSlice = (set, get) => ({
       if (readyNodes.length > 0 && Math.random() < GAME_CONSTANTS.CHANCES.MINER_AUTO_TICK) {
         const nodeToMine = readyNodes[0];
         const minedType = nodeToMine.type;
-        const lanternActive = state.mining.lanternUntil && state.mining.lanternUntil > Date.now();
         const regenTime = getMiningRegenMs(state.mining, state.weatherEffects);
-        const eventId = state.activeEvent?.id || null;
-
-        newNodes = newNodes.map(n =>
-          n.id === nodeToMine.id
-            ? {
-                ...n,
-                status: 'cooldown',
-                regenAt: now + regenTime,
-                type: rollMineralType(state.mining.pickaxeLevel, lanternActive, eventId),
-              }
-            : n
-        );
+        newNodes = newNodes.map(n => n.id === nodeToMine.id ? { ...n, status: 'cooldown', regenAt: now + regenTime } : n);
         changed = true;
 
-        set({
-          mining: { ...state.mining, nodes: newNodes },
-          inventory: {
-            ...state.inventory,
-            [minedType]: (state.inventory[minedType] || 0) + 1,
-          },
+        set(draft => {
+          draft.mining.nodes = newNodes;
+          if (!draft.inventoryByCategory.minerals[minedType]) {
+            draft.inventoryByCategory.minerals[minedType] = { qty: 0, quality: 'normal', acquiredAt: Date.now() };
+          }
+          draft.inventoryByCategory.minerals[minedType].qty += 1;
         });
         get().addXP(GAME_CONSTANTS.XP.MINE);
         get().progressQuest('mine', minedType, 1);
@@ -299,8 +225,6 @@ export const createMiningSlice = (set, get) => ({
       }
     }
 
-    if (changed) {
-      set({ mining: { ...state.mining, nodes: newNodes } });
-    }
+    if (changed) set({ mining: { ...state.mining, nodes: newNodes } });
   },
 });

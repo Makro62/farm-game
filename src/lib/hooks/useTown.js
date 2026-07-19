@@ -5,30 +5,30 @@ import { useFishingMinigame } from '@/lib/hooks/useFishingMinigame';
 
 export function useTown() {
   const workers = useGameStore((s) => s.workers);
-  const autoFisher = useGameStore((s) => s.autoFisher);
-  const toggleAutoFisher = useGameStore((s) => s.toggleAutoFisher);
+  const fisher = workers?.fisher;
+  const toggleAutoMode = useGameStore((s) => s.toggleAutoMode);
   const selectedBait = useGameStore((s) => s.selectedBait);
-  const inventory = useGameStore((s) => s.inventory);
+  const baitInv = useGameStore((s) => s.inventoryByCategory?.bait || {});
   const enqueueNotification = useGameStore((s) => s.enqueueNotification);
 
-  const [area, setArea] = useState('plaza'); // 'plaza' | 'fishing' | 'processing'
+  const [area, setArea] = useState('plaza');
 
   const fishingProps = useFishingMinigame();
 
   const baitData = SHOP_BAIT.find((b) => b.id === selectedBait);
+  const baitQty = baitData ? (baitInv[selectedBait]?.qty || 0) : 0;
   const selectedBaitLabel =
-    baitData && (inventory[selectedBait] || 0) > 0
-      ? `${baitData.emoji} ${baitData.name} ×${inventory[selectedBait]}`
+    baitData && baitQty > 0
+      ? `${baitData.emoji} ${baitData.name} ×${baitQty}`
       : null;
 
   const handleToggleAuto = () => {
-    if (!workers?.fisher) {
-      enqueueNotification('Sewa Pemancing Kota dulu di toko samping!', { icon: '🎣', type: 'error' });
+    if (!fisher?.hired) {
+      enqueueNotification('Sewa Kurcaci Mamat dulu di toko samping!', { icon: '🎣', type: 'error' });
       return;
     }
-    const next = !autoFisher;
-    toggleAutoFisher();
-    enqueueNotification(next ? 'Kurcaci pemancing aktif!' : 'Kurcaci pemancing istirahat.', {
+    toggleAutoMode('fisher');
+    enqueueNotification(!fisher.isAutoMode ? 'Kurcaci pemancing aktif!' : 'Kurcaci pemancing istirahat.', {
       id: 'auto-fisher-toggle',
       type: 'success'
     });
@@ -37,7 +37,7 @@ export function useTown() {
   return {
     area,
     setArea,
-    autoFisher,
+    autoFisher: fisher?.isAutoMode || false,
     handleToggleAuto,
     selectedBaitLabel,
     fishingProps

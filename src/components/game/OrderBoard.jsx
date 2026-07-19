@@ -1,11 +1,16 @@
-import { useGameStore } from '@/lib/store';
+import { useGameStore, useInventory } from '@/lib/store';
 import { getCropEmoji } from '../../lib/data/item-helpers';
 import { useState, useEffect } from 'react';
+
+function stripPrefix(key) {
+  const parts = key.split('.');
+  return parts.length === 2 ? parts[1] : key;
+}
 
 export function OrderBoard() {
   const orders = useGameStore((state) => state.orders);
   const fulfillOrder = useGameStore((state) => state.fulfillOrder);
-  const inventory = useGameStore((state) => state.inventory);
+  const inventory = useInventory();
 
   const [now, setNow] = useState(Date.now());
 
@@ -47,12 +52,13 @@ export function OrderBoard() {
 
                 <div className="flex-1 space-y-1.5 mb-3">
                   {order.items.map((item) => {
-                    const has = inventory[item.id] || 0;
+                    const itemName = stripPrefix(item.id);
+                    const has = inventory[itemName] || 0;
                     const isEnough = has >= item.qty;
                     return (
                       <div key={item.id} className="flex justify-between items-center text-sm">
                         <span className="text-[var(--text-primary)] flex items-center gap-1 font-bold">
-                          <span>{getCropEmoji(item.id)}</span> {item.id.replace('_', ' ')}
+                          <span>{getCropEmoji(itemName)}</span> {itemName.replace('_', ' ')}
                         </span>
                         <span
                           className={`font-bold px-2 py-0.5 rounded-full text-xs ${

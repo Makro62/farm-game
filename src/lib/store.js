@@ -76,7 +76,11 @@ export const useGameStore = create(
         },
         unlockAll: () => {
           set({
-            workers: { farmer: true, rancher: true, fisher: true, miner: true, chef: true },
+            workers: { farmer: { hired: true, name: 'Kurcaci Budi', role: 'farmer', level: 1, stamina: 100, maxStamina: 100, happiness: 80, loyalty: 60, isAutoMode: true },
+                      rancher: { hired: true, name: 'Kurcaci Siti', role: 'rancher', level: 1, stamina: 100, maxStamina: 100, happiness: 80, loyalty: 60, isAutoMode: true },
+                      fisher: { hired: true, name: 'Kurcaci Mamat', role: 'fisher', level: 1, stamina: 100, maxStamina: 100, happiness: 80, loyalty: 60, isAutoMode: true },
+                      miner: { hired: true, name: 'Kurcaci Tarjo', role: 'miner', level: 1, stamina: 100, maxStamina: 100, happiness: 80, loyalty: 60, isAutoMode: true },
+                      chef: { hired: true, name: 'Kurcaci Juna', role: 'chef', level: 1, stamina: 100, maxStamina: 100, happiness: 80, loyalty: 60, isAutoMode: true } },
             buildings: { silo: true, greenhouse: true },
           });
         }
@@ -117,7 +121,17 @@ export const useXP = () => useGameStore((s) => s.xp);
 export const useDay = () => useGameStore((s) => s.day);
 export const useStreak = () => useGameStore((s) => s.streak);
 export const usePlots = () => useGameStore((s) => s.plots);
-export const useInventory = () => useGameStore((s) => s.inventory);
+export const useInventory = () => {
+  const invCat = useGameStore((s) => s.inventoryByCategory);
+  if (!invCat) return {};
+  const flat = {};
+  for (const items of Object.values(invCat)) {
+    for (const [id, data] of Object.entries(items)) {
+      flat[id] = (flat[id] || 0) + (data.qty || 0);
+    }
+  }
+  return flat;
+};
 export const useInventoryByCategory = () => useGameStore((s) => s.inventoryByCategory);
 export const useCropsInventory = () => useGameStore((s) => s.inventoryByCategory?.crops || {});
 export const useAnimalProductsInventory = () => useGameStore((s) => s.inventoryByCategory?.animalProducts || {});

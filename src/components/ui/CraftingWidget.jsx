@@ -22,7 +22,12 @@ export function CraftingWidget({
   const craftingQueue = useGameStore((state) => state.craftingQueue);
   const startCrafting = useGameStore((state) => state.startCrafting);
   const removeCraftingQueue = useGameStore((state) => state.removeCraftingQueue);
-  const inventory = useGameStore((state) => state.inventory);
+  const invByCat = useGameStore((state) => state.inventoryByCategory);
+  const canCook = (recipe) =>
+    Object.entries(recipe.req).every(([key, qty]) => {
+      const [cat, itemId] = key.split('.');
+      return (invByCat?.[cat]?.[itemId]?.qty || 0) >= qty;
+    });
 
   const [activeType, setActiveType] = useState(type);
   const [currentTime, setCurrentTime] = useState(Date.now());

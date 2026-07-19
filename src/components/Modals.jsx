@@ -1,6 +1,6 @@
 'use client';
 
-import { useGameStore } from '@/lib/store';
+import { useGameStore, useInventory } from '@/lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { NPC_LIST } from '@/lib/data/npcs';
@@ -13,7 +13,7 @@ import OfflineProgressModal from './OfflineProgressModal';
 export default function Modals() {
   const modals = useGameStore((state) => state.modals);
   const closeModals = useGameStore((state) => state.closeModals);
-  const inventory = useGameStore((state) => state.inventory);
+  const inventory = useInventory();
   const giveGift = useGameStore((state) => state.giveGift);
   const [promptValue, setPromptValue] = useState(1);
   const [selectedGift, setSelectedGift] = useState(null);

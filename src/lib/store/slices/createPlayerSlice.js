@@ -1,22 +1,110 @@
-import { getItemSellPrice, isSellableProduce, getItemCategory } from '../../data/item-helpers';
 import { RECIPES, ORDER_TEMPLATES } from '../../data/recipes';
 import { FISHES } from '../../data/fishes';
 import { SHOP_SEEDS } from '../../data/crops';
 import { SHOP_BAIT } from '../../data/shop';
 import { GAME_CONSTANTS } from '../../constants';
-import { safeCoins, safePositiveNumber, checkRecipeIngredients, consumeRecipeIngredients, getIngredientAvailability } from '../utils';
+import { safeCoins, safePositiveNumber } from '../utils';
+
+const INV = {
+  has: (cat, itemId) => {
+    const state = get();
+    return !!(state.inventoryByCategory[cat]?.[itemId]?.qty);
+  },
+  get: (cat, itemId) => {
+    const state = get();
+    return state.inventoryByCategory[cat]?.[itemId]?.qty || 0;
+  },
+  add: (cat, itemId, qty = 1, quality = 'normal') => {
+    set(draft => {
+      if (!draft.inventoryByCategory[cat][itemId]) {
+        draft.inventoryByCategory[cat][itemId] = { qty: 0, quality, acquiredAt: Date.now() };
+      }
+      draft.inventoryByCategory[cat][itemId].qty += qty;
+    });
+  },
+  remove: (cat, itemId, qty = 1) => {
+    let success = false;
+    set(draft => {
+      const item = draft.inventoryByCategory[cat]?.[itemId];
+      if (!item || item.qty < qty) return;
+      item.qty -= qty;
+      if (item.qty === 0) delete draft.inventoryByCategory[cat][itemId];
+      success = true;
+    });
+    return success;
+  },
+  hasReq: (requirements) => {
+    const state = get();
+    for (const [key, amount] of Object.entries(requirements)) {
+      const [cat, itemId] = key.split('.');
+      if ((state.inventoryByCategory[cat]?.[itemId]?.qty || 0) < amount) return false;
+    }
+    return true;
+  },
+  consumeReq: (requirements) => {
+    const state = get();
+    for (const [key, amount] of Object.entries(requirements)) {
+      const [cat, itemId] = key.split('.');
+      if ((state.inventoryByCategory[cat]?.[itemId]?.qty || 0) < amount) return false;
+    }
+    set(draft => {
+      for (const [key, amount] of Object.entries(requirements)) {
+        const [cat, itemId] = key.split('.');
+        const item = draft.inventoryByCategory[cat]?.[itemId];
+        if (!item) continue;
+        item.qty -= amount;
+        if (item.qty <= 0) delete draft.inventoryByCategory[cat][itemId];
+      }
+    });
+    return true;
+  },
+  getFlat: () => {
+    const state = get();
+    const flat = {};
+    for (const [cat, items] of Object.entries(state.inventoryByCategory)) {
+      for (const [itemId, data] of Object.entries(items)) {
+        flat[itemId] = (flat[itemId] || 0) + (data.qty || 0);
+        if (data.qty > 0) {
+          const qualityKey = `${itemId}_${data.quality}`;
+          flat[qualityKey] = (flat[qualityKey] || 0) + data.qty;
+        }
+      }
+    }
+    return flat;
+  }
+};
 
 export const createPlayerSlice = (set, get) => ({
 
+  // ===== INVENTORY HELPERS (public API) =====
+  invAdd: (cat, itemId, qty, quality) => INV.add(cat, itemId, qty, quality),
+  invRemove: (cat, itemId, qty) => INV.remove(cat, itemId, qty),
+  invGet: (cat, itemId) => {
+    const state = get();
+    return state.inventoryByCategory[cat]?.[itemId]?.qty || 0;
+  },
+  invHasReq: (requirements) => INV.hasReq(requirements),
+  invConsumeReq: (requirements) => INV.consumeReq(requirements),
+  invGetFlat: () => INV.getFlat(),
+
+  // Legacy aliases for backward compat
+  addItem: (itemId, quantity = 1, category = null) => {
+    const cat = category || getItemCategory(itemId) || 'collectibles';
+    INV.add(cat, itemId, quantity);
+  },
+
+  removeItem: (itemId, quantity = 1) => {
+    const cat = getItemCategory(itemId);
+    if (!cat) return false;
+    return INV.remove(cat, itemId, quantity);
+  },
 
   buyMultipleAnimals: (animalType, amount, unitPrice, produceTime) => {
     const state = get();
     const qty = safePositiveNumber(amount, 0);
     const price = safePositiveNumber(unitPrice, 0);
     const totalCost = price * qty;
-
     if (qty <= 0 || totalCost <= 0) return false;
-
     const currentCoins = safeCoins(state.coins);
     if (currentCoins < totalCost) return false;
 
@@ -28,15 +116,13 @@ export const createPlayerSlice = (set, get) => ({
       produceTime: safePositiveNumber(produceTime, 20000),
     }));
 
-    set((state) => ({
-      coins: currentCoins - totalCost,
-      animals: [...state.animals, ...newAnimals],
-    }));
+    set(draft => {
+      draft.coins = currentCoins - totalCost;
+      draft.animals.push(...newAnimals);
+    });
     return true;
   },
 
-
-  // ===== ENERGY RESTORATION (via Food) =====
   eatFood: (recipeId) => {
     const state = get();
     const recipe = RECIPES.find(r => r.id === recipeId);
@@ -44,51 +130,39 @@ export const createPlayerSlice = (set, get) => ({
       get().enqueueNotification('Makanan tidak dikenal!', { type: 'error' });
       return false;
     }
-    if (!state.inventory[recipeId] || state.inventory[recipeId] <= 0) {
+    if (!INV.get('cooked', recipeId) && !INV.get('processed', recipeId)) {
       get().enqueueNotification(`Tidak punya ${recipe.name}! Masak dulu di restoran.`, { type: 'error' });
       return false;
     }
-    const energyRestore = Math.min(
-      recipe.xp || 20,
-      100
-    );
-    if (!get().removeItem(recipeId, 1)) return false;
-    const newEnergy = Math.min(state.energy + energyRestore, state.maxEnergy || 200);
-    set({ energy: newEnergy });
+    const energyRestore = Math.min(recipe.xp || 20, 100);
+    if (!INV.remove(recipe.type === 'processing' ? 'processed' : 'cooked', recipeId, 1)) return false;
+    set(draft => {
+      draft.energy = Math.min(draft.energy + energyRestore, draft.maxEnergy || 200);
+    });
     get().enqueueNotification(`Memakan ${recipe.emoji} ${recipe.name}! +${energyRestore} ⚡ Energi`, { icon: '🍽️', type: 'success' });
     return true;
   },
 
-  // ===== XP & LEVEL =====
   addXP: (amount) => {
     if (amount <= 0) return false;
-
     const prevLevel = get().level;
-
-    set((state) => {
-      let newXP = state.xp + amount;
-      let newLevel = state.level;
-      let newMaxEnergy = state.maxEnergy || 100;
-
-      // Check level up
+    set(draft => {
+      let newXP = draft.xp + amount;
+      let newLevel = draft.level;
+      let newMaxEnergy = draft.maxEnergy || 100;
       while (newXP >= newLevel * 100) {
         newXP -= newLevel * 100;
         newLevel++;
       }
-
-      if (newLevel > state.level) {
+      if (newLevel > draft.level) {
         newMaxEnergy = 100 + (newLevel - 1) * 10;
-        if (newMaxEnergy > 200) newMaxEnergy = 200; // Cap at 200 (Level 11)
+        if (newMaxEnergy > 200) newMaxEnergy = 200;
       }
-
-      return {
-        xp: newXP,
-        level: newLevel,
-        maxEnergy: newMaxEnergy,
-        ...(newLevel > state.level ? { energy: newMaxEnergy } : {}) // Refill on level up
-      };
+      draft.xp = newXP;
+      draft.level = newLevel;
+      draft.maxEnergy = newMaxEnergy;
+      if (newLevel > prevLevel) draft.energy = newMaxEnergy;
     });
-
     if (get().level > prevLevel) {
       get().enqueueNotification(`Level Up! Level ${get().level} 🌟\nEnergy Maksimal naik!`, { icon: '🎉', duration: 4000, type: 'success' });
       return true;
@@ -96,183 +170,177 @@ export const createPlayerSlice = (set, get) => ({
     return false;
   },
 
-  // ===== ENERGY =====
   consumeEnergy: (amount) => {
     const state = get();
     if (state.energy >= amount) {
-      set({ energy: state.energy - amount });
+      set(draft => { draft.energy -= amount; });
       return true;
     }
     get().enqueueNotification('Energy tidak cukup! Tunggu besok atau makan sesuatu.', { icon: '😴', type: 'error' });
     return false;
   },
 
-  // ===== INVENTORY =====
-  addItem: (itemId, quantity = 1, category = null) => {
-    const resolvedCategory = category || getItemCategory(itemId);
-    set((state) => {
-      const updates = {
-        inventory: {
-          ...state.inventory,
-          [itemId]: (state.inventory[itemId] || 0) + quantity
-        }
-      };
-      // Also update category-indexed inventory
-      if (resolvedCategory) {
-        const cat = state.inventoryByCategory?.[resolvedCategory] || {};
-        updates.inventoryByCategory = {
-          ...state.inventoryByCategory,
-          [resolvedCategory]: {
-            ...cat,
-            [itemId]: (cat[itemId]?.quantity || 0) + quantity
-          }
-        };
-      }
-      return updates;
-    });
-  },
-  
-  removeItem: (itemId, quantity = 1) => {
+  // ===== COIN MANAGEMENT =====
+  buyItem: (itemId, amount, unitPrice) => {
+    const qty = safePositiveNumber(amount, 0);
+    const price = safePositiveNumber(unitPrice, 0);
+    const totalCost = price * qty;
+    if (qty <= 0 || totalCost <= 0) return false;
     const state = get();
-    const current = state.inventory[itemId] || 0;
-    
-    if (current < quantity) {
-      return false;
-    }
-    
-    const category = getItemCategory(itemId);
-    
-    set((state) => {
-      const newInventory = { ...state.inventory };
-      const next = current - quantity;
-      if (next <= 0) {
-        delete newInventory[itemId];
-      } else {
-        newInventory[itemId] = next;
+    const currentCoins = safeCoins(state.coins);
+    if (currentCoins < totalCost) return false;
+    const cat = getItemCategory(itemId) || 'collectibles';
+    set(draft => {
+      draft.coins = currentCoins - totalCost;
+      if (!draft.inventoryByCategory[cat][itemId]) {
+        draft.inventoryByCategory[cat][itemId] = { qty: 0, quality: 'normal', acquiredAt: Date.now() };
       }
-      
-      const updates = { inventory: newInventory };
-      
-      // Also update category-indexed inventory
-      if (category && state.inventoryByCategory?.[category]) {
-        const cat = { ...state.inventoryByCategory[category] };
-        const catNext = (cat[itemId]?.quantity || 0) - quantity;
-        if (catNext <= 0) {
-          delete cat[itemId];
-        } else {
-          cat[itemId] = { ...cat[itemId], quantity: catNext };
-        }
-        updates.inventoryByCategory = {
-          ...state.inventoryByCategory,
-          [category]: cat
-        };
-      }
-      
-      return updates;
+      draft.inventoryByCategory[cat][itemId].qty += qty;
     });
-    
     return true;
   },
 
+  addCoins: (amount) => {
+    const delta = Number(amount);
+    if (!Number.isFinite(delta) || delta <= 0) return;
+    set(draft => { draft.coins = safeCoins(draft.coins) + Math.floor(delta); });
+  },
 
+  spendCoins: (amount) => {
+    const cost = Number(amount);
+    if (!Number.isFinite(cost) || cost <= 0) return false;
+    const currentCoins = safeCoins(get().coins);
+    if (currentCoins < cost) return false;
+    set(draft => { draft.coins = currentCoins - Math.floor(cost); });
+    return true;
+  },
 
-  // ===== BOOSTERS =====
+  sellItem: (itemId, quantity) => {
+    const state = get();
+    const cat = getItemCategory(itemId);
+    if (!cat) return 0;
+    const have = state.inventoryByCategory[cat]?.[itemId]?.qty || 0;
+    const qty = Math.min(have, Math.max(0, Number(quantity) || 0));
+    if (qty <= 0) return 0;
+
+    let sellPrice = getItemSellPrice(itemId);
+    if (sellPrice == null || !Number.isFinite(sellPrice)) return 0;
+
+    const todayPrices = state.todayPrices || {};
+    const activeEvent = state.activeEvent;
+    if (todayPrices[itemId]) sellPrice = todayPrices[itemId];
+    if (activeEvent?.id === 'panen' && SHOP_SEEDS.some(s => s.cropId === itemId)) sellPrice *= 2;
+    if (activeEvent?.id === 'bahari' && FISHES.some(f => f.id === itemId)) sellPrice *= 2;
+    if (state.buildings?.silo?.unlocked && SHOP_SEEDS.some(s => s.cropId === itemId)) sellPrice *= 1.15;
+
+    const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
+    const finalEarned = Math.round(sellPrice * qty * multiplier);
+
+    INV.remove(cat, itemId, qty);
+    set(draft => { draft.coins = safeCoins(draft.coins) + finalEarned; });
+    return finalEarned;
+  },
+
+  sellAllInventory: () => {
+    const state = get();
+    let totalEarned = 0;
+    const todayPrices = state.todayPrices || {};
+    const activeEvent = state.activeEvent;
+
+    const toSell = {};
+    for (const [cat, items] of Object.entries(state.inventoryByCategory)) {
+      for (const [itemId, data] of Object.entries(items)) {
+        if (!isSellableProduce(itemId)) continue;
+        let sellPrice = getItemSellPrice(itemId);
+        if (sellPrice == null) continue;
+        if (todayPrices[itemId]) sellPrice = todayPrices[itemId];
+        if (activeEvent?.id === 'panen' && SHOP_SEEDS.some(s => s.cropId === itemId)) sellPrice *= 2;
+        else if (activeEvent?.id === 'bahari' && FISHES.some(f => f.id === itemId)) sellPrice *= 2;
+        if (state.buildings?.silo?.unlocked && SHOP_SEEDS.some(s => s.cropId === itemId)) sellPrice *= 1.15;
+        totalEarned += sellPrice * data.qty;
+        toSell[`${cat}.${itemId}`] = true;
+      }
+    }
+
+    if (totalEarned <= 0) return 0;
+    const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
+    const finalEarned = Math.round(totalEarned * multiplier);
+
+    set(draft => {
+      for (const key of Object.keys(toSell)) {
+        const [cat, itemId] = key.split('.');
+        delete draft.inventoryByCategory[cat]?.[itemId];
+      }
+      draft.coins = safeCoins(draft.coins) + finalEarned;
+    });
+    return finalEarned;
+  },
+
   activateCoinBooster: () => {
-    set({
-      coinMultiplier: GAME_CONSTANTS.MULTIPLIERS.COIN_BOOSTER,
-      coinMultiplierExpireAt: Date.now() + 30 * 60 * 1000,
+    set(draft => {
+      draft.coinMultiplier = GAME_CONSTANTS.MULTIPLIERS.COIN_BOOSTER;
+      draft.coinMultiplierExpireAt = Date.now() + 30 * 60 * 1000;
     });
   },
 
   buyGrowthBooster: (cost = GAME_CONSTANTS.COSTS.GROWTH_BOOSTER) => {
-    const state = get();
     const price = safePositiveNumber(cost, GAME_CONSTANTS.COSTS.GROWTH_BOOSTER);
+    const state = get();
     if (state.growthMultiplier > 1) return false;
     const currentCoins = safeCoins(state.coins);
     if (currentCoins < price) return false;
-    set({
-      coins: currentCoins - price,
-      growthMultiplier: GAME_CONSTANTS.MULTIPLIERS.GROWTH_BOOSTER,
-      growthMultiplierExpireAt: Date.now() + 30 * 60 * 1000,
+    set(draft => {
+      draft.coins = currentCoins - price;
+      draft.growthMultiplier = GAME_CONSTANTS.MULTIPLIERS.GROWTH_BOOSTER;
+      draft.growthMultiplierExpireAt = Date.now() + 30 * 60 * 1000;
     });
     return true;
   },
 
-  // ===== STREAK SYSTEM =====
   checkStreak: () => {
     const today = new Date().toDateString();
     const yesterday = new Date(Date.now() - 86400000).toDateString();
     const state = get();
-    
-    if (state.lastLogin === today) {
-      return { claimed: false, message: 'Sudah klaim hari ini' };
-    }
-    
+    if (state.lastLogin === today) return { claimed: false, message: 'Sudah klaim hari ini' };
     let newStreak = 1;
-    if (state.lastLogin === yesterday) {
-      newStreak = state.streak + 1;
-    }
-    
+    if (state.lastLogin === yesterday) newStreak = state.streak + 1;
     const rewards = [100, 200, 300, 400, 500, 750, 1500];
     const reward = rewards[Math.min(newStreak - 1, 6)] ?? 100;
-
-    set({
-      streak: newStreak,
-      lastLogin: today,
-      coins: safeCoins(state.coins) + reward,
+    set(draft => {
+      draft.streak = newStreak;
+      draft.lastLogin = today;
+      draft.coins = safeCoins(draft.coins) + reward;
     });
-    
-    return {
-      claimed: true,
-      streak: newStreak,
-      reward,
-      message: `🔥 Streak ${newStreak} hari! +${reward} 💰`
-    };
+    return { claimed: true, streak: newStreak, reward, message: `🔥 Streak ${newStreak} hari! +${reward} 💰` };
   },
 
-  // ===== COMBO SYSTEM =====
   registerCombo: () => {
     const now = Date.now();
     const state = get();
     const timeSinceLast = now - state.combo.lastAction;
-    
     let newCount = 1;
-    if (timeSinceLast < GAME_CONSTANTS.COMBO.WINDOW_MS) {
-      newCount = state.combo.count + 1;
-    }
-    
+    if (timeSinceLast < GAME_CONSTANTS.COMBO.WINDOW_MS) newCount = state.combo.count + 1;
     const multiplier = Math.min(1 + (newCount - 1) * GAME_CONSTANTS.COMBO.MULTIPLIER_STEP, GAME_CONSTANTS.COMBO.MAX_MULTIPLIER);
-    
-    set({
-      combo: {
-        count: newCount,
-        multiplier,
-        lastAction: now
-      }
+    set(draft => {
+      draft.combo.count = newCount;
+      draft.combo.multiplier = multiplier;
+      draft.combo.lastAction = now;
     });
-    
     return { count: newCount, multiplier };
   },
-  
+
   resetCombo: () => {
-    set({
-      combo: {
-        count: 0,
-        multiplier: 1,
-        lastAction: 0
-      }
+    set(draft => {
+      draft.combo.count = 0;
+      draft.combo.multiplier = 1;
+      draft.combo.lastAction = 0;
     });
   },
 
-  // ===== QUEST SYSTEM =====
   generateDailyQuests: () => {
     const today = new Date().toDateString();
     const state = get();
-    
-    if (state.lastQuestDate === today && Array.isArray(state.dailyQuests) && state.dailyQuests.length > 0) {
-      return; 
-    }
-    
+    if (state.lastQuestDate === today && Array.isArray(state.dailyQuests) && state.dailyQuests.length > 0) return;
     const level = state.level || 1;
     const possibleQuests = [
       { type: 'harvest', action: 'Panen', targetId: 'wortel', targetName: 'Wortel', count: 0, required: 10, rewardCoins: 100, rewardXp: 50, claimed: false },
@@ -284,10 +352,7 @@ export const createPlayerSlice = (set, get) => ({
       { type: 'fish', action: 'Pancing', targetId: 'ikan_mas', targetName: 'Ikan Mas', count: 0, required: 5, rewardCoins: 100, rewardXp: 50, claimed: false },
       { type: 'fish', action: 'Pancing', targetId: 'lele', targetName: 'Lele', count: 0, required: 3, rewardCoins: 150, rewardXp: 80, claimed: false },
       { type: 'collect', action: 'Kumpulkan', targetId: 'telur', targetName: 'Telur Ayam', count: 0, required: 5, rewardCoins: 100, rewardXp: 50, claimed: false },
-      // ===== Cross-chain quests (level 5+) =====
     ];
-    
-    // ===== Cross-chain quests (lintas menu, mulai level 5) =====
     if (level >= 5) {
       possibleQuests.push(
         { type: 'chain', action: 'Rantai Produksi', targetId: 'gandum_ke_roti', targetName: 'Gandum → Roti', count: 0, required: 1, rewardCoins: 500, rewardXp: 200, claimed: false, chain: [{ type: 'harvest', targetId: 'gandum', amount: 3 }, { type: 'craft', targetId: 'roti_gandum', amount: 1 }] },
@@ -301,128 +366,107 @@ export const createPlayerSlice = (set, get) => ({
         { type: 'chain', action: 'Rantai Produksi', targetId: 'tambang_ke_sushi', targetName: 'Tambang → Sushi Emas', count: 0, required: 1, rewardCoins: 2000, rewardXp: 800, claimed: false, chain: [{ type: 'mine', targetId: 'emas', amount: 1 }, { type: 'fish', targetId: 'ikan_mas', amount: 2 }, { type: 'craft', targetId: 'sushi_emas', amount: 1 }] },
       );
     }
-    
     const shuffled = [...possibleQuests].sort(() => 0.5 - Math.random());
     const selectedQuests = shuffled.slice(0, 3).map((q, i) => ({ ...q, id: `q_${Date.now()}_${i}` }));
-    
-    set({ dailyQuests: selectedQuests, lastQuestDate: today });
+    set(draft => { draft.dailyQuests = selectedQuests; draft.lastQuestDate = today; });
   },
-  
+
   progressQuest: (type, targetId, amount = 1) => {
-    set((state) => {
-      const quests = state.dailyQuests;
-      if (!Array.isArray(quests) || quests.length === 0) return state;
-
-      let updated = false;
-      const newQuests = quests.map((q) => {
-        if (q.claimed) return q;
-
-        // Chain quest: track based on chain sub-actions
+    set(draft => {
+      const quests = draft.dailyQuests;
+      if (!Array.isArray(quests) || quests.length === 0) return;
+      for (let i = 0; i < quests.length; i++) {
+        const q = quests[i];
+        if (q.claimed) continue;
         if (q.type === 'chain' && q.chain) {
-          const subAction = q.chain.find(c => c.type === type && c.targetId === targetId);
-          if (subAction) {
-            updated = true;
-            return { ...q, count: q.count + (amount || 1) };
+          if (q.chain.some(c => c.type === type && c.targetId === targetId)) {
+            quests[i] = { ...q, count: q.count + (amount || 1) };
           }
-          return q;
+        } else if (q.type === type && q.targetId === targetId && q.count < q.required) {
+          quests[i] = { ...q, count: Math.min(q.required, q.count + amount) };
         }
-
-        if (q.type === type && q.targetId === targetId && q.count < q.required) {
-          updated = true;
-          return { ...q, count: Math.min(q.required, q.count + amount) };
-        }
-        return q;
-      });
-
-      return updated ? { dailyQuests: newQuests } : state;
+      }
     });
   },
 
   batchProgressQuest: (entries = []) => {
     if (!entries.length) return;
-    set((state) => {
-      const quests = state.dailyQuests;
-      if (!Array.isArray(quests) || quests.length === 0) return state;
-
-      const deltas = new Map();
+    set(draft => {
+      const quests = draft.dailyQuests;
+      if (!Array.isArray(quests) || quests.length === 0) return;
       for (const { type, targetId, amount = 1 } of entries) {
-        const key = `${type}:${targetId}`;
-        deltas.set(key, { type, targetId, amount: (deltas.get(key)?.amount || 0) + amount });
+        for (let i = 0; i < quests.length; i++) {
+          const q = quests[i];
+          if (q.claimed || q.count >= q.required) continue;
+          if (q.type === type && q.targetId === targetId) {
+            quests[i] = { ...q, count: Math.min(q.required, q.count + amount) };
+          }
+        }
       }
-
-      let updated = false;
-      const newQuests = quests.map((q) => {
-        const key = `${q.type}:${q.targetId}`;
-        const delta = deltas.get(key);
-        if (!delta || q.claimed || q.count >= q.required) return q;
-        updated = true;
-        return { ...q, count: Math.min(q.required, q.count + delta.amount) };
-      });
-
-      return updated ? { dailyQuests: newQuests } : state;
     });
   },
-  
+
   claimQuestReward: (questId) => {
     const state = get();
     const quest = state.dailyQuests.find(q => q.id === questId);
-    
-    if (!quest || quest.claimed || quest.count < quest.required) {
-      return false;
-    }
-    
+    if (!quest || quest.claimed || quest.count < quest.required) return false;
     const rewardCoins = safePositiveNumber(quest.rewardCoins, 0);
-    set((state) => ({
-      dailyQuests: state.dailyQuests.map(q => q.id === questId ? { ...q, claimed: true } : q),
-      coins: safeCoins(state.coins) + rewardCoins,
-    }));
-    
+    set(draft => {
+      for (let i = 0; i < draft.dailyQuests.length; i++) {
+        if (draft.dailyQuests[i].id === questId) {
+          draft.dailyQuests[i].claimed = true;
+          break;
+        }
+      }
+      draft.coins = safeCoins(draft.coins) + rewardCoins;
+    });
     get().addXP(quest.rewardXp);
     return true;
   },
 
   completeQuest: (id) => {
-    set((state) => ({
-      dailyQuests: state.dailyQuests.map(q => 
-        q.id === id ? { ...q, completed: true } : q
-      )
-    }));
+    set(draft => {
+      for (let i = 0; i < draft.dailyQuests.length; i++) {
+        if (draft.dailyQuests[i].id === id) {
+          draft.dailyQuests[i].completed = true;
+          break;
+        }
+      }
+    });
   },
 
   // ===== CRAFTING =====
   startCrafting: (recipeId) => {
     const state = get();
-    const recipe = RECIPES.find((r) => r.id === recipeId);
+    const recipe = RECIPES.find(r => r.id === recipeId);
     if (!recipe) return false;
 
     const typeQueue = (state.craftingQueue || []).filter(
-      (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === recipe.type
+      q => RECIPES.find(r => r.id === q.recipeId)?.type === recipe.type
     );
     if (typeQueue.length >= GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE) {
       get().enqueueNotification(`Antrean penuh! Maksimal ${GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE} antrean per fasilitas.`, { type: 'error' });
       return false;
     }
 
-    if (!checkRecipeIngredients(recipe, state.inventory, state.inventoryByCategory)) {
-      const missing = Object.entries(recipe.req).filter(([ing, qty]) => {
-        return getIngredientAvailability(ing, state.inventory, state.inventoryByCategory) < qty;
+    if (!INV.hasReq(recipe.req)) {
+      const missing = Object.entries(recipe.req).filter(([key, amt]) => {
+        const [cat, itemId] = key.split('.');
+        return (state.inventoryByCategory[cat]?.[itemId]?.qty || 0) < amt;
       });
-      get().enqueueNotification(`Bahan tidak cukup: ${missing.map(([ing]) => ing).join(', ')}`, { type: 'error' });
+      get().enqueueNotification(`Bahan tidak cukup: ${missing.map(([k]) => k.split('.')[1]).join(', ')}`, { type: 'error' });
       return false;
     }
 
-    const consumed = consumeRecipeIngredients(recipe, state.inventory, state.inventoryByCategory);
-    if (!consumed) return false;
+    INV.consumeReq(recipe.req);
 
     const id = Math.random().toString(36).substring(2, 9);
     const startTime = Date.now();
     const duration = recipe.time * 1000;
 
-    set((s) => ({
-      inventory: consumed.inventory,
-      inventoryByCategory: consumed.inventoryByCategory,
-      craftingQueue: [...s.craftingQueue, { id, recipeId, startTime, duration }],
-    }));
+    set(draft => {
+      draft.craftingQueue.push({ id, recipeId, startTime, duration });
+    });
 
     const verb = recipe.type === 'processing' ? 'memproses' : 'membuat';
     get().enqueueNotification(`Mulai ${verb} ${recipe.name}!`, { icon: recipe.type === 'processing' ? '⚙️' : '🍳', type: 'success' });
@@ -433,91 +477,58 @@ export const createPlayerSlice = (set, get) => ({
     const state = get();
     const queueItem = state.craftingQueue.find(q => q.id === queueId);
     if (!queueItem) return;
-
     const recipe = RECIPES.find(r => r.id === queueItem.recipeId);
     if (!recipe) return;
 
     // Refund ingredients
-    const newInventory = { ...state.inventory };
-    const newCat = state.inventoryByCategory ? { ...state.inventoryByCategory } : null;
-    for (const [ingredient, qty] of Object.entries(recipe.req)) {
-      const parts = ingredient.split('.');
-      if (parts.length === 2 && newCat?.[parts[0]]) {
-        const catItems = { ...newCat[parts[0]] };
-        catItems[parts[1]] = { quantity: (catItems[parts[1]]?.quantity || 0) + qty };
-        newCat[parts[0]] = catItems;
-      } else {
-        newInventory[ingredient] = (newInventory[ingredient] || 0) + qty;
-      }
+    for (const [key, qty] of Object.entries(recipe.req)) {
+      const [cat, itemId] = key.split('.');
+      INV.add(cat, itemId, qty);
     }
 
-    set(s => ({
-      inventory: newInventory,
-      ...(newCat ? { inventoryByCategory: newCat } : {}),
-      craftingQueue: s.craftingQueue.filter(q => q.id !== queueId)
-    }));
+    set(draft => {
+      draft.craftingQueue = draft.craftingQueue.filter(q => q.id !== queueId);
+    });
     get().enqueueNotification('Dibatalkan, bahan dikembalikan!', { type: 'success' });
   },
 
   processCraftingQueue: () => {
     const state = get();
     if (!state.craftingQueue || state.craftingQueue.length === 0) return;
-
     const now = Date.now();
     let changed = false;
-    const newQueue = [...state.craftingQueue];
-    const inv = { ...state.inventory };
-    const cat = state.inventoryByCategory ? { ...state.inventoryByCategory } : null;
+    const completed = [];
     let xpGained = 0;
 
-    for (let i = newQueue.length - 1; i >= 0; i--) {
-      const item = newQueue[i];
+    for (const item of state.craftingQueue) {
       if (now - item.startTime >= item.duration) {
-        const recipe = RECIPES.find((r) => r.id === item.recipeId);
+        const recipe = RECIPES.find(r => r.id === item.recipeId);
         if (recipe) {
-          inv[recipe.id] = (inv[recipe.id] || 0) + 1;
-          if (cat) {
-            const outputCat = recipe.type === 'processing' ? 'processed' : 'cooked';
-            const catItems = { ...(cat[outputCat] || {}) };
-            catItems[recipe.id] = { quantity: (catItems[recipe.id]?.quantity || 0) + 1 };
-            cat[outputCat] = catItems;
-          }
+          const cat = recipe.type === 'processing' ? 'processed' : 'cooked';
+          INV.add(cat, recipe.id, 1);
           xpGained += recipe.xp || 0;
-          if (recipe.type === 'restaurant') {
-            get().progressQuest?.('craft', recipe.id, 1);
-          }
+          if (recipe.type === 'restaurant') get().progressQuest?.('craft', recipe.id, 1);
         }
-        newQueue.splice(i, 1);
+        completed.push(item.id);
         changed = true;
       }
     }
 
     if (changed) {
-      set({
-        craftingQueue: newQueue,
-        inventory: inv,
-        ...(cat ? { inventoryByCategory: cat } : {}),
+      set(draft => {
+        draft.craftingQueue = draft.craftingQueue.filter(q => !completed.includes(q.id));
       });
       if (xpGained > 0) get().addXP(xpGained);
-      let totalCooked = 0;
-      let totalSushiEmas = 0;
-      for (const item of [...state.craftingQueue]) {
-        if (now - item.startTime >= item.duration) {
-          const recipe = RECIPES.find(r => r.id === item.recipeId);
-          if (recipe) {
-            totalCooked++;
-            if (recipe.id === 'sushi_emas') totalSushiEmas++;
-          }
-        }
-      }
+      let totalCooked = completed.length;
+      let totalSushiEmas = completed.filter(id => {
+        const item = state.craftingQueue.find(q => q.id === id);
+        return item?.recipeId === 'sushi_emas';
+      }).length;
       if (totalCooked > 0) {
-        set(s => ({
-          stats: {
-            ...s.stats,
-            totalCooked: (s.stats?.totalCooked || 0) + totalCooked,
-            ...(totalSushiEmas > 0 ? { totalSushiEmasMade: (s.stats?.totalSushiEmasMade || 0) + totalSushiEmas } : {}),
-          }
-        }));
+        set(draft => {
+          draft.stats.totalCooked = (draft.stats.totalCooked || 0) + totalCooked;
+          if (totalSushiEmas > 0) draft.stats.totalSushiEmasMade = (draft.stats.totalSushiEmasMade || 0) + totalSushiEmas;
+        });
         get().markSessionAction?.('cooked');
         get().checkAchievements?.();
       }
@@ -528,51 +539,29 @@ export const createPlayerSlice = (set, get) => ({
     const state = get();
     const index = state.craftingQueue.findIndex(q => q.id === queueId);
     if (index === -1) return false;
-
     const item = state.craftingQueue[index];
     if (Date.now() - item.startTime < item.duration) return false;
-
-    const recipe = RECIPES.find((r) => r.id === item.recipeId);
+    const recipe = RECIPES.find(r => r.id === item.recipeId);
     if (!recipe) {
-        const newQueue = [...state.craftingQueue];
-        newQueue.splice(index, 1);
-        set({ craftingQueue: newQueue });
-        return false;
+      set(draft => { draft.craftingQueue.splice(index, 1); });
+      return false;
     }
 
-    const inv = { ...state.inventory };
-    inv[recipe.id] = (inv[recipe.id] || 0) + 1;
-    
-    const cat = state.inventoryByCategory ? { ...state.inventoryByCategory } : null;
-    if (cat) {
-      const outputCat = recipe.type === 'processing' ? 'processed' : 'cooked';
-      const catItems = { ...(cat[outputCat] || {}) };
-      catItems[recipe.id] = { quantity: (catItems[recipe.id]?.quantity || 0) + 1 };
-      cat[outputCat] = catItems;
-    }
-    
-    const newQueue = [...state.craftingQueue];
-    newQueue.splice(index, 1);
+    const cat = recipe.type === 'processing' ? 'processed' : 'cooked';
+    INV.add(cat, recipe.id, 1);
 
-    set({ craftingQueue: newQueue, inventory: inv, ...(cat ? { inventoryByCategory: cat } : {}) });
+    set(draft => { draft.craftingQueue.splice(index, 1); });
     get().addXP(recipe.xp || 0);
-    if (recipe.type === 'restaurant') {
-      get().progressQuest?.('craft', recipe.id, 1);
-    }
-    // ===== Stats & Achievement tracking =====
-    set(s => ({
-      stats: {
-        ...s.stats,
-        totalCooked: (s.stats?.totalCooked || 0) + 1,
-        ...(recipe.id === 'sushi_emas' ? { totalSushiEmasMade: (s.stats?.totalSushiEmasMade || 0) + 1 } : {}),
-      }
-    }));
+    if (recipe.type === 'restaurant') get().progressQuest?.('craft', recipe.id, 1);
+    set(draft => {
+      draft.stats.totalCooked = (draft.stats.totalCooked || 0) + 1;
+      if (recipe.id === 'sushi_emas') draft.stats.totalSushiEmasMade = (draft.stats.totalSushiEmasMade || 0) + 1;
+    });
     get().markSessionAction?.('cooked');
     get().checkAchievements?.();
     return true;
   },
 
-  // ===== ORDERS =====
   generateOrders: () => {
     const state = get();
     const level = state.level || 1;
@@ -581,60 +570,45 @@ export const createPlayerSlice = (set, get) => ({
       if (level < 10) return t.tier <= 2;
       return true;
     });
-
-    // ===== Tier 2+ hanya menerima Masakan Jadi =====
-    const isCookedItem = (itemId) => {
-      return RECIPES.some(r => r.id === itemId);
-    };
+    const isCookedItem = (itemId) => RECIPES.some(r => r.id === itemId);
     const filteredTemplates = templates.filter(t => {
-      if (t.tier === 1) return true; // Tier 1: bahan mentah OK
-      return t.items.every(item => isCookedItem(item.id)); // Tier 2+: harus masakan jadi
+      if (t.tier === 1) return true;
+      return t.items.every(item => isCookedItem(item.id));
     });
-
     const newOrders = [];
     for (let i = 0; i < 3; i++) {
       const pool = filteredTemplates.length > 0 ? filteredTemplates : templates;
       const t = pool[Math.floor(Math.random() * pool.length)];
-      newOrders.push({
-        id: Math.random().toString(36).substring(2, 9),
-        ...t,
-        createdAt: Date.now()
-      });
+      newOrders.push({ id: Math.random().toString(36).substring(2, 9), ...t, createdAt: Date.now() });
     }
-    
-    set({ orders: newOrders });
+    set(draft => { draft.orders = newOrders; });
   },
 
   fulfillOrder: (orderId) => {
     const state = get();
     const orderIndex = state.orders.findIndex(o => o.id === orderId);
     if (orderIndex === -1) return false;
-    
     const order = state.orders[orderIndex];
-    const inv = { ...state.inventory };
 
     for (const item of order.items) {
-      if ((inv[item.id] || 0) < item.qty) {
+      const cat = getItemCategory(item.id);
+      if (!cat || (state.inventoryByCategory[cat]?.[item.id]?.qty || 0) < item.qty) {
         get().enqueueNotification(`Bahan tidak cukup: ${item.qty}x ${item.id}`, { type: 'error' });
         return false;
       }
     }
 
     for (const item of order.items) {
-      inv[item.id] -= item.qty;
-      if (inv[item.id] <= 0) delete inv[item.id];
+      const cat = getItemCategory(item.id);
+      INV.remove(cat, item.id, item.qty);
     }
 
     get().addCoins(order.coins);
     get().addXP(order.xp);
-    
-    const updatedOrders = [...state.orders];
-    updatedOrders.splice(orderIndex, 1);
-    
-    set({
-      inventory: inv,
-      orders: updatedOrders,
-      stats: { ...state.stats, totalOrdersFulfilled: (state.stats?.totalOrdersFulfilled || 0) + 1 },
+
+    set(draft => {
+      draft.orders.splice(orderIndex, 1);
+      draft.stats.totalOrdersFulfilled = (draft.stats.totalOrdersFulfilled || 0) + 1;
     });
     get().checkAchievements?.();
     get().enqueueNotification(`Pesanan selesai! +${order.coins} 💰`, { icon: '📦', type: 'success' });
@@ -647,29 +621,14 @@ export const createPlayerSlice = (set, get) => ({
       get().generateOrders();
       return;
     }
-
     const now = Date.now();
-    let changed = false;
-    const newOrders = [...state.orders];
-    
-    for (let i = newOrders.length - 1; i >= 0; i--) {
-      const order = newOrders[i];
-      if (now - order.createdAt > order.timer * 1000) {
-        newOrders.splice(i, 1);
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      set({ orders: newOrders });
-      if (newOrders.length === 0) {
-        get().generateOrders();
-      }
+    const newOrders = state.orders.filter(o => now - o.createdAt <= o.timer * 1000);
+    if (newOrders.length !== state.orders.length) {
+      set(draft => { draft.orders = newOrders; });
+      if (newOrders.length === 0) get().generateOrders();
     }
   },
 
-  // ===== TUTORIAL =====
-  // ===== CRAFTING BAIT / SPECIAL ITEMS =====
   craftBait: (baitId) => {
     const state = get();
     const bait = SHOP_BAIT.find(b => b.id === baitId);
@@ -677,51 +636,42 @@ export const createPlayerSlice = (set, get) => ({
       get().enqueueNotification('Item ini tidak bisa di-craft!', { type: 'error' });
       return false;
     }
-
-    const inv = state.inventory;
     for (const [mineral, qty] of Object.entries(bait.mineralReq)) {
-      if ((inv[mineral] || 0) < qty) {
+      if ((state.inventoryByCategory.minerals?.[mineral]?.qty || 0) < qty) {
         get().enqueueNotification(`Bahan tidak cukup! Butuh ${qty}x ${mineral}`, { type: 'error' });
         return false;
       }
     }
-
-    const newInventory = { ...inv };
     for (const [mineral, qty] of Object.entries(bait.mineralReq)) {
-      newInventory[mineral] -= qty;
-      if (newInventory[mineral] <= 0) delete newInventory[mineral];
+      INV.remove('minerals', mineral, qty);
     }
-    newInventory[baitId] = (newInventory[baitId] || 0) + 1;
-
-    set({ inventory: newInventory });
+    INV.add('bait', baitId, 1);
     get().enqueueNotification(`Berhasil membuat ${bait.emoji} ${bait.name}!`, { type: 'success' });
     return true;
   },
 
-  // ===== MINIGAME ACTIONS =====
   recordFishingCatch: (caughtFish, bait) => {
-    get().addItem(caughtFish.id, 1);
+    const cat = 'fish';
+    INV.add(cat, caughtFish.id, 1);
     get().addXP(15 + (bait ? 5 : 0));
     get().progressQuest('fish', caughtFish.id, 1);
-    set(s => ({ stats: { ...s.stats, totalFished: (s.stats?.totalFished || 0) + 1 } }));
+    set(draft => { draft.stats.totalFished = (draft.stats.totalFished || 0) + 1; });
     get().markSessionAction?.('fished');
     get().checkAchievements?.();
   },
 
   recordBaitUsage: (bait) => {
     if (bait?.id === 'umpan_cacing') {
-      set(s => ({ stats: { ...s.stats, totalWormBaitUsed: (s.stats?.totalWormBaitUsed || 0) + 1 } }));
+      set(draft => { draft.stats.totalWormBaitUsed = (draft.stats.totalWormBaitUsed || 0) + 1; });
     }
   },
 
   completeTutorialStep: (step) => {
     const state = get();
-    if (state.tutorialStep === step) {
-      set({ tutorialStep: step + 1 });
-    }
+    if (state.tutorialStep === step) set(draft => { draft.tutorialStep = step + 1; });
   },
-  
+
   skipTutorial: () => {
-    set({ tutorialStep: -1 });
+    set(draft => { draft.tutorialStep = -1; });
   },
 });
