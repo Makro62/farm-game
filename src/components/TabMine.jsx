@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { MINERALS } from '@/lib/data/minerals';
 import { SHOP_MINING } from '@/lib/data/shop';
 import { motion } from 'framer-motion';
@@ -13,6 +14,14 @@ import SideDock from './ui/SideDock';
 import { useMining } from '@/lib/hooks/useMining';
 
 const TARGET_TOOLS = new Set(['bom_kecil', 'tali']);
+
+const FLOOR_META = {
+  1: { name: 'Lantai Dasar', emoji: '🪨', hazard: null },
+  2: { name: 'Koridor Gelap', emoji: '🕯️', hazard: 'cave_in' },
+  3: { name: 'Gua Dalam', emoji: '🦇', hazard: 'bats' },
+  4: { name: 'Terowongan Api', emoji: '🌋', hazard: 'lava' },
+  5: { name: 'Kamar Harta', emoji: '👑', hazard: 'gas' },
+};
 
 export default function TabMine() {
   const {
@@ -35,6 +44,19 @@ export default function TabMine() {
     handleShopBuy,
     getRegenProgress
   } = useMining();
+
+  const [selectedFloor, setSelectedFloor] = useState(mining.currentFloor || 1);
+
+  const canEnterFloor = (floor) => {
+    if (floor > (mining.maxFloorReached || 1) + 1) return false;
+    if (floor >= 3 && !lanternActive && mining.pickaxeLevel < 2) return false;
+    return true;
+  };
+
+  const handleChangeFloor = (floor) => {
+    if (!canEnterFloor(floor)) return;
+    setSelectedFloor(floor);
+  };
 
   const shopPanel = (
     <>
@@ -139,6 +161,28 @@ export default function TabMine() {
           {workers.miner ? 'Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_MINER.toLocaleString()} 💰`}
         </span>
       </button>
+
+      {/* Smeltery Panel */}
+      {mining.smeltery?.unlocked && (
+        <>
+          <ShopSectionTitle icon="🔥">Smeltery</ShopSectionTitle>
+          <div className="glass-card p-2 mb-3 text-xs">
+            <div className="font-bold text-[var(--text-primary)] mb-1">Antrean Peleburan</div>
+            {mining.smeltery.queue.length === 0 ? (
+              <div className="text-[var(--text-secondary)] italic">Kosong</div>
+            ) : (
+              mining.smeltery.queue.map((job, i) => (
+                <div key={i} className="flex items-center justify-between py-1 border-b border-white/10 last:border-0">
+                  <span>{job.recipe}</span>
+                  <span className="text-[var(--gold-deep)]">
+                    {job.completeAt ? Math.ceil((job.completeAt - Date.now()) / 1000) + 's' : 'Selesai'}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
     </>
   );
 
@@ -160,9 +204,44 @@ export default function TabMine() {
               </GameActionButton>
             </GameAreaHeader>
 
+            {/* Floor Selector */}
+            <div className="flex flex-wrap justify-center gap-1 mb-2">
+              {[1, 2, 3, 4, 5].map((floor) => {
+                const meta = FLOOR_META[floor];
+                const locked = !canEnterFloor(floor);
+                const isCurrent = selectedFloor === floor;
+                return (
+                  <button
+                    key={floor}
+                    onClick={() => handleChangeFloor(floor)}
+                    disabled={locked}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border-2 transition-all
+                      ${isCurrent
+                        ? 'bg-[var(--gold)] text-[var(--text-primary)] border-[var(--gold-deep)] shadow-sm'
+                        : locked
+                          ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed opacity-50'
+                          : 'bg-[#5c5952] text-[var(--text-primary)] border-[#3d3b36] hover:bg-[#6b6861]'
+                      }`}
+                  >
+                    <div className="text-xs">{meta.emoji}</div>
+                    <div>{meta.name}</div>
+                    {locked && <div className="text-[8px]">🔒</div>}
+                  </button>
+                );
+              })}
+            </div>
+
             {selectedMiningTool && (
               <div className="mb-2 text-center text-xs font-bold text-[var(--gold-deep)] bg-[var(--gold)]/20 rounded-xl py-1.5 px-3 border-2 border-[var(--gold)]">
                 {SHOP_MINING.find((t) => t.id === selectedMiningTool)?.emoji} Klik petak untuk memakai alat
+              </div>
+            )}
+
+            {/* Hazard Warning */}
+            {FLOOR_META[selectedFloor]?.hazard && (
+              <div className="mb-2 text-center text-[10px] font-bold text-red-400 bg-red-900/30 rounded-xl py-1 px-3 border border-red-500/30">
+                ⚠️ Bahaya: {FLOOR_META[selectedFloor].hazard === 'cave_in' ? 'Longsor' : FLOOR_META[selectedFloor].hazard === 'bats' ? 'Kelelawar' : FLOOR_META[selectedFloor].hazard === 'lava' ? 'Lava' : 'Gas Beracun'}
+                {selectedFloor >= 3 && !lanternActive && <span> — Nyalakan senter untuk visibilitas!</span>}
               </div>
             )}
 
@@ -176,6 +255,7 @@ export default function TabMine() {
                   const isReady = node.status === 'ready';
                   const progress = getRegenProgress(node);
                   const mineral = MINERALS.find((m) => m.id === node.type);
+                  const hasHazard = node.hazard && selectedFloor >= 3;
 
                   return (
                     <motion.button
@@ -193,6 +273,7 @@ export default function TabMine() {
                               : 'bg-[#1f1e1c] border-[#141312] cursor-not-allowed'
                         }
                         ${selectedMiningTool ? 'ring-1 ring-orange-400/50' : ''}
+                        ${hasHazard ? 'ring-1 ring-red-500/50' : ''}
                       `}
                       title={isReady && mineral ? `${mineral.emoji} ${mineral.name}` : undefined}
                     >
@@ -205,6 +286,9 @@ export default function TabMine() {
                             <div className="progress-fill" style={{ width: `${progress}%` }} />
                           </div>
                         </div>
+                      )}
+                      {hasHazard && (
+                        <span className="absolute top-0 right-0 text-[10px]">⚠️</span>
                       )}
                     </motion.button>
                   );

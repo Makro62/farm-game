@@ -3,7 +3,6 @@ import { MINERALS } from '@/lib/data/minerals';
 import { FISHES } from '@/lib/data/fishes';
 import { RECIPES } from '@/lib/data/recipes';
 import { QUALITY_MULTIPLIERS } from '@/lib/data/item-helpers';
-import { GAME_CONSTANTS } from '@/lib/constants';
 
 const SEASON_PRICE_MODIFIERS = {
   wortel: { spring: 1.1, summer: 1.0, autumn: 0.9, winter: 0.8 },
@@ -23,10 +22,6 @@ const SEASON_PRICE_MODIFIERS = {
 export function getCropGrowthSpeed(season, weather, buildings, workers) {
   let speed = 1.0;
 
-  if (season && CROP_DATA) {
-    speed *= 1.0;
-  }
-
   if (weather?.includes('Hujan') || weather?.includes('rainy')) {
     speed *= 1.2;
   } else if (weather?.includes('Berangin') || weather?.includes('windy')) {
@@ -36,6 +31,7 @@ export function getCropGrowthSpeed(season, weather, buildings, workers) {
   }
 
   if (buildings?.greenhouse?.active) speed *= 1.2;
+  if (buildings?.greenhouse?.unlocked) speed *= 1.1;
 
   if (workers?.farmer?.skills?.watering >= 3) speed *= 1.05;
 
@@ -43,50 +39,55 @@ export function getCropGrowthSpeed(season, weather, buildings, workers) {
 }
 
 export function calculateSellPrice(itemId, gameState) {
-  const state = gameState || {};
-  const season = state.season?.current;
-  const buildings = state.buildings || {};
-  const event = state.activeEvent;
-  const market = state.market || {};
+  if (!gameState) return null;
+  const { season, buildings, activeEvent, market, inventoryByCategory } = gameState;
+  const currentSeason = season?.current;
+  const event = activeEvent;
+  const supply = market?.supply?.[itemId] || 0;
+  const demand = market?.demand?.[itemId] || 100;
+  const saturationMult = Math.max(0.5, Math.min(2.0, demand / (supply + 1)));
 
+  // Try crops first
   const cropData = CROP_DATA[itemId];
   if (cropData) {
     let price = cropData.baseSellPrice;
 
-    if (season && SEASON_PRICE_MODIFIERS[itemId]?.[season]) {
-      price *= SEASON_PRICE_MODIFIERS[itemId][season];
+    if (currentSeason && SEASON_PRICE_MODIFIERS[itemId]?.[currentSeason]) {
+      price *= SEASON_PRICE_MODIFIERS[itemId][currentSeason];
     }
 
-    if (buildings.silo) price *= 1.15;
+    if (buildings?.silo?.unlocked) {
+      price *= 1.15 + (buildings.silo.level || 0) * 0.05;
+    }
 
     if (event?.id === 'panen') price *= 2;
 
-    const supply = market.supply?.[itemId] || 0;
-    const demand = market.demand?.[itemId] || 100;
-    const saturationMult = Math.max(0.5, Math.min(2.0, demand / (supply + 1)));
     price *= saturationMult;
 
     return Math.floor(price);
   }
 
+  // Try minerals
   const mineral = MINERALS.find(m => m.id === itemId);
   if (mineral) {
-    let price = mineral.price;
+    let price = mineral.basePrice || mineral.price;
     if (event?.id === 'tambang') price *= 1.5;
     return Math.floor(price);
   }
 
+  // Try fish
   const fish = FISHES.find(f => f.id === itemId);
   if (fish) {
-    let price = fish.priceNormal;
+    let price = fish.basePrice || fish.priceNormal;
     if (event?.id === 'bahari') price *= 2;
     return Math.floor(price);
   }
 
+  // Try recipes
   const recipe = RECIPES.find(r => r.id === itemId);
   if (recipe) {
     let price = recipe.price;
-    if (buildings.silo) price *= 1.1;
+    if (buildings?.silo?.unlocked) price *= 1.1;
     return Math.floor(price);
   }
 
@@ -98,4 +99,26 @@ export function calculateSellPriceWithQuality(itemId, quality, gameState) {
   if (base === null) return null;
   const mult = QUALITY_MULTIPLIERS[quality] || 1.0;
   return Math.floor(base * mult);
+}
+
+export function getDynamicPrice(itemId, category, gameState) {
+  const item = gameState?.shop?.[category]?.items?.[itemId];
+  if (!item) return null;
+  const basePrice = item.price;
+
+  let finalPrice = basePrice;
+
+  if (gameState?.season?.current) {
+    const seasonMult = SEASON_PRICE_MODIFIERS[itemId]?.[gameState.season.current] || 1.0;
+    finalPrice *= seasonMult;
+  }
+
+  const repDiscount = Math.min((gameState?.town?.reputation || 0) / 10000, 0.2);
+  finalPrice *= (1 - repDiscount);
+
+  if (gameState?.activeEvent?.priceModifiers?.[itemId]) {
+    finalPrice *= gameState.activeEvent.priceModifiers[itemId];
+  }
+
+  return Math.floor(finalPrice);
 }

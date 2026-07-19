@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/lib/store';
-import { RECIPES } from '../lib/data/recipes';
-import { getCropEmoji, getItemDisplayName } from '../lib/data/item-helpers';
+import { RECIPES, canCook as canCookRecipe } from '../lib/data/recipes';
+import { getItemEmoji, getItemDisplayName } from '../lib/data/item-helpers';
 import { CraftingWidget } from './ui/CraftingWidget';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import { QuestPanel } from './game/QuestPanel';
@@ -180,6 +180,9 @@ export default function TabRestaurant() {
     enqueueNotification
   } = useRestaurant();
 
+  const restaurant = useGameStore((s) => s.restaurant);
+  const totalServed = useGameStore((s) => s.stats?.totalServed || 0);
+
   return (
     <TabPage>
       <GameStage
@@ -200,6 +203,25 @@ export default function TabRestaurant() {
                 Auto: {autoChef ? 'ON' : 'OFF'}
               </GameActionButton>
             </GameAreaHeader>
+
+            {/* Restaurant Stats */}
+            <div className="flex items-center justify-between gap-2 mb-2 px-3 py-1.5 rounded-xl bg-[var(--primary-light)]/20 border border-[var(--primary)]/30 text-xs font-bold">
+              <div className="flex items-center gap-2">
+                <span>⭐</span>
+                <span className="text-[var(--text-primary)]">
+                  Reputasi: {restaurant?.reputation || 0}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>🍽️</span>
+                <span className="text-[var(--text-primary)]">
+                  {totalServed} dilayani
+                </span>
+                <span className="text-[var(--text-secondary)]">
+                  {activeCustomers.length} sekarang
+                </span>
+              </div>
+            </div>
 
             <div
               className="field-frame relative stage-play-frame overflow-hidden bg-cover bg-center"
@@ -288,19 +310,27 @@ export default function TabRestaurant() {
                                 )}
                                 
                                 <div className={`flex flex-wrap gap-0.5 justify-center mt-1 ${!isUnlocked ? 'opacity-0' : ''}`}>
-                                  {Object.entries(recipe.req).map(([item, qty]) => (
-                                    <span
-                                      key={item}
-                                      className={`text-[9px] px-1 rounded ${
-                                        (inventory[item] || 0) >= qty
-                                          ? 'bg-[var(--primary-light)]/40'
-                                          : 'bg-red-100 text-red-700'
-                                      }`}
-                                    >
-                                      {getCropEmoji(item)}
-                                      {qty}
-                                    </span>
-                                  ))}
+                                  {Object.entries(recipe.req).map(([ingredient, qty]) => {
+                                    const parts = ingredient.split('.');
+                                    const itemId = parts.length === 2 ? parts[1] : ingredient;
+                                    const cat = parts.length === 2 ? parts[0] : null;
+                                    const available = cat
+                                      ? (useGameStore.getState().inventoryByCategory?.[cat]?.[itemId]?.quantity || 0)
+                                      : (inventory[itemId] || 0);
+                                    return (
+                                      <span
+                                        key={ingredient}
+                                        className={`text-[9px] px-1 rounded ${
+                                          available >= qty
+                                            ? 'bg-[var(--primary-light)]/40'
+                                            : 'bg-red-100 text-red-700'
+                                        }`}
+                                      >
+                                        {getItemEmoji(itemId)}
+                                        {qty}
+                                      </span>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </button>

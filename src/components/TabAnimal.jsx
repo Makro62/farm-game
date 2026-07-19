@@ -32,6 +32,7 @@ export default function TabAnimal() {
   } = useRanching();
   
   const swapAnimals = useGameStore((state) => state.swapAnimals);
+  const buildings = useGameStore((state) => state.buildings);
   const [shopAmounts, setShopAmounts] = useState({});
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -48,6 +49,30 @@ export default function TabAnimal() {
                 Auto: {autoFarm ? 'ON' : 'OFF'}
               </GameActionButton>
             </GameAreaHeader>
+
+            {/* Building & Worker Status */}
+            <div className="flex flex-wrap gap-1 mb-2 px-2">
+              {buildings?.coop?.unlocked && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                  🐔 Kandang Lv{buildings.coop.level || 1}
+                </span>
+              )}
+              {buildings?.barn?.unlocked && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                  🐄 Barn Lv{buildings.barn.level || 1}
+                </span>
+              )}
+              {workers?.rancher && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                  👩‍🌾 Peternak {autoFarm ? 'Aktif' : 'Istirahat'}
+                </span>
+              )}
+              {animals.length > 0 && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                  🐾 {animals.length} ekor
+                </span>
+              )}
+            </div>
 
             <div
               className={`p-3 sm:p-4 field-frame relative stage-play-frame transition-all bg-cover bg-center ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}
@@ -101,8 +126,24 @@ export default function TabAnimal() {
                       className={`group kandang-animal-cell
                         ${isEditMode ? 'cursor-grab ring-2 ring-yellow-400' : ''}
                         ${isReady ? (isHungry ? 'ring-2 ring-red-400/80' : 'ring-2 ring-yellow-400/80 animate-breathe') : ''}
+                        ${animal.health < 50 ? 'ring-2 ring-red-600/60' : ''}
                       `}
                     >
+                      {/* Health Indicator */}
+                      {animal.health !== undefined && animal.health < 100 && (
+                        <div className="absolute top-0 left-0 right-0 h-1 z-30">
+                          <div className="progress-bar !h-1 !rounded-none">
+                            <div
+                              className={`progress-fill ${animal.health > 50 ? 'bg-green-500' : 'bg-red-500'}`}
+                              style={{ width: `${animal.health}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {/* Happiness Indicator */}
+                      {animal.happiness !== undefined && animal.happiness < 80 && (
+                        <div className="absolute -top-1 -left-1 text-[8px] z-30">😟</div>
+                      )}
                       <motion.div
                         animate={isReady ? { y: [0, -5, 0] } : {}}
                         transition={{ duration: 1, repeat: Infinity }}

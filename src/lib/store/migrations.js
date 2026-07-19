@@ -32,7 +32,10 @@ export const partializeState = (state) => ({
   selectedRecipe: state.selectedRecipe,
   season: state.season,
   weather: state.weather,
-  mining: state.mining,
+  mining: state.mining ? {
+    ...state.mining,
+    nodes: state.mining.nodes,
+  } : state.mining,
   npcs: state.npcs,
   activeEvent: state.activeEvent,
   dailyQuests: state.dailyQuests,
@@ -44,6 +47,8 @@ export const partializeState = (state) => ({
   coinMultiplierExpireAt: state.coinMultiplierExpireAt,
   growthMultiplierExpireAt: state.growthMultiplierExpireAt,
   buildings: state.buildings,
+  restaurant: state.restaurant,
+  town: state.town,
   decorations: state.decorations,
   activeCustomers: state.activeCustomers,
   achievements: state.achievements,
@@ -62,15 +67,21 @@ export const migrateState = (persistedState, currentState) => {
   if (merged.mining) {
     if (merged.mining.pickaxeLevel == null) merged.mining.pickaxeLevel = 1;
     if (merged.mining.lanternUntil == null) merged.mining.lanternUntil = null;
+    if (merged.mining.currentFloor == null) merged.mining.currentFloor = 1;
+    if (merged.mining.maxFloorReached == null) merged.mining.maxFloorReached = 1;
+    if (!merged.mining.smeltery) merged.mining.smeltery = { unlocked: false, level: 0, queue: [], fuel: 0 };
+    if (Array.isArray(merged.mining.nodes)) {
+      merged.mining.nodes = merged.mining.nodes.map(n => ({ ...n, hazard: n.hazard || null }));
+    }
   }
 
+  const oldWorkers = merged.workers || {};
   merged.workers = {
-    farmer: false,
-    rancher: false,
-    fisher: false,
-    miner: false,
-    chef: false,
-    ...(merged.workers || {}),
+    farmer: typeof oldWorkers.farmer === 'object' ? oldWorkers.farmer : oldWorkers.farmer ? { hired: true, name: 'Petani Budi', level: 1, stamina: 100, maxStamina: 100, happiness: 80, skills: { farming: 1, harvesting: 1, watering: 1 } } : null,
+    rancher: typeof oldWorkers.rancher === 'object' ? oldWorkers.rancher : oldWorkers.rancher ? { hired: true, name: 'Peternak Siti', level: 1, stamina: 100, maxStamina: 100, happiness: 80, skills: { ranching: 1, collecting: 1, feeding: 1 } } : null,
+    fisher: typeof oldWorkers.fisher === 'object' ? oldWorkers.fisher : oldWorkers.fisher ? { hired: true, name: 'Nelayan Mamat', level: 1, stamina: 100, maxStamina: 100, happiness: 80, skills: { fishing: 1, baiting: 1 } } : null,
+    miner: typeof oldWorkers.miner === 'object' ? oldWorkers.miner : oldWorkers.miner ? { hired: true, name: 'Penambang Tarjo', level: 1, stamina: 100, maxStamina: 100, happiness: 80, skills: { mining: 1, blasting: 1 } } : null,
+    chef: typeof oldWorkers.chef === 'object' ? oldWorkers.chef : oldWorkers.chef ? { hired: true, name: 'Koki Juna', level: 1, stamina: 100, maxStamina: 100, happiness: 80, skills: { cooking: 1, baking: 1, prep: 1 } } : null,
   };
 
   merged = migrateLegacyWorkers(merged);
@@ -96,10 +107,15 @@ export const migrateState = (persistedState, currentState) => {
   if (merged.energy == null) merged.energy = 100;
   if (merged.maxEnergy == null) merged.maxEnergy = 100;
 
+  const oldBuildings = merged.buildings || {};
   merged.buildings = {
-    silo: false,
-    greenhouse: false,
-    ...(merged.buildings || {}),
+    silo: typeof oldBuildings.silo === 'object' ? oldBuildings.silo : { unlocked: !!oldBuildings.silo, level: oldBuildings.silo ? 1 : 0, maxLevel: 3 },
+    greenhouse: typeof oldBuildings.greenhouse === 'object' ? oldBuildings.greenhouse : { unlocked: !!oldBuildings.greenhouse, level: oldBuildings.greenhouse ? 1 : 0, maxLevel: 1 },
+    mill: oldBuildings.mill || { unlocked: false, level: 0, queue: [] },
+    well: oldBuildings.well || { unlocked: true, level: 1, maxLevel: 3 },
+    workshop: oldBuildings.workshop || { unlocked: false, level: 0, maxLevel: 3 },
+    coop: oldBuildings.coop || { unlocked: false, level: 0, maxLevel: 3, capacity: 0 },
+    barn: oldBuildings.barn || { unlocked: false, level: 0, maxLevel: 3, capacity: 0 },
   };
   if (!Array.isArray(merged.decorations)) {
     merged.decorations = [];

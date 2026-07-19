@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '@/lib/store';
-import { RECIPES } from '@/lib/data/recipes';
-import { getItemDisplayName } from '@/lib/data/item-helpers';
+import { RECIPES, canCook as canCookRecipe, getItemCategory } from '@/lib/data/recipes';
+import { getItemDisplayName, getItemEmoji } from '@/lib/data/item-helpers';
 import { GAME_CONSTANTS } from '@/lib/constants';
 
 export function useRestaurant() {
@@ -26,17 +26,23 @@ export function useRestaurant() {
       ? RECIPES.filter(r => r.type !== 'processing') 
       : RECIPES.filter((r) => r.type === menuFilter);
 
-  const canCook = (recipe) =>
-    Object.entries(recipe.req || {}).every(([item, qty]) => (inventory[item] || 0) >= qty);
+  const inventoryByCategory = useGameStore((state) => state.inventoryByCategory);
+
+  const canCook = (recipe) => {
+    if (!recipe || !recipe.req) return false;
+    const result = canCookRecipe(recipe.id, inventoryByCategory, inventory);
+    return result.canCook;
+  };
 
   const handleCook = (recipeId) => {
     const recipe = RECIPES.find(r => r.id === recipeId);
     if (!recipe) return;
-    const missing = Object.entries(recipe.req)
-      .filter(([item, qty]) => (inventory[item] || 0) < qty)
-      .map(([item, qty]) => `${qty - (inventory[item] || 0)}x ${getItemDisplayName(item)}`);
-    if (missing.length > 0) {
-      enqueueNotification(`Kurang bahan: ${missing.join(', ')}`, { icon: '📋', duration: 4000, type: 'error' });
+    const result = canCookRecipe(recipe.id, inventoryByCategory, inventory);
+    if (!result.canCook && result.missing) {
+      const missingText = result.missing
+        .map(m => `${m.required - m.available}x ${getItemDisplayName(m.ingredient)}`)
+        .join(', ');
+      enqueueNotification(`Kurang bahan: ${missingText}`, { icon: '📋', duration: 4000, type: 'error' });
       return;
     }
     if (startCrafting(recipeId)) {

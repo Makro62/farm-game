@@ -4,7 +4,7 @@ import { FISHES } from '../../data/fishes';
 import { SHOP_SEEDS } from '../../data/crops';
 import { SHOP_BAIT } from '../../data/shop';
 import { GAME_CONSTANTS } from '../../constants';
-import { safeCoins, safePositiveNumber } from '../utils';
+import { safeCoins, safePositiveNumber, checkRecipeIngredients, consumeRecipeIngredients, getIngredientAvailability } from '../utils';
 
 export const createPlayerSlice = (set, get) => ({
 
@@ -403,25 +403,24 @@ export const createPlayerSlice = (set, get) => ({
       return false;
     }
 
-    const inv = { ...state.inventory };
-    for (const [item, qty] of Object.entries(recipe.req)) {
-      if ((inv[item] || 0) < qty) {
-        get().enqueueNotification(`Bahan tidak cukup: ${qty}x ${item}`, { type: 'error' });
-        return false;
-      }
+    if (!checkRecipeIngredients(recipe, state.inventory, state.inventoryByCategory)) {
+      const missing = Object.entries(recipe.req).filter(([ing, qty]) => {
+        return getIngredientAvailability(ing, state.inventory, state.inventoryByCategory) < qty;
+      });
+      get().enqueueNotification(`Bahan tidak cukup: ${missing.map(([ing]) => ing).join(', ')}`, { type: 'error' });
+      return false;
     }
 
-    for (const [item, qty] of Object.entries(recipe.req)) {
-      inv[item] -= qty;
-      if (inv[item] <= 0) delete inv[item];
-    }
+    const consumed = consumeRecipeIngredients(recipe, state.inventory, state.inventoryByCategory);
+    if (!consumed) return false;
 
     const id = Math.random().toString(36).substring(2, 9);
     const startTime = Date.now();
     const duration = recipe.time * 1000;
 
     set((s) => ({
-      inventory: inv,
+      inventory: consumed.inventory,
+      inventoryByCategory: consumed.inventoryByCategory,
       craftingQueue: [...s.craftingQueue, { id, recipeId, startTime, duration }],
     }));
 
@@ -440,12 +439,21 @@ export const createPlayerSlice = (set, get) => ({
 
     // Refund ingredients
     const newInventory = { ...state.inventory };
-    for (const [item, qty] of Object.entries(recipe.req)) {
-      newInventory[item] = (newInventory[item] || 0) + qty;
+    const newCat = state.inventoryByCategory ? { ...state.inventoryByCategory } : null;
+    for (const [ingredient, qty] of Object.entries(recipe.req)) {
+      const parts = ingredient.split('.');
+      if (parts.length === 2 && newCat?.[parts[0]]) {
+        const catItems = { ...newCat[parts[0]] };
+        catItems[parts[1]] = { quantity: (catItems[parts[1]]?.quantity || 0) + qty };
+        newCat[parts[0]] = catItems;
+      } else {
+        newInventory[ingredient] = (newInventory[ingredient] || 0) + qty;
+      }
     }
 
     set(s => ({
       inventory: newInventory,
+      ...(newCat ? { inventoryByCategory: newCat } : {}),
       craftingQueue: s.craftingQueue.filter(q => q.id !== queueId)
     }));
     get().enqueueNotification('Dibatalkan, bahan dikembalikan!', { type: 'success' });
@@ -459,6 +467,7 @@ export const createPlayerSlice = (set, get) => ({
     let changed = false;
     const newQueue = [...state.craftingQueue];
     const inv = { ...state.inventory };
+    const cat = state.inventoryByCategory ? { ...state.inventoryByCategory } : null;
     let xpGained = 0;
 
     for (let i = newQueue.length - 1; i >= 0; i--) {
@@ -467,6 +476,12 @@ export const createPlayerSlice = (set, get) => ({
         const recipe = RECIPES.find((r) => r.id === item.recipeId);
         if (recipe) {
           inv[recipe.id] = (inv[recipe.id] || 0) + 1;
+          if (cat) {
+            const outputCat = recipe.type === 'processing' ? 'processed' : 'cooked';
+            const catItems = { ...(cat[outputCat] || {}) };
+            catItems[recipe.id] = { quantity: (catItems[recipe.id]?.quantity || 0) + 1 };
+            cat[outputCat] = catItems;
+          }
           xpGained += recipe.xp || 0;
           if (recipe.type === 'restaurant') {
             get().progressQuest?.('craft', recipe.id, 1);
@@ -481,6 +496,7 @@ export const createPlayerSlice = (set, get) => ({
       set({
         craftingQueue: newQueue,
         inventory: inv,
+        ...(cat ? { inventoryByCategory: cat } : {}),
       });
       if (xpGained > 0) get().addXP(xpGained);
       let totalCooked = 0;
@@ -527,10 +543,18 @@ export const createPlayerSlice = (set, get) => ({
     const inv = { ...state.inventory };
     inv[recipe.id] = (inv[recipe.id] || 0) + 1;
     
+    const cat = state.inventoryByCategory ? { ...state.inventoryByCategory } : null;
+    if (cat) {
+      const outputCat = recipe.type === 'processing' ? 'processed' : 'cooked';
+      const catItems = { ...(cat[outputCat] || {}) };
+      catItems[recipe.id] = { quantity: (catItems[recipe.id]?.quantity || 0) + 1 };
+      cat[outputCat] = catItems;
+    }
+    
     const newQueue = [...state.craftingQueue];
     newQueue.splice(index, 1);
 
-    set({ craftingQueue: newQueue, inventory: inv });
+    set({ craftingQueue: newQueue, inventory: inv, ...(cat ? { inventoryByCategory: cat } : {}) });
     get().addXP(recipe.xp || 0);
     if (recipe.type === 'restaurant') {
       get().progressQuest?.('craft', recipe.id, 1);

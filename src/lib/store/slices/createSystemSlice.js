@@ -1,4 +1,4 @@
-import { getMiningRegenMs, isWorkerActive, getGrowthMultiplier, normalizePlot, normalizePlots, normalizeAnimal, consumeInventoryItem, pickAutoSeed, safeCoins, safePositiveNumber, getAnimalProduceTime, rollMineralType } from '../utils';
+import { getMiningRegenMs, isWorkerActive, getGrowthMultiplier, normalizePlot, normalizePlots, normalizeAnimal, consumeInventoryItem, pickAutoSeed, safeCoins, safePositiveNumber, getAnimalProduceTime, rollMineralType, checkRecipeIngredients, consumeRecipeIngredients } from '../utils';
 import { SHOP_ANIMALS, ANIMAL_FEED } from '../../data/shop';
 import { FISHES } from '../../data/fishes';
 import { RECIPES } from '../../data/recipes';
@@ -437,26 +437,18 @@ export const createSystemSlice = (set, get) => ({
         );
         
         if (typeQueue.length < 3) {
-          let canCook = true;
-          for (const [item, qty] of Object.entries(recipe.req)) {
-            if ((inventory[item] || 0) < qty) {
-              canCook = false;
-              break;
+          if (checkRecipeIngredients(recipe, inventory, state.inventoryByCategory)) {
+            const consumed = consumeRecipeIngredients(recipe, inventory, state.inventoryByCategory);
+            if (consumed) {
+              inventory = consumed.inventory;
+              const id = Math.random().toString(36).substring(2, 9);
+              const startTime = Date.now();
+              const duration = recipe.time * 1000;
+              
+              craftingQueue.push({ id, recipeId: recipe.id, startTime, duration });
+              queueChanged = true;
+              get().enqueueNotification(`👨‍🍳 Koki Juna memasak ${recipe.name}!`, { id: 'auto-chef', type: 'success' });
             }
-          }
-          
-          if (canCook) {
-            for (const [item, qty] of Object.entries(recipe.req)) {
-              inventory[item] -= qty;
-              if (inventory[item] <= 0) delete inventory[item];
-            }
-            const id = Math.random().toString(36).substring(2, 9);
-            const startTime = Date.now();
-            const duration = recipe.time * 1000;
-            
-            craftingQueue.push({ id, recipeId: recipe.id, startTime, duration });
-            queueChanged = true;
-            get().enqueueNotification(`👨‍🍳 Koki Juna memasak ${recipe.name}!`, { id: 'auto-chef', type: 'success' });
           }
         }
       }

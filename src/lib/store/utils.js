@@ -84,6 +84,65 @@ export function safePositiveNumber(value, fallback = 0) {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
+// ===== RECIPE INGREDIENT HELPERS =====
+
+export function getIngredientAvailability(ingredientKey, inventory, inventoryByCategory) {
+  const parts = ingredientKey.split('.');
+  if (parts.length === 2) {
+    const [cat, itemId] = parts;
+    return inventoryByCategory?.[cat]?.[itemId]?.quantity || 0;
+  }
+  return inventory?.[ingredientKey] || 0;
+}
+
+export function consumeIngredient(ingredientKey, amount, inventory, inventoryByCategory) {
+  const parts = ingredientKey.split('.');
+  if (parts.length === 2) {
+    const [cat, itemId] = parts;
+    if (!inventoryByCategory?.[cat]?.[itemId]) return null;
+    const newCat = { ...inventoryByCategory };
+    const catItems = { ...newCat[cat] };
+    const next = (catItems[itemId]?.quantity || 0) - amount;
+    if (next <= 0) {
+      delete catItems[itemId];
+    } else {
+      catItems[itemId] = { ...catItems[itemId], quantity: next };
+    }
+    newCat[cat] = catItems;
+    return { inventory, inventoryByCategory: newCat };
+  }
+  const newInv = { ...inventory };
+  const next = (newInv[ingredientKey] || 0) - amount;
+  if (next <= 0) {
+    delete newInv[ingredientKey];
+  } else {
+    newInv[ingredientKey] = next;
+  }
+  return { inventory: newInv, inventoryByCategory };
+}
+
+export function checkRecipeIngredients(recipe, inventory, inventoryByCategory) {
+  for (const [ingredient, amount] of Object.entries(recipe.req || {})) {
+    const available = getIngredientAvailability(ingredient, inventory, inventoryByCategory);
+    if (available < amount) return false;
+  }
+  return true;
+}
+
+export function consumeRecipeIngredients(recipe, inventory, inventoryByCategory) {
+  let currentInv = { ...inventory };
+  let currentCat = inventoryByCategory ? { ...inventoryByCategory } : null;
+
+  for (const [ingredient, amount] of Object.entries(recipe.req || {})) {
+    const result = consumeIngredient(ingredient, amount, currentInv, currentCat);
+    if (!result) return null;
+    currentInv = result.inventory;
+    currentCat = result.inventoryByCategory;
+  }
+
+  return { inventory: currentInv, inventoryByCategory: currentCat };
+}
+
 export const WORKER_AUTO_KEYS = {
   farmer: 'autoFarmer',
   rancher: 'autoRancher',

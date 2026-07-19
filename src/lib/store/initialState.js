@@ -8,6 +8,10 @@ function createEmptyPlots(count = 30) {
     plantedAt: null,
     growTime: null,
     watered: false,
+    fertilizer: null,
+    quality: null,
+    pestInfestation: false,
+    greenhouse: false,
   }));
 }
 
@@ -17,6 +21,7 @@ function createMiningNodes(count = 30) {
     status: 'ready',
     type: rollMineralType(1, false, null),
     regenAt: null,
+    hazard: null,
   }));
 }
 
@@ -34,9 +39,6 @@ export const initialState = {
 
   plots: createEmptyPlots(),
 
-  // ===== STRUCTURED INVENTORY =====
-  // Flat keys retained for backward compatibility
-  // Category keys for structured access
   inventory: {},
   inventoryByCategory: {
     crops: {},
@@ -67,11 +69,11 @@ export const initialState = {
   growthMultiplier: 1,
 
   workers: {
-    farmer: false,
-    rancher: false,
-    fisher: false,
-    miner: false,
-    chef: false,
+    farmer: null,
+    rancher: null,
+    fisher: null,
+    miner: null,
+    chef: null,
   },
 
   autoFarmer: false,
@@ -97,20 +99,29 @@ export const initialState = {
   },
 
   season: { current: 'spring', day: 1, tick: 0 },
-  weather: { current: '☀️ Cerah', nextChangeIn: 300 },
+  weather: { current: '☀️ Cerah', nextChangeIn: 300, forecast: ['☀️ Cerah', '🌧️ Hujan', '☀️ Cerah'] },
 
   mining: {
+    currentFloor: 1,
+    maxFloorReached: 1,
     nodes: createMiningNodes(),
     pickaxeLevel: 1,
     lanternUntil: null,
+    hazards: [],
+    smeltery: {
+      unlocked: false,
+      level: 0,
+      queue: [],
+      fuel: 0,
+    },
   },
 
   npcs: {
-    maria: { level: 1, points: 0 },
-    botan: { level: 1, points: 0 },
-    hadi: { level: 1, points: 0 },
-    bejo: { level: 1, points: 0 },
-    dodi: { level: 1, points: 0 },
+    maria: { level: 1, points: 0, hearts: 1, dailyGiftGiven: false, questsCompleted: [] },
+    botan: { level: 1, points: 0, hearts: 1, dailyGiftGiven: false, questsCompleted: [] },
+    hadi: { level: 1, points: 0, hearts: 1, dailyGiftGiven: false, questsCompleted: [] },
+    bejo: { level: 1, points: 0, hearts: 1, dailyGiftGiven: false, questsCompleted: [] },
+    dodi: { level: 1, points: 0, hearts: 1, dailyGiftGiven: false, questsCompleted: [] },
   },
   activeEvent: null,
 
@@ -123,13 +134,17 @@ export const initialState = {
 
   totalTables: 4,
   buildings: {
-    silo: false,
-    greenhouse: false,
+    silo: { unlocked: false, level: 0, maxLevel: 3 },
+    greenhouse: { unlocked: false, level: 0, maxLevel: 1 },
+    mill: { unlocked: false, level: 0, queue: [] },
+    well: { unlocked: true, level: 1, maxLevel: 3 },
+    workshop: { unlocked: false, level: 0, maxLevel: 3 },
+    coop: { unlocked: false, level: 0, maxLevel: 3, capacity: 0 },
+    barn: { unlocked: false, level: 0, maxLevel: 3, capacity: 0 },
   },
   decorations: [],
   tutorialStep: 0,
 
-  // ===== Achievement & Stats System =====
   achievements: {},
   sessionActions: {},
   weatherEffects: {
@@ -159,4 +174,16 @@ export const initialState = {
   },
   activeCustomers: [],
   notificationsQueue: [],
+
+  restaurant: {
+    reputation: 0,
+    dailySpecial: null,
+    serviceOn: true,
+  },
+
+  town: {
+    museumDonations: [],
+    bankSavings: 0,
+    bankInterestRate: 0.02,
+  },
 };
