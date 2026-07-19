@@ -11,7 +11,6 @@ import TabPage, { GameStage } from './ui/TabPage';
 import SideDock from './ui/SideDock';
 import ToolChip from './ui/ToolChip';
 import { useFarming } from '@/lib/hooks/useFarming';
-import { useGameStore } from '@/lib/store';
 
 const FARM_TOOLS = [
   { id: 'tanam', label: 'Tanam', emoji: '🌱' },

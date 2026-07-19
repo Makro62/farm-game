@@ -1,28 +1,30 @@
 export const RECIPES = [
   // ===== TIER 1 (Level 1+) =====
   { id: 'sup_wortel', name: 'Sup Wortel', emoji: '🥣', type: 'kitchen', time: 180, price: 150, xp: 50, req: { wortel: 4 }, unlockLevel: 1 },
-  { id: 'tepung_jagung', name: 'Tepung Jagung', emoji: '🌾', type: 'kitchen', time: 180, price: 200, xp: 60, req: { jagung: 4 }, unlockLevel: 1 },
-  { id: 'es_teh', name: 'Es Teh Manis', emoji: '🍹', type: 'kitchen', time: 100, price: 150, xp: 40, req: { tebu: 2 }, unlockLevel: 1 },
-  { id: 'jus_tomat', name: 'Jus Tomat', emoji: '🍅', type: 'kitchen', time: 120, price: 180, xp: 50, req: { tomat: 3 }, unlockLevel: 1 },
+  { id: 'sup_wortel', name: 'Sup Wortel', emoji: '🥣', type: 'kitchen', time: 180, price: 150, xp: 50, req: { wortel: 4 }, unlockLevel: 1 },
+  { id: 'tepung_jagung', name: 'Tepung Jagung', emoji: '🌾', type: 'processing', time: 120, price: 200, xp: 60, req: { jagung: 4 }, unlockLevel: 1 },
+  { id: 'gula', name: 'Gula', emoji: '🍬', type: 'processing', time: 120, price: 150, xp: 40, req: { tebu: 2 }, unlockLevel: 1 },
+  { id: 'saus_tomat', name: 'Saus Tomat', emoji: '🥫', type: 'processing', time: 120, price: 180, xp: 50, req: { tomat: 3 }, unlockLevel: 1 },
+  { id: 'lele_bakar', name: 'Lele Bakar', emoji: '🍢', type: 'fish_kitchen', time: 300, price: 400, xp: 150, req: { lele: 2, jagung: 1 }, unlockLevel: 1 },
   { id: 'lele_bakar', name: 'Lele Bakar', emoji: '🍢', type: 'fish_kitchen', time: 300, price: 400, xp: 150, req: { lele: 2, jagung: 1 }, unlockLevel: 1 },
 
   // ===== TIER 2 (Level 5+) =====
-  { id: 'keju', name: 'Keju', emoji: '🧀', type: 'kitchen', time: 300, price: 400, xp: 120, req: { susu: 3 }, unlockLevel: 5 },
-  { id: 'nasi_goreng', name: 'Nasi Goreng', emoji: '🍛', type: 'kitchen', time: 250, price: 450, xp: 120, req: { gandum: 2, telur: 1, tomat: 1 }, unlockLevel: 5 },
+  { id: 'keju', name: 'Keju', emoji: '🧀', type: 'processing', time: 240, price: 400, xp: 120, req: { susu: 3 }, unlockLevel: 5 },
+  { id: 'nasi_goreng', name: 'Nasi Goreng', emoji: '🍛', type: 'kitchen', time: 250, price: 450, xp: 120, req: { gandum: 2, telur: 1, saus_tomat: 1 }, unlockLevel: 5 },
   { id: 'roti_gandum', name: 'Roti Gandum', emoji: '🍞', type: 'kitchen', time: 300, price: 250, xp: 80, req: { gandum: 3, telur: 1 }, unlockLevel: 5 },
-  { id: 'susu_stroberi', name: 'Susu Stroberi', emoji: '🥤', type: 'kitchen', time: 180, price: 300, xp: 90, req: { susu: 2, stroberi: 2 }, unlockLevel: 5 },
-  { id: 'kue_wortel', name: 'Kue Wortel', emoji: '🥕', type: 'restaurant', time: 480, price: 600, xp: 150, req: { wortel: 3, gandum: 2, telur: 1, tebu: 1 }, unlockLevel: 5 },
+  { id: 'es_teh', name: 'Es Teh Manis', emoji: '🍹', type: 'kitchen', time: 100, price: 200, xp: 60, req: { gula: 1, apel: 1 }, unlockLevel: 5 }, // Apel used as substitute for tea flavor (apple tea)
+  { id: 'kue_wortel', name: 'Kue Wortel', emoji: '🥕', type: 'restaurant', time: 480, price: 600, xp: 150, req: { wortel: 3, gandum: 2, telur: 1, gula: 1 }, unlockLevel: 5 },
   { id: 'sushi_mas', name: 'Sushi Ikan Mas', emoji: '🍣', type: 'fish_kitchen', time: 240, price: 300, xp: 100, req: { ikan_mas: 2, tomat: 2 }, unlockLevel: 5 },
 
   // ===== TIER 3 (Level 10+) =====
-  { id: 'kue_manis', name: 'Kue Manis', emoji: '🥮', type: 'restaurant', time: 400, price: 500, xp: 120, req: { gandum: 2, susu: 2, tebu: 2 }, unlockLevel: 10 },
-  { id: 'pancake', name: 'Pancake', emoji: '🥞', type: 'restaurant', time: 360, price: 550, xp: 140, req: { gandum: 2, telur: 1, susu: 1, tebu: 1 }, unlockLevel: 10 },
-  { id: 'takoyaki', name: 'Takoyaki', emoji: '🧆', type: 'fish_kitchen', time: 360, price: 1000, xp: 300, req: { cumi: 2, telur: 2 }, unlockLevel: 10 },
+  { id: 'kue_manis', name: 'Kue Manis', emoji: '🥮', type: 'restaurant', time: 400, price: 500, xp: 120, req: { tepung_jagung: 2, susu: 2, gula: 2 }, unlockLevel: 10 },
+  { id: 'pancake', name: 'Pancake', emoji: '🥞', type: 'restaurant', time: 360, price: 550, xp: 140, req: { gandum: 2, telur: 1, susu: 1, gula: 1 }, unlockLevel: 10 },
+  { id: 'takoyaki', name: 'Takoyaki', emoji: '🧆', type: 'fish_kitchen', time: 360, price: 1000, xp: 300, req: { cumi: 2, telur: 2, tepung_jagung: 1 }, unlockLevel: 10 },
   { id: 'nasi_jamur', name: 'Nasi Jamur', emoji: '🍚', type: 'kitchen', time: 420, price: 600, xp: 160, req: { jamur: 2, gandum: 3 }, unlockLevel: 10 },
-  { id: 'kue_apel', name: 'Kue Apel', emoji: '🥧', type: 'restaurant', time: 540, price: 750, xp: 180, req: { apel: 3, gandum: 2, susu: 1, tebu: 1 }, unlockLevel: 10 },
+  { id: 'kue_apel', name: 'Kue Apel', emoji: '🥧', type: 'restaurant', time: 540, price: 750, xp: 180, req: { apel: 3, gandum: 2, susu: 1, gula: 1 }, unlockLevel: 10 },
 
   // ===== TIER 4 (Level 15+) =====
-  { id: 'kue_stroberi', name: 'Kue Stroberi', emoji: '🍰', type: 'restaurant', time: 600, price: 800, xp: 200, req: { stroberi: 3, telur: 2, susu: 1, tebu: 1 }, unlockLevel: 15 },
+  { id: 'kue_stroberi', name: 'Kue Stroberi', emoji: '🍰', type: 'restaurant', time: 600, price: 800, xp: 200, req: { stroberi: 3, telur: 2, susu: 1, gula: 1 }, unlockLevel: 15 },
   { id: 'sushi_emas', name: 'Sushi Emas', emoji: '✨🍣', type: 'fish_kitchen', time: 480, price: 1200, xp: 350, req: { ikan_mas: 2, emas: 1 }, unlockLevel: 15 },
 ];
 

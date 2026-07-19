@@ -11,7 +11,7 @@ export function useTown() {
   const inventory = useGameStore((s) => s.inventory);
   const enqueueNotification = useGameStore((s) => s.enqueueNotification);
 
-  const [area, setArea] = useState('plaza');
+  const [area, setArea] = useState('plaza'); // 'plaza' | 'fishing' | 'processing'
 
   const fishingProps = useFishingMinigame();
 

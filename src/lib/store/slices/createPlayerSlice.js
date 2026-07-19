@@ -364,7 +364,7 @@ export const createPlayerSlice = (set, get) => ({
       (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === recipe.type
     );
     if (typeQueue.length >= GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE) {
-      get().enqueueNotification(`Antrean dapur ini penuh! Maksimal ${GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE} antrean per jenis.`, { type: 'error' });
+      get().enqueueNotification(`Antrean penuh! Maksimal ${GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE} antrean per fasilitas.`, { type: 'error' });
       return false;
     }
 
@@ -390,7 +390,8 @@ export const createPlayerSlice = (set, get) => ({
       craftingQueue: [...s.craftingQueue, { id, recipeId, startTime, duration }],
     }));
 
-    get().enqueueNotification(`Mulai membuat ${recipe.name}!`, { icon: '🍳', type: 'success' });
+    const verb = recipe.type === 'processing' ? 'memproses' : 'membuat';
+    get().enqueueNotification(`Mulai ${verb} ${recipe.name}!`, { icon: recipe.type === 'processing' ? '⚙️' : '🍳', type: 'success' });
     return true;
   },
 

@@ -22,7 +22,9 @@ export function useRestaurant() {
   const [serviceOn, setServiceOn] = useState(true);
 
   const recipes =
-    menuFilter === 'all' ? RECIPES : RECIPES.filter((r) => r.type === menuFilter);
+    menuFilter === 'all' 
+      ? RECIPES.filter(r => r.type !== 'processing') 
+      : RECIPES.filter((r) => r.type === menuFilter);
 
   const canCook = (recipe) =>
     Object.entries(recipe.req || {}).every(([item, qty]) => (inventory[item] || 0) >= qty);
