@@ -1,56 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import { useGameStore } from '@/lib/store';
-import { SHOP_BAIT } from '@/lib/data/shop';
+import { useTown } from '@/lib/hooks/useTown';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import { MarketBoard } from './game/MarketBoard';
 import { QuestPanel } from './game/QuestPanel';
 import { TownShop } from './game/TownShop';
 import { TownPlaza, FishingLake, FishCatchBoard } from './game/TownPlaza';
 import { OrderBoard } from './game/OrderBoard';
-import { useFishingMinigame } from '@/lib/hooks/useFishingMinigame';
 import TabPage, { GameStage } from './ui/TabPage';
 import SideDock from './ui/SideDock';
-import toast from 'react-hot-toast';
 
 export default function TabTown() {
-  const workers = useGameStore((s) => s.workers);
-  const autoFisher = useGameStore((s) => s.autoFisher);
-  const toggleAutoFisher = useGameStore((s) => s.toggleAutoFisher);
-  const selectedBait = useGameStore((s) => s.selectedBait);
-  const inventory = useGameStore((s) => s.inventory);
-
-  const [area, setArea] = useState('plaza');
-
   const {
-    fishState,
-    indicatorPos,
-    score,
-    isHolding,
-    setIsHolding,
-    startFishing,
-    startMinigame,
-    activeBait,
-  } = useFishingMinigame();
-
-  const baitData = SHOP_BAIT.find((b) => b.id === selectedBait);
-  const selectedBaitLabel =
-    baitData && (inventory[selectedBait] || 0) > 0
-      ? `${baitData.emoji} ${baitData.name} ×${inventory[selectedBait]}`
-      : null;
-
-  const handleToggleAuto = () => {
-    if (!workers?.fisher) {
-      toast('Sewa Pemancing Kota dulu di toko samping!', { icon: '🎣' });
-      return;
-    }
-    const next = !autoFisher;
-    toggleAutoFisher();
-    toast.success(next ? 'Kurcaci pemancing aktif!' : 'Kurcaci pemancing istirahat.', {
-      id: 'auto-fisher-toggle',
-    });
-  };
+    area,
+    setArea,
+    autoFisher,
+    handleToggleAuto,
+    selectedBaitLabel,
+    fishingProps
+  } = useTown();
 
   return (
     <TabPage>
@@ -77,14 +45,14 @@ export default function TabTown() {
                 <TownPlaza />
               ) : (
                 <FishingLake
-                  fishState={fishState}
-                  indicatorPos={indicatorPos}
-                  score={score}
-                  isHolding={isHolding}
-                  setIsHolding={setIsHolding}
-                  startFishing={startFishing}
-                  startMinigame={startMinigame}
-                  activeBait={activeBait}
+                  fishState={fishingProps.fishState}
+                  indicatorPos={fishingProps.indicatorPos}
+                  score={fishingProps.score}
+                  isHolding={fishingProps.isHolding}
+                  setIsHolding={fishingProps.setIsHolding}
+                  startFishing={fishingProps.startFishing}
+                  startMinigame={fishingProps.startMinigame}
+                  activeBait={fishingProps.activeBait}
                   selectedBaitLabel={selectedBaitLabel}
                 />
               )}

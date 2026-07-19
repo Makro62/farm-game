@@ -1,7 +1,6 @@
 import { CUSTOMERS } from '@/lib/data/customers';
 import { RECIPES } from '@/lib/data/recipes';
 import { safePositiveNumber } from '../utils';
-import toast from 'react-hot-toast';
 
 export const createCustomerSlice = (set, get) => ({
   // Total tables available in the restaurant (can be upgraded later)
@@ -10,15 +9,29 @@ export const createCustomerSlice = (set, get) => ({
   upgradeTables: () => {
     const state = get();
     if (state.totalTables >= 9) return false;
-    
     const cost = state.totalTables * 1000;
     if (state.coins < cost) {
-      toast.error('Koin tidak cukup untuk beli meja baru!');
+      get().enqueueNotification('Koin tidak cukup untuk beli meja baru!', { type: 'error' });
       return false;
     }
-    
-    set({ coins: state.coins - cost, totalTables: state.totalTables + 1 });
-    toast.success('Meja baru berhasil ditambahkan!');
+
+    // ===== Meja butuh mineral dari Tambang =====
+    const tableLevel = state.totalTables;
+    const besiReq = tableLevel * 2;
+    const batuReq = tableLevel * 5;
+    if ((state.inventory.besi || 0) < besiReq || (state.inventory.batu || 0) < batuReq) {
+      get().enqueueNotification(`Butuh ${besiReq}x Besi + ${batuReq}x Batu dari Tambang untuk upgrade meja!`, { type: 'error' });
+      return false;
+    }
+
+    const newInv = { ...state.inventory };
+    newInv.besi -= besiReq;
+    newInv.batu -= batuReq;
+    if (newInv.besi <= 0) delete newInv.besi;
+    if (newInv.batu <= 0) delete newInv.batu;
+
+    set({ coins: state.coins - cost, inventory: newInv, totalTables: state.totalTables + 1 });
+    get().enqueueNotification('Meja baru berhasil ditambahkan!', { type: 'success' });
     return true;
   },
 
@@ -74,9 +87,8 @@ export const createCustomerSlice = (set, get) => ({
     const customer = state.activeCustomers[customerIndex];
     const recipe = RECIPES.find(r => r.id === customer.recipeId);
     
-    // Cek apakah pemain memiliki makanan tersebut
     if (!state.inventory[customer.recipeId] || state.inventory[customer.recipeId] <= 0) {
-      toast.error(`Anda tidak memiliki ${recipe?.name}! Masak dulu di dapur.`, { icon: '🍽️' });
+      get().enqueueNotification(`Anda tidak memiliki ${recipe?.name}! Masak dulu di dapur.`, { icon: '🍽️', type: 'error' });
       return false;
     }
 
@@ -105,12 +117,14 @@ export const createCustomerSlice = (set, get) => ({
     const newActiveCustomers = [...state.activeCustomers];
     newActiveCustomers.splice(customerIndex, 1);
 
-    set({ 
+    set(s => ({ 
       inventory: newInventory, 
-      activeCustomers: newActiveCustomers 
-    });
+      activeCustomers: newActiveCustomers,
+      stats: { ...s.stats, totalServed: (s.stats?.totalServed || 0) + 1 },
+    }));
+    get().checkAchievements?.();
 
-    toast.success(`${customer.name} senang! +${finalEarned} 💰 (Tip: ${finalTip})`);
+    get().enqueueNotification(`${customer.name} senang! +${finalEarned} 💰 (Tip: ${finalTip})`, { type: 'success' });
     return true;
   },
 
@@ -137,7 +151,7 @@ export const createCustomerSlice = (set, get) => ({
     if (changed) {
       set({ activeCustomers: updatedCustomers });
       if (leftCount > 0) {
-        toast.error(`${leftCount} pelanggan pergi karena kehabisan kesabaran!`, { icon: '😡' });
+        get().enqueueNotification(`${leftCount} pelanggan pergi karena kehabisan kesabaran!`, { icon: '😡', type: 'error' });
       }
     }
   }

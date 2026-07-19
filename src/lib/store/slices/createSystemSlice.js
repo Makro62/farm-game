@@ -1,12 +1,29 @@
-import { getMiningRegenMs, isWorkerActive, getGrowthMultiplier, normalizePlot, normalizePlots, normalizeAnimal, consumeInventoryItem, pickAutoSeed, safeCoins, safePositiveNumber, getAnimalProduceTime } from '../utils';
-import { SHOP_ANIMALS } from '../../data/shop';
+import { getMiningRegenMs, isWorkerActive, getGrowthMultiplier, normalizePlot, normalizePlots, normalizeAnimal, consumeInventoryItem, pickAutoSeed, safeCoins, safePositiveNumber, getAnimalProduceTime, rollMineralType } from '../utils';
+import { SHOP_ANIMALS, ANIMAL_FEED } from '../../data/shop';
 import { FISHES } from '../../data/fishes';
 import { RECIPES } from '../../data/recipes';
+import { getItemSellPrice } from '../../data/item-helpers';
 import { GAME_CONSTANTS } from '../../constants';
 import { logger } from '../../logger';
-import toast from 'react-hot-toast';
+// Removed toast import
 
 export const createSystemSlice = (set, get) => ({
+  // ===== NOTIFICATIONS =====
+  enqueueNotification: (message, options = {}) => {
+    set((state) => ({
+      notificationsQueue: [
+        ...state.notificationsQueue,
+        { id: Date.now() + Math.random().toString(), message, options }
+      ]
+    }));
+  },
+
+  dequeueNotification: (id) => {
+    set((state) => ({
+      notificationsQueue: state.notificationsQueue.filter(n => n.id !== id)
+    }));
+  },
+
   // ===== UI MODALS =====
   openPrompt: (title, msg, onConfirm) => {
     set((state) => ({
@@ -183,7 +200,7 @@ export const createSystemSlice = (set, get) => ({
         const plots = state.plots || [];
         const wateredPlots = plots.map(p => ({ ...p, watered: true }));
         set({ plots: wateredPlots });
-        setTimeout(() => toast('Cuaca memburuk! Semua tanaman tersiram otomatis 🌧️', { icon: '☔' }), 0);
+        get().enqueueNotification('Cuaca memburuk! Semua tanaman tersiram otomatis 🌧️', { icon: '☔', type: 'info' });
       }
       
       // Efek Instan: Salju -> Tanaman layu (kecuali ready)
@@ -196,7 +213,7 @@ export const createSystemSlice = (set, get) => ({
           return p;
         });
         set({ plots: deadPlots });
-        setTimeout(() => toast('Salju turun! Tanaman yang tumbuh menjadi layu ❄️', { icon: '⛄' }), 0);
+        get().enqueueNotification('Salju turun! Tanaman yang tumbuh menjadi layu ❄️', { icon: '⛄', type: 'info' });
       }
       
       set({ 
@@ -231,17 +248,20 @@ export const createSystemSlice = (set, get) => ({
         const now = Date.now();
         let changed = false;
         let newCoinMult = state.coinMultiplier;
-        let newGrowthMult = state.growthMultiplier;
-        
         if (state.coinMultiplierExpireAt && now > state.coinMultiplierExpireAt) {
           newCoinMult = 1;
           changed = true;
-          toast('Booster Koin telah habis.', { icon: '⏳' });
+          if (state.coinMultiplier > 1) {
+            get().enqueueNotification('Booster Koin telah habis.', { icon: '⏳', type: 'info' });
+          }
         }
+        let newGrowthMult = state.growthMultiplier;
         if (state.growthMultiplierExpireAt && now > state.growthMultiplierExpireAt) {
           newGrowthMult = 1;
           changed = true;
-          toast('Booster Pertumbuhan telah habis.', { icon: '⏳' });
+          if (state.growthMultiplier > 1) {
+            get().enqueueNotification('Booster Pertumbuhan telah habis.', { icon: '⏳', type: 'info' });
+          }
         }
         
         if (changed) {
@@ -335,7 +355,21 @@ export const createSystemSlice = (set, get) => ({
         const data = SHOP_ANIMALS.find((s) => s.id === a.type);
         const produceTime = getAnimalProduceTime(a, state.weatherEffects);
         if (data && a.status === 'producing' && now - a.lastCollected >= produceTime) {
-          animals[i] = { ...a, lastCollected: now };
+          // Auto-feed if not fed
+          if (!a.fed) {
+            const feedData = ANIMAL_FEED[a.type];
+            if (feedData && (inventory[feedData.feedItem] || 0) >= feedData.feedQty) {
+              inventory[feedData.feedItem] -= feedData.feedQty;
+              if (inventory[feedData.feedItem] <= 0) delete inventory[feedData.feedItem];
+              animals[i] = { ...a, fed: true };
+              animalsChanged = true;
+            } else {
+              // Can't feed — skip this animal
+              animals[i] = a;
+              continue;
+            }
+          }
+          animals[i] = { ...animals[i], lastCollected: now, fed: false };
           inventory[data.product] = (inventory[data.product] || 0) + 1;
           collected++;
           animalsChanged = true;
@@ -357,10 +391,10 @@ export const createSystemSlice = (set, get) => ({
       if (xpGain > 0) get().addXP(xpGain);
       if (questEntries.length > 0) get().batchProgressQuest(questEntries);
       if (harvested > 0 || planted > 0) {
-        toast.success(`👨‍🌾 Petani Budi panen ${harvested} & tanam ${planted}!`, { id: 'auto-farm' });
+        get().enqueueNotification(`👨‍🌾 Petani Budi panen ${harvested} & tanam ${planted}!`, { id: 'auto-farm', type: 'success' });
       }
       if (collected > 0) {
-        toast.success(`👩‍🌾 Peternak Siti ambil ${collected} hasil ternak!`, { id: 'auto-rancher' });
+        get().enqueueNotification(`👩‍🌾 Peternak Siti ambil ${collected} hasil ternak!`, { id: 'auto-rancher', type: 'success' });
       }
     }
 
@@ -379,10 +413,13 @@ export const createSystemSlice = (set, get) => ({
         }
         set((s) => ({
           inventory: { ...s.inventory, [caughtFish.id]: (s.inventory[caughtFish.id] || 0) + 1 },
+          stats: { ...s.stats, totalFished: (s.stats?.totalFished || 0) + 1 },
         }));
         get().addXP(GAME_CONSTANTS.XP.FISH);
         get().progressQuest('fish', caughtFish.id, 1);
-        toast.success(`🎣 Nelayan Mamat mendapat ${caughtFish.emoji} ${caughtFish.name}!`, { id: 'auto-fisher', duration: 2000 });
+        get().markSessionAction?.('fished');
+        get().checkAchievements?.();
+        get().enqueueNotification(`🎣 Nelayan Mamat mendapat ${caughtFish.emoji} ${caughtFish.name}!`, { id: 'auto-fisher', type: 'success' });
       }
     }
 
@@ -414,7 +451,7 @@ export const createSystemSlice = (set, get) => ({
             
             craftingQueue.push({ id, recipeId: recipe.id, startTime, duration });
             queueChanged = true;
-            toast.success(`👨‍🍳 Koki Juna memasak ${recipe.name}!`, { id: 'auto-chef', duration: 2000 });
+            get().enqueueNotification(`👨‍🍳 Koki Juna memasak ${recipe.name}!`, { id: 'auto-chef', type: 'success' });
           }
         }
       }
@@ -499,7 +536,7 @@ export const createSystemSlice = (set, get) => ({
       }
     }
     
-    // 4. Simulasikan penambang (Auto Miner)
+    // 4. Simulasikan penambang (Auto Miner) — distribusi mineral proper
     let minedGems = 0;
     let maturedNodes = 0;
     
@@ -508,12 +545,16 @@ export const createSystemSlice = (set, get) => ({
     
     if (isWorkerActive(state, 'miner')) {
       if (mineAttempts > 0) {
-        minedGems = Math.floor(mineAttempts * 0.5); // Kasarannya 50% node yg siap ditambang
-        newInventory['batu'] = (newInventory['batu'] || 0) + minedGems;
+        minedGems = Math.floor(mineAttempts * 0.5);
+        const lanternActive = state.mining.lanternUntil && state.mining.lanternUntil > now;
+        const eventId = state.activeEvent?.id || null;
+        for (let m = 0; m < minedGems; m++) {
+          const mineralType = rollMineralType(state.mining.pickaxeLevel, lanternActive, eventId);
+          newInventory[mineralType] = (newInventory[mineralType] || 0) + 1;
+        }
       }
     } else if (mineAttempts > 0) {
-      maturedNodes = Math.min(30, Math.floor(mineAttempts)); // Simulasikan node yg cooldown selesai
-      // Kita tidak benar-benar mengupdate node array di sini, biarkan syncMiningNodes yg bekerja
+      maturedNodes = Math.min(30, Math.floor(mineAttempts));
     }
     
     // Simulasikan tanaman yang matang tanpa Auto Farmer
@@ -529,6 +570,21 @@ export const createSystemSlice = (set, get) => ({
       }
     }
     
+    // ===== Hitung earnedCoins dari item yang terkumpul =====
+    earnedCoins = 0;
+    try {
+      const offlineItems = { ...newInventory };
+      for (const [itemId] of Object.entries(state.inventory)) {
+        delete offlineItems[itemId];
+      }
+      for (const [itemId, qty] of Object.entries(offlineItems)) {
+        const price = getItemSellPrice(itemId);
+        if (price != null) {
+          earnedCoins += price * Number(qty);
+        }
+      }
+    } catch { /* skip coin calc */ }
+
     // Set report
     if (harvestedCrops > 0 || collectedProducts > 0 || caughtFishes > 0 || minedGems > 0 || maturedCrops > 0 || maturedNodes > 0) {
       set({

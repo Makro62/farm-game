@@ -1,64 +1,14 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/lib/store';
 import { CropIcon } from '../ui/CropIcon';
-import { getItemEmoji } from '@/lib/data/item-helpers';
 import { cn } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { useFarming } from '@/lib/hooks/useFarming';
 
 export function PlotGrid({ isEditMode, farmTool = 'tanam' }) {
   const plots = useGameStore((state) => state.plots);
-  const plantSeed = useGameStore((state) => state.plantSeed);
-  const harvest = useGameStore((state) => state.harvest);
-  const waterPlot = useGameStore((state) => state.waterPlot);
-  const sellAllInventory = useGameStore((state) => state.sellAllInventory);
   const swapPlots = useGameStore((state) => state.swapPlots);
-  const selectedInventoryItem = useGameStore((state) => state.selectedSeed);
-  const setSelectedInventoryItem = useGameStore((state) => state.setSelectedSeed);
+  const { handlePlotClick } = useFarming();
 
-  const handlePlotClick = (plot) => {
-    if (farmTool === 'jual') {
-      const earned = sellAllInventory();
-      if (earned > 0) toast.success(`Hasil terjual +${earned} 💰`);
-      else toast.error('Tidak ada hasil untuk dijual.');
-      return;
-    }
-
-    if (farmTool === 'siram') {
-      const result = waterPlot(plot.id);
-      if (result.ok) toast.success(result.message, { icon: '💧' });
-      else toast(result.message, { icon: '💧' });
-      return;
-    }
-
-    if (farmTool === 'panen') {
-      if (plot.status === 'ready' || (plot.status === 'growing' && plot.plantedAt && Date.now() - plot.plantedAt >= plot.growTime)) {
-        const crop = harvest(plot.id);
-        if (crop) toast.success(`Panen ${getItemEmoji(crop)}!`);
-      } else {
-        toast('Petak belum siap panen', { icon: '🌾' });
-      }
-      return;
-    }
-
-    if (plot.status === 'empty') {
-      if (!selectedInventoryItem) {
-        toast('Pilih bibit dari toko samping dulu!', { icon: '👆' });
-        return;
-      }
-
-      const result = plantSeed(plot.id, selectedInventoryItem);
-      if (result.ok) {
-        toast.success(result.message, { icon: '🌱', id: 'plant' });
-      } else {
-        toast.error(result.message);
-        if (result.message?.includes('Kehabisan')) setSelectedInventoryItem(null);
-      }
-    } else if (plot.status === 'ready') {
-      toast('Ganti ke mode Panen untuk memanen', { icon: '✋' });
-    } else if (plot.status === 'growing') {
-      toast('Masih tumbuh — pakai Siram untuk mempercepat', { icon: '🌱' });
-    }
-  };
 
   return (
     <div
@@ -111,7 +61,7 @@ export function PlotGrid({ isEditMode, farmTool = 'tanam' }) {
                   e.preventDefault();
                   return;
                 }
-                handlePlotClick(plot);
+                handlePlotClick(plot, farmTool);
               }}
               data-tutorial={
                 plot.status === 'empty' 

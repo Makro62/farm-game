@@ -1,6 +1,6 @@
-import toast from 'react-hot-toast';
 import { ANIMAL_FEED } from '@/lib/data/shop';
 import { GAME_CONSTANTS } from '@/lib/constants';
+import { getShopAnimal } from '@/lib/data/item-helpers';
 import { safeCoins } from '../utils';
 
 export const createRanchingSlice = (set, get) => ({
@@ -67,9 +67,17 @@ export const createRanchingSlice = (set, get) => ({
       return false; // UI handles toast
     }
 
+    // ===== Hewan harus diberi makan untuk produksi =====
+    if (!animal.fed) {
+      const feedData = ANIMAL_FEED[animal.type];
+      const feedName = feedData?.feedItem || 'pakan';
+      get().enqueueNotification(`${animal.type} lapar! Beri ${feedName} dulu sebelum kolek.`, { icon: '🍽️', type: 'error' });
+      return false;
+    }
+
     const dropsFertilizer = Math.random() < GAME_CONSTANTS.CHANCES.FERTILIZER_DROP;
 
-    // ===== Fase B: Bonus produksi jika hewan sudah diberi makan =====
+    // ===== Bonus produksi jika hewan sudah diberi makan =====
     const wasFed = animal.fed === true;
     const bonusDrop = wasFed && Math.random() < GAME_CONSTANTS.CHANCES.FEED_BONUS;
 
@@ -105,16 +113,29 @@ export const createRanchingSlice = (set, get) => ({
     get().checkAchievements?.();
 
     if (dropsFertilizer) {
-      toast('🌿 Dapat Pupuk Kandang! Otomatis dipakai saat tanam.', { duration: 2500 });
+      get().enqueueNotification('🌿 Dapat Pupuk Kandang! Otomatis dipakai saat tanam.', { duration: 2500 });
     }
     if (bonusDrop) {
-      toast(`🌟 Bonus produksi! ${animal.type} yang kenyang menghasilkan ekstra!`, { duration: 2500 });
+      get().enqueueNotification(`🌟 Bonus produksi! ${animal.type} yang kenyang menghasilkan ekstra!`, { duration: 2500 });
     }
 
     return true;
   },
 
   
+  sellAnimal: (animalId) => {
+    const state = get();
+    const animal = state.animals.find(a => a.id === animalId);
+    if (!animal) return 0;
+    const animalData = getShopAnimal(animal.type);
+    const sellPrice = animalData ? Math.floor(animalData.price / 2) : 0;
+    set((s) => ({
+      animals: s.animals.filter(a => a.id !== animalId),
+      coins: safeCoins(s.coins) + sellPrice,
+    }));
+    return sellPrice;
+  },
+
   swapAnimals: (id1, id2) => {
     set((state) => {
       const newAnimals = [...state.animals];

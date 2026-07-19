@@ -1,21 +1,8 @@
-import { Fredoka, Nunito } from 'next/font/google';
 import '@/styles/globals.css';
 import { GameProvider } from '@/lib/store-provider';
 import { Toaster } from 'react-hot-toast';
 import ClientLayout from '@/components/ClientLayout';
 import ClearServiceWorker from '@/components/ClearServiceWorker';
-
-const display = Fredoka({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-display',
-});
-
-const body = Nunito({
-  subsets: ['latin'],
-  weight: ['400', '600', '700', '800'],
-  variable: '--font-body',
-});
 
 export const metadata = {
   title: '🌾 Farm Tycoon - Game Bertani Seru!',
@@ -40,8 +27,15 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id" suppressHydrationWarning className={`${display.variable} ${body.variable}`}>
+    <html lang="id" suppressHydrationWarning>
       <head>
+        {/* Google Fonts — loaded via <link> for graceful offline fallback */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap"
+          rel="stylesheet"
+        />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Farm Tycoon" />

@@ -21,9 +21,6 @@ function rollFish(rareBonus = 0) {
 }
 
 export function useFishingMinigame() {
-  const addItem = useGameStore((state) => state.addItem);
-  const addXP = useGameStore((state) => state.addXP);
-  const progressQuest = useGameStore((state) => state.progressQuest);
   const selectedBait = useGameStore((state) => state.selectedBait);
   const inventory = useGameStore((state) => state.inventory);
   const weatherEffects = useGameStore((state) => state.weatherEffects);
@@ -124,9 +121,7 @@ export function useFishingMinigame() {
     if (success) {
       const weatherRareBonus = weatherEffects?.fishingRare ? (weatherEffects.fishingRare - 1) : 0;
       const caughtFish = rollFish((bait?.rareBonus || 0) + weatherRareBonus);
-      addItem(caughtFish.id, 1);
-      addXP(15 + (bait ? 5 : 0));
-      progressQuest('fish', caughtFish.id, 1);
+      useGameStore.getState().recordFishingCatch(caughtFish, bait);
       toast.success(`Berhasil menangkap ${caughtFish.emoji} ${caughtFish.name}!`, { duration: 4000 });
     } else {
       toast.error('Gagal menangkap ikan, kurang tarikan!');
@@ -151,6 +146,7 @@ export function useFishingMinigame() {
     setActiveBait(bait);
     setFishState('waiting');
     if (bait) {
+      useGameStore.getState().recordBaitUsage(bait);
       toast(`Pakai ${bait.emoji} ${bait.name}`, { icon: '🎣', id: 'bait-use', duration: 1500 });
     }
   };

@@ -1,8 +1,7 @@
 'use client';
 
-import { useGameStore } from '@/lib/store';
 import { MINERALS } from '@/lib/data/minerals';
-import { SHOP_MINING, PICKAXE_LABELS } from '@/lib/data/shop';
+import { SHOP_MINING } from '@/lib/data/shop';
 import { motion } from 'framer-motion';
 import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
@@ -11,101 +10,31 @@ import { QuestPanel } from './game/QuestPanel';
 import { GAME_CONSTANTS } from '@/lib/constants';
 import TabPage, { GameStage } from './ui/TabPage';
 import SideDock from './ui/SideDock';
-import toast from 'react-hot-toast';
-import { useState, useEffect } from 'react';
+import { useMining } from '@/lib/hooks/useMining';
 
 const TARGET_TOOLS = new Set(['bom_kecil', 'tali']);
 
 export default function TabMine() {
-  const mining = useGameStore((state) => state.mining);
-  const inventory = useGameStore((state) => state.inventory);
-  const mineNode = useGameStore((state) => state.mineNode);
-  const useMiningTool = useGameStore((state) => state.useMiningTool);
-  const setSelectedMiningTool = useGameStore((state) => state.setSelectedMiningTool);
-  const selectedMiningTool = useGameStore((state) => state.selectedMiningTool);
-  const hireWorker = useGameStore((state) => state.hireWorker);
-  const workers = useGameStore((state) => state.workers);
-  const autoMiner = useGameStore((state) => state.autoMiner);
-  const toggleAutoMiner = useGameStore((state) => state.toggleAutoMiner);
-  const openConfirm = useGameStore((state) => state.openConfirm);
-  const buyItem = useGameStore((state) => state.buyItem);
-
-  const [currentTime, setCurrentTime] = useState(Date.now());
-  const [shopAmounts, setShopAmounts] = useState({});
-
-  useEffect(() => {
-    const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const pickaxe = PICKAXE_LABELS[mining.pickaxeLevel] || PICKAXE_LABELS[1];
-  const lanternActive = mining.lanternUntil && mining.lanternUntil > currentTime;
-  const lanternSecs = lanternActive ? Math.ceil((mining.lanternUntil - currentTime) / 1000) : 0;
-  const ownedTools = SHOP_MINING.filter((t) => (inventory[t.id] || 0) > 0);
-
-  const handleUseTool = (toolId, nodeId = null) => {
-    const result = useMiningTool(toolId, nodeId);
-    if (result.ok) {
-      toast.success(result.message);
-    } else if (result.needTarget) {
-      setSelectedMiningTool(toolId);
-      const tool = SHOP_MINING.find((t) => t.id === toolId);
-      toast(`Pilih petak tambang untuk memakai ${tool?.name}`, { icon: tool?.emoji });
-    } else {
-      toast.error(result.message);
-    }
-  };
-
-  const handleMine = (node) => {
-    if (selectedMiningTool) {
-      handleUseTool(selectedMiningTool, node.id);
-      return;
-    }
-    if (node.status !== 'ready') return;
-    const minedType = mineNode(node.id);
-    if (minedType) {
-      const mineral = MINERALS.find((m) => m.id === minedType);
-      toast.success(`Berhasil menambang ${mineral.emoji} ${mineral.name}!`);
-    }
-  };
-
-  const handleHireMiner = () => {
-    if (workers.miner) {
-      toast('Penambang Tarjo sudah bekerja! Aktifkan Auto jika perlu.', { icon: '✅' });
-      return;
-    }
-    openConfirm(
-      'Sewa Penambang Tarjo',
-      `Sewa Penambang Tarjo seharga ${GAME_CONSTANTS.COSTS.WORKER_MINER.toLocaleString()} 💰?`,
-      () => {
-        if (hireWorker('miner', GAME_CONSTANTS.COSTS.WORKER_MINER)) {
-          toast.success('Kurcaci Penambang berhasil disewa!', { icon: '👷' });
-        } else toast.error('Koin tidak cukup!');
-      }
-    );
-  };
-
-  const handleToggleAuto = () => {
-    if (!workers.miner) {
-      toast('Sewa Penambang Tarjo dulu di tab Alat!', { icon: '👷‍♂️' });
-      return;
-    }
-    toggleAutoMiner();
-  };
-
-  const handleShopBuy = (item, amount) => {
-    if (buyItem(item.id, amount, item.price)) {
-      toast.success(`Berhasil membeli ${amount} ${item.name}!`);
-    } else toast.error('Koin tidak cukup!');
-  };
-
-  const getRegenProgress = (node) => {
-    if (!node.regenAt) return 0;
-    const total = mining.pickaxeLevel >= 3 ? 60000 : mining.pickaxeLevel >= 2 ? 90000 : 120000;
-    const lanternFactor = lanternActive ? 0.5 : 1;
-    const duration = total * lanternFactor;
-    return Math.max(0, Math.min(100, 100 - ((node.regenAt - currentTime) / duration) * 100));
-  };
+  const {
+    mining,
+    inventory,
+    selectedMiningTool,
+    workers,
+    autoMiner,
+    shopAmounts,
+    setShopAmounts,
+    pickaxe,
+    lanternActive,
+    lanternSecs,
+    ownedTools,
+    setSelectedMiningTool,
+    handleUseTool,
+    handleMine,
+    handleHireMiner,
+    handleToggleAuto,
+    handleShopBuy,
+    getRegenProgress
+  } = useMining();
 
   const shopPanel = (
     <>

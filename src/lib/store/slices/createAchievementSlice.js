@@ -1,5 +1,4 @@
 import { ACHIEVEMENTS } from '../../data/achievements';
-import toast from 'react-hot-toast';
 
 export const createAchievementSlice = (set, get) => ({
 
@@ -63,8 +62,8 @@ export const createAchievementSlice = (set, get) => ({
     if (ach.rewardXp) get().addXP(ach.rewardXp);
     if (ach.rewardCoins) get().addCoins(ach.rewardCoins);
 
-    // Toast notif
-    toast(
+    // Notification
+    get().enqueueNotification(
       `🏆 Pencapaian Terbuka!\n${ach.emoji} ${ach.name}`,
       {
         duration: 5000,
@@ -74,12 +73,19 @@ export const createAchievementSlice = (set, get) => ({
           fontWeight: 'bold',
         },
         icon: '🎉',
+        type: 'success'
       }
     );
   },
 
+  // ===== STAT TRACKING =====
+  incrementStat: (key, amount = 1) => {
+    set((s) => ({
+      stats: { ...s.stats, [key]: (s.stats?.[key] || 0) + amount }
+    }));
+  },
+
   // ===== SESSION TRACKING =====
-  // Dipanggil setiap kali pemain melakukan aksi di area tertentu
   markSessionAction: (area) => {
     set((s) => ({
       sessionActions: {

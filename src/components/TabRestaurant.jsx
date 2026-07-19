@@ -11,7 +11,7 @@ import { QuestPanel } from './game/QuestPanel';
 import { GAME_CONSTANTS } from '@/lib/constants';
 import TabPage, { GameStage } from './ui/TabPage';
 import SideDock from './ui/SideDock';
-import toast from 'react-hot-toast';
+import { useRestaurant } from '@/lib/hooks/useRestaurant';
 
 function MenuBoard() {
   return (
@@ -160,75 +160,25 @@ function TableGrid() {
 }
 
 export default function TabRestaurant() {
-  const inventory = useGameStore((state) => state.inventory);
-  const startCrafting = useGameStore((state) => state.startCrafting);
-  const workers = useGameStore((state) => state.workers);
-  const hireWorker = useGameStore((state) => state.hireWorker);
-  const autoChef = useGameStore((state) => state.autoChef);
-  const toggleAutoChef = useGameStore((state) => state.toggleAutoChef);
-  const selectedRecipe = useGameStore((state) => state.selectedRecipe);
-  const setSelectedRecipe = useGameStore((state) => state.setSelectedRecipe);
-  const openConfirm = useGameStore((state) => state.openConfirm);
-  const level = useGameStore((state) => state.level || 1);
-
-  const [menuFilter, setMenuFilter] = useState('all'); // all | kitchen | fish_kitchen | restaurant
-  const [serviceOn, setServiceOn] = useState(true);
-
-  const recipes =
-    menuFilter === 'all' ? RECIPES : RECIPES.filter((r) => r.type === menuFilter);
-
-  const canCook = (recipe) =>
-    Object.entries(recipe.req || {}).every(([item, qty]) => (inventory[item] || 0) >= qty);
-
-  const handleCook = (recipeId) => {
-    const recipe = RECIPES.find(r => r.id === recipeId);
-    if (!recipe) return;
-    const missing = Object.entries(recipe.req)
-      .filter(([item, qty]) => (inventory[item] || 0) < qty)
-      .map(([item, qty]) => `${qty - (inventory[item] || 0)}x ${getItemDisplayName(item)}`);
-    if (missing.length > 0) {
-      toast.error(`Kurang bahan: ${missing.join(', ')}`, { icon: '📋', duration: 4000 });
-      return;
-    }
-    if (startCrafting(recipeId)) {
-      // toast from store
-    }
-  };
-
-  const handleHireWorker = () => {
-    if (workers?.chef) {
-      toast('Koki Juna sudah disewa! Aktifkan Auto. 👨‍🍳', { icon: '✅' });
-      return;
-    }
-    openConfirm(
-      'Sewa Koki Juna',
-      `Sewa Koki Juna (Auto-Cooking) seharga ${GAME_CONSTANTS.COSTS.WORKER_CHEF} 💰?`,
-      () => {
-        if (hireWorker('chef', GAME_CONSTANTS.COSTS.WORKER_CHEF)) {
-          toast.success('Koki Juna berhasil disewa! Pilih target menu.');
-        } else {
-          toast.error('Koin tidak cukup!');
-        }
-      }
-    );
-  };
-
-  const handleToggleAuto = () => {
-    if (!workers?.chef) {
-      toast('Sewa Koki Juna dulu di toko samping! 🔒', { icon: '👨‍🍳' });
-      return;
-    }
-    if (!selectedRecipe && !autoChef) {
-      toast('Pilih salah satu resep sebagai target sebelum menyalakan Koki!', { icon: '📌' });
-      return;
-    }
-    const next = !autoChef;
-    toggleAutoChef();
-    toast.success(
-      next ? 'Koki Juna mulai masak otomatis!' : 'Koki Juna istirahat.',
-      { id: 'auto-chef-toggle' }
-    );
-  };
+  const {
+    inventory,
+    workers,
+    autoChef,
+    selectedRecipe,
+    level,
+    menuFilter,
+    serviceOn,
+    recipes,
+    setMenuFilter,
+    setServiceOn,
+    canCook,
+    eatFood,
+    handleCook,
+    handleHireWorker,
+    handleToggleAuto,
+    handleSetTarget,
+    enqueueNotification
+  } = useRestaurant();
 
   return (
     <TabPage>
@@ -241,7 +191,7 @@ export default function TabRestaurant() {
                 active={!serviceOn}
                 onClick={() => {
                   setServiceOn(false);
-                  toast('Mode atur meja — siapkan menu di toko samping', { icon: '🪑' });
+                  enqueueNotification('Mode atur meja — siapkan menu di toko samping', { icon: '🪑', type: 'info' });
                 }}
               >
                 Atur Meja
@@ -314,7 +264,7 @@ export default function TabRestaurant() {
                               type="button"
                               onClick={() => {
                                 if (!isUnlocked) {
-                                  toast.error(`Resep ini butuh Level ${recipe.unlockLevel}!`, { icon: '🔒' });
+                                  enqueueNotification(`Resep ini butuh Level ${recipe.unlockLevel}!`, { icon: '🔒', type: 'error' });
                                   return;
                                 }
                                 handleCook(recipe.id);
@@ -354,18 +304,25 @@ export default function TabRestaurant() {
                                 </div>
                               </div>
                             </button>
+                            {(inventory[recipe.id] || 0) > 0 && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  eatFood(recipe.id);
+                                }}
+                                className="absolute top-1 left-1 w-6 h-6 rounded-full bg-green-400 text-white flex items-center justify-center text-xs shadow-md z-10 hover:scale-110 transition-transform"
+                                title="Makan untuk pulihkan energi"
+                              >
+                                🍽️
+                              </button>
+                            )}
                             {workers?.chef && isUnlocked && (
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setSelectedRecipe(isSelected ? null : recipe.id);
-                                  if (!isSelected) {
-                                    toast.success(`${recipe.name} jadi target Auto Chef!`, {
-                                      icon: '📌',
-                                      id: 'set-target',
-                                    });
-                                  }
+                                  handleSetTarget(recipe, isSelected);
                                 }}
                                 className={`absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-sm shadow-md z-10 ${
                                   isSelected

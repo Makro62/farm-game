@@ -139,4 +139,5 @@ export const initialState = {
     totalSushiEmasMade: 0,
   },
   activeCustomers: [],
+  notificationsQueue: [],
 };

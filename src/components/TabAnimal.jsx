@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useGameStore } from '@/lib/store';
 import { getAnimalEmoji, getShopAnimal } from '../lib/data/item-helpers';
 import { SHOP_ANIMALS, ANIMAL_FEED } from '../lib/data/shop';
@@ -14,116 +13,26 @@ import { QuestPanel } from './game/QuestPanel';
 import { GAME_CONSTANTS } from '@/lib/constants';
 import TabPage, { GameStage } from './ui/TabPage';
 import SideDock from './ui/SideDock';
-import toast from 'react-hot-toast';
+import { useRanching } from '@/lib/hooks/useRanching';
 
 export default function TabAnimal() {
-  const animals = useGameStore((state) => state.animals);
-  const feedAnimal = useGameStore((state) => state.feedAnimal);
-  const collectAnimal = useGameStore((state) => state.collectAnimal);
-  const swapAnimals = useGameStore((state) => state.swapAnimals);
-  const inventory = useGameStore((state) => state.inventory);
-  const workers = useGameStore((state) => state.workers);
-  const hireWorker = useGameStore((state) => state.hireWorker);
-  const autoFarm = useGameStore((state) => state.autoRancher);
-  const toggleAutoFarm = useGameStore((state) => state.toggleAutoRancher);
-  const openConfirm = useGameStore((state) => state.openConfirm);
-  const buyMultipleAnimals = useGameStore((state) => state.buyMultipleAnimals);
-  const weatherEffects = useGameStore((state) => state.weatherEffects);
+  const {
+    animals,
+    autoFarm,
+    currentTime,
+    workers,
+    weatherEffects,
+    handleToggleAuto,
+    handleSellAnimal,
+    handleHireWorker,
+    handleShopBuy,
+    handleCollect,
+    handleFeed
+  } = useRanching();
   
+  const swapAnimals = useGameStore((state) => state.swapAnimals);
   const [shopAmounts, setShopAmounts] = useState({});
-
-  const [currentTime, setCurrentTime] = useState(Date.now());
-
-  useEffect(() => {
-    const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
   const [isEditMode, setIsEditMode] = useState(false);
-
-
-  // Auto-collect ditangani lewat store.runAutoWorkers()
-
-  const handleToggleAuto = () => {
-    if (!workers?.rancher) {
-      toast('Sewa Peternak Siti dulu di toko samping! 🔒', { icon: '👩‍🌾' });
-      return;
-    }
-    const next = !autoFarm;
-    toggleAutoFarm();
-    toast.success(
-      next ? 'Kurcaci peternak aktif!' : 'Kurcaci peternak istirahat.',
-      { id: 'auto-rancher-toggle' }
-    );
-  };
-
-  const handleSellAnimal = (animal) => {
-    const animalData = getShopAnimal(animal.type);
-    if (!animalData) return;
-    
-    // Asumsikan harga jual hewan adalah setengah dari harga beli
-    const sellPrice = Math.floor(animalData.price / 2);
-    
-    openConfirm(
-      'Jual Hewan',
-      `Apakah Anda yakin ingin menjual ${animalData.name} seharga ${sellPrice} 💰?`,
-      () => {
-        // Implement sell logic (hapus dari array animals dan tambah koin)
-        useGameStore.setState(state => ({
-          animals: state.animals.filter(a => a.id !== animal.id),
-        }));
-        useGameStore.getState().addCoins(sellPrice);
-        toast.success(`${animalData.name} berhasil dijual! (+${sellPrice} 💰)`);
-      }
-    );
-  };
-
-  const handleHireWorker = () => {
-    if (workers.rancher) {
-      toast('Peternak Siti sudah dimiliki! Aktifkan Auto. 👩‍🌾', { icon: '✅' });
-      return;
-    }
-    openConfirm(
-      'Sewa Peternak Siti',
-      `Sewa Peternak Siti (Auto-Collect Products) seharga ${GAME_CONSTANTS.COSTS.WORKER_RANCHER} 💰?`,
-      () => {
-        if (hireWorker('rancher', GAME_CONSTANTS.COSTS.WORKER_RANCHER)) {
-          toast.success('Peternak Siti berhasil disewa! Auto ternak aktif. 👩‍🌾');
-        } else {
-          toast.error('Koin tidak cukup!');
-        }
-      }
-    );
-  };
-
-  const handleShopBuy = (animal, amount) => {
-    if (buyMultipleAnimals(animal.id, amount, animal.price, animal.time * 1000)) {
-      toast.success(`Berhasil membeli ${amount} ${animal.name}!`);
-    } else {
-      toast.error('Koin tidak cukup!');
-    }
-  };
-
-  const handleCollect = (animal) => {
-    const animalData = getShopAnimal(animal.type);
-    if (!animalData) return;
-    const produceTime = getAnimalProduceTime(animal, weatherEffects);
-    if (currentTime - animal.lastCollected >= produceTime) {
-      if (collectAnimal(animal.id, animalData.product)) {
-        toast.success(`Berhasil memanen dari ternak!`, { icon: '✨', id: `harvest-${animal.id}` });
-      }
-    }
-  };
-
-  const handleFeed = (e, animal) => {
-    e.stopPropagation();
-    const result = feedAnimal(animal.id);
-    if (result.ok) {
-      toast.success(result.message, { icon: '🌽' });
-    } else {
-      toast.error(result.message, { icon: '😢' });
-    }
-  };
 
   return (
     <TabPage>
@@ -155,6 +64,7 @@ export default function TabAnimal() {
                   const produceTime = getAnimalProduceTime(animal, weatherEffects);
                   const progress = Math.min(100, ((currentTime - animal.lastCollected) / produceTime) * 100);
                   const isReady = progress >= 100;
+                  const isHungry = isReady && !animal.fed;
                   return (
                     <motion.button
                       key={animal.id}
@@ -189,7 +99,7 @@ export default function TabAnimal() {
                       }}
                       className={`group kandang-animal-cell
                         ${isEditMode ? 'cursor-grab ring-2 ring-yellow-400' : ''}
-                        ${isReady ? 'ring-2 ring-yellow-400/80 animate-breathe' : ''}
+                        ${isReady ? (isHungry ? 'ring-2 ring-red-400/80' : 'ring-2 ring-yellow-400/80 animate-breathe') : ''}
                       `}
                     >
                       <motion.div
@@ -199,17 +109,23 @@ export default function TabAnimal() {
                       >
                         <AnimalIcon type={animal.type} />
                       </motion.div>
+                      {isHungry && (
+                        <div className="absolute bottom-0 left-0 right-0 h-4 bg-red-500/80 z-20 flex items-center justify-center">
+                          <span className="text-[9px] font-black text-white drop-shadow-md">Butuh Makan! 🌽</span>
+                        </div>
+                      )}
+                      {isReady && !isHungry && (
+                        <div className="absolute bottom-0 left-0 right-0 h-4 bg-green-500/80 z-20 flex items-center justify-center">
+                          <span className="text-[9px] font-black text-white drop-shadow-md">Siap Diambil ✨</span>
+                        </div>
+                      )}
                       {!isReady && (
                         <div className="absolute bottom-0 left-0 right-0 h-4 progress-bar !rounded-none overflow-hidden border-t border-white/10 z-20 flex items-center justify-center">
                           <div className="progress-fill absolute left-0 top-0 bottom-0" style={{ width: `${progress}%` }} />
                           <span className="relative z-10 text-[9px] font-black text-white drop-shadow-md tracking-wider">
-                            {isReady ? (
-                              <span className="text-white drop-shadow-md">Siap Diambil! ✨</span>
-                            ) : (
-                              <span className="text-white drop-shadow-md">
-                                {Math.ceil((produceTime - (currentTime - animal.lastCollected)) / 1000)}s ⚡
-                              </span>
-                            )}
+                            <span className="text-white drop-shadow-md">
+                              {Math.ceil((produceTime - (currentTime - animal.lastCollected)) / 1000)}s ⚡
+                            </span>
                           </span>
                         </div>
                       )}

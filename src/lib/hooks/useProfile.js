@@ -1,0 +1,124 @@
+import { useState } from 'react';
+import { useGameStore } from '@/lib/store';
+import { formatNumber } from '@/lib/utils';
+import { getItemSellPrice } from '@/lib/data/item-helpers';
+import { SHOP_SEEDS } from '@/lib/data/crops';
+import { SHOP_ANIMALS, SHOP_BAIT, SHOP_MINING } from '@/lib/data/shop';
+import { FISHES } from '@/lib/data/fishes';
+import { MINERALS } from '@/lib/data/minerals';
+import { RECIPES } from '@/lib/data/recipes';
+import { SEASON_META } from '@/lib/nav';
+
+export function useProfile() {
+  const inventory = useGameStore((state) => state.inventory);
+  const coins = useGameStore((state) => state.coins);
+  const level = useGameStore((state) => state.level);
+  const xp = useGameStore((state) => state.xp);
+  const day = useGameStore((state) => state.season?.day || 1);
+  const season = useGameStore((state) => state.season?.current || 'spring');
+  const achievements = useGameStore((state) => state.achievements || {});
+  const sellItem = useGameStore((state) => state.sellItem);
+  const sellAllInventory = useGameStore((state) => state.sellAllInventory);
+  const coinMultiplier = useGameStore((state) => state.coinMultiplier);
+  const openConfirm = useGameStore((state) => state.openConfirm);
+  const resetGame = useGameStore((state) => state.resetGame);
+  const dev = useGameStore((state) => state.dev);
+  const enqueueNotification = useGameStore((state) => state.enqueueNotification);
+
+  const [showSettings, setShowSettings] = useState(false);
+  const xpNeeded = level * 100;
+  const seasonMeta = SEASON_META[season] || SEASON_META.spring;
+
+  const categorized = {
+    bibit: [],
+    pertanian: [],
+    peternakan: [],
+    tambang: [],
+    pancing: [],
+    dapur: [],
+    lainnya: [],
+  };
+
+  Object.entries(inventory).forEach(([itemId, qty]) => {
+    if (qty <= 0) return;
+
+    if (SHOP_SEEDS.some((s) => s.id === itemId)) {
+      categorized.bibit.push({ id: itemId, qty });
+    } else if (SHOP_SEEDS.some((s) => s.cropId === itemId)) {
+      categorized.pertanian.push({ id: itemId, qty });
+    } else if (SHOP_ANIMALS.some((a) => a.product === itemId)) {
+      categorized.peternakan.push({ id: itemId, qty });
+    } else if (MINERALS.some((m) => m.id === itemId) || SHOP_MINING.some((m) => m.id === itemId)) {
+      categorized.tambang.push({ id: itemId, qty });
+    } else if (FISHES.some((f) => f.id === itemId) || SHOP_BAIT.some((b) => b.id === itemId)) {
+      categorized.pancing.push({ id: itemId, qty });
+    } else if (RECIPES.some((r) => r.id === itemId)) {
+      categorized.dapur.push({ id: itemId, qty });
+    } else {
+      categorized.lainnya.push({ id: itemId, qty });
+    }
+  });
+
+  const hasSellable = Object.entries(inventory).some(
+    ([id, qty]) => qty > 0 && getItemSellPrice(id) > 0
+  );
+
+  const handleSellItem = (itemId, name, qty) => {
+    const price = getItemSellPrice(itemId);
+    if (!price) {
+      enqueueNotification('Barang ini tidak bisa dijual.', { type: 'error' });
+      return;
+    }
+    const total = price * qty;
+    openConfirm(
+      'Jual Barang',
+      `Jual semua ${qty}x ${name} seharga ${formatNumber(total)} 💰?`,
+      () => {
+        const earned = sellItem(itemId, qty);
+        if (earned > 0) {
+          enqueueNotification(`Terjual seharga ${formatNumber(earned)} 💰`, { icon: '💰', type: 'success' });
+        }
+      }
+    );
+  };
+
+  const handleSellAll = () => {
+    openConfirm(
+      'Jual Semua Hasil',
+      'Jual semua hasil yang bisa dijual? Umpan & alat tidak ikut.',
+      () => {
+        const earned = sellAllInventory();
+        if (earned > 0) {
+          enqueueNotification(
+            coinMultiplier > 1
+              ? `Terjual ${formatNumber(earned)} 💰 (×${coinMultiplier} booster!)`
+              : `Terjual semua hasil seharga ${formatNumber(earned)} 💰!`,
+            { type: 'success' }
+          );
+        } else {
+          enqueueNotification('Tidak ada hasil yang bisa dijual.', { type: 'error' });
+        }
+      }
+    );
+  };
+
+  return {
+    inventory,
+    coins,
+    level,
+    xp,
+    day,
+    achievements,
+    dev,
+    showSettings,
+    xpNeeded,
+    seasonMeta,
+    categorized,
+    hasSellable,
+    resetGame,
+    setShowSettings,
+    handleSellItem,
+    handleSellAll,
+    enqueueNotification
+  };
+}

@@ -81,7 +81,7 @@ export function SeedShop() {
               onDecrease={() => setShopAmounts(p => ({ ...p, [seed.id]: Math.max(1, amt - 1) }))}
               onIncrease={() => setShopAmounts(p => ({ ...p, [seed.id]: amt + 1 }))}
               onBuy={() => handleShopBuy(seed, amt)}
-              dataTutorial={seed.id === 'crop_carrot' ? 'shop-seed' : undefined}
+              dataTutorial={seed.id === 'bibit_wortel' ? 'shop-seed' : undefined}
             />
           );
         })}

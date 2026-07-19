@@ -10,7 +10,8 @@ import { MarketBoard } from './game/MarketBoard';
 import TabPage, { GameStage } from './ui/TabPage';
 import SideDock from './ui/SideDock';
 import ToolChip from './ui/ToolChip';
-import toast from 'react-hot-toast';
+import { useFarming } from '@/lib/hooks/useFarming';
+import { useGameStore } from '@/lib/store';
 
 const FARM_TOOLS = [
   { id: 'tanam', label: 'Tanam', emoji: '🌱' },
@@ -20,32 +21,11 @@ const FARM_TOOLS = [
 ];
 
 export default function TabFarm() {
-  const workers = useGameStore((state) => state.workers);
-  const autoFarm = useGameStore((state) => state.autoFarmer);
-  const toggleAutoFarm = useGameStore((state) => state.toggleAutoFarmer);
-  const inventory = useGameStore((state) => state.inventory);
+  const { autoFarm, handleToggleAuto } = useFarming();
   const buildings = useGameStore((state) => state.buildings);
-
+  const enqueueNotification = useGameStore((state) => state.enqueueNotification);
   const [isEditMode, setIsEditMode] = useState(false);
   const [farmTool, setFarmTool] = useState('tanam');
-
-  const handleToggleAuto = () => {
-    if (!workers?.farmer) {
-      toast('Sewa Petani Budi dulu di toko samping!', { icon: '👨‍🌾' });
-      return;
-    }
-    const next = !autoFarm;
-    toggleAutoFarm();
-    if (next) {
-      const hasSeeds = Object.values(inventory).some((val) => val > 0);
-      if (!hasSeeds) {
-        toast('Auto ON — beli bibit dulu agar kurcaci bisa menanam!', { icon: '👨‍🌾' });
-      } else {
-        toast.success('Kurcaci petani aktif! Auto panen & tanam.', { id: 'auto-farm-toggle' });
-      }
-    }
-  };
-
   return (
     <TabPage>
       <GameStage
@@ -70,7 +50,7 @@ export default function TabFarm() {
                     setIsEditMode(false);
                     setFarmTool(tool.id);
                     if (tool.id === 'jual') {
-                      toast('Klik petak mana saja untuk jual semua hasil', { icon: '💰' });
+                      enqueueNotification('Klik petak mana saja untuk jual semua hasil', { icon: '💰', type: 'info' });
                     }
                   }}
                 >

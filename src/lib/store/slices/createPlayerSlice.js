@@ -2,9 +2,9 @@ import { getItemSellPrice, isSellableProduce } from '../../data/item-helpers';
 import { RECIPES, ORDER_TEMPLATES } from '../../data/recipes';
 import { FISHES } from '../../data/fishes';
 import { SHOP_SEEDS } from '../../data/crops';
+import { SHOP_BAIT } from '../../data/shop';
 import { GAME_CONSTANTS } from '../../constants';
 import { safeCoins, safePositiveNumber } from '../utils';
-import toast from 'react-hot-toast';
 
 export const createPlayerSlice = (set, get) => ({
 
@@ -35,6 +35,29 @@ export const createPlayerSlice = (set, get) => ({
     return true;
   },
 
+
+  // ===== ENERGY RESTORATION (via Food) =====
+  eatFood: (recipeId) => {
+    const state = get();
+    const recipe = RECIPES.find(r => r.id === recipeId);
+    if (!recipe) {
+      get().enqueueNotification('Makanan tidak dikenal!', { type: 'error' });
+      return false;
+    }
+    if (!state.inventory[recipeId] || state.inventory[recipeId] <= 0) {
+      get().enqueueNotification(`Tidak punya ${recipe.name}! Masak dulu di restoran.`, { type: 'error' });
+      return false;
+    }
+    const energyRestore = Math.min(
+      recipe.xp || 20,
+      100
+    );
+    if (!get().removeItem(recipeId, 1)) return false;
+    const newEnergy = Math.min(state.energy + energyRestore, state.maxEnergy || 200);
+    set({ energy: newEnergy });
+    get().enqueueNotification(`Memakan ${recipe.emoji} ${recipe.name}! +${energyRestore} ⚡ Energi`, { icon: '🍽️', type: 'success' });
+    return true;
+  },
 
   // ===== XP & LEVEL =====
   addXP: (amount) => {
@@ -67,7 +90,7 @@ export const createPlayerSlice = (set, get) => ({
     });
 
     if (get().level > prevLevel) {
-      toast.success(`Level Up! Level ${get().level} 🌟\nEnergy Maksimal naik!`, { icon: '🎉', duration: 4000 });
+      get().enqueueNotification(`Level Up! Level ${get().level} 🌟\nEnergy Maksimal naik!`, { icon: '🎉', duration: 4000, type: 'success' });
       return true;
     }
     return false;
@@ -80,7 +103,7 @@ export const createPlayerSlice = (set, get) => ({
       set({ energy: state.energy - amount });
       return true;
     }
-    toast.error('Energy tidak cukup! Tunggu besok atau makan sesuatu.', { icon: '😴' });
+    get().enqueueNotification('Energy tidak cukup! Tunggu besok atau makan sesuatu.', { icon: '😴', type: 'error' });
     return false;
   },
 
@@ -215,6 +238,7 @@ export const createPlayerSlice = (set, get) => ({
       return; 
     }
     
+    const level = state.level || 1;
     const possibleQuests = [
       { type: 'harvest', action: 'Panen', targetId: 'wortel', targetName: 'Wortel', count: 0, required: 10, rewardCoins: 100, rewardXp: 50, claimed: false },
       { type: 'harvest', action: 'Panen', targetId: 'tomat', targetName: 'Tomat', count: 0, required: 15, rewardCoins: 150, rewardXp: 80, claimed: false },
@@ -224,8 +248,24 @@ export const createPlayerSlice = (set, get) => ({
       { type: 'mine', action: 'Tambang', targetId: 'besi', targetName: 'Besi', count: 0, required: 3, rewardCoins: 250, rewardXp: 120, claimed: false },
       { type: 'fish', action: 'Pancing', targetId: 'ikan_mas', targetName: 'Ikan Mas', count: 0, required: 5, rewardCoins: 100, rewardXp: 50, claimed: false },
       { type: 'fish', action: 'Pancing', targetId: 'lele', targetName: 'Lele', count: 0, required: 3, rewardCoins: 150, rewardXp: 80, claimed: false },
-      { type: 'collect', action: 'Kumpulkan', targetId: 'telur', targetName: 'Telur Ayam', count: 0, required: 5, rewardCoins: 100, rewardXp: 50, claimed: false }
+      { type: 'collect', action: 'Kumpulkan', targetId: 'telur', targetName: 'Telur Ayam', count: 0, required: 5, rewardCoins: 100, rewardXp: 50, claimed: false },
+      // ===== Cross-chain quests (level 5+) =====
     ];
+    
+    // ===== Cross-chain quests (lintas menu, mulai level 5) =====
+    if (level >= 5) {
+      possibleQuests.push(
+        { type: 'chain', action: 'Rantai Produksi', targetId: 'gandum_ke_roti', targetName: 'Gandum → Roti', count: 0, required: 1, rewardCoins: 500, rewardXp: 200, claimed: false, chain: [{ type: 'harvest', targetId: 'gandum', amount: 3 }, { type: 'craft', targetId: 'roti_gandum', amount: 1 }] },
+        { type: 'chain', action: 'Rantai Produksi', targetId: 'wortel_ke_sup', targetName: 'Wortel → Sup Wortel', count: 0, required: 1, rewardCoins: 400, rewardXp: 180, claimed: false, chain: [{ type: 'harvest', targetId: 'wortel', amount: 4 }, { type: 'craft', targetId: 'sup_wortel', amount: 1 }] },
+        { type: 'chain', action: 'Rantai Produksi', targetId: 'ternak_ke_keju', targetName: 'Susu → Keju', count: 0, required: 1, rewardCoins: 600, rewardXp: 250, claimed: false, chain: [{ type: 'collect', targetId: 'susu', amount: 3 }, { type: 'craft', targetId: 'keju', amount: 1 }] },
+      );
+    }
+    if (level >= 10) {
+      possibleQuests.push(
+        { type: 'chain', action: 'Rantai Produksi', targetId: 'farm_to_table', targetName: 'Farm to Table', count: 0, required: 1, rewardCoins: 1000, rewardXp: 400, claimed: false, chain: [{ type: 'harvest', targetId: 'gandum', amount: 2 }, { type: 'collect', targetId: 'telur', amount: 1 }, { type: 'craft', targetId: 'roti_gandum', amount: 1 }] },
+        { type: 'chain', action: 'Rantai Produksi', targetId: 'tambang_ke_sushi', targetName: 'Tambang → Sushi Emas', count: 0, required: 1, rewardCoins: 2000, rewardXp: 800, claimed: false, chain: [{ type: 'mine', targetId: 'emas', amount: 1 }, { type: 'fish', targetId: 'ikan_mas', amount: 2 }, { type: 'craft', targetId: 'sushi_emas', amount: 1 }] },
+      );
+    }
     
     const shuffled = [...possibleQuests].sort(() => 0.5 - Math.random());
     const selectedQuests = shuffled.slice(0, 3).map((q, i) => ({ ...q, id: `q_${Date.now()}_${i}` }));
@@ -240,7 +280,19 @@ export const createPlayerSlice = (set, get) => ({
 
       let updated = false;
       const newQuests = quests.map((q) => {
-        if (!q.claimed && q.type === type && q.targetId === targetId && q.count < q.required) {
+        if (q.claimed) return q;
+
+        // Chain quest: track based on chain sub-actions
+        if (q.type === 'chain' && q.chain) {
+          const subAction = q.chain.find(c => c.type === type && c.targetId === targetId);
+          if (subAction) {
+            updated = true;
+            return { ...q, count: q.count + (amount || 1) };
+          }
+          return q;
+        }
+
+        if (q.type === type && q.targetId === targetId && q.count < q.required) {
           updated = true;
           return { ...q, count: Math.min(q.required, q.count + amount) };
         }
@@ -312,14 +364,14 @@ export const createPlayerSlice = (set, get) => ({
       (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === recipe.type
     );
     if (typeQueue.length >= GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE) {
-      toast.error(`Antrean dapur ini penuh! Maksimal ${GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE} antrean per jenis.`);
+      get().enqueueNotification(`Antrean dapur ini penuh! Maksimal ${GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE} antrean per jenis.`, { type: 'error' });
       return false;
     }
 
     const inv = { ...state.inventory };
     for (const [item, qty] of Object.entries(recipe.req)) {
       if ((inv[item] || 0) < qty) {
-        toast.error(`Bahan tidak cukup: ${qty}x ${item}`);
+        get().enqueueNotification(`Bahan tidak cukup: ${qty}x ${item}`, { type: 'error' });
         return false;
       }
     }
@@ -338,7 +390,7 @@ export const createPlayerSlice = (set, get) => ({
       craftingQueue: [...s.craftingQueue, { id, recipeId, startTime, duration }],
     }));
 
-    toast.success(`Mulai membuat ${recipe.name}!`, { icon: '🍳' });
+    get().enqueueNotification(`Mulai membuat ${recipe.name}!`, { icon: '🍳', type: 'success' });
     return true;
   },
 
@@ -360,7 +412,7 @@ export const createPlayerSlice = (set, get) => ({
       inventory: newInventory,
       craftingQueue: s.craftingQueue.filter(q => q.id !== queueId)
     }));
-    toast.success('Dibatalkan, bahan dikembalikan!');
+    get().enqueueNotification('Dibatalkan, bahan dikembalikan!', { type: 'success' });
   },
 
   processCraftingQueue: () => {
@@ -390,8 +442,33 @@ export const createPlayerSlice = (set, get) => ({
     }
 
     if (changed) {
-      set({ craftingQueue: newQueue, inventory: inv });
+      set({
+        craftingQueue: newQueue,
+        inventory: inv,
+      });
       if (xpGained > 0) get().addXP(xpGained);
+      let totalCooked = 0;
+      let totalSushiEmas = 0;
+      for (const item of [...state.craftingQueue]) {
+        if (now - item.startTime >= item.duration) {
+          const recipe = RECIPES.find(r => r.id === item.recipeId);
+          if (recipe) {
+            totalCooked++;
+            if (recipe.id === 'sushi_emas') totalSushiEmas++;
+          }
+        }
+      }
+      if (totalCooked > 0) {
+        set(s => ({
+          stats: {
+            ...s.stats,
+            totalCooked: (s.stats?.totalCooked || 0) + totalCooked,
+            ...(totalSushiEmas > 0 ? { totalSushiEmasMade: (s.stats?.totalSushiEmasMade || 0) + totalSushiEmas } : {}),
+          }
+        }));
+        get().markSessionAction?.('cooked');
+        get().checkAchievements?.();
+      }
     }
   },
 
@@ -445,9 +522,19 @@ export const createPlayerSlice = (set, get) => ({
       return true;
     });
 
+    // ===== Tier 2+ hanya menerima Masakan Jadi =====
+    const isCookedItem = (itemId) => {
+      return RECIPES.some(r => r.id === itemId);
+    };
+    const filteredTemplates = templates.filter(t => {
+      if (t.tier === 1) return true; // Tier 1: bahan mentah OK
+      return t.items.every(item => isCookedItem(item.id)); // Tier 2+: harus masakan jadi
+    });
+
     const newOrders = [];
     for (let i = 0; i < 3; i++) {
-      const t = templates[Math.floor(Math.random() * templates.length)];
+      const pool = filteredTemplates.length > 0 ? filteredTemplates : templates;
+      const t = pool[Math.floor(Math.random() * pool.length)];
       newOrders.push({
         id: Math.random().toString(36).substring(2, 9),
         ...t,
@@ -468,7 +555,7 @@ export const createPlayerSlice = (set, get) => ({
 
     for (const item of order.items) {
       if ((inv[item.id] || 0) < item.qty) {
-        toast.error(`Bahan tidak cukup: ${item.qty}x ${item.id}`);
+        get().enqueueNotification(`Bahan tidak cukup: ${item.qty}x ${item.id}`, { type: 'error' });
         return false;
       }
     }
@@ -490,7 +577,7 @@ export const createPlayerSlice = (set, get) => ({
       stats: { ...state.stats, totalOrdersFulfilled: (state.stats?.totalOrdersFulfilled || 0) + 1 },
     });
     get().checkAchievements?.();
-    toast.success(`Pesanan selesai! +${order.coins} 💰`, { icon: '📦' });
+    get().enqueueNotification(`Pesanan selesai! +${order.coins} 💰`, { icon: '📦', type: 'success' });
     return true;
   },
 
@@ -522,6 +609,51 @@ export const createPlayerSlice = (set, get) => ({
   },
 
   // ===== TUTORIAL =====
+  // ===== CRAFTING BAIT / SPECIAL ITEMS =====
+  craftBait: (baitId) => {
+    const state = get();
+    const bait = SHOP_BAIT.find(b => b.id === baitId);
+    if (!bait?.craftable || !bait?.mineralReq) {
+      get().enqueueNotification('Item ini tidak bisa di-craft!', { type: 'error' });
+      return false;
+    }
+
+    const inv = state.inventory;
+    for (const [mineral, qty] of Object.entries(bait.mineralReq)) {
+      if ((inv[mineral] || 0) < qty) {
+        get().enqueueNotification(`Bahan tidak cukup! Butuh ${qty}x ${mineral}`, { type: 'error' });
+        return false;
+      }
+    }
+
+    const newInventory = { ...inv };
+    for (const [mineral, qty] of Object.entries(bait.mineralReq)) {
+      newInventory[mineral] -= qty;
+      if (newInventory[mineral] <= 0) delete newInventory[mineral];
+    }
+    newInventory[baitId] = (newInventory[baitId] || 0) + 1;
+
+    set({ inventory: newInventory });
+    get().enqueueNotification(`Berhasil membuat ${bait.emoji} ${bait.name}!`, { type: 'success' });
+    return true;
+  },
+
+  // ===== MINIGAME ACTIONS =====
+  recordFishingCatch: (caughtFish, bait) => {
+    get().addItem(caughtFish.id, 1);
+    get().addXP(15 + (bait ? 5 : 0));
+    get().progressQuest('fish', caughtFish.id, 1);
+    set(s => ({ stats: { ...s.stats, totalFished: (s.stats?.totalFished || 0) + 1 } }));
+    get().markSessionAction?.('fished');
+    get().checkAchievements?.();
+  },
+
+  recordBaitUsage: (bait) => {
+    if (bait?.id === 'umpan_cacing') {
+      set(s => ({ stats: { ...s.stats, totalWormBaitUsed: (s.stats?.totalWormBaitUsed || 0) + 1 } }));
+    }
+  },
+
   completeTutorialStep: (step) => {
     const state = get();
     if (state.tutorialStep === step) {

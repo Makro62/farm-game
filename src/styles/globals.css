@@ -4,6 +4,10 @@
 
 @layer base {
   :root {
+    /* Font families (previously injected by next/font/google) */
+    --font-display: 'Fredoka', 'Comic Sans MS', system-ui, sans-serif;
+    --font-body: 'Nunito', 'Arial', system-ui, sans-serif;
+
     /* Mockup cozy farm — cream + kayu + rumput */
     --primary: #5DBE4A;
     --primary-light: #8FD96A;

@@ -71,21 +71,8 @@ export function getShopAnimal(type) {
 }
 
 export function getAnimalEmoji(animal) {
-  const emojis = {
-    ayam: '🐔',
-    bebek: '🦆',
-    sapi: '🐄',
-    domba: '🐑',
-    babi: '🐖',
-    kuda: '🐴',
-    chicken: '🐔',
-    duck: '🦆',
-    cow: '🐄',
-    sheep: '🐑',
-    pig: '🐖',
-    horse: '🐴',
-  };
-  return emojis[animal] || '🐾';
+  const data = getShopAnimal(animal);
+  return data?.emoji || '🐾';
 }
 
 export function getItemSellPrice(itemId) {
@@ -119,6 +106,25 @@ export function isSellableProduce(itemId) {
   if (SHOP_BAIT.some((b) => b.id === itemId)) return false;
   if (SHOP_MINING.some((m) => m.id === itemId)) return false;
   return getItemSellPrice(itemId) != null;
+}
+
+export function getItemSource(itemId) {
+  if (!itemId) return null;
+
+  if (SHOP_SEEDS.some(s => s.cropId === itemId)) return '🌱 Ladang (Tanam & Panen)';
+  if (SHOP_SEEDS.some(s => s.id === itemId)) return '🛒 Toko Bibit (Beli)';
+  if (SHOP_ANIMALS.some(a => a.product === itemId)) return '🐄 Peternakan (Kolek dari hewan)';
+  if (FISHES.some(f => f.id === itemId)) return '🎣 Memancing';
+  if (MINERALS.some(m => m.id === itemId)) return '⛏️ Tambang';
+  if (RECIPES.some(r => r.id === itemId)) return '🍳 Restoran (Masak)';
+  if (SHOP_BAIT.some(b => b.id === itemId)) return '🎣 Umpan Pancing';
+  if (SHOP_MINING.some(m => m.id === itemId)) return '⛏️ Alat Tambang';
+  if (SPECIAL_ITEMS[itemId]) {
+    if (itemId === 'cacing') return '⛏️ Drop dari Tambang (Batu)';
+    if (itemId === 'pupuk_kandang') return '🐄 Drop dari Ternak (Kolek)';
+  }
+
+  return null;
 }
 
 export function getItemDisplayName(itemId) {

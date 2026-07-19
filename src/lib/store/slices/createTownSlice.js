@@ -34,6 +34,28 @@ export const createTownSlice = (set, get) => ({
     if (!get().spendCoins(building.price)) {
       return { ok: false, message: 'Koin tidak cukup!' };
     }
+
+    // ===== Infrastruktur butuh mineral dari Tambang =====
+    const mineralReq = {
+      silo: { batu: 20, besi: 10 },
+      greenhouse: { batu: 30, tembaga: 15, emas: 5 },
+    }[buildingId];
+
+    if (mineralReq) {
+      for (const [mineral, qty] of Object.entries(mineralReq)) {
+        if ((state.inventory[mineral] || 0) < qty) {
+          get().addCoins(building.price); // refund coins
+          return { ok: false, message: `Butuh ${qty}x ${mineral} dari Tambang untuk membangun ${building.name}!` };
+        }
+      }
+      const newInv = { ...state.inventory };
+      for (const [mineral, qty] of Object.entries(mineralReq)) {
+        newInv[mineral] -= qty;
+        if (newInv[mineral] <= 0) delete newInv[mineral];
+      }
+      set({ inventory: newInv });
+    }
+
     set((s) => ({
       buildings: { ...(s.buildings || {}), [buildingId]: true },
     }));

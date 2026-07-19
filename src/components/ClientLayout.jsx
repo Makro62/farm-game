@@ -8,6 +8,7 @@ import { NAV_TABS } from '@/lib/nav';
 import GameSidebar from '@/components/GameSidebar';
 import Modals from '@/components/Modals';
 import TutorialOverlay from '@/components/ui/TutorialOverlay';
+import NotificationManager from '@/components/NotificationManager';
 import { cn } from '@/lib/utils';
 
 export default function ClientLayout({ children }) {
@@ -81,6 +82,7 @@ export default function ClientLayout({ children }) {
       </nav>
 
       <Modals />
+      <NotificationManager />
       <TutorialOverlay />
     </div>
   );

@@ -1,5 +1,4 @@
 import { getMiningRegenMs, rollMineralType, isWorkerActive } from '../utils';
-import toast from 'react-hot-toast';
 import { SHOP_MINING } from '@/lib/data/shop';
 import { GAME_CONSTANTS } from '@/lib/constants';
 
@@ -48,7 +47,7 @@ export const createMiningSlice = (set, get) => ({
     get().markSessionAction?.('mined');
     get().checkAchievements?.();
     if (dropsWorm) {
-      toast('🪱 Dapat Cacing Tanah! Bisa jadi umpan pancing.', { duration: 2500 });
+      get().enqueueNotification('🪱 Dapat Cacing Tanah! Bisa jadi umpan pancing.', { duration: 2500 });
     }
     const combo = get().registerCombo?.();
     if (combo?.count >= 3) {
