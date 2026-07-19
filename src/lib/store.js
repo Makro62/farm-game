@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 
 // Helpers and utilities for persist logic
 import { partializeState, migrateState } from './store/migrations';
@@ -22,7 +23,7 @@ import { initialState } from './store/initialState';
 
 export const useGameStore = create(
   persist(
-    (set, get) => ({
+    immer((set, get) => ({
       // Base State
       ...initialState,
       
@@ -85,7 +86,7 @@ export const useGameStore = create(
           });
         }
       }
-    }),
+    })),
     {
       name: 'farm-game-storage',
       storage: createJSONStorage(() => {
