@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useGameStore, useInventory } from '@/lib/store';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
-import { NPC_LIST } from '@/lib/data/npcs';
-import { getCropEmoji } from '@/lib/data/item-helpers';
-import Button from './ui/Button';
-import QtyControl from './ui/QtyControl';
-import toast from 'react-hot-toast';
-import OfflineProgressModal from './OfflineProgressModal';
+import { useGameStore, useInventory } from "@/lib/store";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { NPC_LIST } from "@/lib/data/npcs";
+import { getCropEmoji } from "@/lib/data/item-helpers";
+import Button from "./ui/Button";
+import QtyControl from "./ui/QtyControl";
+import toast from "react-hot-toast";
+import OfflineProgressModal from "./OfflineProgressModal";
 
 export default function Modals() {
   const modals = useGameStore((state) => state.modals);
@@ -49,23 +49,26 @@ export default function Modals() {
 
     if (result) {
       if (isLiked) {
-        toast.success(`${npcData.name}: "Wah, terima kasih banyak! Saya sangat suka ini!" 🥰`, {
-          duration: 4000,
-        });
+        toast.success(
+          `${npcData.name}: "Wah, terima kasih banyak! Saya sangat suka ini!" 🥰`,
+          {
+            duration: 4000,
+          },
+        );
       } else {
         toast(`${npcData.name}: "Hmm... terima kasih atas hadiahnya." 🙂`, {
-          icon: '🎁',
+          icon: "🎁",
           duration: 3000,
         });
       }
 
       if (result.leveledUp) {
         toast.success(
-          `🎉 Level Persahabatan dengan ${npcData.name} naik ke Level ${result.newLevel}!`
+          `🎉 Level Persahabatan dengan ${npcData.name} naik ke Level ${result.newLevel}!`,
         );
       }
     } else {
-      toast.error('Gagal memberikan hadiah.');
+      toast.error("Gagal memberikan hadiah.");
     }
 
     closeModals();
@@ -91,7 +94,9 @@ export default function Modals() {
               <h2 className="text-xl font-display font-bold text-[var(--text-primary)] mb-2">
                 {modals.confirm.title}
               </h2>
-              <p className="text-[var(--text-secondary)] mb-6 font-medium">{modals.confirm.msg}</p>
+              <p className="text-[var(--text-secondary)] mb-6 font-medium">
+                {modals.confirm.msg}
+              </p>
               <div className="flex justify-end gap-3">
                 <Button variant="secondary" onClick={closeModals}>
                   Batal
@@ -134,7 +139,11 @@ export default function Modals() {
                 <Button variant="secondary" size="lg" onClick={closeModals}>
                   Batal
                 </Button>
-                <Button variant="primary" size="lg" onClick={handlePromptSubmit}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={handlePromptSubmit}
+                >
                   Beli
                 </Button>
               </div>
@@ -151,7 +160,9 @@ export default function Modals() {
               className="glass-panel max-w-md w-full"
             >
               <div className="text-center mb-4">
-                <div className="text-6xl mb-2 drop-shadow-md">{targetNpc.emoji}</div>
+                <div className="text-6xl mb-2 drop-shadow-md">
+                  {targetNpc.emoji}
+                </div>
                 <h2 className="text-2xl font-display font-black text-[var(--text-primary)]">
                   {targetNpc.name}
                 </h2>
@@ -159,7 +170,8 @@ export default function Modals() {
                   {targetNpc.role}
                 </p>
                 <p className="text-[var(--text-secondary)] text-sm mt-3 font-medium">
-                  Pilih barang dari inventory Anda untuk diberikan sebagai hadiah.
+                  Pilih barang dari inventory Anda untuk diberikan sebagai
+                  hadiah.
                 </p>
               </div>
 
@@ -178,16 +190,18 @@ export default function Modals() {
                         onClick={() => setSelectedGift(item)}
                         className={`relative w-16 h-16 rounded-xl flex items-center justify-center transition-all border-2 ${
                           selectedGift === item
-                            ? 'bg-[var(--gold)]/20 border-[var(--gold)] shadow-inner scale-105'
-                            : 'bg-white/50 border-[var(--wood-light)] hover:bg-white'
+                            ? "bg-[var(--gold)]/20 border-[var(--gold)] shadow-inner scale-105"
+                            : "bg-white/50 border-[var(--wood-light)] hover:bg-white"
                         }`}
                       >
-                        <span className="text-3xl drop-shadow-md">{getCropEmoji(item)}</span>
+                        <span className="text-3xl drop-shadow-md">
+                          {getCropEmoji(item)}
+                        </span>
                         <span className="absolute -bottom-2 -right-2 bg-[var(--card)] text-[var(--text-primary)] text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm border-2 border-[var(--wood-light)]">
                           {inventory[item]}
                         </span>
                       </button>
-                    )
+                    ),
                 )}
               </div>
 

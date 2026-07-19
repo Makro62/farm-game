@@ -1,8 +1,8 @@
-import { SHOP_SEEDS, CROP_DATA } from './crops';
-import { SHOP_ANIMALS, SHOP_BAIT, SHOP_MINING, SPECIAL_ITEMS } from './shop';
-import { RECIPES } from './recipes';
-import { FISHES } from './fishes';
-import { MINERALS } from './minerals';
+import { SHOP_SEEDS, CROP_DATA } from "./crops";
+import { SHOP_ANIMALS, SHOP_BAIT, SHOP_MINING, SPECIAL_ITEMS } from "./shop";
+import { RECIPES } from "./recipes";
+import { FISHES } from "./fishes";
+import { MINERALS } from "./minerals";
 
 // ===== ITEM CATEGORY SYSTEM =====
 // Maps every item ID to its inventory category
@@ -10,47 +10,47 @@ import { MINERALS } from './minerals';
 export const ITEM_CATEGORY = {};
 
 // Seeds -> crops mapping
-SHOP_SEEDS.forEach(s => {
-  ITEM_CATEGORY[s.id] = 'seeds';        // bibit_wortel -> seeds
-  ITEM_CATEGORY[s.cropId] = 'crops';     // wortel -> crops
+SHOP_SEEDS.forEach((s) => {
+  ITEM_CATEGORY[s.id] = "seeds"; // bibit_wortel -> seeds
+  ITEM_CATEGORY[s.cropId] = "crops"; // wortel -> crops
 });
 
 // Animal products
-SHOP_ANIMALS.forEach(a => {
-  ITEM_CATEGORY[a.id] = 'animals';
-  ITEM_CATEGORY[a.product] = 'animalProducts';  // telur, susu, etc
+SHOP_ANIMALS.forEach((a) => {
+  ITEM_CATEGORY[a.id] = "animals";
+  ITEM_CATEGORY[a.product] = "animalProducts"; // telur, susu, etc
 });
 
 // Minerals
-MINERALS.forEach(m => {
-  ITEM_CATEGORY[m.id] = 'minerals';
+MINERALS.forEach((m) => {
+  ITEM_CATEGORY[m.id] = "minerals";
 });
 
 // Fish
-FISHES.forEach(f => {
-  ITEM_CATEGORY[f.id] = 'fish';
+FISHES.forEach((f) => {
+  ITEM_CATEGORY[f.id] = "fish";
 });
 
 // Cooked/processed items from recipes
-RECIPES.forEach(r => {
-  if (r.type === 'processing') {
-    ITEM_CATEGORY[r.id] = 'processed';
+RECIPES.forEach((r) => {
+  if (r.type === "processing") {
+    ITEM_CATEGORY[r.id] = "processed";
   } else {
-    ITEM_CATEGORY[r.id] = 'cooked';
+    ITEM_CATEGORY[r.id] = "cooked";
   }
 });
 
 // Shop items
-SHOP_BAIT.forEach(b => {
-  ITEM_CATEGORY[b.id] = 'bait';
+SHOP_BAIT.forEach((b) => {
+  ITEM_CATEGORY[b.id] = "bait";
 });
-SHOP_MINING.forEach(mt => {
-  ITEM_CATEGORY[mt.id] = 'tools';
+SHOP_MINING.forEach((mt) => {
+  ITEM_CATEGORY[mt.id] = "tools";
 });
 
 // Special items
-Object.keys(SPECIAL_ITEMS).forEach(si => {
-  ITEM_CATEGORY[si] = 'collectibles';
+Object.keys(SPECIAL_ITEMS).forEach((si) => {
+  ITEM_CATEGORY[si] = "collectibles";
 });
 
 export function getItemCategory(itemId) {
@@ -67,34 +67,34 @@ export const QUALITY_MULTIPLIERS = {
 
 export function rollCropQuality(weather, fertilizer) {
   let score = Math.random();
-  if (fertilizer === 'premium') score += 0.3;
-  if (fertilizer === 'organic') score += 0.2;
-  if (weather === 'rainy') score += 0.1;
-  if (score > 0.95) return 'iridium';
-  if (score > 0.85) return 'gold';
-  if (score > 0.70) return 'silver';
-  return 'normal';
+  if (fertilizer === "premium") score += 0.3;
+  if (fertilizer === "organic") score += 0.2;
+  if (weather === "rainy") score += 0.1;
+  if (score > 0.95) return "iridium";
+  if (score > 0.85) return "gold";
+  if (score > 0.7) return "silver";
+  return "normal";
 }
 
 export function rollFishSize(fishId) {
-  const fish = FISHES.find(f => f.id === fishId);
-  if (!fish?.sizeTiers) return 'normal';
+  const fish = FISHES.find((f) => f.id === fishId);
+  if (!fish?.sizeTiers) return "normal";
   const rand = Math.random();
   let cumulative = 0;
   for (const [size, data] of Object.entries(fish.sizeTiers)) {
     cumulative += data.chance;
     if (rand <= cumulative) return size;
   }
-  return 'normal';
+  return "normal";
 }
 
 const LEGACY_ANIMAL_MAP = {
-  chicken: 'ayam',
-  duck: 'bebek',
-  cow: 'sapi',
-  sheep: 'domba',
-  pig: 'babi',
-  horse: 'kuda',
+  chicken: "ayam",
+  duck: "bebek",
+  cow: "sapi",
+  sheep: "domba",
+  pig: "babi",
+  horse: "kuda",
 };
 
 export function getShopSeed(itemId) {
@@ -102,21 +102,21 @@ export function getShopSeed(itemId) {
 }
 
 export function getCropEmojiById(cropId) {
-  if (!cropId) return '📦';
+  if (!cropId) return "📦";
   const seed = SHOP_SEEDS.find((s) => s.cropId === cropId);
   if (seed?.emoji) return seed.emoji;
-  return CROP_DATA[cropId]?.emoji || '📦';
+  return CROP_DATA[cropId]?.emoji || "📦";
 }
 
 /** Prefer getItemEmoji — alias getCropEmoji retained for compatibility */
 export function getItemEmoji(itemId) {
-  if (!itemId) return '📦';
+  if (!itemId) return "📦";
 
   const seed = getShopSeed(itemId);
   if (seed) return seed.emoji || getCropEmojiById(seed.cropId);
 
-  if (itemId.startsWith('bibit_')) {
-    const cropId = itemId.replace('bibit_', '');
+  if (itemId.startsWith("bibit_")) {
+    const cropId = itemId.replace("bibit_", "");
     return getCropEmojiById(cropId);
   }
 
@@ -144,7 +144,7 @@ export function getItemEmoji(itemId) {
   const specialItem = SPECIAL_ITEMS[itemId];
   if (specialItem) return specialItem.emoji;
 
-  return '📦';
+  return "📦";
 }
 
 export const getCropEmoji = getItemEmoji;
@@ -156,7 +156,7 @@ export function getShopAnimal(type) {
 
 export function getAnimalEmoji(animal) {
   const data = getShopAnimal(animal);
-  return data?.emoji || '🐾';
+  return data?.emoji || "🐾";
 }
 
 export function getItemSellPrice(itemId, options = {}) {
@@ -218,17 +218,19 @@ export function isSellableProduce(itemId) {
 export function getItemSource(itemId) {
   if (!itemId) return null;
 
-  if (SHOP_SEEDS.some(s => s.cropId === itemId)) return '🌱 Ladang (Tanam & Panen)';
-  if (SHOP_SEEDS.some(s => s.id === itemId)) return '🛒 Toko Bibit (Beli)';
-  if (SHOP_ANIMALS.some(a => a.product === itemId)) return '🐄 Peternakan (Kolek dari hewan)';
-  if (FISHES.some(f => f.id === itemId)) return '🎣 Memancing';
-  if (MINERALS.some(m => m.id === itemId)) return '⛏️ Tambang';
-  if (RECIPES.some(r => r.id === itemId)) return '🍳 Restoran (Masak)';
-  if (SHOP_BAIT.some(b => b.id === itemId)) return '🎣 Umpan Pancing';
-  if (SHOP_MINING.some(m => m.id === itemId)) return '⛏️ Alat Tambang';
+  if (SHOP_SEEDS.some((s) => s.cropId === itemId))
+    return "🌱 Ladang (Tanam & Panen)";
+  if (SHOP_SEEDS.some((s) => s.id === itemId)) return "🛒 Toko Bibit (Beli)";
+  if (SHOP_ANIMALS.some((a) => a.product === itemId))
+    return "🐄 Peternakan (Kolek dari hewan)";
+  if (FISHES.some((f) => f.id === itemId)) return "🎣 Memancing";
+  if (MINERALS.some((m) => m.id === itemId)) return "⛏️ Tambang";
+  if (RECIPES.some((r) => r.id === itemId)) return "🍳 Restoran (Masak)";
+  if (SHOP_BAIT.some((b) => b.id === itemId)) return "🎣 Umpan Pancing";
+  if (SHOP_MINING.some((m) => m.id === itemId)) return "⛏️ Alat Tambang";
   if (SPECIAL_ITEMS[itemId]) {
-    if (itemId === 'cacing') return '⛏️ Drop dari Tambang (Batu)';
-    if (itemId === 'pupuk_kandang') return '🐄 Drop dari Ternak (Kolek)';
+    if (itemId === "cacing") return "⛏️ Drop dari Tambang (Batu)";
+    if (itemId === "pupuk_kandang") return "🐄 Drop dari Ternak (Kolek)";
   }
 
   return null;
@@ -239,10 +241,13 @@ export function getItemDisplayName(itemId) {
   if (seedData) return seedData.name;
 
   const cropData = SHOP_SEEDS.find((s) => s.cropId === itemId);
-  if (cropData) return cropData.name.replace('Bibit ', '');
+  if (cropData) return cropData.name.replace("Bibit ", "");
 
   const animalProduct = SHOP_ANIMALS.find((a) => a.product === itemId);
-  if (animalProduct) return animalProduct.productEmoji + ' ' + animalProduct.product.replace('_', ' ');
+  if (animalProduct)
+    return (
+      animalProduct.productEmoji + " " + animalProduct.product.replace("_", " ")
+    );
 
   const fishData = FISHES.find((f) => f.id === itemId);
   if (fishData) return fishData.name;

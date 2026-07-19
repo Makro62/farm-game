@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useGameStore } from '@/lib/store';
-import { CROP_DATA } from '../../lib/data/crops';
-import { getCropEmoji } from '../../lib/data/item-helpers';
-import toast from 'react-hot-toast';
+import { useGameStore } from "@/lib/store";
+import { CROP_DATA } from "../../lib/data/crops";
+import { getCropEmoji } from "../../lib/data/item-helpers";
+import toast from "react-hot-toast";
 
 export function MarketBoard() {
   const todayPrices = useGameStore((s) => s.todayPrices);
@@ -15,7 +15,7 @@ export function MarketBoard() {
 
   const handleRefresh = () => {
     updateMarket();
-    toast.success('Harga pasar diperbarui!', { icon: '📈' });
+    toast.success("Harga pasar diperbarui!", { icon: "📈" });
   };
 
   return (
@@ -24,7 +24,11 @@ export function MarketBoard() {
         <span className="flex items-center gap-2">
           <span className="text-xl">📈</span> Papan Harga
         </span>
-        <button type="button" onClick={handleRefresh} className="btn-gold !px-2.5 !py-1 !text-[10px] uppercase tracking-wide">
+        <button
+          type="button"
+          onClick={handleRefresh}
+          className="btn-gold !px-2.5 !py-1 !text-[10px] uppercase tracking-wide"
+        >
           Refresh
         </button>
       </div>
@@ -46,17 +50,19 @@ export function MarketBoard() {
       ) : (
         <div className="grid grid-cols-1 gap-1.5 max-h-56 overflow-y-auto pr-1">
           {entries.map(([cropId, price]) => {
-            const up = marketTrend[cropId] === 'up';
+            const up = marketTrend[cropId] === "up";
             return (
               <div
                 key={cropId}
-                className={`market-row ${up ? 'market-row--up' : 'market-row--down'} px-2.5 py-2 flex items-center justify-between gap-2`}
+                className={`market-row ${up ? "market-row--up" : "market-row--down"} px-2.5 py-2 flex items-center justify-between gap-2`}
               >
                 <span className="text-sm font-extrabold text-[#F4F7E8] truncate">
                   {getCropEmoji(cropId)} {CROP_DATA[cropId]?.name || cropId}
                 </span>
-                <span className={`text-xs font-black tabular-nums ${up ? 'text-[#9FE870]' : 'text-[#FFB3AA]'}`}>
-                  {price}💰 {up ? '▲' : '▼'}
+                <span
+                  className={`text-xs font-black tabular-nums ${up ? "text-[#9FE870]" : "text-[#FFB3AA]"}`}
+                >
+                  {price}💰 {up ? "▲" : "▼"}
                 </span>
               </div>
             );

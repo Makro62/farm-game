@@ -1,31 +1,33 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useGameStore } from '@/lib/store';
-import { RECIPES } from '@/lib/data/recipes';
-import { getCropEmoji } from '@/lib/data/item-helpers';
-import { motion, AnimatePresence } from 'framer-motion';
-import { GameActionButton } from './GameAreaHeader';
+import { useState, useEffect } from "react";
+import { useGameStore } from "@/lib/store";
+import { RECIPES } from "@/lib/data/recipes";
+import { getCropEmoji } from "@/lib/data/item-helpers";
+import { motion, AnimatePresence } from "framer-motion";
+import { GameActionButton } from "./GameAreaHeader";
 
 const TYPE_TABS = [
-  { id: 'kitchen', label: 'Dasar', icon: '🥣' },
-  { id: 'fish_kitchen', label: 'Ikan', icon: '🍣' },
-  { id: 'restaurant', label: 'Kue', icon: '🍰' },
+  { id: "kitchen", label: "Dasar", icon: "🥣" },
+  { id: "fish_kitchen", label: "Ikan", icon: "🍣" },
+  { id: "restaurant", label: "Kue", icon: "🍰" },
 ];
 
 export function CraftingWidget({
-  type = 'kitchen',
-  title = 'Dapur Produksi',
-  icon = '🍳',
+  type = "kitchen",
+  title = "Dapur Produksi",
+  icon = "🍳",
   hub = false,
 }) {
   const craftingQueue = useGameStore((state) => state.craftingQueue);
   const startCrafting = useGameStore((state) => state.startCrafting);
-  const removeCraftingQueue = useGameStore((state) => state.removeCraftingQueue);
+  const removeCraftingQueue = useGameStore(
+    (state) => state.removeCraftingQueue,
+  );
   const invByCat = useGameStore((state) => state.inventoryByCategory);
   const canCook = (recipe) =>
     Object.entries(recipe.req).every(([key, qty]) => {
-      const [cat, itemId] = key.split('.');
+      const [cat, itemId] = key.split(".");
       return (invByCat?.[cat]?.[itemId]?.qty || 0) >= qty;
     });
 
@@ -43,7 +45,7 @@ export function CraftingWidget({
 
   const recipes = RECIPES.filter((r) => r.type === activeType);
   const activeQueues = craftingQueue.filter(
-    (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === activeType
+    (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === activeType,
   );
   const slotsLeft = Math.max(0, 3 - activeQueues.length);
 
@@ -71,7 +73,10 @@ export function CraftingWidget({
       )}
 
       <p className="text-[10px] font-bold text-[var(--text-secondary)] mb-2">
-        Antrean {slotsLeft}/3 · {readyCount > 0 ? `${readyCount} resep siap masak` : 'Siapkan bahan dulu'}
+        Antrean {slotsLeft}/3 ·{" "}
+        {readyCount > 0
+          ? `${readyCount} resep siap masak`
+          : "Siapkan bahan dulu"}
       </p>
 
       <AnimatePresence>
@@ -79,14 +84,15 @@ export function CraftingWidget({
           const recipe = RECIPES.find((r) => r.id === queue.recipeId);
           if (!recipe) return null;
 
-          const rawProgress = ((currentTime - queue.startTime) / queue.duration) * 100;
+          const rawProgress =
+            ((currentTime - queue.startTime) / queue.duration) * 100;
           const progress = Math.min(100, Math.max(0, rawProgress));
           const isAlmostDone = progress > 90;
 
           return (
             <motion.div
               initial={{ opacity: 0, height: 0, scale: 0.9 }}
-              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              animate={{ opacity: 1, height: "auto", scale: 1 }}
               exit={{ opacity: 0, height: 0, scale: 0.9 }}
               transition={{ duration: 0.3 }}
               key={queue.id}
@@ -104,8 +110,13 @@ export function CraftingWidget({
                 <span className="font-bold text-[var(--text-primary)] text-sm flex items-center gap-2">
                   <motion.span
                     className="text-xl"
-                    animate={{ rotate: isAlmostDone ? [0, -10, 10, 0] : [0, -5, 5, 0] }}
-                    transition={{ repeat: Infinity, duration: isAlmostDone ? 0.5 : 2 }}
+                    animate={{
+                      rotate: isAlmostDone ? [0, -10, 10, 0] : [0, -5, 5, 0],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: isAlmostDone ? 0.5 : 2,
+                    }}
                   >
                     {recipe.emoji}
                   </motion.span>
@@ -139,7 +150,9 @@ export function CraftingWidget({
               whileHover={{ scale: 1.01 }}
               key={recipe.id}
               className={`glass-card p-3 rounded-2xl flex flex-col transition-shadow ${
-                ready ? 'ring-2 ring-[var(--primary)] border-[var(--primary)]' : ''
+                ready
+                  ? "ring-2 ring-[var(--primary)] border-[var(--primary)]"
+                  : ""
               }`}
             >
               <div className="flex justify-between items-center mb-2">
@@ -166,7 +179,7 @@ export function CraftingWidget({
               <div className="flex justify-between items-center text-xs">
                 <div className="flex gap-1.5 flex-wrap">
                   {Object.entries(recipe.req).map(([key, qty]) => {
-                    const [cat, itemId] = key.split('.');
+                    const [cat, itemId] = key.split(".");
                     const has = invByCat?.[cat]?.[itemId]?.qty || 0;
                     const isEnough = has >= qty;
                     return (
@@ -174,8 +187,8 @@ export function CraftingWidget({
                         key={key}
                         className={`px-1.5 py-0.5 rounded-lg flex items-center gap-1 border text-[10px] font-bold ${
                           isEnough
-                            ? 'bg-[var(--primary-light)]/40 text-[var(--primary-dark)] border-[var(--primary)]/40'
-                            : 'bg-[#FFCDD2]/60 text-[#C62828] border-[#EF9A9A]'
+                            ? "bg-[var(--primary-light)]/40 text-[var(--primary-dark)] border-[var(--primary)]/40"
+                            : "bg-[#FFCDD2]/60 text-[#C62828] border-[#EF9A9A]"
                         }`}
                       >
                         {getCropEmoji(itemId)} {has}/{qty}

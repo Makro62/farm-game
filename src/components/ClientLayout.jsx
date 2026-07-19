@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useGameStore } from '@/lib/store';
-import { NAV_TABS } from '@/lib/nav';
-import GameSidebar from '@/components/GameSidebar';
-import Modals from '@/components/Modals';
-import TutorialOverlay from '@/components/ui/TutorialOverlay';
-import NotificationManager from '@/components/NotificationManager';
-import { cn } from '@/lib/utils';
+import { useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useGameStore } from "@/lib/store";
+import { NAV_TABS } from "@/lib/nav";
+import GameSidebar from "@/components/GameSidebar";
+import Modals from "@/components/Modals";
+import TutorialOverlay from "@/components/ui/TutorialOverlay";
+import NotificationManager from "@/components/NotificationManager";
+import { cn } from "@/lib/utils";
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
@@ -24,35 +24,35 @@ export default function ClientLayout({ children }) {
     const onHide = () => {
       if (document.hidden) touch();
     };
-    document.addEventListener('visibilitychange', onHide);
-    window.addEventListener('beforeunload', touch);
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("beforeunload", touch);
     return () => {
       clearInterval(id);
-      document.removeEventListener('visibilitychange', onHide);
-      window.removeEventListener('beforeunload', touch);
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("beforeunload", touch);
     };
   }, []);
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'development') return;
+    if (process.env.NODE_ENV !== "development") return;
     const onKey = (e) => {
       if (!(e.ctrlKey && e.shiftKey)) return;
-      if (e.key === 'c') {
+      if (e.key === "c") {
         e.preventDefault();
         useGameStore.getState().dev.addCoins(1000);
       }
-      if (e.key === 'l') {
+      if (e.key === "l") {
         e.preventDefault();
         const s = useGameStore.getState();
         s.dev.setLevel(s.level + 1);
       }
-      if (e.key === 'r') {
+      if (e.key === "r") {
         e.preventDefault();
         useGameStore.getState().dev.resetPlots();
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   return (
@@ -72,7 +72,10 @@ export default function ClientLayout({ children }) {
             <Link
               key={tab.id}
               href={tab.href}
-              className={cn('shell-bottom-link', active && 'shell-bottom-link--active')}
+              className={cn(
+                "shell-bottom-link",
+                active && "shell-bottom-link--active",
+              )}
             >
               <span className="shell-bottom-emoji">{tab.emoji}</span>
               <span>{tab.label}</span>

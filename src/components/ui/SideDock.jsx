@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 /**
  * Panel konten kanan (toko / info) — dibangun ulang sebagai dock
  * dengan tab pill dan body scroll terpisah.
  */
-export default function SideDock({ tabs = [], defaultTab, className = '' }) {
+export default function SideDock({ tabs = [], defaultTab, className = "" }) {
   const firstId = tabs[0]?.id;
   const [active, setActive] = useState(defaultTab || firstId);
 
@@ -21,7 +21,7 @@ export default function SideDock({ tabs = [], defaultTab, className = '' }) {
   if (!tabs.length) return null;
 
   return (
-    <aside className={cn('dock', className)}>
+    <aside className={cn("dock", className)}>
       <div className="dock-head">
         <div className="dock-tabs" role="tablist" aria-label="Panel samping">
           {tabs.map((tab) => {
@@ -32,10 +32,12 @@ export default function SideDock({ tabs = [], defaultTab, className = '' }) {
                 type="button"
                 role="tab"
                 aria-selected={selected}
-                className={cn('dock-tab', selected && 'dock-tab--on')}
+                className={cn("dock-tab", selected && "dock-tab--on")}
                 onClick={() => setActive(tab.id)}
               >
-                {tab.emoji ? <span className="dock-tab-emoji">{tab.emoji}</span> : null}
+                {tab.emoji ? (
+                  <span className="dock-tab-emoji">{tab.emoji}</span>
+                ) : null}
                 <span>{tab.label}</span>
               </button>
             );

@@ -1,5 +1,5 @@
-import { useGameStore } from '@/lib/store';
-import toast from 'react-hot-toast';
+import { useGameStore } from "@/lib/store";
+import toast from "react-hot-toast";
 
 export function QuestPanel() {
   const dailyQuests = useGameStore((state) => state.dailyQuests);
@@ -17,7 +17,10 @@ export function QuestPanel() {
           const isComplete = quest.count >= quest.required;
 
           return (
-            <div key={quest.id} className="quest-parchment p-3 mb-3 relative overflow-hidden">
+            <div
+              key={quest.id}
+              className="quest-parchment p-3 mb-3 relative overflow-hidden"
+            >
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="font-bold text-[var(--text-primary)] line-clamp-1 pr-2">
                   {quest.action} {quest.required} {quest.targetName}
@@ -48,7 +51,7 @@ export function QuestPanel() {
                     type="button"
                     onClick={() => {
                       if (claimQuestReward(quest.id)) {
-                        toast.success('Hadiah quest berhasil diambil!');
+                        toast.success("Hadiah quest berhasil diambil!");
                       }
                     }}
                     className="btn-primary !text-xs !px-3 !py-1"
@@ -62,8 +65,12 @@ export function QuestPanel() {
         })
       ) : (
         <div className="quest-parchment p-3 min-h-[80px] mb-6 flex flex-col items-center justify-center text-center">
-          <span className="text-[var(--text-secondary)] text-sm font-medium mb-2">Quest sedang disiapkan...</span>
-          <span className="text-xs text-[var(--text-secondary)]">Tunggu sejenak untuk quest baru.</span>
+          <span className="text-[var(--text-secondary)] text-sm font-medium mb-2">
+            Quest sedang disiapkan...
+          </span>
+          <span className="text-xs text-[var(--text-secondary)]">
+            Tunggu sejenak untuk quest baru.
+          </span>
         </div>
       )}
     </>

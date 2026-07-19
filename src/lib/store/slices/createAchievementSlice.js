@@ -1,7 +1,6 @@
-import { ACHIEVEMENTS } from '../../data/achievements';
+import { ACHIEVEMENTS } from "../../data/achievements";
 
 export const createAchievementSlice = (set, get) => ({
-
   // ===== CHECK & UNLOCK =====
   checkAchievements: () => {
     const state = get();
@@ -18,21 +17,28 @@ export const createAchievementSlice = (set, get) => ({
         // Stats-based condition
         const current = stats[ach.condition.stat] || 0;
         met = current >= ach.condition.value;
-      } else if (ach.condition.type === 'custom') {
+      } else if (ach.condition.type === "custom") {
         // Custom conditions
         switch (ach.condition.key) {
-          case 'pickaxeGold':
+          case "pickaxeGold":
             met = (mining.pickaxeLevel || 1) >= 3;
             break;
-          case 'allRounder': {
+          case "allRounder": {
             // Butuh aksi di semua 5 area dalam sesi ini (tracked via sessionActions)
             const sa = state.sessionActions || {};
-            met = sa.harvested && sa.collected && sa.mined && sa.fished && sa.cooked;
+            met =
+              sa.harvested &&
+              sa.collected &&
+              sa.mined &&
+              sa.fished &&
+              sa.cooked;
             break;
           }
-          case 'supplyChain':
+          case "supplyChain":
             // Gunakan pupuk (fertilizer) DAN masak sesuatu
-            met = (stats.totalFertilizerUsed || 0) >= 1 && (stats.totalCooked || 0) >= 1;
+            met =
+              (stats.totalFertilizerUsed || 0) >= 1 &&
+              (stats.totalCooked || 0) >= 1;
             break;
           default:
             break;
@@ -47,7 +53,7 @@ export const createAchievementSlice = (set, get) => ({
 
   unlockAchievement: (achId) => {
     const state = get();
-    const ach = ACHIEVEMENTS.find(a => a.id === achId);
+    const ach = ACHIEVEMENTS.find((a) => a.id === achId);
     if (!ach) return;
     if (state.achievements?.[achId]?.unlocked) return;
 
@@ -68,20 +74,20 @@ export const createAchievementSlice = (set, get) => ({
       {
         duration: 5000,
         style: {
-          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-          color: '#fff',
-          fontWeight: 'bold',
+          background: "linear-gradient(135deg, #f59e0b, #d97706)",
+          color: "#fff",
+          fontWeight: "bold",
         },
-        icon: '🎉',
-        type: 'success'
-      }
+        icon: "🎉",
+        type: "success",
+      },
     );
   },
 
   // ===== STAT TRACKING =====
   incrementStat: (key, amount = 1) => {
     set((s) => ({
-      stats: { ...s.stats, [key]: (s.stats?.[key] || 0) + amount }
+      stats: { ...s.stats, [key]: (s.stats?.[key] || 0) + amount },
     }));
   },
 

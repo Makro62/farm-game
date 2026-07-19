@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useGameStore } from './store';
-import { logger } from './logger';
+import { useEffect } from "react";
+import { useGameStore } from "./store";
+import { logger } from "./logger";
 
 export function GameProvider({ children }) {
   useEffect(() => {
@@ -13,7 +13,7 @@ export function GameProvider({ children }) {
       }
       state.generateDailyQuests?.();
     } catch (err) {
-      logger.error('Boot effect failed:', err);
+      logger.error("Boot effect failed:", err);
     }
   }, []);
 
@@ -22,7 +22,7 @@ export function GameProvider({ children }) {
       try {
         useGameStore.getState().processGameTick?.();
       } catch (err) {
-        logger.error('Game tick error:', err);
+        logger.error("Game tick error:", err);
       }
     };
 

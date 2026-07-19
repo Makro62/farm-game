@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { CROP_DATA } from '../../lib/data/crops';
-import { getCropEmojiById, getShopSeed } from '../../lib/data/item-helpers';
+import { CROP_DATA } from "../../lib/data/crops";
+import { getCropEmojiById, getShopSeed } from "../../lib/data/item-helpers";
 
 /**
  * Ikon bibit / tanaman — selalu menampilkan emoji hasil panen yang sesuai.
  */
-export function CropIcon({ itemId, cropId, className = 'plot-emoji', title }) {
+export function CropIcon({ itemId, cropId, className = "plot-emoji", title }) {
   const seed = itemId ? getShopSeed(itemId) : null;
   const resolvedCropId = cropId || seed?.cropId || itemId;
   const emoji = seed?.emoji || getCropEmojiById(resolvedCropId);

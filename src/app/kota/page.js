@@ -1,4 +1,4 @@
-import TabTown from '@/components/TabTown';
+import TabTown from "@/components/TabTown";
 
 export default function KotaPage() {
   return <TabTown />;

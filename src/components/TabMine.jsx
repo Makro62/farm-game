@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { MINERALS } from '@/lib/data/minerals';
-import { SHOP_MINING } from '@/lib/data/shop';
-import { motion } from 'framer-motion';
-import { ShopItemCard, ShopSectionTitle } from './ui/ShopItemCard';
-import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
-import { MarketBoard } from './game/MarketBoard';
-import { QuestPanel } from './game/QuestPanel';
-import { GAME_CONSTANTS } from '@/lib/constants';
-import TabPage, { GameStage } from './ui/TabPage';
-import SideDock from './ui/SideDock';
-import { useMining } from '@/lib/hooks/useMining';
+import { useState } from "react";
+import { MINERALS } from "@/lib/data/minerals";
+import { SHOP_MINING } from "@/lib/data/shop";
+import { motion } from "framer-motion";
+import { ShopItemCard, ShopSectionTitle } from "./ui/ShopItemCard";
+import { GameAreaHeader, GameActionButton } from "./ui/GameAreaHeader";
+import { MarketBoard } from "./game/MarketBoard";
+import { QuestPanel } from "./game/QuestPanel";
+import { GAME_CONSTANTS } from "@/lib/constants";
+import TabPage, { GameStage } from "./ui/TabPage";
+import SideDock from "./ui/SideDock";
+import { useMining } from "@/lib/hooks/useMining";
 
-const TARGET_TOOLS = new Set(['bom_kecil', 'tali']);
+const TARGET_TOOLS = new Set(["bom_kecil", "tali"]);
 
 const FLOOR_META = {
-  1: { name: 'Lantai Dasar', emoji: '🪨', hazard: null },
-  2: { name: 'Koridor Gelap', emoji: '🕯️', hazard: 'cave_in' },
-  3: { name: 'Gua Dalam', emoji: '🦇', hazard: 'bats' },
-  4: { name: 'Terowongan Api', emoji: '🌋', hazard: 'lava' },
-  5: { name: 'Kamar Harta', emoji: '👑', hazard: 'gas' },
+  1: { name: "Lantai Dasar", emoji: "🪨", hazard: null },
+  2: { name: "Koridor Gelap", emoji: "🕯️", hazard: "cave_in" },
+  3: { name: "Gua Dalam", emoji: "🦇", hazard: "bats" },
+  4: { name: "Terowongan Api", emoji: "🌋", hazard: "lava" },
+  5: { name: "Kamar Harta", emoji: "👑", hazard: "gas" },
 };
 
 export default function TabMine() {
@@ -42,7 +42,7 @@ export default function TabMine() {
     handleHireMiner,
     handleToggleAuto,
     handleShopBuy,
-    getRegenProgress
+    getRegenProgress,
   } = useMining();
 
   const [selectedFloor, setSelectedFloor] = useState(mining.currentFloor || 1);
@@ -71,8 +71,15 @@ export default function TabMine() {
               name={item.name}
               price={item.price}
               amount={amt}
-              onDecrease={() => setShopAmounts((p) => ({ ...p, [item.id]: Math.max(1, amt - 1) }))}
-              onIncrease={() => setShopAmounts((p) => ({ ...p, [item.id]: amt + 1 }))}
+              onDecrease={() =>
+                setShopAmounts((p) => ({
+                  ...p,
+                  [item.id]: Math.max(1, amt - 1),
+                }))
+              }
+              onIncrease={() =>
+                setShopAmounts((p) => ({ ...p, [item.id]: amt + 1 }))
+              }
               onBuy={() => handleShopBuy(item, amt)}
             />
           );
@@ -91,7 +98,7 @@ export default function TabMine() {
           </div>
           <div className="text-[10px] text-[var(--text-secondary)] font-medium mt-0.5">
             Regen: {pickaxe.regen}
-            {lanternActive ? ' (senter aktif)' : ''}
+            {lanternActive ? " (senter aktif)" : ""}
           </div>
         </div>
         <span className="bg-[var(--primary-light)]/40 border border-[var(--primary)] text-[var(--text-primary)] text-xs px-2 py-1 rounded-full font-black">
@@ -112,12 +119,17 @@ export default function TabMine() {
           </div>
         ) : (
           ownedTools.map((tool) => (
-            <div key={tool.id} className="flex items-center justify-between gap-2 p-2 glass-card rounded-xl">
+            <div
+              key={tool.id}
+              className="flex items-center justify-between gap-2 p-2 glass-card rounded-xl"
+            >
               <div className="min-w-0 flex-1">
                 <div className="font-bold text-[var(--text-primary)] text-xs flex items-center gap-1">
                   <span>{tool.emoji}</span>
                   <span className="truncate">{tool.name}</span>
-                  <span className="text-[var(--gold-deep)] shrink-0">×{inventory[tool.id]}</span>
+                  <span className="text-[var(--gold-deep)] shrink-0">
+                    ×{inventory[tool.id]}
+                  </span>
                 </div>
               </div>
               <button
@@ -125,11 +137,11 @@ export default function TabMine() {
                 onClick={() => handleUseTool(tool.id)}
                 className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold border-2 ${
                   selectedMiningTool === tool.id
-                    ? 'bg-[var(--gold)] text-[var(--text-primary)] border-[var(--gold-deep)]'
-                    : 'bg-white text-[var(--text-primary)] border-[var(--wood)]'
+                    ? "bg-[var(--gold)] text-[var(--text-primary)] border-[var(--gold-deep)]"
+                    : "bg-white text-[var(--text-primary)] border-[var(--wood)]"
                 }`}
               >
-                {TARGET_TOOLS.has(tool.id) ? 'Pilih' : 'Pakai'}
+                {TARGET_TOOLS.has(tool.id) ? "Pilih" : "Pakai"}
               </button>
             </div>
           ))
@@ -150,15 +162,21 @@ export default function TabMine() {
         type="button"
         onClick={handleHireMiner}
         className={`w-full glass-card p-2 flex justify-between items-center text-left ${
-          workers.miner ? 'border-[var(--primary)] bg-[var(--primary)]/10' : ''
+          workers.miner ? "border-[var(--primary)] bg-[var(--primary)]/10" : ""
         }`}
       >
         <div>
-          <div className="font-bold text-[var(--text-primary)] text-sm">Penambang Tarjo</div>
-          <div className="text-[10px] text-[var(--text-secondary)]">Auto-Mine</div>
+          <div className="font-bold text-[var(--text-primary)] text-sm">
+            Penambang Tarjo
+          </div>
+          <div className="text-[10px] text-[var(--text-secondary)]">
+            Auto-Mine
+          </div>
         </div>
         <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-full text-xs border border-[#FFF1B8]">
-          {workers.miner ? 'Dimiliki' : `${GAME_CONSTANTS.COSTS.WORKER_MINER.toLocaleString()} 💰`}
+          {workers.miner
+            ? "Dimiliki"
+            : `${GAME_CONSTANTS.COSTS.WORKER_MINER.toLocaleString()} 💰`}
         </span>
       </button>
 
@@ -167,15 +185,22 @@ export default function TabMine() {
         <>
           <ShopSectionTitle icon="🔥">Smeltery</ShopSectionTitle>
           <div className="glass-card p-2 mb-3 text-xs">
-            <div className="font-bold text-[var(--text-primary)] mb-1">Antrean Peleburan</div>
+            <div className="font-bold text-[var(--text-primary)] mb-1">
+              Antrean Peleburan
+            </div>
             {mining.smeltery.queue.length === 0 ? (
               <div className="text-[var(--text-secondary)] italic">Kosong</div>
             ) : (
               mining.smeltery.queue.map((job, i) => (
-                <div key={i} className="flex items-center justify-between py-1 border-b border-white/10 last:border-0">
+                <div
+                  key={i}
+                  className="flex items-center justify-between py-1 border-b border-white/10 last:border-0"
+                >
                   <span>{job.recipe}</span>
                   <span className="text-[var(--gold-deep)]">
-                    {job.completeAt ? Math.ceil((job.completeAt - Date.now()) / 1000) + 's' : 'Selesai'}
+                    {job.completeAt
+                      ? Math.ceil((job.completeAt - Date.now()) / 1000) + "s"
+                      : "Selesai"}
                   </span>
                 </div>
               ))
@@ -199,8 +224,12 @@ export default function TabMine() {
         main={
           <div className="glass-panel p-3 sm:p-4 stage-play-area">
             <GameAreaHeader icon="⛏️" title="Area Pertambangan">
-              <GameActionButton variant="miner" active={autoMiner} onClick={handleToggleAuto}>
-                Auto: {autoMiner ? 'ON' : 'OFF'}
+              <GameActionButton
+                variant="miner"
+                active={autoMiner}
+                onClick={handleToggleAuto}
+              >
+                Auto: {autoMiner ? "ON" : "OFF"}
               </GameActionButton>
             </GameAreaHeader>
 
@@ -216,11 +245,12 @@ export default function TabMine() {
                     onClick={() => handleChangeFloor(floor)}
                     disabled={locked}
                     className={`px-2 py-1 rounded-lg text-[10px] font-bold border-2 transition-all
-                      ${isCurrent
-                        ? 'bg-[var(--gold)] text-[var(--text-primary)] border-[var(--gold-deep)] shadow-sm'
-                        : locked
-                          ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed opacity-50'
-                          : 'bg-[#5c5952] text-[var(--text-primary)] border-[#3d3b36] hover:bg-[#6b6861]'
+                      ${
+                        isCurrent
+                          ? "bg-[var(--gold)] text-[var(--text-primary)] border-[var(--gold-deep)] shadow-sm"
+                          : locked
+                            ? "bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed opacity-50"
+                            : "bg-[#5c5952] text-[var(--text-primary)] border-[#3d3b36] hover:bg-[#6b6861]"
                       }`}
                   >
                     <div className="text-xs">{meta.emoji}</div>
@@ -233,15 +263,25 @@ export default function TabMine() {
 
             {selectedMiningTool && (
               <div className="mb-2 text-center text-xs font-bold text-[var(--gold-deep)] bg-[var(--gold)]/20 rounded-xl py-1.5 px-3 border-2 border-[var(--gold)]">
-                {SHOP_MINING.find((t) => t.id === selectedMiningTool)?.emoji} Klik petak untuk memakai alat
+                {SHOP_MINING.find((t) => t.id === selectedMiningTool)?.emoji}{" "}
+                Klik petak untuk memakai alat
               </div>
             )}
 
             {/* Hazard Warning */}
             {FLOOR_META[selectedFloor]?.hazard && (
               <div className="mb-2 text-center text-[10px] font-bold text-red-400 bg-red-900/30 rounded-xl py-1 px-3 border border-red-500/30">
-                ⚠️ Bahaya: {FLOOR_META[selectedFloor].hazard === 'cave_in' ? 'Longsor' : FLOOR_META[selectedFloor].hazard === 'bats' ? 'Kelelawar' : FLOOR_META[selectedFloor].hazard === 'lava' ? 'Lava' : 'Gas Beracun'}
-                {selectedFloor >= 3 && !lanternActive && <span> — Nyalakan senter untuk visibilitas!</span>}
+                ⚠️ Bahaya:{" "}
+                {FLOOR_META[selectedFloor].hazard === "cave_in"
+                  ? "Longsor"
+                  : FLOOR_META[selectedFloor].hazard === "bats"
+                    ? "Kelelawar"
+                    : FLOOR_META[selectedFloor].hazard === "lava"
+                      ? "Lava"
+                      : "Gas Beracun"}
+                {selectedFloor >= 3 && !lanternActive && (
+                  <span> — Nyalakan senter untuk visibilitas!</span>
+                )}
               </div>
             )}
 
@@ -252,7 +292,7 @@ export default function TabMine() {
               <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 rounded-[22px] pointer-events-none" />
               <div className="game-plot-grid relative z-10">
                 {mining.nodes.map((node) => {
-                  const isReady = node.status === 'ready';
+                  const isReady = node.status === "ready";
                   const progress = getRegenProgress(node);
                   const mineral = MINERALS.find((m) => m.id === node.type);
                   const hasHazard = node.hazard && selectedFloor >= 3;
@@ -260,35 +300,52 @@ export default function TabMine() {
                   return (
                     <motion.button
                       key={node.id}
-                      whileHover={{ scale: isReady || selectedMiningTool ? 1.05 : 1 }}
-                      whileTap={{ scale: isReady || selectedMiningTool ? 0.95 : 1 }}
+                      whileHover={{
+                        scale: isReady || selectedMiningTool ? 1.05 : 1,
+                      }}
+                      whileTap={{
+                        scale: isReady || selectedMiningTool ? 0.95 : 1,
+                      }}
                       onClick={() => handleMine(node)}
                       disabled={!isReady && !selectedMiningTool}
                       className={`game-plot-cell border-b-4
                         ${
                           isReady
-                            ? 'bg-[#5c5952] border-[#3d3b36] hover:bg-[#6b6861] cursor-pointer'
+                            ? "bg-[#5c5952] border-[#3d3b36] hover:bg-[#6b6861] cursor-pointer"
                             : selectedMiningTool
-                              ? 'bg-[#3d3a35] border-[#5c5952] cursor-crosshair'
-                              : 'bg-[#1f1e1c] border-[#141312] cursor-not-allowed'
+                              ? "bg-[#3d3a35] border-[#5c5952] cursor-crosshair"
+                              : "bg-[#1f1e1c] border-[#141312] cursor-not-allowed"
                         }
-                        ${selectedMiningTool ? 'ring-1 ring-orange-400/50' : ''}
-                        ${hasHazard ? 'ring-1 ring-red-500/50' : ''}
+                        ${selectedMiningTool ? "ring-1 ring-orange-400/50" : ""}
+                        ${hasHazard ? "ring-1 ring-red-500/50" : ""}
                       `}
-                      title={isReady && mineral ? `${mineral.emoji} ${mineral.name}` : undefined}
+                      title={
+                        isReady && mineral
+                          ? `${mineral.emoji} ${mineral.name}`
+                          : undefined
+                      }
                     >
                       {isReady ? (
-                        <span className="plot-emoji">{mineral?.emoji || '🪨'}</span>
+                        <span className="plot-emoji">
+                          {mineral?.emoji || "🪨"}
+                        </span>
                       ) : (
                         <div className="w-full px-2 flex flex-col items-center">
-                          <span className="text-xl opacity-30 mb-1">{mineral?.emoji || '🪨'}</span>
+                          <span className="text-xl opacity-30 mb-1">
+                            {mineral?.emoji || "🪨"}
+                          </span>
                           <div className="w-full progress-bar !h-1.5">
-                            <div className="progress-fill" style={{ width: `${progress}%` }} />
+                            <div
+                              className="progress-fill"
+                              style={{ width: `${progress}%` }}
+                            />
                           </div>
                         </div>
                       )}
                       {hasHazard && (
-                        <span className="absolute top-0 right-0 text-[10px]">⚠️</span>
+                        <span className="absolute top-0 right-0 text-[10px]">
+                          ⚠️
+                        </span>
                       )}
                     </motion.button>
                   );
@@ -300,9 +357,9 @@ export default function TabMine() {
         side={
           <SideDock
             tabs={[
-              { id: 'toko', label: 'Toko', emoji: '🛒', content: shopPanel },
-              { id: 'alat', label: 'Alat', emoji: '⛏️', content: toolsPanel },
-              { id: 'info', label: 'Info', emoji: '📋', content: infoPanel },
+              { id: "toko", label: "Toko", emoji: "🛒", content: shopPanel },
+              { id: "alat", label: "Alat", emoji: "⛏️", content: toolsPanel },
+              { id: "info", label: "Info", emoji: "📋", content: infoPanel },
             ]}
           />
         }

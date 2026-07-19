@@ -1,15 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
-export function AnimatedCounter({ 
-  value, 
-  duration = 0.5, 
-  className = '',
-  format = (val) => (Number.isFinite(val) ? val : 0).toLocaleString('id-ID')
+export function AnimatedCounter({
+  value,
+  duration = 0.5,
+  className = "",
+  format = (val) => (Number.isFinite(val) ? val : 0).toLocaleString("id-ID"),
 }) {
-  const [displayValue, setDisplayValue] = useState(Number.isFinite(value) ? value : 0);
+  const [displayValue, setDisplayValue] = useState(
+    Number.isFinite(value) ? value : 0,
+  );
 
   useEffect(() => {
     let startTimestamp = null;
@@ -22,11 +24,11 @@ export function AnimatedCounter({
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / durationMs, 1);
-      
+
       // easeOut cubic
       const ease = 1 - Math.pow(1 - progress, 3);
       const current = Math.round(startValue + (endValue - startValue) * ease);
-      
+
       setDisplayValue(current);
 
       if (progress < 1) {
@@ -38,31 +40,26 @@ export function AnimatedCounter({
 
     window.requestAnimationFrame(step);
   }, [value, duration]);
-  
+
   return (
-    <motion.span className={className}>
-      {format(displayValue)}
-    </motion.span>
+    <motion.span className={className}>{format(displayValue)}</motion.span>
   );
 }
 
 // Variant dengan prefix/suffix
-export function AnimatedCoinCounter({ value, className = '' }) {
+export function AnimatedCoinCounter({ value, className = "" }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <span className="text-2xl">💰</span>
-      <AnimatedCounter 
-        value={value} 
-        className="font-bold text-xl"
-      />
+      <AnimatedCounter value={value} className="font-bold text-xl" />
     </div>
   );
 }
 
 // Variant untuk XP
-export function AnimatedXPCounter({ value, max, className = '' }) {
+export function AnimatedXPCounter({ value, max, className = "" }) {
   const percentage = (value / max) * 100;
-  
+
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-1">
@@ -75,7 +72,7 @@ export function AnimatedXPCounter({ value, max, className = '' }) {
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
           className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
         />
       </div>

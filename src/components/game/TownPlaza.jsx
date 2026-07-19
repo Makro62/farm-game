@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { useGameStore, useInventory } from '@/lib/store';
-import { FISHES } from '@/lib/data/fishes';
-import { NPC_LIST } from '../../lib/data/npcs';
-import { SHOP_BUILDINGS, SHOP_DECORATIONS } from '../../lib/data/shop';
-import { GAME_CONSTANTS } from '@/lib/constants';
-import toast from 'react-hot-toast';
+import { motion } from "framer-motion";
+import { useGameStore, useInventory } from "@/lib/store";
+import { FISHES } from "@/lib/data/fishes";
+import { NPC_LIST } from "../../lib/data/npcs";
+import { SHOP_BUILDINGS, SHOP_DECORATIONS } from "../../lib/data/shop";
+import { GAME_CONSTANTS } from "@/lib/constants";
+import toast from "react-hot-toast";
 
 export function TownPlaza() {
   const npcs = useGameStore((s) => s.npcs);
@@ -25,14 +25,16 @@ export function TownPlaza() {
   };
 
   const ownedBuildings = SHOP_BUILDINGS.filter((b) => buildings?.[b.id]);
-  const ownedDecor = SHOP_DECORATIONS.filter((d) => (decorations || []).includes(d.id));
+  const ownedDecor = SHOP_DECORATIONS.filter((d) =>
+    (decorations || []).includes(d.id),
+  );
 
   return (
     <div
       className="p-4 sm:p-5 field-frame relative min-h-[420px] overflow-hidden"
       style={{
         backgroundImage:
-          'linear-gradient(165deg, rgba(184,228,255,0.55) 0%, rgba(200,232,168,0.65) 45%, rgba(143,203,122,0.7) 100%)',
+          "linear-gradient(165deg, rgba(184,228,255,0.55) 0%, rgba(200,232,168,0.65) 45%, rgba(143,203,122,0.7) 100%)",
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-[var(--wood)]/20 pointer-events-none rounded-[22px]" />
@@ -44,16 +46,20 @@ export function TownPlaza() {
           disabled={spunToday}
           className={`w-full glass-card p-4 rounded-2xl text-left border-2 transition-transform ${
             spunToday
-              ? 'opacity-70 cursor-default border-[var(--wood)]/40'
-              : 'border-[var(--gold)] hover:scale-[1.01]'
+              ? "opacity-70 cursor-default border-[var(--wood)]/40"
+              : "border-[var(--gold)] hover:scale-[1.01]"
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="text-4xl">{spunToday ? '✅' : '🎡'}</div>
+            <div className="text-4xl">{spunToday ? "✅" : "🎡"}</div>
             <div>
-              <div className="font-display font-bold text-[var(--text-primary)] text-lg">Roda Harian</div>
+              <div className="font-display font-bold text-[var(--text-primary)] text-lg">
+                Roda Harian
+              </div>
               <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                {spunToday ? 'Sudah diputar hari ini — kembali besok!' : '1× putaran gratis · hadiah koin'}
+                {spunToday
+                  ? "Sudah diputar hari ini — kembali besok!"
+                  : "1× putaran gratis · hadiah koin"}
               </p>
             </div>
           </div>
@@ -80,8 +86,12 @@ export function TownPlaza() {
                       {npc.emoji}
                     </span>
                     <div className="min-w-0">
-                      <div className="font-bold text-[var(--text-primary)] text-sm truncate">{npc.name}</div>
-                      <div className="text-[10px] text-[var(--text-secondary)] truncate">{npc.role}</div>
+                      <div className="font-bold text-[var(--text-primary)] text-sm truncate">
+                        {npc.name}
+                      </div>
+                      <div className="text-[10px] text-[var(--text-secondary)] truncate">
+                        {npc.role}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)] mb-1 font-bold">
@@ -91,7 +101,9 @@ export function TownPlaza() {
                   <div className="w-full h-1.5 bg-[var(--wood)]/25 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[var(--primary)]"
-                      style={{ width: `${Math.min(100, (data.points / maxPoints) * 100)}%` }}
+                      style={{
+                        width: `${Math.min(100, (data.points / maxPoints) * 100)}%`,
+                      }}
                     />
                   </div>
                 </motion.button>
@@ -101,10 +113,13 @@ export function TownPlaza() {
         </div>
 
         <div className="glass-card rounded-2xl p-3">
-          <h4 className="font-bold text-sm text-[var(--text-primary)] mb-2">Kota Kamu</h4>
+          <h4 className="font-bold text-sm text-[var(--text-primary)] mb-2">
+            Kota Kamu
+          </h4>
           {ownedBuildings.length === 0 && ownedDecor.length === 0 ? (
             <p className="text-xs text-[var(--text-secondary)] italic">
-              Belum ada bangunan/dekorasi. Beli di toko samping untuk menghias kota.
+              Belum ada bangunan/dekorasi. Beli di toko samping untuk menghias
+              kota.
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -121,7 +136,8 @@ export function TownPlaza() {
         </div>
 
         <div className="text-[11px] text-center text-[var(--text-secondary)] font-medium">
-          Tip: kasih hadiah yang disukai warga → naik level → bonus XP · Mancing lewat tombol Danau
+          Tip: kasih hadiah yang disukai warga → naik level → bonus XP · Mancing
+          lewat tombol Danau
         </div>
       </div>
     </div>
@@ -146,34 +162,40 @@ export function FishingLake({
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/10 to-black/30 pointer-events-none rounded-[22px]" />
 
-      {(activeBait || selectedBaitLabel) && fishState === 'idle' && (
+      {(activeBait || selectedBaitLabel) && fishState === "idle" && (
         <div className="absolute top-3 left-3 z-20 text-[11px] font-bold bg-[var(--panel)] text-[var(--text-primary)] px-2.5 py-1 rounded-xl border-2 border-[var(--wood)] shadow-md">
           Umpan: {selectedBaitLabel || `${activeBait.emoji} ${activeBait.name}`}
         </div>
       )}
 
-      {fishState === 'idle' && (
+      {fishState === "idle" && (
         <button
           type="button"
           onClick={startFishing}
           className="relative z-10 bg-white/85 backdrop-blur-md px-6 py-4 rounded-2xl border-[3px] border-[var(--wood)] shadow-[0_5px_0_var(--wood-light)] hover:scale-105 transition-transform text-center"
         >
           <span className="text-5xl drop-shadow-md inline-block mb-2">🎣</span>
-          <p className="text-[var(--text-primary)] font-bold text-lg">Lempar Kail!</p>
-          <p className="text-[var(--text-secondary)] text-xs mt-1">Pilih umpan di kiri dulu (opsional)</p>
+          <p className="text-[var(--text-primary)] font-bold text-lg">
+            Lempar Kail!
+          </p>
+          <p className="text-[var(--text-secondary)] text-xs mt-1">
+            Pilih umpan di kiri dulu (opsional)
+          </p>
         </button>
       )}
 
-      {fishState === 'waiting' && (
+      {fishState === "waiting" && (
         <div className="relative z-10 text-center">
-          <span className="text-5xl drop-shadow-md animate-bounce inline-block">🎣</span>
+          <span className="text-5xl drop-shadow-md animate-bounce inline-block">
+            🎣
+          </span>
           <p className="text-white font-bold mt-3 text-lg bg-black/40 px-4 py-1 rounded-full">
-            Menunggu gigitan{activeBait ? ` · ${activeBait.emoji}` : ''}...
+            Menunggu gigitan{activeBait ? ` · ${activeBait.emoji}` : ""}...
           </p>
         </div>
       )}
 
-      {fishState === 'bite' && (
+      {fishState === "bite" && (
         <button
           type="button"
           onClick={startMinigame}
@@ -184,7 +206,7 @@ export function FishingLake({
         </button>
       )}
 
-      {fishState === 'minigame' && (
+      {fishState === "minigame" && (
         <div className="relative z-10 w-full max-w-sm glass-card p-5 rounded-2xl shadow-2xl flex flex-col items-center">
           <h3 className="font-bold mb-3 text-[var(--text-primary)] text-center leading-tight">
             Tahan tombol saat garis merah
@@ -203,7 +225,9 @@ export function FishingLake({
           <div className="w-full h-4 bg-[var(--wood)]/30 rounded-full mb-5 overflow-hidden shadow-inner border border-[var(--wood)]">
             <div
               className="h-full bg-gradient-to-r from-[var(--gold)] to-[var(--primary)] transition-all duration-100"
-              style={{ width: `${(score / GAME_CONSTANTS.FISHING.WIN_THRESHOLD) * 100}%` }}
+              style={{
+                width: `${(score / GAME_CONSTANTS.FISHING.WIN_THRESHOLD) * 100}%`,
+              }}
             />
           </div>
 
@@ -213,10 +237,10 @@ export function FishingLake({
             onPointerUp={() => setIsHolding(false)}
             onPointerLeave={() => setIsHolding(false)}
             className={`w-full py-4 text-lg btn-primary touch-none select-none ${
-              isHolding ? 'brightness-90' : ''
+              isHolding ? "brightness-90" : ""
             }`}
           >
-            {isHolding ? 'MENARIK...' : 'TAHAN (KLIK)'}
+            {isHolding ? "MENARIK..." : "TAHAN (KLIK)"}
           </button>
         </div>
       )}
@@ -228,7 +252,7 @@ export function FishCatchBoard() {
   const inventory = useInventory();
   const sellItem = useGameStore((s) => s.sellItem);
   const activeEvent = useGameStore((s) => s.activeEvent);
-  const bahari = activeEvent?.id === 'bahari';
+  const bahari = activeEvent?.id === "bahari";
 
   const handleSell = (fish) => {
     const count = inventory[fish.id] || 0;
@@ -237,7 +261,7 @@ export function FishCatchBoard() {
     if (result) {
       toast.success(`Menjual ${count} ${fish.name}! +${result}💰`);
     } else {
-      toast.error('Gagal menjual.');
+      toast.error("Gagal menjual.");
     }
   };
 
@@ -273,7 +297,9 @@ export function FishCatchBoard() {
                   <div className="text-sm font-extrabold text-[var(--text-primary)] truncate">
                     {fish.emoji} {fish.name} ×{count}
                   </div>
-                  <div className="text-[10px] text-[var(--text-secondary)]">{unit}💰 / ekor</div>
+                  <div className="text-[10px] text-[var(--text-secondary)]">
+                    {unit}💰 / ekor
+                  </div>
                 </div>
                 <button
                   type="button"

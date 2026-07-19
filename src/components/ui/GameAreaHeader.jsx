@@ -1,12 +1,15 @@
-'use client';
+"use client";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 export function GameAreaHeader({ icon, title, children }) {
   return (
     <div className="game-area-header">
       <h2 className="game-area-title">
-        <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-black/25 border border-white/15 text-xl" aria-hidden>
+        <span
+          className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-black/25 border border-white/15 text-xl"
+          aria-hidden
+        >
           {icon}
         </span>
         <span className="text-shadow">{title}</span>
@@ -17,28 +20,28 @@ export function GameAreaHeader({ icon, title, children }) {
 }
 
 const ACTIVE_VARIANTS = {
-  default: 'game-action-btn--muted',
-  edit: 'game-action-btn--edit',
-  toggle: 'game-action-btn--edit',
-  auto: 'game-action-btn--auto',
-  miner: 'game-action-btn--miner',
+  default: "game-action-btn--muted",
+  edit: "game-action-btn--edit",
+  toggle: "game-action-btn--edit",
+  auto: "game-action-btn--auto",
+  miner: "game-action-btn--miner",
 };
 
 export function GameActionButton({
   children,
   onClick,
-  variant = 'default',
+  variant = "default",
   active = false,
-  className = '',
+  className = "",
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        'game-action-btn',
+        "game-action-btn",
         active && (ACTIVE_VARIANTS[variant] || ACTIVE_VARIANTS.default),
-        className
+        className,
       )}
     >
       {children}

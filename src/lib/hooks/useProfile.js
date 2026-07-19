@@ -1,16 +1,18 @@
-import { useState } from 'react';
-import { useGameStore } from '@/lib/store';
-import { formatNumber } from '@/lib/utils';
-import { getItemSellPrice } from '@/lib/data/item-helpers';
-import { SEASON_META } from '@/lib/nav';
+import { useState } from "react";
+import { useGameStore } from "@/lib/store";
+import { formatNumber } from "@/lib/utils";
+import { getItemSellPrice } from "@/lib/data/item-helpers";
+import { SEASON_META } from "@/lib/nav";
 
 export function useProfile() {
-  const inventoryByCategory = useGameStore((state) => state?.inventoryByCategory);
+  const inventoryByCategory = useGameStore(
+    (state) => state?.inventoryByCategory,
+  );
   const coins = useGameStore((state) => state?.coins);
   const level = useGameStore((state) => state?.level);
   const xp = useGameStore((state) => state?.xp);
   const day = useGameStore((state) => state?.season?.day || 1);
-  const season = useGameStore((state) => state?.season?.current || 'spring');
+  const season = useGameStore((state) => state?.season?.current || "spring");
   const achievements = useGameStore((state) => state?.achievements || {});
   const sellItem = useGameStore((state) => state?.sellItem);
   const sellAllInventory = useGameStore((state) => state?.sellAllInventory);
@@ -18,7 +20,9 @@ export function useProfile() {
   const openConfirm = useGameStore((state) => state?.openConfirm);
   const resetGame = useGameStore((state) => state?.resetGame);
   const dev = useGameStore((state) => state?.dev);
-  const enqueueNotification = useGameStore((state) => state?.enqueueNotification);
+  const enqueueNotification = useGameStore(
+    (state) => state?.enqueueNotification,
+  );
 
   const [showSettings, setShowSettings] = useState(false);
   const xpNeeded = level * 100;
@@ -33,51 +37,65 @@ export function useProfile() {
   }
 
   const CATEGORY_LABELS = {
-    seeds: 'bibit', crops: 'pertanian', animalProducts: 'peternakan',
-    minerals: 'tambang', tools: 'tambang', fish: 'pancing',
-    bait: 'pancing', processed: 'dapur', cooked: 'dapur',
-    collectibles: 'lainnya',
+    seeds: "bibit",
+    crops: "pertanian",
+    animalProducts: "peternakan",
+    minerals: "tambang",
+    tools: "tambang",
+    fish: "pancing",
+    bait: "pancing",
+    processed: "dapur",
+    cooked: "dapur",
+    collectibles: "lainnya",
   };
 
   const categorized = {
-    bibit: [], pertanian: [], peternakan: [],
-    tambang: [], pancing: [], dapur: [], lainnya: [],
+    bibit: [],
+    pertanian: [],
+    peternakan: [],
+    tambang: [],
+    pancing: [],
+    dapur: [],
+    lainnya: [],
   };
 
   Object.entries(inventory).forEach(([itemId, qty]) => {
     if (qty <= 0) return;
     const category = null; // TODO: map from item data
-    const label = CATEGORY_LABELS[category] || 'lainnya';
+    const label = CATEGORY_LABELS[category] || "lainnya";
     categorized[label].push({ id: itemId, qty });
   });
 
   const hasSellable = Object.entries(inventory).some(
-    ([id, qty]) => qty > 0 && getItemSellPrice(id) > 0
+    ([id, qty]) => qty > 0 && getItemSellPrice(id) > 0,
   );
 
   const handleSellItem = (itemId, name, qty) => {
     const price = getItemSellPrice(itemId);
     if (!price) {
-      enqueueNotification('Barang ini tidak bisa dijual.', { type: 'error' });
+      enqueueNotification("Barang ini tidak bisa dijual.", { type: "error" });
       return;
     }
     const total = price * qty;
     openConfirm(
-      'Jual Barang',
+      "Jual Barang",
       `Jual semua ${qty}x ${name} seharga ${formatNumber(total)} 💰?`,
       () => {
         const earned = sellItem(itemId, qty);
         if (earned > 0) {
-          enqueueNotification(`Terjual seharga ${formatNumber(earned)} 💰`, { icon: '💰', type: 'success' });
+          enqueueNotification(`Terjual seharga ${formatNumber(earned)} 💰`, {
+            icon: "💰",
+            type: "success",
+          });
         }
-      }
+      },
     );
   };
 
   const handleSellAll = () => {
     openConfirm(
-      'Jual Semua Hasil',
-      'Jual semua hasil yang bisa dijual? Umpan & alat tidak ikut.',
+      "Jual Semua Hasil",
+      "Jual semua hasil yang bisa dijual? Umpan & alat tidak ikut.",
       () => {
         const earned = sellAllInventory();
         if (earned > 0) {
@@ -85,18 +103,20 @@ export function useProfile() {
             coinMultiplier > 1
               ? `Terjual ${formatNumber(earned)} 💰 (×${coinMultiplier} booster!)`
               : `Terjual semua hasil seharga ${formatNumber(earned)} 💰!`,
-            { type: 'success' }
+            { type: "success" },
           );
         } else {
-          enqueueNotification('Tidak ada hasil yang bisa dijual.', { type: 'error' });
+          enqueueNotification("Tidak ada hasil yang bisa dijual.", {
+            type: "error",
+          });
         }
-      }
+      },
     );
   };
 
   const handleSellCategory = (categoryKey, itemsList) => {
     openConfirm(
-      'Jual Kategori',
+      "Jual Kategori",
       `Jual semua barang yang bisa dijual di kategori ini?`,
       () => {
         let totalEarned = 0;
@@ -116,12 +136,15 @@ export function useProfile() {
             coinMultiplier > 1
               ? `Terjual ${soldCount} jenis barang seharga ${formatNumber(totalEarned)} 💰 (×${coinMultiplier} booster!)`
               : `Terjual ${soldCount} jenis barang seharga ${formatNumber(totalEarned)} 💰!`,
-            { type: 'success' }
+            { type: "success" },
           );
         } else {
-          enqueueNotification('Tidak ada barang yang bisa dijual di kategori ini.', { type: 'error' });
+          enqueueNotification(
+            "Tidak ada barang yang bisa dijual di kategori ini.",
+            { type: "error" },
+          );
         }
-      }
+      },
     );
   };
 
@@ -143,6 +166,6 @@ export function useProfile() {
     handleSellItem,
     handleSellAll,
     handleSellCategory,
-    enqueueNotification
+    enqueueNotification,
   };
 }

@@ -1,32 +1,32 @@
-'use client';
+"use client";
 
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 // Helpers and utilities for persist logic
-import { partializeState, migrateState } from './store/migrations';
-import { logger } from './logger';
+import { partializeState, migrateState } from "./store/migrations";
+import { logger } from "./logger";
 
 // Slices
-import { createFarmingSlice } from './store/slices/createFarmingSlice';
-import { createMiningSlice } from './store/slices/createMiningSlice';
-import { createRanchingSlice } from './store/slices/createRanchingSlice';
-import { createEconomySlice } from './store/slices/createEconomySlice';
-import { createPlayerSlice } from './store/slices/createPlayerSlice';
-import { createTownSlice } from './store/slices/createTownSlice';
-import { createSystemSlice } from './store/slices/createSystemSlice';
-import { createCustomerSlice } from './store/slices/createCustomerSlice';
-import { createAchievementSlice } from './store/slices/createAchievementSlice';
+import { createFarmingSlice } from "./store/slices/createFarmingSlice";
+import { createMiningSlice } from "./store/slices/createMiningSlice";
+import { createRanchingSlice } from "./store/slices/createRanchingSlice";
+import { createEconomySlice } from "./store/slices/createEconomySlice";
+import { createPlayerSlice } from "./store/slices/createPlayerSlice";
+import { createTownSlice } from "./store/slices/createTownSlice";
+import { createSystemSlice } from "./store/slices/createSystemSlice";
+import { createCustomerSlice } from "./store/slices/createCustomerSlice";
+import { createAchievementSlice } from "./store/slices/createAchievementSlice";
 
-import { initialState } from './store/initialState';
+import { initialState } from "./store/initialState";
 
 export const useGameStore = create(
   persist(
     immer((set, get) => ({
       // Base State
       ...initialState,
-      
+
       // Feature Slices
       ...createFarmingSlice(set, get),
       ...createMiningSlice(set, get),
@@ -40,8 +40,8 @@ export const useGameStore = create(
 
       // Reset tanpa reload penuh — cegah loop refresh
       resetGame: () => {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('farm-game-storage');
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("farm-game-storage");
         }
         set({
           ...initialState,
@@ -55,7 +55,7 @@ export const useGameStore = create(
         });
         return true;
       },
-      
+
       // Dev override (Cheats)
       dev: {
         addCoins: (amount) => {
@@ -72,25 +72,79 @@ export const useGameStore = create(
         },
         instantGrow: () => {
           set((s) => ({
-            plots: s.plots.map(p => p.status === 'growing' ? { ...p, plantedAt: 0 } : p)
+            plots: s.plots.map((p) =>
+              p.status === "growing" ? { ...p, plantedAt: 0 } : p,
+            ),
           }));
         },
         unlockAll: () => {
           set({
-            workers: { farmer: { hired: true, name: 'Kurcaci Budi', role: 'farmer', level: 1, stamina: 100, maxStamina: 100, happiness: 80, loyalty: 60, isAutoMode: true },
-                      rancher: { hired: true, name: 'Kurcaci Siti', role: 'rancher', level: 1, stamina: 100, maxStamina: 100, happiness: 80, loyalty: 60, isAutoMode: true },
-                      fisher: { hired: true, name: 'Kurcaci Mamat', role: 'fisher', level: 1, stamina: 100, maxStamina: 100, happiness: 80, loyalty: 60, isAutoMode: true },
-                      miner: { hired: true, name: 'Kurcaci Tarjo', role: 'miner', level: 1, stamina: 100, maxStamina: 100, happiness: 80, loyalty: 60, isAutoMode: true },
-                      chef: { hired: true, name: 'Kurcaci Juna', role: 'chef', level: 1, stamina: 100, maxStamina: 100, happiness: 80, loyalty: 60, isAutoMode: true } },
+            workers: {
+              farmer: {
+                hired: true,
+                name: "Kurcaci Budi",
+                role: "farmer",
+                level: 1,
+                stamina: 100,
+                maxStamina: 100,
+                happiness: 80,
+                loyalty: 60,
+                isAutoMode: true,
+              },
+              rancher: {
+                hired: true,
+                name: "Kurcaci Siti",
+                role: "rancher",
+                level: 1,
+                stamina: 100,
+                maxStamina: 100,
+                happiness: 80,
+                loyalty: 60,
+                isAutoMode: true,
+              },
+              fisher: {
+                hired: true,
+                name: "Kurcaci Mamat",
+                role: "fisher",
+                level: 1,
+                stamina: 100,
+                maxStamina: 100,
+                happiness: 80,
+                loyalty: 60,
+                isAutoMode: true,
+              },
+              miner: {
+                hired: true,
+                name: "Kurcaci Tarjo",
+                role: "miner",
+                level: 1,
+                stamina: 100,
+                maxStamina: 100,
+                happiness: 80,
+                loyalty: 60,
+                isAutoMode: true,
+              },
+              chef: {
+                hired: true,
+                name: "Kurcaci Juna",
+                role: "chef",
+                level: 1,
+                stamina: 100,
+                maxStamina: 100,
+                happiness: 80,
+                loyalty: 60,
+                isAutoMode: true,
+              },
+            },
             buildings: { silo: true, greenhouse: true },
           });
-        }
-      }
+        },
+      },
     })),
     {
-      name: 'farm-game-storage',
+      name: "farm-game-storage",
       storage: createJSONStorage(() => {
-        if (typeof window === 'undefined') {
+        if (typeof window === "undefined") {
           return {
             getItem: () => null,
             setItem: () => {},
@@ -103,15 +157,15 @@ export const useGameStore = create(
       merge: migrateState,
       onRehydrateStorage: () => (state, error) => {
         if (error) {
-          logger.error('Failed to rehydrate store:', error);
+          logger.error("Failed to rehydrate store:", error);
           return;
         }
         if (state && !Number.isFinite(state.coins)) {
           useGameStore.setState({ coins: 100 });
         }
-      }
-    }
-  )
+      },
+    },
+  ),
 );
 
 // Selector hooks untuk performa optimal
@@ -132,16 +186,22 @@ export const useInventory = () => {
   }
   return flat;
 };
-export const useInventoryByCategory = () => useGameStore((s) => s.inventoryByCategory);
-export const useCropsInventory = () => useGameStore((s) => s.inventoryByCategory?.crops || {});
-export const useAnimalProductsInventory = () => useGameStore((s) => s.inventoryByCategory?.animalProducts || {});
-export const useMineralsInventory = () => useGameStore((s) => s.inventoryByCategory?.minerals || {});
-export const useFishInventory = () => useGameStore((s) => s.inventoryByCategory?.fish || {});
-export const useSettings = () => useGameStore((s) => ({
-  soundEnabled: s.soundEnabled,
-  musicEnabled: s.musicEnabled,
-  notificationsEnabled: s.notificationsEnabled
-}));
+export const useInventoryByCategory = () =>
+  useGameStore((s) => s.inventoryByCategory);
+export const useCropsInventory = () =>
+  useGameStore((s) => s.inventoryByCategory?.crops || {});
+export const useAnimalProductsInventory = () =>
+  useGameStore((s) => s.inventoryByCategory?.animalProducts || {});
+export const useMineralsInventory = () =>
+  useGameStore((s) => s.inventoryByCategory?.minerals || {});
+export const useFishInventory = () =>
+  useGameStore((s) => s.inventoryByCategory?.fish || {});
+export const useSettings = () =>
+  useGameStore((s) => ({
+    soundEnabled: s.soundEnabled,
+    musicEnabled: s.musicEnabled,
+    notificationsEnabled: s.notificationsEnabled,
+  }));
 export const useSeason = () => useGameStore((s) => s.season);
 export const useWeather = () => useGameStore((s) => s.weather);
 export const useMining = () => useGameStore((s) => s.mining);

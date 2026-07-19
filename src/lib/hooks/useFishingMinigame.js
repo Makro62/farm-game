@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import toast from 'react-hot-toast';
-import { FISHES } from '../data/fishes';
-import { SHOP_BAIT } from '../data/shop';
-import { useGameStore } from '@/lib/store';
-import { GAME_CONSTANTS } from '@/lib/constants';
+import { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
+import { FISHES } from "../data/fishes";
+import { SHOP_BAIT } from "../data/shop";
+import { useGameStore } from "@/lib/store";
+import { GAME_CONSTANTS } from "@/lib/constants";
 
 function rollFish(rareBonus = 0) {
   // Rare fish (last 2) get boosted chance; common fish share the rest
@@ -22,10 +22,12 @@ function rollFish(rareBonus = 0) {
 
 export function useFishingMinigame() {
   const selectedBait = useGameStore((state) => state?.selectedBait);
-  const baitInv = useGameStore((state) => state?.inventoryByCategory?.bait || {});
+  const baitInv = useGameStore(
+    (state) => state?.inventoryByCategory?.bait || {},
+  );
   const weatherEffects = useGameStore((state) => state?.weatherEffects);
 
-  const [fishState, setFishState] = useState('idle');
+  const [fishState, setFishState] = useState("idle");
   const [indicatorPos, setIndicatorPos] = useState(50);
   const [score, setScore] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
@@ -43,22 +45,24 @@ export function useFishingMinigame() {
   }, [activeBait]);
 
   useEffect(() => {
-    if (fishState === 'waiting') {
+    if (fishState === "waiting") {
       const waitMult = activeBait?.waitMult ?? 1;
       const waitTime =
-        (GAME_CONSTANTS.FISHING.WAIT_MIN_MS + Math.random() * GAME_CONSTANTS.FISHING.WAIT_RANDOM_MS) * waitMult;
+        (GAME_CONSTANTS.FISHING.WAIT_MIN_MS +
+          Math.random() * GAME_CONSTANTS.FISHING.WAIT_RANDOM_MS) *
+        waitMult;
       const timer = setTimeout(() => {
-        setFishState('bite');
+        setFishState("bite");
       }, waitTime);
       return () => clearTimeout(timer);
     }
   }, [fishState, activeBait]);
 
   useEffect(() => {
-    if (fishState === 'bite') {
+    if (fishState === "bite") {
       const timer = setTimeout(() => {
-        toast.error('Yah, ikannya lepas! 🐟💨');
-        setFishState('idle');
+        toast.error("Yah, ikannya lepas! 🐟💨");
+        setFishState("idle");
         setActiveBait(null);
       }, GAME_CONSTANTS.FISHING.BITE_WINDOW_MS);
       return () => clearTimeout(timer);
@@ -66,7 +70,7 @@ export function useFishingMinigame() {
   }, [fishState]);
 
   useEffect(() => {
-    if (fishState !== 'minigame') return;
+    if (fishState !== "minigame") return;
 
     let pos = 50;
     let dir = 1;
@@ -112,19 +116,24 @@ export function useFishingMinigame() {
   }, [fishState]);
 
   const finishMinigame = (success) => {
-    setFishState('idle');
+    setFishState("idle");
     setIsHolding(false);
     setScore(0);
     const bait = baitRef.current;
     setActiveBait(null);
 
     if (success) {
-      const weatherRareBonus = weatherEffects?.fishingRare ? (weatherEffects.fishingRare - 1) : 0;
+      const weatherRareBonus = weatherEffects?.fishingRare
+        ? weatherEffects.fishingRare - 1
+        : 0;
       const caughtFish = rollFish((bait?.rareBonus || 0) + weatherRareBonus);
       useGameStore.getState().recordFishingCatch(caughtFish, bait);
-      toast.success(`Berhasil menangkap ${caughtFish.emoji} ${caughtFish.name}!`, { duration: 4000 });
+      toast.success(
+        `Berhasil menangkap ${caughtFish.emoji} ${caughtFish.name}!`,
+        { duration: 4000 },
+      );
     } else {
-      toast.error('Gagal menangkap ikan, kurang tarikan!');
+      toast.error("Gagal menangkap ikan, kurang tarikan!");
     }
   };
 
@@ -135,7 +144,9 @@ export function useFishingMinigame() {
     if (selectedBait && (baitInv[selectedBait]?.qty || 0) > 0) {
       bait = SHOP_BAIT.find((b) => b.id === selectedBait) || null;
       if (bait && store.removeItem(selectedBait, 1)) {
-        const remaining = useGameStore.getState().inventoryByCategory?.bait?.[selectedBait]?.qty || 0;
+        const remaining =
+          useGameStore.getState().inventoryByCategory?.bait?.[selectedBait]
+            ?.qty || 0;
         if (remaining <= 0) {
           store.setSelectedBait(null);
         }
@@ -145,15 +156,19 @@ export function useFishingMinigame() {
     }
 
     setActiveBait(bait);
-    setFishState('waiting');
+    setFishState("waiting");
     if (bait) {
       useGameStore.getState().recordBaitUsage(bait);
-      toast(`Pakai ${bait.emoji} ${bait.name}`, { icon: '🎣', id: 'bait-use', duration: 1500 });
+      toast(`Pakai ${bait.emoji} ${bait.name}`, {
+        icon: "🎣",
+        id: "bait-use",
+        duration: 1500,
+      });
     }
   };
 
   const startMinigame = () => {
-    setFishState('minigame');
+    setFishState("minigame");
     setScore(0);
     setIndicatorPos(50);
   };

@@ -1,8 +1,8 @@
-import { CROP_DATA } from '@/lib/data/crops';
-import { MINERALS } from '@/lib/data/minerals';
-import { FISHES } from '@/lib/data/fishes';
-import { RECIPES } from '@/lib/data/recipes';
-import { QUALITY_MULTIPLIERS } from '@/lib/data/item-helpers';
+import { CROP_DATA } from "@/lib/data/crops";
+import { MINERALS } from "@/lib/data/minerals";
+import { FISHES } from "@/lib/data/fishes";
+import { RECIPES } from "@/lib/data/recipes";
+import { QUALITY_MULTIPLIERS } from "@/lib/data/item-helpers";
 
 const SEASON_PRICE_MODIFIERS = {
   wortel: { spring: 1.1, summer: 1.0, autumn: 0.9, winter: 0.8 },
@@ -22,11 +22,11 @@ const SEASON_PRICE_MODIFIERS = {
 export function getCropGrowthSpeed(season, weather, buildings, workers) {
   let speed = 1.0;
 
-  if (weather?.includes('Hujan') || weather?.includes('rainy')) {
+  if (weather?.includes("Hujan") || weather?.includes("rainy")) {
     speed *= 1.2;
-  } else if (weather?.includes('Berangin') || weather?.includes('windy')) {
+  } else if (weather?.includes("Berangin") || weather?.includes("windy")) {
     speed *= 1.1;
-  } else if (weather?.includes('Kekeringan') || weather?.includes('drought')) {
+  } else if (weather?.includes("Kekeringan") || weather?.includes("drought")) {
     speed *= 0.5;
   }
 
@@ -40,7 +40,8 @@ export function getCropGrowthSpeed(season, weather, buildings, workers) {
 
 export function calculateSellPrice(itemId, gameState) {
   if (!gameState) return null;
-  const { season, buildings, activeEvent, market, inventoryByCategory } = gameState;
+  const { season, buildings, activeEvent, market, inventoryByCategory } =
+    gameState;
   const currentSeason = season?.current;
   const event = activeEvent;
   const supply = market?.supply?.[itemId] || 0;
@@ -60,7 +61,7 @@ export function calculateSellPrice(itemId, gameState) {
       price *= 1.15 + (buildings.silo.level || 0) * 0.05;
     }
 
-    if (event?.id === 'panen') price *= 2;
+    if (event?.id === "panen") price *= 2;
 
     price *= saturationMult;
 
@@ -68,23 +69,23 @@ export function calculateSellPrice(itemId, gameState) {
   }
 
   // Try minerals
-  const mineral = MINERALS.find(m => m.id === itemId);
+  const mineral = MINERALS.find((m) => m.id === itemId);
   if (mineral) {
     let price = mineral.basePrice || mineral.price;
-    if (event?.id === 'tambang') price *= 1.5;
+    if (event?.id === "tambang") price *= 1.5;
     return Math.floor(price);
   }
 
   // Try fish
-  const fish = FISHES.find(f => f.id === itemId);
+  const fish = FISHES.find((f) => f.id === itemId);
   if (fish) {
     let price = fish.basePrice || fish.priceNormal;
-    if (event?.id === 'bahari') price *= 2;
+    if (event?.id === "bahari") price *= 2;
     return Math.floor(price);
   }
 
   // Try recipes
-  const recipe = RECIPES.find(r => r.id === itemId);
+  const recipe = RECIPES.find((r) => r.id === itemId);
   if (recipe) {
     let price = recipe.price;
     if (buildings?.silo?.unlocked) price *= 1.1;
@@ -109,12 +110,13 @@ export function getDynamicPrice(itemId, category, gameState) {
   let finalPrice = basePrice;
 
   if (gameState?.season?.current) {
-    const seasonMult = SEASON_PRICE_MODIFIERS[itemId]?.[gameState.season.current] || 1.0;
+    const seasonMult =
+      SEASON_PRICE_MODIFIERS[itemId]?.[gameState.season.current] || 1.0;
     finalPrice *= seasonMult;
   }
 
   const repDiscount = Math.min((gameState?.town?.reputation || 0) / 10000, 0.2);
-  finalPrice *= (1 - repDiscount);
+  finalPrice *= 1 - repDiscount;
 
   if (gameState?.activeEvent?.priceModifiers?.[itemId]) {
     finalPrice *= gameState.activeEvent.priceModifiers[itemId];

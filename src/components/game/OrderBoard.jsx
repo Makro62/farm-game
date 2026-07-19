@@ -1,9 +1,9 @@
-import { useGameStore, useInventory } from '@/lib/store';
-import { getCropEmoji } from '../../lib/data/item-helpers';
-import { useState, useEffect } from 'react';
+import { useGameStore, useInventory } from "@/lib/store";
+import { getCropEmoji } from "../../lib/data/item-helpers";
+import { useState, useEffect } from "react";
 
 function stripPrefix(key) {
-  const parts = key.split('.');
+  const parts = key.split(".");
   return parts.length === 2 ? parts[1] : key;
 }
 
@@ -34,7 +34,10 @@ export function OrderBoard() {
           </div>
         ) : (
           orders.map((order, index) => {
-            const timeLeft = Math.max(0, Math.floor((order.timer * 1000 - (now - order.createdAt)) / 1000));
+            const timeLeft = Math.max(
+              0,
+              Math.floor((order.timer * 1000 - (now - order.createdAt)) / 1000),
+            );
             const m = Math.floor(timeLeft / 60);
             const s = timeLeft % 60;
 
@@ -44,9 +47,11 @@ export function OrderBoard() {
                 className="quest-parchment p-3 flex flex-col border-2 border-[var(--gold-rim)]"
               >
                 <div className="flex justify-between items-center mb-2 pb-2 border-b border-[var(--wood)]/25">
-                  <span className="font-black text-[var(--gold-deep)]">Pesanan #{index + 1}</span>
+                  <span className="font-black text-[var(--gold-deep)]">
+                    Pesanan #{index + 1}
+                  </span>
                   <span className="text-[10px] font-bold bg-[#EF5350]/15 border border-[#EF5350]/40 text-[#C62828] px-2 py-0.5 rounded-full">
-                    {m}:{s.toString().padStart(2, '0')}
+                    {m}:{s.toString().padStart(2, "0")}
                   </span>
                 </div>
 
@@ -56,15 +61,19 @@ export function OrderBoard() {
                     const has = inventory[itemName] || 0;
                     const isEnough = has >= item.qty;
                     return (
-                      <div key={item.id} className="flex justify-between items-center text-sm">
+                      <div
+                        key={item.id}
+                        className="flex justify-between items-center text-sm"
+                      >
                         <span className="text-[var(--text-primary)] flex items-center gap-1 font-bold">
-                          <span>{getCropEmoji(itemName)}</span> {itemName.replace('_', ' ')}
+                          <span>{getCropEmoji(itemName)}</span>{" "}
+                          {itemName.replace("_", " ")}
                         </span>
                         <span
                           className={`font-bold px-2 py-0.5 rounded-full text-xs ${
                             isEnough
-                              ? 'bg-[var(--primary-light)]/50 text-[var(--primary-dark)]'
-                              : 'bg-red-100 text-red-700'
+                              ? "bg-[var(--primary-light)]/50 text-[var(--primary-dark)]"
+                              : "bg-red-100 text-red-700"
                           }`}
                         >
                           {has}/{item.qty}
@@ -79,7 +88,11 @@ export function OrderBoard() {
                     <span>{order.coins} 💰</span>
                     <span>{order.xp} ⭐</span>
                   </div>
-                  <button type="button" onClick={() => fulfillOrder(order.id)} className="btn-gold !px-4 !py-2 !text-sm">
+                  <button
+                    type="button"
+                    onClick={() => fulfillOrder(order.id)}
+                    className="btn-gold !px-4 !py-2 !text-sm"
+                  >
                     Penuhi
                   </button>
                 </div>

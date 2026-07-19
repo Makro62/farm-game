@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 export default function QtyControl({
   value,
@@ -7,7 +7,7 @@ export default function QtyControl({
   onChange,
   min = 1,
   max,
-  size = 'md',
+  size = "md",
   editable = false,
 }) {
   const clamp = (n) => {
@@ -16,10 +16,10 @@ export default function QtyControl({
     return Math.max(min, next);
   };
 
-  const isLg = size === 'lg';
+  const isLg = size === "lg";
 
   return (
-    <div className={`qty-control ${isLg ? 'qty-control--lg' : ''}`}>
+    <div className={`qty-control ${isLg ? "qty-control--lg" : ""}`}>
       <button
         type="button"
         onClick={onDecrease}

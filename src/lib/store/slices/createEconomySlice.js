@@ -1,7 +1,7 @@
-import { getItemSellPrice, isSellableProduce } from '../../data/item-helpers';
-import { SHOP_SEEDS } from '../../data/crops';
-import { FISHES } from '../../data/fishes';
-import { safeCoins, safePositiveNumber } from '../utils';
+import { getItemSellPrice, isSellableProduce } from "../../data/item-helpers";
+import { SHOP_SEEDS } from "../../data/crops";
+import { FISHES } from "../../data/fishes";
+import { safeCoins, safePositiveNumber } from "../utils";
 
 export const createEconomySlice = (set, get) => ({
   buyItem: (itemId, amount, unitPrice) => {
@@ -13,11 +13,15 @@ export const createEconomySlice = (set, get) => ({
     const currentCoins = safeCoins(state.coins);
     if (currentCoins < totalCost) return false;
 
-    const cat = getItemCategory(itemId) || 'collectibles';
-    set(draft => {
+    const cat = getItemCategory(itemId) || "collectibles";
+    set((draft) => {
       draft.coins = currentCoins - totalCost;
       if (!draft.inventoryByCategory[cat][itemId]) {
-        draft.inventoryByCategory[cat][itemId] = { qty: 0, quality: 'normal', acquiredAt: Date.now() };
+        draft.inventoryByCategory[cat][itemId] = {
+          qty: 0,
+          quality: "normal",
+          acquiredAt: Date.now(),
+        };
       }
       draft.inventoryByCategory[cat][itemId].qty += qty;
     });
@@ -53,14 +57,20 @@ export const createEconomySlice = (set, get) => ({
     const todayPrices = state.todayPrices || {};
     const activeEvent = state.activeEvent;
     if (todayPrices[itemId]) sellPrice = todayPrices[itemId];
-    if (activeEvent?.id === 'panen' && SHOP_SEEDS.some((s) => s.cropId === itemId)) sellPrice *= 2;
-    if (activeEvent?.id === 'bahari' && FISHES.some((f) => f.id === itemId)) sellPrice *= 2;
-    if (state.buildings?.silo && SHOP_SEEDS.some((s) => s.cropId === itemId)) sellPrice *= 1.15;
+    if (
+      activeEvent?.id === "panen" &&
+      SHOP_SEEDS.some((s) => s.cropId === itemId)
+    )
+      sellPrice *= 2;
+    if (activeEvent?.id === "bahari" && FISHES.some((f) => f.id === itemId))
+      sellPrice *= 2;
+    if (state.buildings?.silo && SHOP_SEEDS.some((s) => s.cropId === itemId))
+      sellPrice *= 1.15;
 
     const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
     const finalEarned = Math.round(sellPrice * qty * multiplier);
 
-    set(draft => {
+    set((draft) => {
       if (draft.inventoryByCategory[cat]?.[itemId]) {
         draft.inventoryByCategory[cat][itemId].qty -= qty;
         if (draft.inventoryByCategory[cat][itemId].qty <= 0) {
@@ -85,9 +95,21 @@ export const createEconomySlice = (set, get) => ({
         let sellPrice = getItemSellPrice(itemId);
         if (sellPrice == null) continue;
         if (todayPrices[itemId]) sellPrice = todayPrices[itemId];
-        if (activeEvent?.id === 'panen' && SHOP_SEEDS.some((s) => s.cropId === itemId)) sellPrice *= 2;
-        else if (activeEvent?.id === 'bahari' && FISHES.some((f) => f.id === itemId)) sellPrice *= 2;
-        if (state.buildings?.silo && SHOP_SEEDS.some((s) => s.cropId === itemId)) sellPrice *= 1.15;
+        if (
+          activeEvent?.id === "panen" &&
+          SHOP_SEEDS.some((s) => s.cropId === itemId)
+        )
+          sellPrice *= 2;
+        else if (
+          activeEvent?.id === "bahari" &&
+          FISHES.some((f) => f.id === itemId)
+        )
+          sellPrice *= 2;
+        if (
+          state.buildings?.silo &&
+          SHOP_SEEDS.some((s) => s.cropId === itemId)
+        )
+          sellPrice *= 1.15;
         totalEarned += sellPrice * data.qty;
         toSell[`${cat}.${itemId}`] = true;
       }
@@ -97,9 +119,9 @@ export const createEconomySlice = (set, get) => ({
     const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
     const finalEarned = Math.round(totalEarned * multiplier);
 
-    set(draft => {
+    set((draft) => {
       for (const key of Object.keys(toSell)) {
-        const [cat, itemId] = key.split('.');
+        const [cat, itemId] = key.split(".");
         delete draft.inventoryByCategory[cat]?.[itemId];
       }
       draft.coins = safeCoins(draft.coins) + finalEarned;
@@ -110,18 +132,53 @@ export const createEconomySlice = (set, get) => ({
 
 function getItemCategory(itemId) {
   const catMap = {
-    wortel: 'crops', jagung: 'crops', tomat: 'crops', stroberi: 'crops',
-    semangka: 'crops', jamur: 'crops', nanas: 'crops', labu: 'crops',
-    kentang: 'crops', gandum: 'crops', tebu: 'crops', tulip: 'crops', apel: 'crops',
-    telur: 'animalProducts', susu: 'animalProducts', bulu: 'animalProducts',
-    truffle: 'animalProducts', tapal: 'animalProducts', telur_bebek: 'animalProducts',
-    batu: 'minerals', tembaga: 'minerals', besi: 'minerals', emas: 'minerals', berlian: 'minerals',
-    ikan_mas: 'fish', lele: 'fish', ikan_badut: 'fish', cumi: 'fish', gurita: 'fish',
-    tepung_jagung: 'processed', gula: 'processed', saus_tomat: 'processed', keju: 'processed',
-    sup_wortel: 'cooked', nasi_goreng: 'cooked', roti_gandum: 'cooked', es_teh: 'cooked',
-    kue_wortel: 'cooked', sushi_mas: 'cooked', kue_manis: 'cooked', pancake: 'cooked',
-    takoyaki: 'cooked', nasi_jamur: 'cooked', kue_apel: 'cooked', kue_stroberi: 'cooked',
-    sushi_emas: 'cooked', lele_bakar: 'cooked',
+    wortel: "crops",
+    jagung: "crops",
+    tomat: "crops",
+    stroberi: "crops",
+    semangka: "crops",
+    jamur: "crops",
+    nanas: "crops",
+    labu: "crops",
+    kentang: "crops",
+    gandum: "crops",
+    tebu: "crops",
+    tulip: "crops",
+    apel: "crops",
+    telur: "animalProducts",
+    susu: "animalProducts",
+    bulu: "animalProducts",
+    truffle: "animalProducts",
+    tapal: "animalProducts",
+    telur_bebek: "animalProducts",
+    batu: "minerals",
+    tembaga: "minerals",
+    besi: "minerals",
+    emas: "minerals",
+    berlian: "minerals",
+    ikan_mas: "fish",
+    lele: "fish",
+    ikan_badut: "fish",
+    cumi: "fish",
+    gurita: "fish",
+    tepung_jagung: "processed",
+    gula: "processed",
+    saus_tomat: "processed",
+    keju: "processed",
+    sup_wortel: "cooked",
+    nasi_goreng: "cooked",
+    roti_gandum: "cooked",
+    es_teh: "cooked",
+    kue_wortel: "cooked",
+    sushi_mas: "cooked",
+    kue_manis: "cooked",
+    pancake: "cooked",
+    takoyaki: "cooked",
+    nasi_jamur: "cooked",
+    kue_apel: "cooked",
+    kue_stroberi: "cooked",
+    sushi_emas: "cooked",
+    lele_bakar: "cooked",
   };
   return catMap[itemId] || null;
 }

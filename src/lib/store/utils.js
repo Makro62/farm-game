@@ -1,6 +1,6 @@
-import { SHOP_SEEDS } from '../data/crops';
-import { SHOP_ANIMALS } from '../data/shop';
-import { GAME_CONSTANTS } from '../constants';
+import { SHOP_SEEDS } from "../data/crops";
+import { SHOP_ANIMALS } from "../data/shop";
+import { GAME_CONSTANTS } from "../constants";
 
 export const MINING_REGEN_MS = GAME_CONSTANTS.MINING.REGEN_MS;
 
@@ -23,33 +23,60 @@ export function getAnimalProduceTime(animal, weatherEffects = null) {
   return ms;
 }
 
-export function rollMineralType(pickaxeLevel = 1, lanternActive = false, eventId = null) {
+export function rollMineralType(
+  pickaxeLevel = 1,
+  lanternActive = false,
+  eventId = null,
+) {
   const weights = { batu: 50, tembaga: 20, besi: 15, emas: 10, berlian: 5 };
-  if (pickaxeLevel >= 2) { weights.besi += 5; weights.batu -= 5; }
-  if (pickaxeLevel >= 3) { weights.emas += 5; weights.berlian += 3; weights.batu -= 8; }
-  if (lanternActive) { weights.emas += 3; weights.berlian += 2; weights.batu -= 5; }
-  if (eventId === 'tambang') { weights.emas += 5; weights.berlian += 5; weights.batu -= 10; }
-  Object.keys(weights).forEach(k => { if (weights[k] < 0) weights[k] = 0; });
+  if (pickaxeLevel >= 2) {
+    weights.besi += 5;
+    weights.batu -= 5;
+  }
+  if (pickaxeLevel >= 3) {
+    weights.emas += 5;
+    weights.berlian += 3;
+    weights.batu -= 8;
+  }
+  if (lanternActive) {
+    weights.emas += 3;
+    weights.berlian += 2;
+    weights.batu -= 5;
+  }
+  if (eventId === "tambang") {
+    weights.emas += 5;
+    weights.berlian += 5;
+    weights.batu -= 10;
+  }
+  Object.keys(weights).forEach((k) => {
+    if (weights[k] < 0) weights[k] = 0;
+  });
   const total = Object.values(weights).reduce((a, b) => a + b, 0);
   let rand = Math.random() * total;
   for (const [type, weight] of Object.entries(weights)) {
     rand -= weight;
     if (rand <= 0) return type;
   }
-  return 'batu';
+  return "batu";
 }
 
-export function pickAutoSeed(inventory, selectedSeed, season, hasGreenhouse = false) {
+export function pickAutoSeed(
+  inventory,
+  selectedSeed,
+  season,
+  hasGreenhouse = false,
+) {
   if (selectedSeed) {
     const seed = SHOP_SEEDS.find((s) => s.id === selectedSeed);
     if (seed && (inventory[selectedSeed] || 0) > 0) {
-      if (hasGreenhouse || seed.season === 'all' || seed.season === season) return seed;
+      if (hasGreenhouse || seed.season === "all" || seed.season === season)
+        return seed;
     }
   }
   const available = SHOP_SEEDS.filter(
     (s) =>
       (inventory[s.id] || 0) > 0 &&
-      (hasGreenhouse || s.season === 'all' || s.season === season)
+      (hasGreenhouse || s.season === "all" || s.season === season),
   );
   if (available.length === 0) return null;
   return available[Math.floor(Math.random() * available.length)];
@@ -57,11 +84,11 @@ export function pickAutoSeed(inventory, selectedSeed, season, hasGreenhouse = fa
 
 export function getGrowthMultiplier(state) {
   let mult = state?.growthMultiplier > 0 ? state.growthMultiplier : 1;
-  
+
   if (state?.weatherEffects?.cropGrowth) {
     mult *= state.weatherEffects.cropGrowth;
   }
-  
+
   return mult;
 }
 
@@ -86,8 +113,12 @@ export function safePositiveNumber(value, fallback = 0) {
 
 // ===== RECIPE INGREDIENT HELPERS =====
 
-export function getIngredientAvailability(ingredientKey, inventory, inventoryByCategory) {
-  const parts = ingredientKey.split('.');
+export function getIngredientAvailability(
+  ingredientKey,
+  inventory,
+  inventoryByCategory,
+) {
+  const parts = ingredientKey.split(".");
   if (parts.length === 2) {
     const [cat, itemId] = parts;
     return inventoryByCategory?.[cat]?.[itemId]?.quantity || 0;
@@ -95,8 +126,13 @@ export function getIngredientAvailability(ingredientKey, inventory, inventoryByC
   return inventory?.[ingredientKey] || 0;
 }
 
-export function consumeIngredient(ingredientKey, amount, inventory, inventoryByCategory) {
-  const parts = ingredientKey.split('.');
+export function consumeIngredient(
+  ingredientKey,
+  amount,
+  inventory,
+  inventoryByCategory,
+) {
+  const parts = ingredientKey.split(".");
   if (parts.length === 2) {
     const [cat, itemId] = parts;
     if (!inventoryByCategory?.[cat]?.[itemId]) return null;
@@ -123,18 +159,31 @@ export function consumeIngredient(ingredientKey, amount, inventory, inventoryByC
 
 export function checkRecipeIngredients(recipe, inventory, inventoryByCategory) {
   for (const [ingredient, amount] of Object.entries(recipe.req || {})) {
-    const available = getIngredientAvailability(ingredient, inventory, inventoryByCategory);
+    const available = getIngredientAvailability(
+      ingredient,
+      inventory,
+      inventoryByCategory,
+    );
     if (available < amount) return false;
   }
   return true;
 }
 
-export function consumeRecipeIngredients(recipe, inventory, inventoryByCategory) {
+export function consumeRecipeIngredients(
+  recipe,
+  inventory,
+  inventoryByCategory,
+) {
   let currentInv = { ...inventory };
   let currentCat = inventoryByCategory ? { ...inventoryByCategory } : null;
 
   for (const [ingredient, amount] of Object.entries(recipe.req || {})) {
-    const result = consumeIngredient(ingredient, amount, currentInv, currentCat);
+    const result = consumeIngredient(
+      ingredient,
+      amount,
+      currentInv,
+      currentCat,
+    );
     if (!result) return null;
     currentInv = result.inventory;
     currentCat = result.inventoryByCategory;
@@ -144,11 +193,11 @@ export function consumeRecipeIngredients(recipe, inventory, inventoryByCategory)
 }
 
 export const WORKER_AUTO_KEYS = {
-  farmer: 'autoFarmer',
-  rancher: 'autoRancher',
-  fisher: 'autoFisher',
-  miner: 'autoMiner',
-  chef: 'autoChef',
+  farmer: "autoFarmer",
+  rancher: "autoRancher",
+  fisher: "autoFisher",
+  miner: "autoMiner",
+  chef: "autoChef",
 };
 
 export function isWorkerActive(state, type) {
@@ -159,20 +208,28 @@ export function isWorkerActive(state, type) {
 }
 
 export const PLOT_STATE_MAP = {
-  empty: 'empty',
-  growing: 'growing',
-  ready: 'ready',
-  grass: 'empty',
-  depleted: 'empty',
+  empty: "empty",
+  growing: "growing",
+  ready: "ready",
+  grass: "empty",
+  depleted: "empty",
 };
 
 export function normalizePlot(plot, index = 0) {
-  if (!plot || typeof plot !== 'object') {
-    return { id: index, status: 'empty', crop: null, plantedAt: null, growTime: null };
+  if (!plot || typeof plot !== "object") {
+    return {
+      id: index,
+      status: "empty",
+      crop: null,
+      plantedAt: null,
+      growTime: null,
+    };
   }
 
   const legacyState = plot.state;
-  const status = plot.status || (legacyState ? PLOT_STATE_MAP[legacyState] || legacyState : 'empty');
+  const status =
+    plot.status ||
+    (legacyState ? PLOT_STATE_MAP[legacyState] || legacyState : "empty");
 
   return {
     id: plot.id ?? index,
@@ -187,7 +244,7 @@ export function normalizePlots(plots) {
   if (!Array.isArray(plots)) {
     return Array.from({ length: 30 }, (_, i) => ({
       id: i,
-      status: 'empty',
+      status: "empty",
       crop: null,
       plantedAt: null,
       growTime: null,
@@ -198,7 +255,7 @@ export function normalizePlots(plots) {
   while (normalized.length < 30) {
     normalized.push({
       id: normalized.length,
-      status: 'empty',
+      status: "empty",
       crop: null,
       plantedAt: null,
       growTime: null,
@@ -208,14 +265,14 @@ export function normalizePlots(plots) {
 }
 
 export function normalizeAnimal(animal) {
-  if (!animal || typeof animal !== 'object') return animal;
+  if (!animal || typeof animal !== "object") return animal;
 
   const produceTime = animal.produceTime > 0 ? animal.produceTime : 20000;
 
   if (animal.readyToCollect) {
     return {
       ...animal,
-      status: animal.status || 'producing',
+      status: animal.status || "producing",
       lastCollected: 0,
       produceTime,
     };
@@ -223,23 +280,23 @@ export function normalizeAnimal(animal) {
 
   return {
     ...animal,
-    status: animal.status || 'producing',
+    status: animal.status || "producing",
     lastCollected: animal.lastCollected ?? Date.now(),
     produceTime,
   };
 }
 
 export function migrateLegacyWorkers(merged) {
-  if (typeof window === 'undefined') return merged;
+  if (typeof window === "undefined") return merged;
 
   try {
-    const legacyRaw = localStorage.getItem('farmTycoonSave');
+    const legacyRaw = localStorage.getItem("farmTycoonSave");
     if (!legacyRaw) return merged;
 
     const payload = JSON.parse(legacyRaw);
     const dataStr = payload.data ?? legacyRaw;
-    const legacy = typeof dataStr === 'string' ? JSON.parse(dataStr) : dataStr;
-    if (!legacy || typeof legacy !== 'object') return merged;
+    const legacy = typeof dataStr === "string" ? JSON.parse(dataStr) : dataStr;
+    if (!legacy || typeof legacy !== "object") return merged;
 
     merged.workers = {
       farmer: !!(merged.workers?.farmer || legacy.gnomeFarmOwned),
@@ -249,9 +306,12 @@ export function migrateLegacyWorkers(merged) {
       chef: !!merged.workers?.chef,
     };
 
-    if (legacy.gnomeFarmOwned && legacy.gnomeFarmActive !== false) merged.autoFarmer = true;
-    if (legacy.gnomeAnimalOwned && legacy.gnomeAnimalActive !== false) merged.autoRancher = true;
-    if (legacy.merchantOwned && legacy.merchantActive !== false) merged.autoFisher = true;
+    if (legacy.gnomeFarmOwned && legacy.gnomeFarmActive !== false)
+      merged.autoFarmer = true;
+    if (legacy.gnomeAnimalOwned && legacy.gnomeAnimalActive !== false)
+      merged.autoRancher = true;
+    if (legacy.merchantOwned && legacy.merchantActive !== false)
+      merged.autoFisher = true;
   } catch {
     // abaikan save lama yang rusak
   }
