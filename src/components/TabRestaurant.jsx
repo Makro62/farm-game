@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/lib/store';
 import { RECIPES } from '../lib/data/recipes';
-import { getCropEmoji } from '../lib/data/item-helpers';
+import { getCropEmoji, getItemDisplayName } from '../lib/data/item-helpers';
 import { CraftingWidget } from './ui/CraftingWidget';
 import { GameAreaHeader, GameActionButton } from './ui/GameAreaHeader';
 import { QuestPanel } from './game/QuestPanel';
@@ -181,6 +181,15 @@ export default function TabRestaurant() {
     Object.entries(recipe.req || {}).every(([item, qty]) => (inventory[item] || 0) >= qty);
 
   const handleCook = (recipeId) => {
+    const recipe = RECIPES.find(r => r.id === recipeId);
+    if (!recipe) return;
+    const missing = Object.entries(recipe.req)
+      .filter(([item, qty]) => (inventory[item] || 0) < qty)
+      .map(([item, qty]) => `${qty - (inventory[item] || 0)}x ${getItemDisplayName(item)}`);
+    if (missing.length > 0) {
+      toast.error(`Kurang bahan: ${missing.join(', ')}`, { icon: '📋', duration: 4000 });
+      return;
+    }
     if (startCrafting(recipeId)) {
       // toast from store
     }

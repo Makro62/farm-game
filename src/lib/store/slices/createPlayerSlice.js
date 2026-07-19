@@ -179,11 +179,11 @@ export const createPlayerSlice = (set, get) => ({
     const timeSinceLast = now - state.combo.lastAction;
     
     let newCount = 1;
-    if (timeSinceLast < 2500) {
+    if (timeSinceLast < GAME_CONSTANTS.COMBO.WINDOW_MS) {
       newCount = state.combo.count + 1;
     }
     
-    const multiplier = Math.min(1 + (newCount - 1) * 0.25, 4.0);
+    const multiplier = Math.min(1 + (newCount - 1) * GAME_CONSTANTS.COMBO.MULTIPLIER_STEP, GAME_CONSTANTS.COMBO.MAX_MULTIPLIER);
     
     set({
       combo: {
@@ -311,8 +311,8 @@ export const createPlayerSlice = (set, get) => ({
     const typeQueue = (state.craftingQueue || []).filter(
       (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === recipe.type
     );
-    if (typeQueue.length >= 3) {
-      toast.error('Antrean dapur ini penuh! Maksimal 3 antrean per jenis.');
+    if (typeQueue.length >= GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE) {
+      toast.error(`Antrean dapur ini penuh! Maksimal ${GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE} antrean per jenis.`);
       return false;
     }
 
@@ -376,18 +376,16 @@ export const createPlayerSlice = (set, get) => ({
     for (let i = newQueue.length - 1; i >= 0; i--) {
       const item = newQueue[i];
       if (now - item.startTime >= item.duration) {
-        if (state.autoChef) {
-          const recipe = RECIPES.find((r) => r.id === item.recipeId);
-          if (recipe) {
-            inv[recipe.id] = (inv[recipe.id] || 0) + 1;
-            xpGained += recipe.xp || 0;
-            if (recipe.type === 'restaurant') {
-              get().progressQuest?.('craft', recipe.id, 1);
-            }
+        const recipe = RECIPES.find((r) => r.id === item.recipeId);
+        if (recipe) {
+          inv[recipe.id] = (inv[recipe.id] || 0) + 1;
+          xpGained += recipe.xp || 0;
+          if (recipe.type === 'restaurant') {
+            get().progressQuest?.('craft', recipe.id, 1);
           }
-          newQueue.splice(i, 1);
-          changed = true;
         }
+        newQueue.splice(i, 1);
+        changed = true;
       }
     }
 
@@ -486,9 +484,11 @@ export const createPlayerSlice = (set, get) => ({
     const updatedOrders = [...state.orders];
     updatedOrders.splice(orderIndex, 1);
     
-    set({ inventory: inv, orders: updatedOrders });
-    // ===== Stats & Achievement tracking =====
-    set(s => ({ stats: { ...s.stats, totalOrdersFulfilled: (s.stats?.totalOrdersFulfilled || 0) + 1 } }));
+    set({
+      inventory: inv,
+      orders: updatedOrders,
+      stats: { ...state.stats, totalOrdersFulfilled: (state.stats?.totalOrdersFulfilled || 0) + 1 },
+    });
     get().checkAchievements?.();
     toast.success(`Pesanan selesai! +${order.coins} 💰`, { icon: '📦' });
     return true;

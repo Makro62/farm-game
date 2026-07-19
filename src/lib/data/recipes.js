@@ -39,6 +39,5 @@ export const ORDER_TEMPLATES = [
   { tier: 3, timer: 1500, items: [{ id: 'emas', qty: 2 }, { id: 'sushi_emas', qty: 1 }], coins: 3500, xp: 1200 },
 ];
 
-// Re-export for transitional imports
-export { FISHES } from './fishes';
-export { MINERALS } from './minerals';
+// Please import FISHES/MINERALS directly from their respective files
+// to avoid circular dependency risks.

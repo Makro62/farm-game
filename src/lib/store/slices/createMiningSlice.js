@@ -1,6 +1,7 @@
 import { getMiningRegenMs, rollMineralType, isWorkerActive } from '../utils';
 import toast from 'react-hot-toast';
 import { SHOP_MINING } from '@/lib/data/shop';
+import { GAME_CONSTANTS } from '@/lib/constants';
 
 export const createMiningSlice = (set, get) => ({
   setSelectedMiningTool: (toolId) => set({ selectedMiningTool: toolId }),
@@ -16,8 +17,7 @@ export const createMiningSlice = (set, get) => ({
 
     const regenTime = getMiningRegenMs(state.mining, state.weatherEffects);
     
-    // ===== Drop cacing saat menambang Batu (Tambang → Memancing) =====
-    const dropsWorm = node.type === 'batu' && Math.random() < 0.2;
+    const dropsWorm = node.type === 'batu' && Math.random() < GAME_CONSTANTS.CHANCES.WORM_DROP;
 
     set((state) => ({
       mining: {
@@ -33,7 +33,7 @@ export const createMiningSlice = (set, get) => ({
       }
     }));
 
-    get().addXP(15);
+    get().addXP(GAME_CONSTANTS.XP.MINE);
     get().progressQuest('mine', node.type, 1);
     // ===== Stats & Achievement tracking =====
     set(s => {
@@ -120,7 +120,7 @@ export const createMiningSlice = (set, get) => ({
     if (itemId === 'senter') {
       if (!get().removeItem(itemId, 1)) return { ok: false, message: 'Gagal memakai alat.' };
       set({
-        mining: { ...get().mining, lanternUntil: Date.now() + 300000 },
+        mining: { ...get().mining, lanternUntil: Date.now() + GAME_CONSTANTS.MINING.LANTERN_DURATION_MS },
         selectedMiningTool: null
       });
       return { ok: true, message: '🔦 Senter aktif 5 menit! Regen 2× lebih cepat + bonus ore.' };
@@ -243,7 +243,7 @@ export const createMiningSlice = (set, get) => ({
 
     if (isWorkerActive(state, 'miner')) {
       const readyNodes = newNodes.filter(n => n.status === 'ready');
-      if (readyNodes.length > 0 && Math.random() < 0.2) {
+      if (readyNodes.length > 0 && Math.random() < GAME_CONSTANTS.CHANCES.MINER_AUTO_TICK) {
         const nodeToMine = readyNodes[0];
         const minedType = nodeToMine.type;
         const lanternActive = state.mining.lanternUntil && state.mining.lanternUntil > Date.now();
@@ -269,7 +269,7 @@ export const createMiningSlice = (set, get) => ({
             [minedType]: (state.inventory[minedType] || 0) + 1,
           },
         });
-        get().addXP(15);
+        get().addXP(GAME_CONSTANTS.XP.MINE);
         get().progressQuest('mine', minedType, 1);
         return;
       }

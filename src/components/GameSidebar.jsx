@@ -54,9 +54,7 @@ function useSidebarChrome() {
   }, [pathname]);
 
   useEffect(() => {
-    // Hapus key lama yang bikin sidebar selalu ikon-saja
     try {
-      localStorage.removeItem('sidebar-collapsed');
       if (localStorage.getItem(COLLAPSE_KEY) === '1') setCollapsed(true);
     } catch {
       /* ignore */
@@ -105,7 +103,23 @@ function useSidebarChrome() {
   };
 }
 
+function useAreaBadges() {
+  const plots = useGameStore((s) => s.plots);
+  const animals = useGameStore((s) => s.animals);
+  const mining = useGameStore((s) => s.mining);
+  const orders = useGameStore((s) => s.orders);
+  const crafting = useGameStore((s) => s.craftingQueue);
+  return {
+    pertanian: plots?.some(p => p.status === 'ready'),
+    peternakan: animals?.some(a => a.status === 'producing' && Date.now() - a.lastCollected >= (a.produceTime || 60000)),
+    tambang: mining?.nodes?.some(n => n.status === 'ready'),
+    restoran: crafting?.some(c => Date.now() - c.startTime >= c.duration),
+    kota: orders?.length > 0,
+  };
+}
+
 function ShellNav({ pathname, narrow }) {
+  const badges = useAreaBadges();
   return (
     <nav className="shell-nav" aria-label="Area game">
       {!narrow && <p className="shell-section-label">Area</p>}
@@ -122,10 +136,43 @@ function ShellNav({ pathname, narrow }) {
               {tab.emoji}
             </span>
             {!narrow && <span className="shell-nav-text">{tab.label}</span>}
+            {badges[tab.id] && (
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-white" />
+            )}
           </Link>
         );
       })}
     </nav>
+  );
+}
+
+function SummaryTicker({ narrow }) {
+  const plots = useGameStore((s) => s.plots);
+  const animals = useGameStore((s) => s.animals);
+  const mining = useGameStore((s) => s.mining);
+  const crafting = useGameStore((s) => s.craftingQueue);
+  const orders = useGameStore((s) => s.orders);
+
+  const summary = [];
+  const readyPlots = plots?.filter(p => p.status === 'ready').length || 0;
+  if (readyPlots > 0) summary.push(`🌾 ${readyPlots} siap panen`);
+
+  const readyAnimals = animals?.filter(a => a.status === 'producing' && Date.now() - a.lastCollected >= (a.produceTime || 60000)).length || 0;
+  if (readyAnimals > 0) summary.push(`🐄 ${readyAnimals} siap diambil`);
+
+  const readyNodes = mining?.nodes?.filter(n => n.status === 'ready').length || 0;
+  if (readyNodes > 0) summary.push(`⛏️ ${readyNodes} node siap`);
+
+  const doneCrafting = crafting?.filter(c => Date.now() - c.startTime >= c.duration).length || 0;
+  if (doneCrafting > 0) summary.push(`🍳 ${doneCrafting} masakan siap`);
+
+  if (orders?.length > 0) summary.push(`📦 ${orders.length} pesanan aktif`);
+
+  if (summary.length === 0 || narrow) return null;
+  return (
+    <div className="mx-2 mb-1 text-[10px] text-amber-200 font-bold px-2 py-1 bg-amber-900/30 rounded leading-tight">
+      {summary.join(' · ')}
+    </div>
   );
 }
 
@@ -166,10 +213,10 @@ function ShellPanel({ collapsed, onCollapse, chrome, forceExpanded = false }) {
   };
 
   const toggleSound = () => {
-    const enabled = audioManager.toggleAll();
-    const store = useGameStore.getState();
-    if (store.soundEnabled !== enabled) store.toggleSound();
-    if (store.musicEnabled !== enabled) store.toggleMusic();
+    const next = !soundEnabled;
+    useGameStore.getState().toggleSound();
+    useGameStore.getState().toggleMusic();
+    audioManager.syncFromStore({ soundEnabled: next, musicEnabled: next });
   };
 
   const resetGame = () => {
@@ -278,6 +325,8 @@ function ShellPanel({ collapsed, onCollapse, chrome, forceExpanded = false }) {
           )}
         </div>
       ) : null}
+
+      <SummaryTicker narrow={narrow} />
 
       <ShellNav pathname={pathname} narrow={narrow} />
 

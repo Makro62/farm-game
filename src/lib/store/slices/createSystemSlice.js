@@ -3,8 +3,8 @@ import { SHOP_ANIMALS } from '../../data/shop';
 import { FISHES } from '../../data/fishes';
 import { RECIPES } from '../../data/recipes';
 import { GAME_CONSTANTS } from '../../constants';
-import toast from 'react-hot-toast';
 import { logger } from '../../logger';
+import toast from 'react-hot-toast';
 
 export const createSystemSlice = (set, get) => ({
   // ===== UI MODALS =====
@@ -299,7 +299,7 @@ export const createSystemSlice = (set, get) => ({
           inventory[crop] = (inventory[crop] || 0) + 1;
           harvested++;
           plotsChanged = true;
-          xpGain += 10;
+          xpGain += GAME_CONSTANTS.XP.HARVEST;
           questEntries.push({ type: 'harvest', targetId: crop, amount: 1 });
         }
 
@@ -339,7 +339,7 @@ export const createSystemSlice = (set, get) => ({
           inventory[data.product] = (inventory[data.product] || 0) + 1;
           collected++;
           animalsChanged = true;
-          xpGain += 8;
+          xpGain += GAME_CONSTANTS.XP.COLLECT;
           questEntries.push({ type: 'collect', targetId: data.product, amount: 1 });
         } else {
           animals[i] = a;
@@ -366,7 +366,7 @@ export const createSystemSlice = (set, get) => ({
 
     // --- 3. KURCACI PEMANCING (FISHER) ---
     if (isWorkerActive(state, 'fisher')) {
-      if (Math.random() < 0.1) {
+      if (Math.random() < GAME_CONSTANTS.CHANCES.FISHER_TICK) {
         const rand = Math.random();
         let cumulative = 0;
         let caughtFish = FISHES[0];
@@ -380,7 +380,7 @@ export const createSystemSlice = (set, get) => ({
         set((s) => ({
           inventory: { ...s.inventory, [caughtFish.id]: (s.inventory[caughtFish.id] || 0) + 1 },
         }));
-        get().addXP(15);
+        get().addXP(GAME_CONSTANTS.XP.FISH);
         get().progressQuest('fish', caughtFish.id, 1);
         toast.success(`🎣 Nelayan Mamat mendapat ${caughtFish.emoji} ${caughtFish.name}!`, { id: 'auto-fisher', duration: 2000 });
       }
@@ -432,8 +432,7 @@ export const createSystemSlice = (set, get) => ({
     const now = Date.now();
     const deltaSeconds = Math.floor((now - state.lastSavedAt) / 1000);
     
-    // Hanya proses jika offline lebih dari 60 detik (1 menit)
-    if (deltaSeconds < 60) return;
+    if (deltaSeconds < GAME_CONSTANTS.OFFLINE.MIN_SECONDS) return;
     
     let earnedCoins = 0;
     let harvestedCrops = 0;
@@ -477,17 +476,26 @@ export const createSystemSlice = (set, get) => ({
       }
     }
     
-    // 3. Simulasikan nelayan (Auto Fisher)
+    // 3. Simulasikan nelayan (Auto Fisher) — roll sesuai probabilitas
     let caughtFishes = 0;
     if (isWorkerActive(state, 'fisher')) {
-      const catchAttemptEverySecs = 10;
-      const attempts = Math.floor(deltaSeconds / catchAttemptEverySecs);
-      const catchChance = 0.1;
+      const attempts = Math.floor(deltaSeconds / GAME_CONSTANTS.OFFLINE.FISHER_CATCH_EVERY_SECS);
+      const catchChance = GAME_CONSTANTS.CHANCES.AUTO_FISHER_CATCH;
       const expectedCatches = Math.floor(attempts * catchChance);
       
       if (expectedCatches > 0) {
         caughtFishes = expectedCatches;
-        newInventory[FISHES[0].id] = (newInventory[FISHES[0].id] || 0) + caughtFishes; // Asumsikan dapat ikan dasar untuk simulasi offline
+        for (let f = 0; f < expectedCatches; f++) {
+          const rand = Math.random();
+          let cumulative = 0;
+          for (const fish of FISHES) {
+            cumulative += fish.chance;
+            if (rand <= cumulative) {
+              newInventory[fish.id] = (newInventory[fish.id] || 0) + 1;
+              break;
+            }
+          }
+        }
       }
     }
     

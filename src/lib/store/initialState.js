@@ -102,6 +102,7 @@ export const initialState = {
   craftingQueue: [],
   orders: [],
 
+  totalTables: 4,
   buildings: {
     silo: false,
     greenhouse: false,

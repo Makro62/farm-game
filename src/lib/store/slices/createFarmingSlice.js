@@ -1,4 +1,5 @@
 import { SHOP_SEEDS } from '@/lib/data/crops';
+import { GAME_CONSTANTS } from '@/lib/constants';
 
 export const createFarmingSlice = (set, get) => ({
   setSelectedSeed: (seedId) => set({ selectedSeed: seedId }),
@@ -91,7 +92,7 @@ export const createFarmingSlice = (set, get) => ({
       return { ok: false, message: 'Energy tidak cukup!' };
     }
 
-    const boost = Math.floor((plot.growTime || 0) * 0.18);
+    const boost = Math.floor((plot.growTime || 0) * GAME_CONSTANTS.CHANCES.WATER_BOOST);
     set((s) => ({
       plots: s.plots.map((p) =>
         p.id === plotId
@@ -149,7 +150,7 @@ export const createFarmingSlice = (set, get) => ({
       },
     }));
 
-    get().addXP(10);
+    get().addXP(GAME_CONSTANTS.XP.HARVEST);
     get().progressQuest('harvest', crop, 1);
     // ===== Stats & Achievement tracking =====
     set(s => ({ stats: { ...s.stats, totalHarvested: (s.stats?.totalHarvested || 0) + 1 } }));
@@ -200,9 +201,7 @@ export const createFarmingSlice = (set, get) => ({
       const idx1 = newPlots.findIndex((p) => p.id === id1);
       const idx2 = newPlots.findIndex((p) => p.id === id2);
       if (idx1 !== -1 && idx2 !== -1) {
-        const temp = newPlots[idx1];
-        newPlots[idx1] = newPlots[idx2];
-        newPlots[idx2] = temp;
+        [newPlots[idx1], newPlots[idx2]] = [newPlots[idx2], newPlots[idx1]];
       }
       return { plots: newPlots };
     });

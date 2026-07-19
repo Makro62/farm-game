@@ -19,29 +19,10 @@ export type SoundName =
 export type MusicName = 'main' | 'menu' | 'event';
 
 // ─── Settings persistence ─────────────────────────────────────────
+// Settings are now managed by Zustand store persist.
+// AudioManager reads from a config object passed in or uses defaults.
 function loadConfig(): AudioConfig {
-  if (typeof window === 'undefined') {
-    return { volume: 0.5, musicVolume: 0.25, enabled: true, musicEnabled: true };
-  }
-  try {
-    const raw = localStorage.getItem('audio-settings');
-    if (raw) {
-      const s = JSON.parse(raw);
-      return {
-        volume: s.volume ?? 0.5,
-        musicVolume: s.musicVolume ?? 0.25,
-        enabled: s.enabled ?? true,
-        musicEnabled: s.musicEnabled ?? true,
-      };
-    }
-  } catch { /* ignore */ }
   return { volume: 0.5, musicVolume: 0.25, enabled: true, musicEnabled: true };
-}
-
-function saveConfig(cfg: AudioConfig) {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('audio-settings', JSON.stringify(cfg));
-  }
 }
 
 // ─── Web Audio Synth Engine ───────────────────────────────────────
@@ -353,7 +334,6 @@ class AudioManager {
     if (this.masterGain && this.audioCtx) {
       this.masterGain.gain.setValueAtTime(this.config.volume, this.audioCtx.currentTime);
     }
-    saveConfig(this.config);
   }
 
   setMusicVolume(volume: number) {
@@ -361,7 +341,6 @@ class AudioManager {
     if (this.currentMusic) {
       this.currentMusic.volume(this.config.musicVolume);
     }
-    saveConfig(this.config);
   }
 
   // ─── Toggle ───────────────────────────────────────────
@@ -379,13 +358,11 @@ class AudioManager {
       this.playMusic(this.currentMusicName || 'main');
     }
 
-    saveConfig(this.config);
     return newState;
   }
 
   toggleSound(): boolean {
     this.config.enabled = !this.config.enabled;
-    saveConfig(this.config);
     return this.config.enabled;
   }
 
@@ -396,7 +373,6 @@ class AudioManager {
     } else {
       this.playMusic(this.currentMusicName || 'main');
     }
-    saveConfig(this.config);
     return this.config.musicEnabled;
   }
 
@@ -412,6 +388,21 @@ class AudioManager {
 
   isMusicEnabled(): boolean {
     return this.config.musicEnabled;
+  }
+
+  syncFromStore(settings: { soundEnabled?: boolean; musicEnabled?: boolean }) {
+    if (settings.soundEnabled !== undefined) {
+      this.config.enabled = settings.soundEnabled;
+    }
+    if (settings.musicEnabled !== undefined) {
+      const wasEnabled = this.config.musicEnabled;
+      this.config.musicEnabled = settings.musicEnabled;
+      if (!wasEnabled && settings.musicEnabled) {
+        this.playMusic(this.currentMusicName || 'main');
+      } else if (wasEnabled && !settings.musicEnabled) {
+        this.stopMusic(300);
+      }
+    }
   }
 
   stopAll() {

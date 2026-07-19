@@ -1,14 +1,15 @@
 import { SHOP_SEEDS } from '../data/crops';
 import { SHOP_ANIMALS } from '../data/shop';
+import { GAME_CONSTANTS } from '../constants';
 
-export const MINING_REGEN_MS = { 1: 120000, 2: 90000, 3: 60000 };
+export const MINING_REGEN_MS = GAME_CONSTANTS.MINING.REGEN_MS;
 
 export function getMiningRegenMs(mining, weatherEffects = null) {
   let ms = MINING_REGEN_MS[mining?.pickaxeLevel] || MINING_REGEN_MS[1];
   if (mining?.lanternUntil && mining.lanternUntil > Date.now()) {
-    ms = Math.floor(ms * 0.5);
+    ms = Math.floor(ms * GAME_CONSTANTS.MINING.LANTERN_REGEN_MULT);
   }
-  if (weatherEffects && weatherEffects.miningRegen) {
+  if (weatherEffects?.miningRegen && weatherEffects.miningRegen > 0) {
     ms = Math.floor(ms / weatherEffects.miningRegen);
   }
   return ms;
@@ -16,21 +17,25 @@ export function getMiningRegenMs(mining, weatherEffects = null) {
 
 export function getAnimalProduceTime(animal, weatherEffects = null) {
   let ms = animal.produceTime || 60000;
-  if (weatherEffects && weatherEffects.animalProduce) {
+  if (weatherEffects?.animalProduce && weatherEffects.animalProduce > 0) {
     ms = Math.floor(ms / weatherEffects.animalProduce);
   }
   return ms;
 }
 
 export function rollMineralType(pickaxeLevel = 1, lanternActive = false, eventId = null) {
-  let bonus = (lanternActive ? 0.05 : 0) + (pickaxeLevel >= 3 ? 0.08 : pickaxeLevel >= 2 ? 0.04 : 0);
-  // Event Demam Emas: peluang emas & berlian naik
-  if (eventId === 'tambang') bonus += 0.12;
-  const r = Math.random();
-  if (r < 0.05 + bonus) return 'berlian';
-  if (r < 0.15 + bonus) return 'emas';
-  if (r < 0.3 + (pickaxeLevel >= 2 ? 0.05 : 0)) return 'besi';
-  if (r < 0.5) return 'tembaga';
+  const weights = { batu: 50, tembaga: 20, besi: 15, emas: 10, berlian: 5 };
+  if (pickaxeLevel >= 2) { weights.besi += 5; weights.batu -= 5; }
+  if (pickaxeLevel >= 3) { weights.emas += 5; weights.berlian += 3; weights.batu -= 8; }
+  if (lanternActive) { weights.emas += 3; weights.berlian += 2; weights.batu -= 5; }
+  if (eventId === 'tambang') { weights.emas += 5; weights.berlian += 5; weights.batu -= 10; }
+  Object.keys(weights).forEach(k => { if (weights[k] < 0) weights[k] = 0; });
+  const total = Object.values(weights).reduce((a, b) => a + b, 0);
+  let rand = Math.random() * total;
+  for (const [type, weight] of Object.entries(weights)) {
+    rand -= weight;
+    if (rand <= 0) return type;
+  }
   return 'batu';
 }
 

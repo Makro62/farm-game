@@ -1,402 +1,862 @@
-# 🌾 Farm Tycoon — Dokumen Desain Game (GDD)
 
-> **Repository:** [github.com/Makro62/farm-game](https://github.com/Makro62/farm-game)  
-> **Dibuat:** Juni 2026  
-> **Terakhir Diperbarui:** Juli 2026  
-> **Versi Dokumen:** 4.1 (Detail Ekstensif)
+---
+title: Farm Tycoon — Game Design Document
+version: 1.0 (Code-Accurate)
+last_updated: 2026-07-20
+---
+
+# Farm Tycoon — Game Design Document (GDD)
+
+> **Status**: Final — mencerminkan kondisi kode setelah semua perbaikan P1–P3 dan code quality fix.
+> **Tech Stack**: Next.js 14 (App Router) + Zustand (state management) + Tailwind CSS + Framer Motion + Howler.js + Web Audio API
 
 ---
 
-## Daftar Isi
+## 1. Executive Summary
 
-1. [Gambaran Umum & Arsitektur Sistem](#1-gambaran-umum--arsitektur-sistem)
-2. [Alur Pembelian (Purchase Flow)](#2-alur-pembelian-purchase-flow)
-3. [Alur Farming (Crop System)](#3-alur-farming-crop-system)
-4. [Alur Peternakan (Animal System)](#4-alur-peternakan-animal-system)
-5. [Alur Restoran & Crafting (Dapur Dewi Hidangan)](#5-alur-restoran--crafting-dapur-dewi-hidangan)
-6. [Sistem Pekerja Otomatis (Auto Workers)](#6-sistem-pekerja-otomatis-auto-workers)
-7. [Sistem Cuaca & Efeknya](#7-sistem-cuaca--efeknya)
-8. [Sistem Musim (Seasons)](#8-sistem-musim-seasons)
-9. [NPC & Friendship System](#9-npc--friendship-system)
-10. [Sistem Pertambangan](#10-sistem-pertambangan)
-11. [Sistem Memancing](#11-sistem-memancing)
-12. [Sistem Audio](#12-sistem-audio)
-13. [Sistem Save / Load](#13-sistem-save--load)
-14. [Event Spesial & Festival](#14-event-spesial--festival)
-15. [Sistem UI & Responsivitas](#15-sistem-ui--responsivitas)
-16. [Roadmap Implementasi](#16-roadmap-implementasi)
-17. [Rencana Pembangunan Fitur (Plans)](#17-rencana-pembangunan-fitur-plans)
+Farm Tycoon adalah idle-farming game berbasis web dengan 6 area gameplay yang saling terhubung: **Ladang, Peternakan, Tambang, Memancing, Restoran, dan Kota**. Pemain menanam tanaman, memelihara hewan, menambang mineral, memancing ikan, memasak resep, melayani pelanggan, menyelesaikan order board, dan membangun hubungan dengan NPC.
+
+Game berjalan sepenuhnya di client-side (localStorage) dengan game loop tick 1 detik. Mendukung offline progress, auto workers (5 tipe), sistem cuaca/musim, daily quests, combo system, wheel of fortune, dan achievement system dengan 21 achievement.
 
 ---
 
-## 1. Gambaran Umum & Arsitektur Sistem
+## 2. Game Overview
 
-Farm Tycoon adalah web-game berbasis browser yang dibangun dengan **Next.js 16 (React 18)** menggunakan **App Router**, **Zustand** untuk state management, dan **TailwindCSS** untuk styling. Arsitekturnya menggunakan pendekatan page-based routing yang dikombinasikan dengan centralized store.
+| Aspek | Detail |
+|-------|--------|
+| **Platform** | Web (PWA-ready) |
+| **Genre** | Idle Farming / Tycoon / Simulation |
+| **Target Player** | Casual, mobile-first |
+| **Session Length** | 5–30 menit (daily check-in) |
+| **Monetization** | None (free-to-play murni) |
+| **Save Method** | localStorage via Zustand persist middleware |
+| **Offline Progress** | Didukung untuk Auto Farmer, Auto Rancher, Auto Fisher, Auto Miner |
 
-### 1.1 Tech Stack
+### 2.1 Player Progression
 
-| Teknologi | Versi | Kegunaan |
-|---|---|---|
-| **Next.js** | 16.2.10 (Turbopack) | Framework React, App Router, SSR/SSG, routing |
-| **React** | 18 | UI component library |
-| **Zustand** | 4.5.0 | State management (persisted to localStorage) |
-| **TailwindCSS** | 3.4.0 | Utility-first CSS framework |
-| **Framer Motion** | 11.18.2 | Animasi & transisi UI |
-| **Howler.js** | 2.2.4 | Background music streaming |
-| **Web Audio API** | Native | Synthesized sound effects |
-| **Lucide React** | 0.300.0 | Icon library |
-| **react-hot-toast** | 2.6.0 | Toast notifications |
-| **canvas-confetti** | 1.9.4 | Efek visual celebration |
-| **@ducanh2912/next-pwa** | 10.2.6 | Progressive Web App support |
+- **Level**: 1–11+ (XP kumulatif, setiap level butuh `level * 100` XP)
+- **Energy**: 100 base + `(level - 1) * 10`, cap 200 di level 11
+- **Max Energy**: 200
+- **Energy reset**: Setiap "hari" (7 tick musim → 1 hari → energi full restore)
+- **Coins**: Currency utama, bisa dari jual item, order, quest, wheel, streak, serve pelanggan
 
-### 1.2 Struktur Folder
+### 2.2 XP Sources
+
+| Aksi | XP |
+|------|----|
+| Panen tanaman | 10 |
+| Tambang mineral | 15 |
+| Memancing ikan | 15 |
+| Kolek hasil ternak | 8 |
+| Bonus beri pakan ternak | 3 |
+| Masak resep | 0 (via `recipe.xp`) |
+
+---
+
+## 3. Game World & Setting
+
+### 3.1 Navigation
+
+6 tab utama via sidebar (`src/lib/nav.js`):
+
+| ID | Label | Emoji | Route |
+|----|-------|-------|-------|
+| `pertanian` | Ladang | 🌱 | `/pertanian` |
+| `peternakan` | Ternak | 🐄 | `/peternakan` |
+| `tambang` | Tambang | ⛏️ | `/tambang` |
+| `kota` | Kota | 🏪 | `/kota` |
+| `restoran` | Restoran | 🍰 | `/restoran` |
+| `profil` | Profil | 🧑‍🌾 | `/profil` |
+
+### 3.2 Musim (Seasons)
+
+Siklus 4 musim, masing-masing 7 hari (180 tick/hari):
+
+| Musim | Emoji | Durasi |
+|-------|-------|--------|
+| Spring (Semi) | 🌸 | 7 hari |
+| Summer (Panas) | ☀️ | 7 hari |
+| Autumn (Gugur) | 🍂 | 7 hari |
+| Winter (Dingin) | ❄️ | 7 hari |
+
+**Musim mempengaruhi**: bibit mana yang bisa ditanam (tanpa Greenhouse).
+
+### 3.3 Cuaca (Weather)
+
+Berubah setiap 300 tick. Dipengaruhi musim:
+
+| Cuaca | Efek |
+|-------|------|
+| ☀️ Cerah | Normal |
+| ⛅ Berawan | Normal |
+| 🌧️ Hujan | Semua tanaman otomatis tersiram |
+| ⛈️ Badai | Mining regen 50%, animal produce 80% |
+| 🌫️ Berkabut | Fishing rare 70%, customer rate 120% |
+| 🌬️ Berangin | Crop growth 110% |
+| ☃️ Bersalju (winter only) | Tanaman growing → layu |
+
+Weather effects di-cache di `state.weatherEffects` dan digunakan oleh farming, mining, ranching, fishing, dan customer slices.
+
+---
+
+## 4. Core Gameplay Mechanics
+
+### 4.1 Energy System
+
+- Setiap aksi mengkonsumsi 1–2 energy
+- Energy terisi penuh saat ganti hari
+- Tidak ada mekanisme "makan" untuk restore energy selain ganti hari
+- Jika energy tidak cukup, aksi gagal dengan toast
+
+### 4.2 Combo System
+
+- Window: 2.5 detik antar aksi
+- Multiplier: `1 + (count - 1) * 0.25`, max 4.0x
+- Threshold ≥3 untuk bonus coins otomatis
+- Reset saat window expired
+
+### 4.3 Daily Streak
+
+- Login harian: reward coins [100, 200, 300, 400, 500, 750, 1500]
+- Streak terputus jika lewat 1 hari
+
+### 4.4 Wheel of Fortune
+
+- 1× spin per hari
+- Reward: 100–200 (60%), 500 (25%), 2000 (10%), 5000 (5%)
+
+### 4.5 Daily Quests
+
+- 3 quest random per hari dari pool 9 quest
+- Tipe: harvest, mine, fish, collect
+- Reward: coins + XP
+- Progress dilacak per aksi
+
+---
+
+## 5. Resource & Economy System
+
+### 5.1 Currency
+
+- **Coins**: Satu-satunya mata uang, tidak ada premium currency
+
+### 5.2 Inventory
+
+- Flat object `{ [itemId]: quantity }` di Zustand store
+- Item tidak punya stack limit
+- Item otomatis terhapus dari inventory jika quantity ≤ 0
+
+### 5.3 Selling Price Logic (`src/lib/data/item-helpers.js`)
+
+| Tipe Item | Formula Harga Jual |
+|-----------|-------------------|
+| Bibit (seed) | **Tidak bisa dijual** (`isSellableProduce` = false) |
+| Hasil panen (crop) | `seed.price * 1.5` |
+| Produk ternak | `animal.price * 0.5` |
+| Ikan | `priceNormal` (dari data fish) |
+| Mineral | `price` (dari data mineral) |
+| Resep masakan | `recipe.price` |
+| Alat tambang/bait | **Tidak bisa dijual** |
+
+### 5.4 Market Price Fluctuation (`updateMarket`)
+
+- Setiap hari (ganti musim tick), harga crop diacak `0.7–1.3×` dari base price
+- Disimpan di `state.todayPrices` dan `state.marketTrend` (up/down)
+
+### 5.5 Price Multipliers
+
+- **Coin Booster** (30 menit): ×2 semua penjualan
+- **Silo building**: +15% harga jual tanaman
+- **Event "Festival Panen"**: ×2 harga tanaman
+- **Event "Hari Bahari"**: ×2 harga ikan
+
+### 5.6 Special Items (Cross-System)
+
+| Item | Source | Usage |
+|------|--------|-------|
+| Cacing Tanah 🪱 | Drop tambang batu (20%) | Craft Umpan Cacing |
+| Pupuk Kandang 🌿 | Drop kolek ternak (15%) | Auto-pakai saat tanam (-15% grow time) |
+
+---
+
+## 6. Farming System (Ladang)
+
+### 6.1 Plot Grid
+
+- 30 plot (`GRID.PLOTS = 30`), setiap plot punya state: `empty` / `growing` / `ready` / `dead`
+- Plot bisa di-swap (drag) via `swapPlots(id1, id2)`
+- Normalisasi plot (migrasi dari legacy state) di `normalizePlot()`
+
+### 6.2 Seeds
+
+12 bibit dengan properti `{ id, cropId, name, emoji, price, time (detik), season }`:
+
+| Bibit | Harga | Waktu | Musim |
+|-------|-------|-------|-------|
+| Wortel 🥕 | 10 | 15 | All |
+| Jagung 🌽 | 20 | 30 | All |
+| Tomat 🍅 | 35 | 60 | Summer |
+| Stroberi 🍓 | 75 | 120 | Spring |
+| Tulip 🌷 | 100 | 100 | Spring |
+| Gandum 🌾 | 90 | 135 | Autumn |
+| Tebu 🎋 | 110 | 140 | Summer |
+| Semangka 🍉 | 120 | 150 | Summer |
+| Apel 🍎 | 140 | 180 | Autumn |
+| Labu 🎃 | 160 | 200 | Autumn |
+| Jamur 🍄 | 500 | 300 | Winter |
+| Nanas 🍍 | 200 | 220 | Summer |
+| Kentang 🥔 | 180 | 190 | Autumn |
+
+### 6.3 Planting Flow (`plantSeed`)
+
+1. Cek season compatibility (kecuali Greenhouse)
+2. Remove seed dari inventory (`removeItem`)
+3. Consume 1 energy (`consumeEnergy`)
+4. Auto-pakai Pupuk Kandang jika ada (-15% grow time)
+5. Plant plot via `plant()`
+
+### 6.4 Watering
+
+- 1 energy per siram
+- Mengurangi sisa grow time sebesar 18%
+- Status `watered: true`
+
+### 6.5 Harvesting
+
+- Consume 1 energy
+- Hasil: +1 crop ke inventory, +10 XP
+- Tracking: `stats.totalHarvested`, `markSessionAction('harvested')`
+- Combo bonus: jika count ≥3, bonus coins
+- Auto check achievement
+
+### 6.6 Growth Calculation
 
 ```
-farm-game/
-├── public/
-│   ├── icons/                    # PWA icons (192, 512)
-│   ├── img/                      # Game images (backgrounds, animals, logo)
-│   ├── music/                    # BGM tracks (farm-theme, menu-theme, event-theme)
-│   ├── manifest.json             # PWA manifest
-│   └── sw.js                     # Service worker for offline support
-├── src/
-│   ├── app/                      # Next.js App Router
-│   │   ├── layout.js             # Root layout: fonts, metadata, GameProvider, Toaster
-│   │   ├── page.js               # Main redirection/home
-│   │   ├── kota/                 # Route untuk Kota (Town)
-│   │   ├── pertanian/            # Route untuk Pertanian (Farm)
-│   │   ├── peternakan/           # Route untuk Peternakan (Animal)
-│   │   ├── profil/               # Route untuk Profil pemain
-│   │   ├── restoran/             # Route untuk Restoran (Crafting)
-│   │   └── tambang/              # Route untuk Tambang (Mine)
-│   ├── components/
-│   │   ├── ClientLayout.jsx      # Layout utama klien, mengatur struktur game & sidebar
-│   │   ├── GameSidebar.jsx       # Sidebar menu navigasi utama
-│   │   ├── TabFarm.jsx           # UI Pertanian: plots, shop bibit, inventory
-│   │   ├── TabAnimal.jsx         # UI Peternakan: animals grid, shop hewan
-│   │   ├── TabMine.jsx           # UI Tambang: mine nodes, alat
-│   │   ├── TabTown.jsx           # UI Kota: NPCs, market, wheel
-│   │   ├── TabRestaurant.jsx     # UI Restoran: dapur dewi hidangan, resep, koki
-│   │   ├── TabProfil.jsx         # UI Profil: stat player, progres, pengaturan
-│   │   ├── Modals.jsx            # Confirm/prompt/NPC gift modals
-│   │   ├── ui/                   # Reusable UI components (CraftingWidget, dll)
-│   │   └── game/                 # Game-specific components
-│   ├── lib/
-│   │   ├── store.js              # Zustand store: semua state & actions (49KB)
-│   │   ├── store-provider.js     # GameProvider: hydration, game loop, streak
-│   │   ├── audio.ts              # AudioManager: Web Audio API synth + Howler music
-│   │   ├── constants.js          # Definisi konstanta game
-│   │   ├── utils.js              # Fungsi helper
-│   │   └── data/                 # Data resep, item, dll
-│   └── styles/
-│       └── globals.css           # Global styles, glassmorphism, layout utilities
-├── docs/
-│   └── FARM_TYCOON_GDD.md        # Dokumen ini
-├── next.config.js                # Next.js config (PWA, turbopack)
-├── tailwind.config.js            # TailwindCSS config
-└── package.json                  # Dependencies
-```
-
-### 1.3 Alur Data (Reactive Architecture)
-
-State management diurus secara tersentralisasi oleh **Zustand** dan dihubungkan ke React components menggunakan provider. UI re-render secara **otomatis** dan presisi setiap kali nilai pada state berubah.
-
-### 1.4 Game Loop
-
-Game loop berjalan setiap **1 detik** via `setInterval` di `store-provider.js`, mengeksekusi:
-
-```
-processGameTick() setiap 1 detik:
-  ├─ advanceSeasonTick()    → update musim & hari
-  ├─ changeWeather()        → countdown & random cuaca baru
-  ├─ syncPlots()            → ubah 'growing' → 'ready' saat waktunya
-  ├─ syncMiningNodes()      → regenerasi petak tambang
-  └─ runAutoWorkers()       → petani, peternak, pemancing, koki
+growTime = (seed.time * 1000) / growthMultiplier
+growthMultiplier = state.growthMultiplier (booster) * weatherEffects.cropGrowth
 ```
 
 ---
 
-## 2. Alur Pembelian (Purchase Flow)
+## 7. Animal Husbandry (Peternakan)
 
-Sistem pembelian menggunakan side-dock/panel di masing-masing area untuk **Bibit Tanaman**, **Hewan Ternak**, **Alat Tambang**, **Resep/Koki**, dan **Pekerja Otomatis**.
+### 7.1 Animals
+
+6 tipe hewan, semua di grid 36 slot:
+
+| Hewan | Harga | Produksi (detik) | Produk | Pakan |
+|-------|-------|-----------------|--------|-------|
+| Ayam 🐔 | 150 | 20 | Telur 🥚 | Jagung ×2 |
+| Bebek 🦆 | 300 | 40 | Telur Bebek 🥚 | Jagung ×2 |
+| Sapi 🐄 | 500 | 60 | Susu 🥛 | Gandum ×2 |
+| Domba 🐑 | 800 | 90 | Bulu 🧶 | Gandum ×2 |
+| Babi 🐖 | 1,200 | 120 | Truffle 🍄 | Wortel ×2 |
+| Kuda 🐴 | 2,000 | 150 | Tapal 🧲 | Wortel ×3 |
+
+### 7.2 Buying Animals
+
+- `buyAnimal(type, price, produceTime)` — validasi coins, generate unique ID, push ke array animals
+- `buyMultipleAnimals(type, amount, unitPrice, produceTime)` — bulk buy
+
+### 7.3 Produksi & Collect
+
+- Setiap hewan punya `lastCollected`, `produceTime`, `fed` status
+- Collect: consume 1 energy, +1 produk (+1 bonus jika fed), 15% chance drop Pupuk Kandang
+- Reset `fed: false` setelah collect
+
+### 7.4 Feeding System (Fase B)
+
+- Opsional, menggunakan hasil panen
+- Bonus: +25% chance bonus produk (+25% FEED_BONUS)
+- XP bonus: +3 per kolek jika hewan fed
+- Tracking: `totalAnimalsFed`
+
+### 7.5 Produksi Auto (Worker)
+
+Lihat section 11 (Auto Workers).
+
+---
+
+## 8. Mining System (Tambang)
+
+### 8.1 Mining Nodes
+
+- 30 node, tiap node punya: `{ id, status, type, regenAt }`
+- 5 tipe mineral dengan weighted random:
+
+| Mineral | Base Weight | Harga Jual | Special Bonus Weight |
+|---------|------------|------------|---------------------|
+| Batu 🪨 | 50 | 5 | — |
+| Tembaga 🔶 | 20 | 30 | — |
+| Besi ⚫ | 15 | 80 | +5 (pickaxe ≥2) |
+| Emas 🟡 | 10 | 300 | +5 (pickaxe ≥3), +3 (lantern), +5 (event) |
+| Berlian 💎 | 5 | 1000 | +3 (pickaxe ≥3), +2 (lantern), +5 (event) |
+
+### 8.2 Mining Action
+
+- Consume 2 energy
+- 20% chance drop Cacing (jika node type = batu)
+- Regen time berdasarkan pickaxe level, lantern, cuaca
+- Combo bonus coins jika ≥3
+
+### 8.3 Pickaxe Levels
+
+| Level | Nama | Regen | Bonus |
+|-------|------|-------|-------|
+| 1 | Cangkul Kayu 🪨 | 120 detik | — |
+| 2 | Pickaxe Besi ⛏️ | 90 detik | +5 besi, -5 batu |
+| 3 | Pickaxe Emas 🛠️ | 60 detik | +5 emas, +3 berlian, -8 batu |
+
+### 8.4 Mining Tools (`useMiningTool`)
+
+| Tool | Harga | Efek |
+|------|-------|------|
+| Bom Kecil 🧨 | 50 | ×2 hasil node siap, atau buka node cooldown |
+| Bom Besar 💣 | 100 + 3 tembaga | Tambang semua node ready sekaligus |
+| Pickaxe Besi ⛏️ | 200 + 5 besi | Upgrade ke level 2 |
+| Pickaxe Emas 🛠️ | 500 + 3 emas + 5 besi | Upgrade ke level 3 |
+| Senter Goa 🔦 | 120 | Buff 5 menit: regen 50% + bonus rare ore |
+| Tali Tambang 🪢 | 60 | Buka 1 node cooldown |
+
+### 8.5 Lantern (Senter)
+
+- Durasi: 5 menit (300,000 ms)
+- Efek: regen 50%, bonus emas +3, berlian +2
+
+---
+
+## 9. Fishing System (Memancing)
+
+### 9.1 Fish Data
+
+5 jenis ikan dengan chance:
+
+| Ikan | Harga Jual (normal/big) | Chance |
+|------|------------------------|--------|
+| Ikan Mas 🐟 | 80 / 160 | 40% |
+| Lele 🐠 | 100 / 200 | 30% |
+| Ikan Badut 🐡 | 200 / 400 | 15% |
+| Cumi-cumi 🦑 | 350 / 700 | 10% |
+| Gurita Emas 🐙 | 2000 / 4000 | 5% |
+
+### 9.2 Bait System
+
+| Umpan | Harga | Wait Mult | Rare Bonus | Craftable |
+|-------|-------|-----------|------------|-----------|
+| Biasa 🪱 | 15 | 85% | 0% | — |
+| Premium 🦐 | 60 | 55% | 12% | — |
+| Emas ✨ | 150 | 40% | 25% | — |
+| Cacing 🪱 | 0 | 65% | 8% | 2 cacing |
+
+### 9.3 Fishing Minigame Constants
+
+| Parameter | Value |
+|-----------|-------|
+| Wait min | 2000 ms |
+| Wait random | 3000 ms |
+| Bite window | 1500 ms |
+| Minigame max time | 6000 ms |
+| Win threshold | 40 (dari 0–100) |
+| Tick rate | 50 ms |
+| Auto catch interval | 10 detik |
+
+### 9.4 Auto Fisher
+
+- Auto-catch tiap tick (10% chance per tick)
+- Mining area disimulasikan dengan random roll FISHES berdasarkan chance
+
+---
+
+## 10. Restaurant & Crafting
+
+### 10.1 Recipes
+
+28 resep dalam 3 tipe: `kitchen`, `restaurant`, `fish_kitchen`
+
+**Tier 1** (Level 1+): 5 resep
+- Sup Wortel, Tepung Jagung, Es Teh Manis, Jus Tomat, Lele Bakar
+
+**Tier 2** (Level 5+): 6 resep
+- Keju, Nasi Goreng, Roti Gandum, Susu Stroberi, Kue Wortel, Sushi Ikan Mas
+
+**Tier 3** (Level 10+): 5 resep
+- Kue Manis, Pancake, Takoyaki, Nasi Jamur, Kue Apel
+
+**Tier 4** (Level 15+): 2 resep
+- Kue Stroberi, Sushi Emas (butuh emas dari tambang)
+
+### 10.2 Crafting Queue
+
+- Max 3 antrean per tipe (`CRAFTING.MAX_QUEUE_PER_TYPE = 3`)
+- `startCrafting(recipeId)`: validasi bahan → deduct inventory → push queue
+- `processCraftingQueue()`: cek durasi tiap item, jika selesai → add hasil ke inventory + XP
+- `collectCraftedItem(queueId)`: collect manual item yang sudah selesai
+- `removeCraftingQueue(queueId)`: batalkan + refund bahan
+
+### 10.3 Restaurant Customers
+
+- 9 tipe pelanggan dengan preferensi resep, patience, dan tip multiplier
+- Serve: membutuhkan recipe item di inventory
+- Tip calculation:
+  - patience > 70%: 50% × tipMultiplier
+  - patience > 30%: 20% × tipMultiplier
+- Pelanggan pergi jika patience = 0
+- Spawn: 10% chance per tick × `weatherEffects.customerRate`
+
+### 10.4 Tables
+
+- Default: 4 meja
+- Upgrade: `totalTables * 1000` coins per meja, max 9 meja
+
+---
+
+## 11. Town & NPC System (Kota)
+
+### 11.1 Buildings
+
+| Building | Harga | Efek |
+|----------|-------|------|
+| Silo 🏚️ | 2000 | +15% harga jual tanaman |
+| Greenhouse 🏠 | 5000 | Tanam bibit luar musim |
+
+### 11.2 Decorations
+
+| Dekorasi | Harga | Bonus |
+|----------|-------|-------|
+| Pot Bunga 🪴 | 300 | +5 XP |
+| Air Mancur ⛲ | 800 | Visual |
+| Patung Koin 🗿 | 1500 | Prestige |
+
+### 11.3 Order Board
+
+- 3 order aktif, digenerate berdasarkan level
+- Order punya tier (1–3), timer, items, coins, XP
+- Fulfill: validasi inventory → kurangi items → add coins + XP
+- Timer: order expired setelah `timer * 1000` ms
+
+### 11.4 NPC Gift System
+
+5 NPC dengan preferensi unik:
+
+| NPC | Role | Suka |
+|-----|------|------|
+| Chef Maria 🍳 | Koki Kota | tomat, wortel, susu, keju, ikan_mas |
+| Pak Tua Botan 👴 | Ahli Tani | tulip, semangka, apel, pupuk_kandang |
+| Paman Hadi 🐮 | Peternak | jagung, gandum, truffle, tapal |
+| Pak Nelayan Bejo 🎣 | Nelayan | ikan_mas, lele, cumi, umpan_premium |
+| Mang Dodi ⛏️ | Penambang | batu, tembaga, besi, emas |
+
+- Gift liked: +50 points
+- Gift other: +10 points
+- Level up: `points >= level * 100`, max level 5
+- Reward level up: `100 * newLevel` XP
+
+### 11.5 Market Price Board
+
+- Harga harian fluktuatif (diupdate setiap ganti hari)
+- Ditampilkan di `MarketBoard` component
+
+---
+
+## 12. Event System
+
+### 12.1 Random Events
+
+Trigger: 30% chance setiap ganti hari.
+
+| Event | Efek |
+|-------|------|
+| 🎊 Festival Panen | Harga jual tanaman ×2 |
+| 🎣 Hari Bahari | Harga jual ikan ×2 |
+| 💎 Demam Emas | Chance emas +5, berlian +5 (di rollMineralType) |
+
+---
+
+## 13. Auto Workers System
+
+5 tipe worker, masing-masing bisa di-hire dan di-toggle.
+
+| Worker | Biaya | Fungsi |
+|--------|-------|--------|
+| Petani Budi 👨‍🌾 | 5,000 | Panen otomatis + tanam ulang |
+| Peternak Siti 👩‍🌾 | 500 | Kolek hasil ternak otomatis |
+| Nelayan Mamat 🎣 | 12,000 | Auto fishing per tick (10% chance) |
+| Penambang 🪨 | 15,000 | Auto mine per tick (20% chance per node ready) |
+| Koki Juna 👨‍🍳 | 25,000 | Auto masak (selectedRecipe) |
+
+### 13.1 Auto Farmer Logic
+
+- Iterasi semua plot
+- Jika ready → panen + tanam ulang dengan seed dari inventory
+- Seed dipilih via `pickAutoSeed()` (prioritas selectedSeed, fallback random)
+- Growth multiplier applied
+
+### 13.2 Auto Rancher Logic
+
+- Iterasi semua hewan
+- Jika `now - lastCollected >= produceTime` → collect otomatis
+- Produk langsung ke inventory
+- XP: 8 per kolek
+
+### 13.3 Auto Fisher Logic
+
+- 10% chance per tick (`CHANCES.FISHER_TICK`)
+- Random roll dari FISHES berdasarkan chance
+
+### 13.4 Auto Miner Logic
+
+- 20% chance per tick per node ready (`CHANCES.MINER_AUTO_TICK`)
+- Mine node pertama yang ready
+- XP: 15 per mine
+
+### 13.5 Auto Chef Logic
+
+- Cek inventory untuk recipe requirements
+- Jika cukup → push ke crafting queue (max 3 per type)
+- Setiap tick cek queue selesai
+
+### 13.6 Offline Simulation
+
+Worker aktif tetap berjalan saat offline:
+- Farmer: harvest matang
+- Rancher: cycles = `deltaSeconds / produceTimeSecs`
+- Fisher: `expectedCatches = floor(attempts * 0.1)`
+- Miner: `minedGems = floor(attempts * 0.5)`
+
+Offline report ditampilkan di modal saat kembali.
+
+---
+
+## 14. Achievement System
+
+21 achievement dalam 7 kategori, tracking 15+ stat.
+
+### 14.1 Achievement Categories
+
+| Kategori | Jumlah | Contoh |
+|----------|--------|--------|
+| Ladang 🌾 | 4 | Panen pertama, 100, 500, pupuk |
+| Ternak 🐄 | 4 | Beli hewan, kolek 50, feed 10, pupuk 20 |
+| Tambang ⛏️ | 5 | Tambang pertama, 100, berlian, cacing 10, pickaxe emas |
+| Pancing 🎣 | 3 | Ikan pertama, 50, umpan cacing |
+| Restoran 🍽️ | 4 | Masak pertama, 20, serve 50, sushi emas |
+| Kota 🏘️ | 3 | Order pertama, 10, gift 5 |
+| Spesial ⭐ | 2 | All Rounder, Supply Chain |
+
+### 14.2 Custom Achievement Conditions
+
+- `pickaxeGold`: `mining.pickaxeLevel >= 3`
+- `allRounder`: semua 5 area dalam 1 sesi (tracked via `sessionActions`)
+- `supplyChain`: pupuk digunakan + masak sesuatu
+
+### 14.3 Stats Tracked
+
+totalHarvested, totalMined, totalFished, totalCooked, totalServed, totalCollected, totalOrdersFulfilled, totalGiftsGiven, totalFertilizerUsed, totalFertilizerDropped, totalAnimalsFed, totalAnimalsOwned, totalWormsFound, totalWormBaitUsed, totalDiamondsMined, totalSushiEmasMade
+
+---
+
+## 15. Audio System
+
+### 15.1 SFX (Web Audio API Synthesis)
+
+Semua SFX disintesis real-time — tidak ada file audio eksternal.
+
+| Sound | Teknik |
+|-------|--------|
+| harvest | Ascending arpeggio (C5-E5-G5-C6) |
+| plant | Frequency sweep 300→600→400 Hz |
+| sell | Cash register bell (1200+1500+2400 Hz) |
+| buy | Soft confirmation (A4-C#5) |
+| click | Subtle 800→500 Hz tap |
+| hover | Very soft 1000 Hz tick |
+| success | Triumphant 3-note arpeggio |
+| error | Descending square wave 300→200 Hz |
+| coin | Bright jingle 1047+1319+1568 Hz |
+| levelup | 4-note fanfare (C5-E5-G5-C6) + harmony |
+| achievement | Celebration 5-note (G4-B4-D5-G5-B5) |
+| combo | Sawtooth whoosh 200→1200 Hz |
+| wheel | Ratchet spin (6 ticks) |
+
+### 15.2 Music (Howler.js)
+
+3 tracks MP3:
+- `main` — farm theme (loop)
+- `menu` — menu theme (loop)
+- `event` — event theme (loop)
+
+### 15.3 AudioManager Class
+
+- Singleton (`audioManager`)
+- Lazy-init Web Audio context (first user interaction)
+- Settings sync dari Zustand store (dual-storage: Zustand persist + AudioManager config)
+
+---
+
+## 16. Save / Load & Persistence
+
+### 16.1 Storage
+
+- **Key**: `farm-game-storage` di localStorage
+- **Middleware**: Zustand `persist` + `createJSONStorage`
+- **Skip hydration**: `skipHydration: true` (manual via `useGameStore.persist.rehydrate()`)
+
+### 16.2 Partialize
+
+37 fields disimpan (coins, level, xp, energy, plots, inventory, animals, workers, mining, season, weather, npcs, craftingQueue, orders, buildings, achievements, stats, totalTables, tutorialStep, dll).
+
+State ephemeral yang TIDAK disimpan: combo, modals, selectedSeed, selectedMiningTool, selectedBait, selectedRecipe, weatherEffects, sessionActions, notificationsEnabled (di partialize).
+
+### 16.3 Merge & Migration
+
+`merge()` function menangani:
+- Normalisasi plots (legacy state → current format)
+- Normalisasi animals (readyToCollect → producing)
+- Migrasi legacy workers dari key `farmTycoonSave`
+- Migrasi tipe hewan (chicken → ayam, duck → bebek, dll)
+- Default values untuk fields baru (achievements, stats, weatherEffects)
+- NPC defaults (bejo, dodi)
+- Padding mining nodes < 30
+- Auto-enable worker toggles untuk migration
+
+### 16.4 Game Loop (store-provider.js)
+
+- `GameProvider` wraps app, handles:
+  1. Rehydrate store (15s timeout)
+  2. Boot: `updateMarket()` + `generateDailyQuests()`
+  3. Tick interval: `processGameTick()` setiap 1000 ms
+- Error state dengan tombol "Reset & Reload" jika gagal load
+
+### 16.5 processGameTick()
+
+Urutan eksekusi setiap tick:
+1. `advanceSeasonTick()` — musim, hari, event
+2. `changeWeather()` — cuaca + efek instan
+3. `syncPlots()` — cek tanaman ready
+4. `syncMiningNodes()` — regen node + auto miner
+5. `runAutoWorkers()` — farmer, rancher, fisher, miner, chef
+6. `processCraftingQueue()` — selesaikan crafting
+7. `checkOrders()` — expire orders, generate baru
+8. `tickCustomers()` + `spawnCustomer()` — restoran
+9. Check booster expiration
+
+### 16.6 Offline Progress
+
+- Threshold: 60 detik offline
+- `calculateOfflineProgress()` dipanggil saat rehidrasi
+- Simulasi: farmer (panen), rancher (produk), fisher (catch), miner (mine)
+
+---
+
+## 17. Technical Architecture
+
+### 17.1 Project Structure
 
 ```
-[1] User buka panel Shop di sebelah kanan/sidebar komponen.
-[2] Validasi kecukupan koin (coins >= price).
-[3] store.buyItem() atau aksi serupa dipanggil.
-[4] Koin dikurangi, item ditambahkan ke inventory / state pekerja diaktifkan.
-[5] Notifikasi via react-hot-toast muncul.
+src/
+├── app/                    # Next.js App Router pages
+│   ├── layout.js           # Root layout: fonts, GameProvider, Toaster
+│   ├── page.js             # Home / redirect
+│   ├── pertanian/page.js   # Farming page
+│   ├── peternakan/page.js  # Ranching page
+│   ├── tambang/page.js     # Mining page
+│   ├── kota/page.js        # Town page
+│   ├── restoran/page.js    # Restaurant page
+│   └── profil/page.js      # Profile page
+├── components/
+│   ├── ClientLayout.jsx    # Layout shell + GameSidebar
+│   ├── GameSidebar.jsx     # Main navigation + HUD (448 lines)
+│   ├── Modals.jsx          # Prompt, confirm, npc gift modals
+│   ├── OfflineProgressModal.jsx
+│   ├── ClearServiceWorker.jsx
+│   ├── TabFarm.jsx         # Farming tab
+│   ├── TabAnimal.jsx       # Ranching tab
+│   ├── TabMine.jsx         # Mining tab
+│   ├── TabTown.jsx         # Town tab
+│   ├── TabRestaurant.jsx   # Restaurant tab
+│   ├── TabProfil.jsx       # Profile tab
+│   ├── game/               # Sub-components
+│   │   ├── PlotGrid.jsx
+│   │   ├── SeedShop.jsx
+│   │   ├── MarketBoard.jsx
+│   │   ├── OrderBoard.jsx
+│   │   ├── TownPlaza.jsx
+│   │   ├── TownShop.jsx
+│   │   └── QuestPanel.jsx
+│   └── ui/                 # Shared UI components
+│       ├── AnimalIcon.jsx, Button.jsx, CropIcon.jsx
+│       ├── AnimatedCounter.jsx, FloatingText.jsx
+│       ├── CraftingWidget.jsx, GameAreaHeader.jsx
+│       ├── QtyControl.jsx, ShopItemCard.jsx
+│       ├── SideDock.jsx, TabPage.jsx, ToolChip.jsx
+│       └── TutorialOverlay.jsx
+├── lib/
+│   ├── store.js            # Zustand store (persist + 9 slices)
+│   ├── store-provider.js   # GameProvider + game loop
+│   ├── constants.js        # GAME_CONSTANTS (82 lines)
+│   ├── nav.js              # NAV_TABS, SEASON_META
+│   ├── audio.ts            # AudioManager (Web Audio + Howler)
+│   ├── logger.js           # Configurable logger (NEXT_PUBLIC_LOG_LEVEL)
+│   ├── utils.js            # cn() utility
+│   ├── store/
+│   │   ├── initialState.js # Default state (142 lines)
+│   │   ├── utils.js        # Pure helpers (201 lines)
+│   │   └── slices/
+│   │       ├── createFarmingSlice.js     # 209 lines
+│   │       ├── createMiningSlice.js      # 282 lines
+│   │       ├── createRanchingSlice.js    # 130 lines
+│   │       ├── createEconomySlice.js     # 122 lines
+│   │       ├── createPlayerSlice.js      # 535 lines
+│   │       ├── createTownSlice.js        # 96 lines
+│   │       ├── createSystemSlice.js      # 557 lines
+│   │       ├── createCustomerSlice.js    # 144 lines
+│   │       └── createAchievementSlice.js # 91 lines
+│   └── data/               # Game data (static)
+│       ├── crops.js        # CROP_DATA + SHOP_SEEDS
+│       ├── shop.js          # Animals, mining tools, bait, buildings, decorations
+│       ├── fishes.js        # 5 ikan
+│       ├── minerals.js      # 5 mineral
+│       ├── recipes.js       # 18 resep + 9 order templates
+│       ├── npcs.js          # 5 NPC
+│       ├── customers.js     # 9 tipe pelanggan
+│       ├── achievements.js  # 21 achievement
+│       └── item-helpers.js  # Sell price, emoji, display name helpers
+├── styles/
+│   └── globals.css          # Tailwind base + custom styles
+└── public/
+    ├── manifest.json
+    ├── icons/
+    └── music/               # MP3 tracks
 ```
 
----
+### 17.2 State Management (Zustand)
 
-## 3. Alur Farming (Crop System)
+- 9 slices di-merge via spread operator
+- Persist middleware dengan `partialize` (37 fields) + `merge` (migration logic)
+- Selector hooks: `useCoins`, `useLevel`, `usePlots`, `useInventory`, `useSettings`, `useSeason`, `useWeather`, `useMining`, `useNpcs`, `useActiveEvent`
 
-Setiap petak (plot) pertanian memiliki state machine 3-state yang dikelola oleh Zustand store.
+### 17.3 Key Dependencies
 
-### 3.1 State Machine Plot Tanah
+- `next`, `react`, `react-dom` — framework
+- `zustand` — state management + persist
+- `framer-motion` — animations
+- `howler` — music playback
+- `lucide-react` — icons
+- `react-hot-toast` — toast notifications
+- `tailwindcss` — styling
 
-```
-     [EMPTY]
-        │ (klik + ada bibit terpilih)
-        ▼
-     [GROWING]  ──── timer growTime selesai ────→  [READY]
-        │                                            │ (klik panen)
-        ▼                                            ▼
-      (Batal) ─────────────────────────────── kembali [EMPTY]
-```
+### 17.4 Logic Distribution
 
-Pemain juga bisa mengatur layout petak pertanian dengan **Drag-and-Drop** melalui tombol edit layout.
+| Area | Slice File | Lines |
+|------|-----------|-------|
+| Farming | `createFarmingSlice.js` | 209 |
+| Ranching | `createRanchingSlice.js` | 130 |
+| Mining | `createMiningSlice.js` | 282 |
+| Economy | `createEconomySlice.js` | 122 |
+| Player (XP, energy, inventory, crafting, orders, quests, combo, streak, tutorial) | `createPlayerSlice.js` | 535 |
+| Town (NPC, market, buildings) | `createTownSlice.js` | 96 |
+| System (weather, season, auto workers, offline, tick, modals, settings, wheel) | `createSystemSlice.js` | 557 |
+| Restaurant customers | `createCustomerSlice.js` | 144 |
+| Achievements | `createAchievementSlice.js` | 91 |
+| Game loop | `store-provider.js` | 105 |
+| Store assembly | `store.js` | 314 |
+| Utility functions | `store/utils.js` | 201 |
 
-### 3.2 Data Bibit & Tanaman Tersedia
+### 17.5 Key Constants (GAME_CONSTANTS)
 
-Bibit dapat ditanam lebih cepat (+1.5x) menggunakan Growth Booster (50 Koin).
-
-| Bibit / Crop | Harga (💰) | Waktu Tumbuh | Musim Favorit |
-|---|---|---|---|
-| 🥕 Wortel | 10 | 15 dtk | Semua |
-| 🌽 Jagung | 20 | 30 dtk | Semua |
-| 🍅 Tomat | 35 | 60 dtk | Summer |
-| 🍓 Stroberi | 75 | 120 dtk | Spring |
-| 🌷 Tulip | 100 | 100 dtk | Spring |
-| 🌾 Gandum | 90 | 135 dtk | Autumn |
-| 🎋 Tebu | 110 | 140 dtk | Summer |
-| 🍉 Semangka | 120 | 150 dtk | Summer |
-| 🍎 Apel | 140 | 180 dtk | Autumn |
-| 🎃 Labu | 160 | 200 dtk | Autumn |
-| 🍄 Jamur | 500 | 300 dtk | Winter |
-
----
-
-## 4. Alur Peternakan (Animal System)
-
-Hewan ditampilkan dalam grid di area peternakan. Setiap hewan memiliki timer produksi independen. Saat progress = 100%, hewan akan bersinar kuning dan siap dipanen manual (diklik) atau dipanen otomatis oleh pekerja.
-
-### 4.1 Data Hewan Ternak
-
-| Hewan | Harga (💰) | Waktu Prod. | Hasil (Produk) |
-|---|---|---|---|
-| 🐔 Ayam | 150 | 20 dtk | 🥚 Telur |
-| 🦆 Bebek | 300 | 40 dtk | 🥚 Telur Bebek |
-| 🐄 Sapi | 500 | 60 dtk | 🥛 Susu |
-| 🐑 Domba | 800 | 90 dtk | 🧶 Bulu |
-| 🐷 Babi | 1.200 | 120 dtk | 🍄 Truffle |
-| 🐴 Kuda | 2.000 | 150 dtk | 🧲 Tapal Kuda |
+| Group | Key Constants |
+|-------|--------------|
+| GRID | PLOTS=30, MINING_NODES=30, ANIMAL_SLOTS=36 |
+| LEVEL | XP_PER_LEVEL=100, MAX_ENERGY=200, MAX_ENERGY_PER_LEVEL=10 |
+| STARTING | COINS=100, ENERGY=100 |
+| CHANCES | WORM_DROP=0.2, FERTILIZER_DROP=0.15, AUTO_FISHER_CATCH=0.1, WATER_BOOST=0.18, FISHER_TICK=0.1, MINER_AUTO_TICK=0.2, FEED_BONUS=0.25 |
+| COSTS | WORKER_FARMER=5000, WORKER_RANCHER=500, WORKER_MINER=15000, FISHER_WORKER=12000, WORKER_CHEF=25000 |
+| MULTIPLIERS | GROWTH_BOOSTER=1.5, COIN_BOOSTER=2 |
+| TIMERS | FARM_TICK_RATE=1000 |
+| FISHING | WAIT_MIN_MS=2000, BITE_WINDOW_MS=1500, WIN_THRESHOLD=40 |
+| MINING | REGEN_MS={1:120000, 2:90000, 3:60000}, LANTERN_DURATION_MS=300000 |
+| OFFLINE | MIN_SECONDS=60 |
+| SYSTEM | SEASON_TICKS_PER_DAY=180, RANDOM_EVENT_CHANCE=0.3 |
+| COMBO | WINDOW_MS=2500, MULTIPLIER_STEP=0.25, MAX_MULTIPLIER=4.0 |
+| CRAFTING | MAX_QUEUE_PER_TYPE=3 |
 
 ---
 
-## 5. Alur Restoran & Crafting (Dapur Dewi Hidangan)
+## 18. UI Structure
 
-**Status:** Selesai Diimplementasikan ✅
+### 18.1 Sidebar (GameSidebar.jsx)
 
-Dapur Produksi (Restoran) memungkinkan pemain mengolah hasil panen menjadi hidangan bernilai tinggi melalui antrean produksi.
+- Collapsible (desktop) / slide-in (mobile)
+- HUD: coins, level, XP bar, energy bar, streak, combo, boosters
+- Season + weather display
+- Navigation: 6 tabs dengan active indicator + notification badge (produk siap panen/ternak/tambang)
+- Tombol: save, music toggle, SFX toggle
 
-### 5.1 Mekanik Restoran
-- **Papan Menu**: Pemain dapat melihat resep yang tersedia.
-- **Ketersediaan Bahan**: Resep hanya bisa dibuat (`startCrafting()`) jika bahan mentah di inventaris mencukupi.
-- **Dapur Saya**: Terdapat 3 slot antrean maksimal per jenis menu. Saat resep dibuat, bahan baku dikonsumsi dan item masak masuk ke slot antrean untuk durasi tertentu sebelum siap.
+### 18.2 Tab Pages
 
-### 5.2 Data Resep Makanan
+Setiap tab menggunakan `TabPage` wrapper + `GameAreaHeader`:
 
-| Resep | Waktu | Jual (💰) | XP | Bahan Baku Dibutuhkan |
-|---|---|---|---|---|
-| 🥣 Sup Wortel | 3 menit | 150 | 50 | 4x Wortel |
-| 🌾 Tepung Jagung| 3 menit | 200 | 60 | 4x Jagung |
-| 🧀 Keju | 5 menit | 400 | 120 | 3x Susu |
-| 🍰 Kue Stroberi | 10 menit | 800 | 200 | 3x Stroberi, 2x Telur, 1x Susu, 1x Tebu |
-| 🥕 Kue Wortel | 8 menit | 600 | 150 | 3x Wortel, 2x Gandum, 1x Telur, 1x Tebu |
-| 🥧 Kue Apel | 9 menit | 750 | 180 | 3x Apel, 2x Gandum, 1x Susu, 1x Tebu |
-| 🥮 Kue Manis | 6m 40s | 500 | 120 | 2x Gandum, 2x Susu, 2x Tebu |
-| 🍣 Sushi Ikan Mas| 4 menit | 300 | 100 | 2x Ikan Mas, 2x Tomat |
-| 🍢 Lele Bakar | 5 menit | 400 | 150 | 2x Lele, 1x Jagung |
-| 🧆 Takoyaki | 6 menit | 1.000 | 300 | 2x Cumi-cumi, 2x Telur |
+| Tab | Key Components |
+|-----|---------------|
+| Ladang | PlotGrid, SeedShop (shop sidebar) |
+| Ternak | Animal grid, feed button, shop sidebar |
+| Tambang | Node grid, tool inventory, shop sidebar |
+| Kota | TownPlaza (NPC), MarketBoard, OrderBoard, TownShop |
+| Restoran | CraftingWidget, customer tables, recipe list |
+| Profil | Stats, achievements, settings, wheel, tutorial |
 
-### 5.3 Pekerja: Koki Juna 👨‍🍳
-- Pemain bisa menyewa Koki Juna dari toko.
-- Setelah aktif (Auto: ON), pemain dapat memilih salah satu resep sebagai **Target Masak**. Koki Juna akan secara otomatis memasak resep tersebut selama bahan baku masih tersedia.
+### 18.3 Modals
 
----
-
-## 6. Sistem Pekerja Otomatis (Auto Workers)
-
-Pekerja otomatis melakukan tugas berulang tanpa interaksi pemain. Dipicu oleh `runAutoWorkers()` di game loop setiap 1 detik.
-
-| Pekerja | Harga Sewa (💰) | Deskripsi Aksi Otomatis |
-|---|---|---|
-| **Peternak Siti** | 500 | Mengumpulkan hasil dari hewan yang telah siap (100%). |
-| **Petani Budi** | 5.000 | Panen plot yang *ready* dan menanam ulang bibit terakhir. |
-| **Nelayan Mamat**| 12.000 | Memancing otomatis dengan probabilitas per detik. |
-| **Penambang** | 15.000 | Menambang node tambang yang *ready* secara otomatis. |
-| **Koki Juna** | 25.000 | Memasak resep spesifik asalkan bahan baku tersedia di Dapur. |
+- Prompt, Confirm, NPC Gift (unified via `Modals.jsx`)
+- Offline progress (`OfflineProgressModal.jsx`)
+- Tutorial overlay (`TutorialOverlay.jsx`)
 
 ---
 
-## 7. Sistem Cuaca & Efeknya
+## 19. Bug Fixes Applied (P1–P3)
 
-Cuaca berubah secara acak setiap **5 menit** (300 tick). Terdapat 5 cuaca: ☀️ Cerah, ⛅ Berawan, 🌧️ Hujan, ⛈️ Badai, 💨 Berangin. 
+### P1 — Critical
+1. **buyAnimal() gratis**: Ditambahkan validasi `safeCoins(state.coins) < price` di `createRanchingSlice.js:9`
+2. **processCraftingQueue() loop tak terbatas**: Diubah `for` loop jadi reverse iteration + `splice` di `createPlayerSlice.js:376`
+3. **rollMineralType() totalWeight overflow**: Ditambahkan guard `if (weights[k] < 0) weights[k] = 0` di `store/utils.js:32`
 
----
+### P2 — Persistence
+4. **totalTables persist**: Ditambahkan `totalTables` ke `partialize()` di `store.js:148`
+5. **tutorialStep persist**: Ditambahkan `tutorialStep` ke `partialize()` di `store.js:149`
+6. **Sound dual-storage**: AudioManager.readSettings() → default, sync via `syncFromStore()`
+7. **tickCustomers() persist**: Ditambahkan `activeCustomers` ke `partialize()`
 
-## 8. Sistem Musim (Seasons)
-
-Siklus musim berjalan 🌸 Spring → ☀️ Summer → 🍂 Autumn → ❄️ Winter. 
-Setiap musim berlangsung **7 hari in-game** (1 hari = 180 tick / 3 menit real-time).
-
----
-
-## 9. NPC & Friendship System
-
-Pemain dapat mengunjungi area **Kota** untuk memberikan hadiah kepada 3 NPC utama (Max Level 5). Pemberian item kesukaan mereka memberikan poin ganda.
-
-| NPC | Peran | Hadiah Kesukaan (Likes) |
-|---|---|---|
-| **👩‍🍳 Chef Maria** | Koki Kota | Tomat, Wortel, Susu |
-| **👴 Pak Tua Botan**| Ahli Tani | Tulip, Semangka, Apel |
-| **🐮 Paman Hadi** | Peternak | Jagung, Gandum |
+### P3 — UX / Code Quality
+8. **Sidebar badge area**: Ditambahkan `computeBadgeCounts()` selector
+9. **Summary ticker di GameSidebar**: Ditambahkan animated summary ticker component
+10. **Toast bahan kurang detail**: Improved error messages di `startCrafting()`
+11. **Loading/error state**: Ditambahkan di `store-provider.js` dengan 15s timeout
+12–19: Magic number → constants, NaN guards, logger config via ENV, dll.
 
 ---
 
-## 10. Sistem Pertambangan
+## 20. Roadmap
 
-Grid tambang terdiri dari 30 node. Pemain dapat menggunakan alat seperti **Bom Kecil/Besar** atau **Senter Goa**. Pemain juga dapat membeli Pickaxe yang lebih kuat.
+### Completed
+- Semua 6 area gameplay (Ladang, Ternak, Tambang, Pancing, Restoran, Kota)
+- Sistem cuaca & musim
+- 5 Auto Workers
+- Crafting & restaurant customers
+- NPC gift system
+- Achievement system (21 achievements)
+- Order board
+- Daily quests, streak, wheel of fortune
+- Offline progress
+- PWA support (manifest + service worker cleanup)
+- Audio (Web Audio SFX + Howler music)
 
-### 10.1 Data Mineral (Drop Rate)
-
-| Mineral | Emoji | Peluang | Jual (💰) |
-|---|---|---|---|
-| Batu | 🪨 | 80% | 5 |
-| Tembaga | 🔶 | 50% | 30 |
-| Besi | ⚫ | 30% | 80 |
-| Emas | 🟡 | 15% | 300 |
-| Berlian | 💎 | 5% | 1.000 |
-
-### 10.2 Upgrade Pickaxe
-
-- **Lv 1 (Cangkul Kayu)**: Regen rate 120 detik (Default)
-- **Lv 2 (Pickaxe Besi)**: Regen rate 90 detik (Harga: 300 Koin)
-- **Lv 3 (Pickaxe Emas)**: Regen rate 60 detik + Bonus Drop Rare Ore (Harga: 800 Koin)
-
----
-
-## 11. Sistem Memancing
-
-Memancing ikan ditangani oleh auto worker (Nelayan Mamat). Drops bervariasi dari Ikan Mas hingga Gurita Emas dengan rarity berbeda.
-
-### 11.1 Data Ikan
-
-| Ikan | Emoji | Peluang Drop | Harga (Normal) | Harga (Besar) |
-|---|---|---|---|---|
-| Ikan Mas | 🐟 | 40% | 80 | 160 |
-| Lele | 🐠 | 30% | 100 | 200 |
-| Ikan Badut | 🐡 | 15% | 200 | 400 |
-| Cumi-cumi | 🦑 | 10% | 350 | 700 |
-| Gurita Emas | 🐙 | 5% | 2.000 | 4.000 |
+### Future Possibilities
+- Multiplayer / leaderboard
+- Premium currency atau battle pass
+- Expanding recipe & crop data
+- Fishing minigame visual refinement
+- More events & seasonal content
+- Mobile app via PWA
 
 ---
 
-## 12. Sistem Audio
-
-Audio terbagi menjadi 2:
-- **Web Audio API**: Efek suara sintesis (SFX) yang di-generate via kode (harvest, plant, coin, levelup) sehingga sangat ringan.
-- **Howler.js**: Untuk musik latar (BGM) seperti `farm-theme.mp3`.
-Dapat di-toggle via Topbar.
-
----
-
-## 13. Sistem Save / Load
-
-Zustand Persist menyimulasikan "Auto-Save" ke `localStorage` dengan key `farm-game-storage`. Data yang di-persist termasuk: statistik (koin, level), inventaris, plot, data pekerja, data hewan, NPC, dan konfigurasi lainnya. Game memastikan backwards-compatibility lewat migrasi logika (normalize old state) ketika skema berubah.
-
----
-
-## 14. Event Spesial & Festival
-
-- **Random Events**: Ada peluang 30% pada awal hari baru untuk event khusus (Festival Panen: harga tanaman x2, dll).
-- **Streak System**: Bonus koin harian bila login beruntun.
-- **Lucky Spin (Wheel)**: Spin roda harian dengan peluang 5% untuk mendapatkan 5.000 Koin.
-
----
-
-## 15. Sistem UI & Responsivitas
-
-Antarmuka menggunakan arsitektur modular yang dibalut `ClientLayout` dan `GameSidebar`. Desain menggunakan **Glassmorphism** dengan palet cerah khas pertanian. Mendukung *responsive layout* secara adaptif pada ukuran desktop, tablet, dan ponsel. Telah disiapkan untuk PWA sehingga dapat diinstal layaknya native application.
-
----
-
-## 16. Roadmap Implementasi
-
-### ✅ Sudah Selesai
-- [x] Migrasi ke Next.js + React + Zustand dengan App Router
-- [x] Sistem farming lengkap (drag and drop, 11 jenis bibit tanaman)
-- [x] Sistem peternakan lengkap (6 jenis hewan ternak)
-- [x] Sistem pertambangan (alat, regenerasi node, 5 mineral)
-- [x] Crafting / Dapur Produksi (Koki Juna, 10 Resep Queueing)
-- [x] Auto workers (5 tipe pekerja otomatis)
-- [x] Fitur kota (3 NPC Friendship, Market Board, Wheel Spin)
-- [x] Sistem Musim (4 musim) & Cuaca (5 cuaca)
-- [x] Audio system (synthesized SFX + BGM)
-- [x] PWA support, Responsive layout, Auto-save
-
-### 🚧 Dalam Pengembangan / Tertunda
-- [x] Order Board (papan pesanan dinamik)
-- [ ] Mini-game memancing interaktif
-- [ ] Tutorial system untuk new players
-
-### 📋 Rencana Masa Depan
-- [ ] Leaderboard & sistem multiplayer sederhana
-- [ ] Seasonal events khusus & Guild/Co-op
-- [ ] Achievement system
-- [ ] Cross-platform save sync (Cloud Save)
-
----
-
-## 17. Rencana Pembangunan Fitur (Plans)
-
-Bagian ini memaparkan rencana mendetail *(technical design/plan)* untuk pengerjaan fitur-fitur yang masih dalam tahap antrean pengembangan.
-
-### Plan 1: Order Board (Papan Pesanan Dinamis)
-**Tujuan**: Memberikan variasi cara pemain mendapatkan koin/XP dengan memenuhi kombinasi barang permintaan (pesanan), bukan sekadar menjual hasil panen lewat tombol "Sell All".
-- **State Store (`store.js`)**: 
-  - Tambahkan array `activeOrders: []`. Setiap order memiliki `{ id, itemsRequired: { cropId: qty, ... }, rewardCoins, rewardXP, expiryTimer }`.
-  - Fungsi: `generateOrder()`, `fulfillOrder(orderId)`, `removeExpiredOrders()`.
-- **Game Loop (`store-provider.js`)**: 
-  - Periksa setiap beberapa siklus tick (misal setiap 60 detik) untuk memanggil `generateOrder()` jika `activeOrders.length < maxOrders`.
-- **UI (`TabTown.jsx` atau Route Khusus `app/pesanan`)**:
-  - Tampilkan UI Kanban/Board yang memuat kartu pesanan.
-  - Kartu memvisualisasikan *progress bar* jumlah bahan di inventory dibanding kebutuhan pesanan. Tombol "Kirim Pesanan" aktif bila kriteria terpenuhi.
-- *(Note)*: Data template pesanan *(Tier 1-3)* sudah dikoding di `ORDER_TEMPLATES` dalam file `constants.js`/`recipes.js` dan siap diintegrasikan.
-
-### Plan 2: Mini-game Memancing Interaktif
-**Tujuan**: Mengubah memancing dari sekadar pasif (menunggu Nelayan Mamat) menjadi kegiatan aktif pemain dengan mini-game.
-- **Konsep Mekanik**: 
-  - Mirip game *Stardew Valley*. Bar hijau yang bisa digerakkan naik turun (diklik/tahan) untuk mencocokkan dengan posisi icon ikan yang bergerak tak beraturan.
-- **Komponen (`components/game/FishingMiniGame.jsx`)**:
-  - Gunakan `requestAnimationFrame` untuk menangani physics gerak bar dan ikon ikan.
-  - State lokal: `fishPosition`, `catchBarPosition`, `progress` (0-100%).
-- **Integrasi Store**: 
-  - Tambahkan method `startFishingMiniGame()` yang mengatur status UI. Saat menang (progress 100%), panggil `rewardFish(rarity)` lalu tutup modal.
-
-### Plan 3: Sistem Tutorial untuk Pemain Baru
-**Tujuan**: Menurunkan *learning curve* dengan panduan on-boarding yang memandu step-by-step.
-- **State (`store.js`)**: 
-  - Tambahkan state `tutorialStep` (default: 0). Nilai -1 jika tutorial selesai/di-skip.
-- **Komponen (`components/ui/TutorialOverlay.jsx`)**:
-  - Komponen pop-over *absolute* yang menargetkan bounding box elemen UI tertentu berbekal React `ref` atau `id` yang diatur via `dataset`.
-  - **Langkah 1**: Tunjuk ke sidebar bibit -> "Beli Bibit Wortel".
-  - **Langkah 2**: Tunjuk ke plot kosong -> "Tanam Wortel di sini".
-  - **Langkah 3**: Berikan growth booster instan (khusus tutorial) -> "Panen Wortel".
-  - **Langkah 4**: Buka inventory -> "Jual hasil panen".
-- Kondisi transisi antar *step* dijalankan secara otomatis saat listener di Zustand mendeteksi aksi terpenuhi (misal inventory bertambah karena panen).
-
-### Plan 4: Cloud Save & Leaderboard
-**Tujuan**: Menghindari kehilangan save data jika `localStorage` terhapus, dan memantik jiwa kompetitif.
-- **Backend (Supabase / Firebase)**:
-  - Gunakan autentikasi simpel (Google/Email) atau anonim (UUID mapping).
-  - Skema DB: `users (id, name, level, total_coins, state_json)`.
-- **Mekanik Sinkronisasi**:
-  - Tombol "Sync to Cloud" di tab Profil.
-  - Saat dipencet, merangkai current Zustand state, mengonversinya menjadi base64/JSON, lalu update ke backend DB.
-  - Fetch 50 top level pemain dari database untuk ditampilkan di halaman "Papan Peringkat".
-
----
-*Dokumen ini adalah living document dan akan diperbarui seiring perkembangan game. Terakhir diupdate: Juli 2026.*
+*Dokumen ini mencerminkan kondisi kode aktual per 20 Juli 2026 setelah implementasi perbaikan P1–P3, persist fix, UX fix, dan code quality enhancement. Build lulus dengan 0 error.*

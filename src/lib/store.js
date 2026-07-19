@@ -145,6 +145,8 @@ export const useGameStore = create(
         stats: state.stats,
         sessionActions: state.sessionActions,
         weatherEffects: state.weatherEffects,
+        totalTables: state.totalTables,
+        tutorialStep: state.tutorialStep,
       }),
       merge: (persistedState, currentState) => {
         let merged = { ...currentState, ...persistedState };
@@ -203,6 +205,10 @@ export const useGameStore = create(
 
         if (!Array.isArray(merged.activeCustomers)) {
           merged.activeCustomers = [];
+        }
+
+        if (!Number.isFinite(merged.totalTables) || merged.totalTables < 4) {
+          merged.totalTables = 4;
         }
 
         if (!merged.workerAutoMigrated) {

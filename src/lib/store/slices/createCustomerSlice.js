@@ -4,12 +4,8 @@ import { safePositiveNumber } from '../utils';
 import toast from 'react-hot-toast';
 
 export const createCustomerSlice = (set, get) => ({
-  // Array of active customers in the restaurant
-  // Each object: { id, typeId, name, emoji, recipeId, tableId, patience, maxPatience, spawnTime }
-  activeCustomers: [],
-  
   // Total tables available in the restaurant (can be upgraded later)
-  totalTables: 4,
+  // Initialized in initialState.js and persisted via partialize
 
   upgradeTables: () => {
     const state = get();
@@ -124,16 +120,14 @@ export const createCustomerSlice = (set, get) => ({
 
     let changed = false;
     const updatedCustomers = [];
+    let leftCount = 0;
 
     state.activeCustomers.forEach(customer => {
-      // Kurangi kesabaran
       const newPatience = customer.patience - deltaTime;
       
       if (newPatience <= 0) {
-        // Pelanggan marah dan pergi
         changed = true;
-        // Opsional: kurangi reputasi/xp jika ada
-        toast.error(`${customer.name} marah karena terlalu lama!`, { icon: '😡' });
+        leftCount++;
       } else {
         updatedCustomers.push({ ...customer, patience: newPatience });
         if (newPatience !== customer.patience) changed = true;
@@ -142,6 +136,9 @@ export const createCustomerSlice = (set, get) => ({
 
     if (changed) {
       set({ activeCustomers: updatedCustomers });
+      if (leftCount > 0) {
+        toast.error(`${leftCount} pelanggan pergi karena kehabisan kesabaran!`, { icon: '😡' });
+      }
     }
   }
 });

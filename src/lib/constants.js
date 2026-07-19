@@ -1,4 +1,27 @@
 export const GAME_CONSTANTS = {
+  GRID: {
+    PLOTS: 30,
+    MINING_NODES: 30,
+    ANIMAL_SLOTS: 36,
+  },
+  LEVEL: {
+    XP_PER_LEVEL: 100,
+    MAX_ENERGY: 200,
+    MAX_ENERGY_PER_LEVEL: 10,
+  },
+  STARTING: {
+    COINS: 100,
+    ENERGY: 100,
+  },
+  CHANCES: {
+    WORM_DROP: 0.2,
+    FERTILIZER_DROP: 0.15,
+    AUTO_FISHER_CATCH: 0.1,
+    WATER_BOOST: 0.18,
+    FISHER_TICK: 0.1,
+    MINER_AUTO_TICK: 0.2,
+    FEED_BONUS: 0.25,
+  },
   COSTS: {
     WORKER_FARMER: 5000,
     WORKER_RANCHER: 500,
@@ -13,7 +36,7 @@ export const GAME_CONSTANTS = {
     COIN_BOOSTER: 2,
   },
   TIMERS: {
-    FARM_TICK_RATE: 1000, // interval in ms for farm plots
+    FARM_TICK_RATE: 1000,
   },
   FISHING: {
     WAIT_MIN_MS: 2000,
@@ -22,9 +45,38 @@ export const GAME_CONSTANTS = {
     MINIGAME_MAX_TIME_MS: 6000,
     WIN_THRESHOLD: 40,
     TICK_MS: 50,
+    CATCH_EVERY_SECS: 10,
+  },
+  MINING: {
+    REGEN_MS: { 1: 120000, 2: 90000, 3: 60000 },
+    LANTERN_DURATION_MS: 300000,
+    LANTERN_REGEN_MULT: 0.5,
+  },
+  OFFLINE: {
+    MIN_SECONDS: 60,
+    FISHER_CATCH_EVERY_SECS: 10,
+    MINER_MINE_EVERY_SECS: 120,
   },
   SYSTEM: {
     SEASON_TICKS_PER_DAY: 180,
     RANDOM_EVENT_CHANCE: 0.3,
-  }
+    TICK_INTERVAL_MS: 1000,
+  },
+  COMBO: {
+    WINDOW_MS: 2500,
+    MULTIPLIER_STEP: 0.25,
+    MAX_MULTIPLIER: 4.0,
+    THRESHOLD: 3,
+  },
+  CRAFTING: {
+    MAX_QUEUE_PER_TYPE: 3,
+  },
+  XP: {
+    HARVEST: 10,
+    MINE: 15,
+    FISH: 15,
+    COLLECT: 8,
+    FEED_BONUS: 3,
+    COOK: 0,
+  },
 };

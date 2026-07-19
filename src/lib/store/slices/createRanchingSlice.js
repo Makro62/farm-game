@@ -1,9 +1,14 @@
 import toast from 'react-hot-toast';
 import { ANIMAL_FEED } from '@/lib/data/shop';
+import { GAME_CONSTANTS } from '@/lib/constants';
+import { safeCoins } from '../utils';
 
 export const createRanchingSlice = (set, get) => ({
-  buyAnimal: (animalType, produceTime) => {
+  buyAnimal: (animalType, price, produceTime) => {
+    const state = get();
+    if (safeCoins(state.coins) < price) return false;
     set((state) => ({
+      coins: safeCoins(state.coins) - price,
       animals: [
         ...state.animals,
         {
@@ -12,11 +17,12 @@ export const createRanchingSlice = (set, get) => ({
           status: 'producing',
           lastCollected: Date.now(),
           produceTime,
-          fed: false, // track feeding status
+          fed: false,
         }
       ],
       stats: { ...state.stats, totalAnimalsOwned: (state.stats?.totalAnimalsOwned || 0) + 1 },
     }));
+    return true;
   },
 
   // ===== Fase B: Sistem Pakan Hewan (Pertanian → Ternak) =====
@@ -61,12 +67,11 @@ export const createRanchingSlice = (set, get) => ({
       return false; // UI handles toast
     }
 
-    // ===== Drop Pupuk Kandang 15% chance (Ternak → Ladang) =====
-    const dropsFertilizer = Math.random() < 0.15;
+    const dropsFertilizer = Math.random() < GAME_CONSTANTS.CHANCES.FERTILIZER_DROP;
 
     // ===== Fase B: Bonus produksi jika hewan sudah diberi makan =====
     const wasFed = animal.fed === true;
-    const bonusDrop = wasFed && Math.random() < 0.25; // 25% bonus drop jika kenyang
+    const bonusDrop = wasFed && Math.random() < GAME_CONSTANTS.CHANCES.FEED_BONUS;
 
     set((state) => ({
       animals: state.animals.map(a => 
@@ -81,7 +86,7 @@ export const createRanchingSlice = (set, get) => ({
       }
     }));
 
-    get().addXP(8 + (wasFed ? 3 : 0)); // Bonus XP jika hewan kenyang
+    get().addXP(GAME_CONSTANTS.XP.COLLECT + (wasFed ? GAME_CONSTANTS.XP.FEED_BONUS : 0));
     get().progressQuest('collect', productType, 1 + (bonusDrop ? 1 : 0));
     const combo = get().registerCombo?.();
     if (combo?.count >= 3) {
@@ -116,9 +121,7 @@ export const createRanchingSlice = (set, get) => ({
       const idx1 = newAnimals.findIndex(a => a.id === id1);
       const idx2 = newAnimals.findIndex(a => a.id === id2);
       if (idx1 !== -1 && idx2 !== -1) {
-        const temp = newAnimals[idx1];
-        newAnimals[idx1] = newAnimals[idx2];
-        newAnimals[idx2] = temp;
+        [newAnimals[idx1], newAnimals[idx2]] = [newAnimals[idx2], newAnimals[idx1]];
       }
       return { animals: newAnimals };
     });
