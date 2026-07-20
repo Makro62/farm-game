@@ -1,6 +1,8 @@
+"use client";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/lib/store";
-import { CropIcon } from "../ui/CropIcon";
+import { CropIcon } from "@/components/ui/CropIcon";
 import { cn } from "@/lib/utils";
 import { useFarming } from "@/lib/hooks/useFarming";
 

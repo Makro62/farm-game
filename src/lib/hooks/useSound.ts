@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import audioManager, { type SoundName, type MusicName } from '../audio';
+import audioManager, { type SoundName, type MusicName } from '@/lib/audio';
 
 /**
  * Hook to play a synthesized SFX.

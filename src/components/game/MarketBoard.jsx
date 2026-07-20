@@ -1,8 +1,8 @@
 "use client";
 
 import { useGameStore } from "@/lib/store";
-import { CROP_DATA } from "../../lib/data/crops";
-import { getCropEmoji } from "../../lib/data/item-helpers";
+import { CROP_DATA } from "@/lib/data/crops";
+import { getCropEmoji } from "@/lib/data/item-helpers";
 import toast from "react-hot-toast";
 
 export function MarketBoard() {

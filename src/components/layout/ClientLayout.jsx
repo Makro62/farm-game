@@ -5,10 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useGameStore } from "@/lib/store";
 import { NAV_TABS } from "@/lib/nav";
-import GameSidebar from "@/components/GameSidebar";
-import Modals from "@/components/Modals";
+import GameSidebar from "@/components/layout/GameSidebar";
+import Modals from "@/components/layout/Modals";
 import TutorialOverlay from "@/components/ui/TutorialOverlay";
-import NotificationManager from "@/components/NotificationManager";
+import NotificationManager from "@/components/layout/NotificationManager";
 import { cn } from "@/lib/utils";
 
 export default function ClientLayout({ children }) {

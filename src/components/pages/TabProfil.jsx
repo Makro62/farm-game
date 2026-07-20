@@ -14,8 +14,8 @@ import { MINERALS } from "@/lib/data/minerals";
 import { RECIPES } from "@/lib/data/recipes";
 import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES } from "@/lib/data/achievements";
 import { SEASON_META } from "@/lib/nav";
-import TabPage from "./ui/TabPage";
-import Button from "./ui/Button";
+import TabPage from "@/components/ui/TabPage";
+import Button from "@/components/ui/Button";
 import {
   Coins,
   Star,

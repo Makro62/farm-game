@@ -1,4 +1,4 @@
-import { ACHIEVEMENTS } from "../../data/achievements";
+import { ACHIEVEMENTS } from "@/lib/data/achievements";
 
 export const createAchievementSlice = (set, get) => ({
   // ===== CHECK & UNLOCK =====

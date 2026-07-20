@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import { useGameStore, useInventory } from "@/lib/store";
 import { FISHES } from "@/lib/data/fishes";
-import { NPC_LIST } from "../../lib/data/npcs";
-import { SHOP_BUILDINGS, SHOP_DECORATIONS } from "../../lib/data/shop";
+import { NPC_LIST } from "@/lib/data/npcs";
+import { SHOP_BUILDINGS, SHOP_DECORATIONS } from "@/lib/data/shop";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import toast from "react-hot-toast";
 

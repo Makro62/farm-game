@@ -3,15 +3,15 @@
 import { useGameStore } from "@/lib/store";
 import { useTown } from "@/lib/hooks/useTown";
 import { NPC_LIST } from "@/lib/data/npcs";
-import { GameAreaHeader, GameActionButton } from "./ui/GameAreaHeader";
-import { MarketBoard } from "./game/MarketBoard";
-import { QuestPanel } from "./game/QuestPanel";
-import { TownShop } from "./game/TownShop";
-import { TownPlaza, FishingLake, FishCatchBoard } from "./game/TownPlaza";
-import { ProcessingPlant } from "./game/ProcessingPlant";
-import { OrderBoard } from "./game/OrderBoard";
-import TabPage, { GameStage } from "./ui/TabPage";
-import SideDock from "./ui/SideDock";
+import { GameAreaHeader, GameActionButton } from "@/components/ui/GameAreaHeader";
+import { MarketBoard } from "@/components/game/MarketBoard";
+import { QuestPanel } from "@/components/game/QuestPanel";
+import { TownShop } from "@/components/game/TownShop";
+import { TownPlaza, FishingLake, FishCatchBoard } from "@/components/game/TownPlaza";
+import { ProcessingPlant } from "@/components/game/ProcessingPlant";
+import { OrderBoard } from "@/components/game/OrderBoard";
+import TabPage, { GameStage } from "@/components/ui/TabPage";
+import SideDock from "@/components/ui/SideDock";
 
 export default function TabTown() {
   const {

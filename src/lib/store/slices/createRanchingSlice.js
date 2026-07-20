@@ -1,7 +1,7 @@
 import { ANIMAL_FEED } from "@/lib/data/shop";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import { getShopAnimal } from "@/lib/data/item-helpers";
-import { safeCoins } from "../utils";
+import { safeCoins } from "@/lib/store/utils";
 
 export const createRanchingSlice = (set, get) => ({
   buyAnimal: (animalType, price, produceTime) => {

@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/lib/store";
-import { RECIPES, canCook as canCookRecipe } from "../lib/data/recipes";
-import { getItemEmoji, getItemDisplayName } from "../lib/data/item-helpers";
-import { CraftingWidget } from "./ui/CraftingWidget";
-import { GameAreaHeader, GameActionButton } from "./ui/GameAreaHeader";
-import { QuestPanel } from "./game/QuestPanel";
+import { RECIPES, canCook as canCookRecipe } from "@/lib/data/recipes";
+import { getItemEmoji, getItemDisplayName } from "@/lib/data/item-helpers";
+import { CraftingWidget } from "@/components/ui/CraftingWidget";
+import { GameAreaHeader, GameActionButton } from "@/components/ui/GameAreaHeader";
+import { QuestPanel } from "@/components/game/QuestPanel";
 import { GAME_CONSTANTS } from "@/lib/constants";
-import TabPage, { GameStage } from "./ui/TabPage";
-import SideDock from "./ui/SideDock";
+import TabPage, { GameStage } from "@/components/ui/TabPage";
+import SideDock from "@/components/ui/SideDock";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
 
 function MenuBoard() {

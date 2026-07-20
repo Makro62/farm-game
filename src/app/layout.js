@@ -1,8 +1,8 @@
 import "@/styles/globals.css";
 import { GameProvider } from "@/lib/store-provider";
 import { Toaster } from "react-hot-toast";
-import ClientLayout from "@/components/ClientLayout";
-import ClearServiceWorker from "@/components/ClearServiceWorker";
+import ClientLayout from "@/components/layout/ClientLayout";
+import ClearServiceWorker from "@/components/layout/ClearServiceWorker";
 
 export const metadata = {
   title: "🌾 Farm Tycoon - Game Bertani Seru!",

@@ -1,4 +1,4 @@
-import TabAnimal from "@/components/TabAnimal";
+import TabAnimal from "@/components/pages/TabAnimal";
 
 export default function PeternakanPage() {
   return <TabAnimal />;

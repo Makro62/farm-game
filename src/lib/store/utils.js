@@ -1,6 +1,6 @@
-import { SHOP_SEEDS } from "../data/crops";
-import { SHOP_ANIMALS } from "../data/shop";
-import { GAME_CONSTANTS } from "../constants";
+import { SHOP_SEEDS } from "@/lib/data/crops";
+import { SHOP_ANIMALS } from "@/lib/data/shop";
+import { GAME_CONSTANTS } from "@/lib/constants";
 
 export const MINING_REGEN_MS = GAME_CONSTANTS.MINING.REGEN_MS;
 

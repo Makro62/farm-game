@@ -1,4 +1,4 @@
-import { getMiningRegenMs, rollMineralType, isWorkerActive } from "../utils";
+import { getMiningRegenMs, rollMineralType, isWorkerActive } from "@/lib/store/utils";
 import { SHOP_MINING } from "@/lib/data/shop";
 import { GAME_CONSTANTS } from "@/lib/constants";
 

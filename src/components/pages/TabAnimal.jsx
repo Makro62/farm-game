@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import { useGameStore } from "@/lib/store";
-import { getAnimalEmoji, getShopAnimal } from "../lib/data/item-helpers";
-import { SHOP_ANIMALS, ANIMAL_FEED } from "../lib/data/shop";
+import { getAnimalEmoji, getShopAnimal } from "@/lib/data/item-helpers";
+import { SHOP_ANIMALS, ANIMAL_FEED } from "@/lib/data/shop";
 import { getAnimalProduceTime } from "@/lib/store/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShopItemCard, ShopSectionTitle } from "./ui/ShopItemCard";
-import { AnimalIcon } from "./ui/AnimalIcon";
-import { GameAreaHeader, GameActionButton } from "./ui/GameAreaHeader";
-import { MarketBoard } from "./game/MarketBoard";
-import { QuestPanel } from "./game/QuestPanel";
+import { ShopItemCard, ShopSectionTitle } from "@/components/ui/ShopItemCard";
+import { AnimalIcon } from "@/components/ui/AnimalIcon";
+import { GameAreaHeader, GameActionButton } from "@/components/ui/GameAreaHeader";
+import { MarketBoard } from "@/components/game/MarketBoard";
+import { QuestPanel } from "@/components/game/QuestPanel";
 import { GAME_CONSTANTS } from "@/lib/constants";
-import TabPage, { GameStage } from "./ui/TabPage";
-import SideDock from "./ui/SideDock";
+import TabPage, { GameStage } from "@/components/ui/TabPage";
+import SideDock from "@/components/ui/SideDock";
 import { useRanching } from "@/lib/hooks/useRanching";
 
 export default function TabAnimal() {

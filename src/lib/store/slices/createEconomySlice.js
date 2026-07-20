@@ -1,7 +1,7 @@
-import { getItemSellPrice, isSellableProduce } from "../../data/item-helpers";
-import { SHOP_SEEDS } from "../../data/crops";
-import { FISHES } from "../../data/fishes";
-import { safeCoins, safePositiveNumber } from "../utils";
+import { getItemSellPrice, isSellableProduce } from "@/lib/data/item-helpers";
+import { SHOP_SEEDS } from "@/lib/data/crops";
+import { FISHES } from "@/lib/data/fishes";
+import { safeCoins, safePositiveNumber } from "@/lib/store/utils";
 
 export const createEconomySlice = (set, get) => ({
   buyItem: (itemId, amount, unitPrice) => {

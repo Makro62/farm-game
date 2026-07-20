@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { NPC_LIST } from "@/lib/data/npcs";
 import { getCropEmoji } from "@/lib/data/item-helpers";
-import Button from "./ui/Button";
-import QtyControl from "./ui/QtyControl";
+import Button from "@/components/ui/Button";
+import QtyControl from "@/components/ui/QtyControl";
 import toast from "react-hot-toast";
 import OfflineProgressModal from "./OfflineProgressModal";
 

@@ -1,6 +1,6 @@
 import { CUSTOMERS } from "@/lib/data/customers";
 import { RECIPES } from "@/lib/data/recipes";
-import { safePositiveNumber } from "../utils";
+import { safePositiveNumber } from "@/lib/store/utils";
 
 export const createCustomerSlice = (set, get) => ({
   upgradeTables: () => {

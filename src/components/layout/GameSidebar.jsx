@@ -23,7 +23,7 @@ import { useGameStore } from "@/lib/store";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import { NAV_TABS, SEASON_META } from "@/lib/nav";
 import audioManager from "@/lib/audio";
-import { AnimatedCounter } from "./ui/AnimatedCounter";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { cn } from "@/lib/utils";
 
 const COLLAPSE_KEY = "farm-shell-collapsed";

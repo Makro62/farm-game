@@ -3,7 +3,7 @@
 import { useGameStore } from "@/lib/store";
 import { getCropEmoji } from "@/lib/data/item-helpers";
 import { motion, AnimatePresence } from "framer-motion";
-import Button from "./ui/Button";
+import Button from "@/components/ui/Button";
 
 export default function OfflineProgressModal() {
   const offlineReport = useGameStore((state) => state.offlineReport);

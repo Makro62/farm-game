@@ -1,5 +1,7 @@
+"use client";
+
 import { useGameStore, useInventory } from "@/lib/store";
-import { getCropEmoji } from "../../lib/data/item-helpers";
+import { getCropEmoji } from "@/lib/data/item-helpers";
 import { useState, useEffect } from "react";
 
 function stripPrefix(key) {

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useGameStore, useInventory } from "@/lib/store";
 import { SHOP_BAIT, SHOP_BUILDINGS, SHOP_DECORATIONS } from "@/lib/data/shop";
-import { ShopItemCard, ShopSectionTitle } from "../ui/ShopItemCard";
-import { GameActionButton } from "../ui/GameAreaHeader";
+import { ShopItemCard, ShopSectionTitle } from "@/components/ui/ShopItemCard";
+import { GameActionButton } from "@/components/ui/GameAreaHeader";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import toast from "react-hot-toast";
 

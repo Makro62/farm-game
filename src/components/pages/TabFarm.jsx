@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { useGameStore } from "@/lib/store";
-import { GameAreaHeader, GameActionButton } from "./ui/GameAreaHeader";
-import { SeedShop } from "./game/SeedShop";
-import { PlotGrid } from "./game/PlotGrid";
-import { QuestPanel } from "./game/QuestPanel";
-import { MarketBoard } from "./game/MarketBoard";
+import { GameAreaHeader, GameActionButton } from "@/components/ui/GameAreaHeader";
+import { SeedShop } from "@/components/game/SeedShop";
+import { PlotGrid } from "@/components/game/PlotGrid";
+import { QuestPanel } from "@/components/game/QuestPanel";
+import { MarketBoard } from "@/components/game/MarketBoard";
 import { SEASON_META } from "@/lib/nav";
 import { getCropGrowthSpeed } from "@/lib/utils/economy";
-import TabPage, { GameStage } from "./ui/TabPage";
-import SideDock from "./ui/SideDock";
-import ToolChip from "./ui/ToolChip";
+import TabPage, { GameStage } from "@/components/ui/TabPage";
+import SideDock from "@/components/ui/SideDock";
+import ToolChip from "@/components/ui/ToolChip";
 import { useFarming } from "@/lib/hooks/useFarming";
 
 const FARM_TOOLS = [

@@ -1,9 +1,9 @@
-import { RECIPES, ORDER_TEMPLATES } from "../../data/recipes";
-import { FISHES } from "../../data/fishes";
-import { SHOP_SEEDS } from "../../data/crops";
-import { SHOP_BAIT } from "../../data/shop";
-import { GAME_CONSTANTS } from "../../constants";
-import { safeCoins, safePositiveNumber } from "../utils";
+import { RECIPES, ORDER_TEMPLATES } from "@/lib/data/recipes";
+import { FISHES } from "@/lib/data/fishes";
+import { SHOP_SEEDS } from "@/lib/data/crops";
+import { SHOP_BAIT } from "@/lib/data/shop";
+import { GAME_CONSTANTS } from "@/lib/constants";
+import { safeCoins, safePositiveNumber } from "@/lib/store/utils";
 
 const INV = {
   has: (cat, itemId) => {
