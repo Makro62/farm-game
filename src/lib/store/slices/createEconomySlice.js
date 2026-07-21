@@ -51,7 +51,8 @@ export const createEconomySlice = (set, get) => ({
     const qty = Math.min(have, Math.max(0, Number(quantity) || 0));
     if (qty <= 0) return 0;
 
-    let sellPrice = getItemSellPrice(itemId);
+    const quality = state.inventoryByCategory[cat]?.[itemId]?.quality || "normal";
+    let sellPrice = getItemSellPrice(itemId, { quality });
     if (sellPrice == null || !Number.isFinite(sellPrice)) return 0;
 
     const todayPrices = state.todayPrices || {};
@@ -92,7 +93,7 @@ export const createEconomySlice = (set, get) => ({
     for (const [cat, items] of Object.entries(state.inventoryByCategory)) {
       for (const [itemId, data] of Object.entries(items)) {
         if (!isSellableProduce(itemId)) continue;
-        let sellPrice = getItemSellPrice(itemId);
+        let sellPrice = getItemSellPrice(itemId, { quality: data.quality || "normal" });
         if (sellPrice == null) continue;
         if (todayPrices[itemId]) sellPrice = todayPrices[itemId];
         if (

@@ -5,7 +5,7 @@ export const CUSTOMERS = [
     emoji: "🧔",
     basePatience: 45000,
     tipMultiplier: 1.2,
-    preferences: ["sup_wortel", "roti_gandum", "jus_tomat"],
+    preferences: ["sup_wortel", "roti_gandum", "jus_semangka"],
   },
   {
     id: "gadis_kecil",
@@ -13,7 +13,7 @@ export const CUSTOMERS = [
     emoji: "👧",
     basePatience: 30000,
     tipMultiplier: 1.0,
-    preferences: ["susu_stroberi", "kue_stroberi", "pancake"],
+    preferences: ["jus_semangka", "kue_stroberi", "pancake"],
   },
   {
     id: "nenek",
@@ -29,7 +29,7 @@ export const CUSTOMERS = [
     emoji: "🧑‍🌾",
     basePatience: 40000,
     tipMultiplier: 1.1,
-    preferences: ["keju", "sushi_emas", "jus_tomat"],
+    preferences: ["keju", "sushi_emas", "kentang_goreng"],
   },
   {
     id: "pengusaha",

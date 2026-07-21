@@ -203,25 +203,14 @@ export const createSystemSlice = (set, get) => ({
           xp: 0,
           xpToNext: 200,
           stamina: 100,
-          maxStamina: 100,
-          staminaRegenPerHour: 10,
           happiness: 80,
-          maxHappiness: 100,
           wagePerDay: 50,
           daysEmployed: 0,
           totalWagesPaid: 0,
           loyalty: 60,
           skills: skillMap[type] || {},
-          specialTrait: null,
           isWorking: true,
           isAutoMode: true,
-          schedule: {
-            workStart: 6,
-            workEnd: 18,
-            lunchBreak: 12,
-            sleepStart: 22,
-            sleepEnd: 5,
-          },
         },
       },
     });
@@ -292,10 +281,46 @@ export const createSystemSlice = (set, get) => ({
           current = seasons[(idx + 1) % 4];
         }
         setTimeout(() => get().updateMarket?.(), 0);
+        
+        // --- WORKER WAGES & MORALE ---
+        let currentCoins = state.coins;
+        const newWorkers = { ...state.workers };
+        let wageNotifications = [];
+        
+        Object.keys(newWorkers).forEach((type) => {
+          const worker = newWorkers[type];
+          if (worker?.hired) {
+            if (currentCoins >= worker.wagePerDay) {
+              currentCoins -= worker.wagePerDay;
+              worker.daysEmployed += 1;
+              worker.totalWagesPaid += worker.wagePerDay;
+              // Random event: worker morale drops if they work too many days without bonus
+              if (Math.random() < 0.2) {
+                worker.happiness = Math.max(0, worker.happiness - 5);
+              }
+              if (worker.happiness < 30) {
+                 wageNotifications.push(`⚠️ ${worker.name} tidak bahagia! Performanya menurun.`);
+              }
+            } else {
+              // Not enough money to pay wage
+              worker.isWorking = false;
+              worker.happiness = Math.max(0, worker.happiness - 30);
+              worker.loyalty = Math.max(0, worker.loyalty - 20);
+              wageNotifications.push(`🚨 ${worker.name} mogok kerja! Gaji harian (${worker.wagePerDay}💰) tidak terbayar.`);
+            }
+          }
+        });
+        
+        setTimeout(() => {
+          wageNotifications.forEach(msg => get().enqueueNotification(msg, { type: "error" }));
+        }, 100);
+
         return {
           season: { current, day, tick },
           activeEvent,
           energy: state.maxEnergy || 100,
+          coins: currentCoins,
+          workers: newWorkers,
         };
       }
       return { season: { current, day, tick }, activeEvent };

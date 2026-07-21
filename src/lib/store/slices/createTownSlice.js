@@ -8,25 +8,33 @@ export const createTownSlice = (set, get) => ({
     const newPrices = {};
     const newTrend = {};
     const crops = [
-      "wortel",
-      "jagung",
-      "tomat",
-      "stroberi",
-      "semangka",
-      "jamur",
-      "nanas",
-      "labu",
-      "kentang",
-      "gandum",
-      "tebu",
-      "tulip",
-      "apel",
+      "wortel", "jagung", "tomat", "stroberi", "semangka",
+      "jamur", "nanas", "labu", "kentang", "gandum",
+      "tebu", "tulip", "apel",
     ];
-    crops.forEach((cropId) => {
+    
+    // Pick one crop to boom and one to crash (randomly)
+    const boomIndex = Math.floor(Math.random() * crops.length);
+    let crashIndex = Math.floor(Math.random() * crops.length);
+    while (crashIndex === boomIndex) {
+      crashIndex = Math.floor(Math.random() * crops.length);
+    }
+    
+    crops.forEach((cropId, index) => {
       const base = getItemSellPrice(cropId) || 20;
-      const fluctuation = 0.7 + Math.random() * 0.6;
+      let fluctuation = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
+      
+      if (index === boomIndex) {
+        fluctuation = 2.0 + Math.random(); // 2.0 to 3.0 (Boom!)
+      } else if (index === crashIndex) {
+        fluctuation = 0.3 + Math.random() * 0.2; // 0.3 to 0.5 (Crash!)
+      }
+
       newPrices[cropId] = Math.round(base * fluctuation);
-      newTrend[cropId] = newPrices[cropId] > base ? "up" : "down";
+      
+      if (index === boomIndex) newTrend[cropId] = "boom";
+      else if (index === crashIndex) newTrend[cropId] = "crash";
+      else newTrend[cropId] = newPrices[cropId] > base ? "up" : "down";
     });
     set({ todayPrices: newPrices, marketTrend: newTrend });
   },

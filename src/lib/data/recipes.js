@@ -58,6 +58,17 @@ export const RECIPES = [
 
   // ===== TIER 2 (Level 5+) =====
   {
+    id: "kentang_goreng",
+    name: "Kentang Goreng",
+    emoji: "🍟",
+    type: "kitchen",
+    time: 150,
+    price: 300,
+    xp: 80,
+    req: { "crops.kentang": 3 },
+    unlockLevel: 5,
+  },
+  {
     id: "keju",
     name: "Keju",
     emoji: "🧀",
@@ -134,6 +145,17 @@ export const RECIPES = [
   },
 
   // ===== TIER 3 (Level 10+) =====
+  {
+    id: "jus_semangka",
+    name: "Jus Semangka",
+    emoji: "🍉",
+    type: "kitchen",
+    time: 120,
+    price: 350,
+    xp: 90,
+    req: { "crops.semangka": 2, "processed.gula": 1 },
+    unlockLevel: 10,
+  },
   {
     id: "kue_manis",
     name: "Kue Manis",
@@ -331,6 +353,8 @@ export function getItemCategory(itemId) {
     kue_stroberi: "cooked",
     sushi_emas: "cooked",
     lele_bakar: "cooked",
+    kentang_goreng: "cooked",
+    jus_semangka: "cooked",
   };
   return catMap[itemId] || null;
 }

@@ -3,25 +3,10 @@
 import { Howl, Howler } from 'howler';
 import { logger } from './logger';
 
-// ─── Types ────────────────────────────────────────────────────────
-export interface AudioConfig {
-  volume: number;
-  musicVolume: number;
-  enabled: boolean;      // SFX enabled
-  musicEnabled: boolean; // Music enabled
-}
-
-export type SoundName =
-  | 'harvest' | 'plant' | 'sell' | 'buy'
-  | 'click' | 'hover' | 'success' | 'error'
-  | 'coin' | 'levelup' | 'achievement' | 'combo' | 'wheel';
-
-export type MusicName = 'main' | 'menu' | 'event';
-
 // ─── Settings persistence ─────────────────────────────────────────
 // Settings are now managed by Zustand store persist.
 // AudioManager reads from a config object passed in or uses defaults.
-function loadConfig(): AudioConfig {
+function loadConfig() {
   return { volume: 0.5, musicVolume: 0.25, enabled: true, musicEnabled: true };
 }
 
@@ -29,18 +14,7 @@ function loadConfig(): AudioConfig {
 // Each sound is synthesized on-the-fly using Web Audio API oscillators,
 // gain envelopes and filters. No external audio files needed.
 
-type SynthFn = (ctx: AudioContext, masterGain: GainNode) => void;
-
-function createOsc(
-  ctx: AudioContext,
-  dest: AudioNode,
-  freq: number,
-  type: OscillatorType,
-  startTime: number,
-  duration: number,
-  volume: number,
-  fadeOut = true,
-) {
+function createOsc(ctx, dest, freq, type, startTime, duration, volume, fadeOut = true) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
@@ -56,22 +30,14 @@ function createOsc(
 }
 
 // Arpeggio helper
-function arpeggio(
-  ctx: AudioContext,
-  dest: AudioNode,
-  notes: number[],
-  type: OscillatorType,
-  noteLen: number,
-  volume: number,
-  startOffset = 0,
-) {
+function arpeggio(ctx, dest, notes, type, noteLen, volume, startOffset = 0) {
   const t = ctx.currentTime + startOffset;
   notes.forEach((freq, i) => {
     createOsc(ctx, dest, freq, type, t + i * noteLen, noteLen * 1.2, volume);
   });
 }
 
-const SYNTH_SOUNDS: Record<SoundName, SynthFn> = {
+const SYNTH_SOUNDS = {
   // 🌾 Harvest — cheerful ascending arpeggio
   harvest: (ctx, master) => {
     arpeggio(ctx, master, [523, 659, 784, 1047], 'sine', 0.08, 0.12);
@@ -202,7 +168,7 @@ const SYNTH_SOUNDS: Record<SoundName, SynthFn> = {
 };
 
 // ─── Music config ─────────────────────────────────────────────────
-const MUSIC_TRACKS: Record<MusicName, string> = {
+const MUSIC_TRACKS = {
   main: '/music/farm-theme.mp3',
   menu: '/music/menu-theme.mp3',
   event: '/music/event-theme.mp3',
@@ -210,23 +176,21 @@ const MUSIC_TRACKS: Record<MusicName, string> = {
 
 // ─── AudioManager ─────────────────────────────────────────────────
 class AudioManager {
-  private config: AudioConfig;
-  private audioCtx: AudioContext | null = null;
-  private masterGain: GainNode | null = null;
-  private musicTracks: Partial<Record<MusicName, Howl>> = {};
-  private currentMusicName: MusicName | null = null;
-  private currentMusic: Howl | null = null;
-  private initialized = false;
-
   constructor() {
     this.config = loadConfig();
+    this.audioCtx = null;
+    this.masterGain = null;
+    this.musicTracks = {};
+    this.currentMusicName = null;
+    this.currentMusic = null;
+    this.initialized = false;
   }
 
   // Lazy-init Web Audio context (must happen after user gesture)
-  private initAudioContext() {
+  initAudioContext() {
     if (this.audioCtx) return;
     try {
-      this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       this.masterGain = this.audioCtx.createGain();
       this.masterGain.gain.setValueAtTime(this.config.volume, this.audioCtx.currentTime);
       this.masterGain.connect(this.audioCtx.destination);
@@ -236,7 +200,7 @@ class AudioManager {
   }
 
   // Lazy-init a single Howl for a music track
-  private getMusicTrack(name: MusicName): Howl {
+  getMusicTrack(name) {
     if (!this.musicTracks[name]) {
       this.musicTracks[name] = new Howl({
         src: [MUSIC_TRACKS[name]],
@@ -245,7 +209,7 @@ class AudioManager {
         html5: true, // streaming, no full preload
       });
     }
-    return this.musicTracks[name]!;
+    return this.musicTracks[name];
   }
 
   /** Call once on first user interaction to unlock audio */
@@ -261,7 +225,7 @@ class AudioManager {
 
   // ─── SFX ──────────────────────────────────────────────
 
-  play(name: SoundName) {
+  play(name) {
     if (!this.config.enabled) return;
     this.ensureInitialized();
     if (!this.audioCtx || !this.masterGain) return;
@@ -281,7 +245,7 @@ class AudioManager {
 
   // ─── Music ────────────────────────────────────────────
 
-  playMusic(name: MusicName, fadeDuration = 1000) {
+  playMusic(name, fadeDuration = 1000) {
     if (!this.config.musicEnabled) return;
     this.ensureInitialized();
 
@@ -329,14 +293,14 @@ class AudioManager {
 
   // ─── Volume controls ─────────────────────────────────
 
-  setVolume(volume: number) {
+  setVolume(volume) {
     this.config.volume = Math.max(0, Math.min(1, volume));
     if (this.masterGain && this.audioCtx) {
       this.masterGain.gain.setValueAtTime(this.config.volume, this.audioCtx.currentTime);
     }
   }
 
-  setMusicVolume(volume: number) {
+  setMusicVolume(volume) {
     this.config.musicVolume = Math.max(0, Math.min(1, volume));
     if (this.currentMusic) {
       this.currentMusic.volume(this.config.musicVolume);
@@ -346,7 +310,7 @@ class AudioManager {
   // ─── Toggle ───────────────────────────────────────────
 
   /** Toggle ALL audio (SFX + Music). Returns new enabled state. */
-  toggleAll(): boolean {
+  toggleAll() {
     const newState = !this.config.enabled;
     this.config.enabled = newState;
     this.config.musicEnabled = newState;
@@ -361,12 +325,12 @@ class AudioManager {
     return newState;
   }
 
-  toggleSound(): boolean {
+  toggleSound() {
     this.config.enabled = !this.config.enabled;
     return this.config.enabled;
   }
 
-  toggleMusic(): boolean {
+  toggleMusic() {
     this.config.musicEnabled = !this.config.musicEnabled;
     if (!this.config.musicEnabled) {
       this.stopMusic(300);
@@ -378,19 +342,19 @@ class AudioManager {
 
   // ─── Getters ──────────────────────────────────────────
 
-  getSettings(): AudioConfig {
+  getSettings() {
     return { ...this.config };
   }
 
-  isEnabled(): boolean {
+  isEnabled() {
     return this.config.enabled;
   }
 
-  isMusicEnabled(): boolean {
+  isMusicEnabled() {
     return this.config.musicEnabled;
   }
 
-  syncFromStore(settings: { soundEnabled?: boolean; musicEnabled?: boolean }) {
+  syncFromStore(settings) {
     if (settings.soundEnabled !== undefined) {
       this.config.enabled = settings.soundEnabled;
     }

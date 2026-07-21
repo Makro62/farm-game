@@ -1,13 +1,13 @@
 'use client';
 
 import { useCallback } from 'react';
-import audioManager, { type SoundName, type MusicName } from '@/lib/audio';
+import audioManager from '@/lib/audio';
 
 /**
  * Hook to play a synthesized SFX.
  * Respects the global audio enabled state managed by AudioManager.
  */
-export function useSound(soundName: SoundName) {
+export function useSound(soundName) {
   const play = useCallback(() => {
     audioManager.play(soundName);
   }, [soundName]);
@@ -31,7 +31,7 @@ export const useComboSound = () => useSound('combo');
 /**
  * Hook to control background music tracks.
  */
-export function useMusic(musicName: MusicName) {
+export function useMusic(musicName) {
   const play = useCallback(() => {
     audioManager.playMusic(musicName);
   }, [musicName]);

@@ -32,7 +32,13 @@ export function useProfile() {
   const inventory = {};
   for (const items of Object.values(inventoryByCategory || {})) {
     for (const [id, data] of Object.entries(items)) {
-      inventory[id] = (inventory[id] || 0) + (data.qty || 0);
+      if (!inventory[id]) {
+        inventory[id] = { qty: 0, quality: data.quality || "normal" };
+      }
+      inventory[id].qty += data.qty || 0;
+      // If there's a higher quality, we might just display the most recent/highest, 
+      // but for simplicity we keep the last seen quality if it was just overwritten
+      inventory[id].quality = data.quality || inventory[id].quality;
     }
   }
 
@@ -59,15 +65,15 @@ export function useProfile() {
     lainnya: [],
   };
 
-  Object.entries(inventory).forEach(([itemId, qty]) => {
-    if (qty <= 0) return;
+  Object.entries(inventory).forEach(([itemId, data]) => {
+    if (data.qty <= 0) return;
     const category = null; // TODO: map from item data
     const label = CATEGORY_LABELS[category] || "lainnya";
-    categorized[label].push({ id: itemId, qty });
+    categorized[label].push({ id: itemId, qty: data.qty, quality: data.quality });
   });
 
   const hasSellable = Object.entries(inventory).some(
-    ([id, qty]) => qty > 0 && getItemSellPrice(id) > 0,
+    ([id, data]) => data.qty > 0 && getItemSellPrice(id) > 0,
   );
 
   const handleSellItem = (itemId, name, qty) => {

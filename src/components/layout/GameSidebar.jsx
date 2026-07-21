@@ -28,10 +28,9 @@ import { cn } from "@/lib/utils";
 
 const COLLAPSE_KEY = "farm-shell-collapsed";
 
-function useSidebarChrome() {
+function useSidebarChrome(mobileOpen, setMobileOpen) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [boostOpen, setBoostOpen] = useState(false);
 
   const coins = useGameStore((s) => s?.coins ?? 0);
@@ -103,32 +102,35 @@ function useSidebarChrome() {
   };
 }
 
-function useAreaBadges() {
-  const plots = useGameStore((s) => s?.plots ?? []);
-  const animals = useGameStore((s) => s?.animals ?? []);
-  const mining = useGameStore((s) => s?.mining ?? null);
-  const orders = useGameStore((s) => s?.orders ?? []);
-  const crafting = useGameStore((s) => s?.craftingQueue ?? []);
-  return {
-    pertanian: plots?.some((p) => p.status === "ready"),
-    peternakan: animals?.some(
-      (a) =>
-        a.status === "producing" &&
-        Date.now() - a.lastCollected >= (a.produceTime || 60000),
-    ),
-    tambang: mining?.nodes?.some((n) => n.status === "ready"),
-    restoran: crafting?.some((c) => Date.now() - c.startTime >= c.duration),
-    kota: orders?.length > 0,
-  };
-}
+
 
 function ShellNav({ pathname, narrow }) {
   const badges = useAreaBadges();
+  const level = useGameStore((s) => s?.level ?? 1);
   return (
     <nav className="shell-nav" aria-label="Area game">
       {!narrow && <p className="shell-section-label">Area</p>}
       {NAV_TABS.map((tab) => {
+        const isLocked = level < (tab.unlockLevel || 1);
         const active = pathname?.startsWith(`/${tab.id}`);
+        
+        if (isLocked) {
+          return (
+            <button
+              key={tab.id}
+              onClick={() => toast.error(`Buka di Level ${tab.unlockLevel}!`, { icon: "🔒" })}
+              className={cn("shell-nav-link", "opacity-50 cursor-not-allowed grayscale")}
+              title={`Terkunci (Butuh Lv ${tab.unlockLevel})`}
+            >
+              <span className="shell-nav-emoji" aria-hidden>
+                {tab.emoji}
+              </span>
+              {!narrow && <span className="shell-nav-text">{tab.label}</span>}
+              {!narrow && <span className="ml-auto text-[10px] font-bold text-amber-900/50">Lv{tab.unlockLevel}</span>}
+            </button>
+          );
+        }
+
         return (
           <Link
             key={tab.id}
@@ -150,41 +152,23 @@ function ShellNav({ pathname, narrow }) {
   );
 }
 
-function SummaryTicker({ narrow }) {
+function useAreaBadges() {
   const plots = useGameStore((s) => s?.plots ?? []);
   const animals = useGameStore((s) => s?.animals ?? []);
   const mining = useGameStore((s) => s?.mining ?? null);
-  const crafting = useGameStore((s) => s?.craftingQueue ?? []);
   const orders = useGameStore((s) => s?.orders ?? []);
-
-  const summary = [];
-  const readyPlots = plots?.filter((p) => p.status === "ready").length || 0;
-  if (readyPlots > 0) summary.push(`🌾 ${readyPlots} siap panen`);
-
-  const readyAnimals =
-    animals?.filter(
+  const crafting = useGameStore((s) => s?.craftingQueue ?? []);
+  return {
+    pertanian: plots?.some((p) => p.status === "ready"),
+    peternakan: animals?.some(
       (a) =>
         a.status === "producing" &&
         Date.now() - a.lastCollected >= (a.produceTime || 60000),
-    ).length || 0;
-  if (readyAnimals > 0) summary.push(`🐄 ${readyAnimals} siap diambil`);
-
-  const readyNodes =
-    mining?.nodes?.filter((n) => n.status === "ready").length || 0;
-  if (readyNodes > 0) summary.push(`⛏️ ${readyNodes} node siap`);
-
-  const doneCrafting =
-    crafting?.filter((c) => Date.now() - c.startTime >= c.duration).length || 0;
-  if (doneCrafting > 0) summary.push(`🍳 ${doneCrafting} masakan siap`);
-
-  if (orders?.length > 0) summary.push(`📦 ${orders.length} pesanan aktif`);
-
-  if (summary.length === 0 || narrow) return null;
-  return (
-    <div className="mx-2 mb-1 text-[10px] text-amber-200 font-bold px-2 py-1 bg-amber-900/30 rounded leading-tight">
-      {summary.join(" · ")}
-    </div>
-  );
+    ),
+    tambang: mining?.nodes?.some((n) => n.status === "ready"),
+    restoran: crafting?.some((c) => Date.now() - c.startTime >= c.duration),
+    kota: orders?.length > 0,
+  };
 }
 
 function ShellPanel({ collapsed, onCollapse, chrome, forceExpanded = false }) {
@@ -301,77 +285,10 @@ function ShellPanel({ collapsed, onCollapse, chrome, forceExpanded = false }) {
       </header>
 
       {!narrow ? (
-        <div className="shell-player">
-          <div className="shell-player-card">
-            <div className="shell-player-row">
-              <Coins className="w-3.5 h-3.5 shrink-0" />
-              <AnimatedCounter
-                value={coins}
-                className="font-black text-sm tabular-nums"
-              />
-              {streak > 0 && (
-                <span className="shell-streak">
-                  <Flame className="w-3 h-3" />
-                  {streak}
-                </span>
-              )}
-            </div>
-            <div className="shell-player-row">
-              <Star className="w-3.5 h-3.5 fill-current shrink-0" />
-              <span className="font-black text-sm">Level {level}</span>
-            </div>
-            <div
-              className="shell-xp"
-              title={`XP: ${xp} / ${level * 100}`}
-              aria-hidden
-            >
-              <div
-                className="shell-xp-fill"
-                style={{ width: `${xpProgress}%` }}
-              />
-            </div>
-
-            <div className="shell-player-row mt-1" style={{ color: "#86efac" }}>
-              <Zap className="w-3.5 h-3.5 fill-current shrink-0" />
-              <span className="font-black text-sm">
-                Energy {Math.floor(energy)}/{maxEnergy}
-              </span>
-            </div>
-            <div
-              className="shell-energy"
-              title={`Energy: ${Math.floor(energy)} / ${maxEnergy}`}
-              aria-hidden
-            >
-              <div
-                className="shell-energy-fill"
-                style={{ width: `${energyProgress}%` }}
-              />
-            </div>
-          </div>
-          <div className="shell-meta">
-            <span>
-              {seasonMeta.emoji} {seasonMeta.label} · Hari {season?.day || 1}/7
-            </span>
-            <span>{weather?.current || "☀️ Cerah"}</span>
-          </div>
-          {(activeEvent || combo?.count > 1) && (
-            <div className="shell-meta-extra">
-              {activeEvent && (
-                <span className="shell-chip shell-chip--event">
-                  {activeEvent.name}
-                </span>
-              )}
-              {combo?.count > 1 && (
-                <span className="shell-chip shell-chip--combo">
-                  Combo ×{combo.count}
-                </span>
-              )}
-            </div>
-          )}
+        <div className="hidden">
+          {/* Header has taken over player stats and summary */}
         </div>
       ) : null}
-
-      <SummaryTicker narrow={narrow} />
 
       <ShellNav pathname={pathname} narrow={narrow} />
 
@@ -469,8 +386,8 @@ function ShellPanel({ collapsed, onCollapse, chrome, forceExpanded = false }) {
   );
 }
 
-export default function GameSidebar() {
-  const chrome = useSidebarChrome();
+export default function GameSidebar({ mobileOpen, setMobileOpen }) {
+  const chrome = useSidebarChrome(mobileOpen, setMobileOpen);
 
   return (
     <>
@@ -482,36 +399,7 @@ export default function GameSidebar() {
         />
       </aside>
 
-      <header className="shell-topbar lg:hidden">
-        <button
-          type="button"
-          className="shell-topbar-menu"
-          onClick={() => chrome.setMobileOpen(true)}
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-        <img
-          src="/img/logo.png"
-          alt="Farm Tycoon"
-          className="w-8 h-8 object-contain"
-        />
-        <span className="font-display font-bold text-lg text-[var(--text-primary)]">
-          Farm Tycoon
-        </span>
-        <div className="shell-topbar-stats">
-          <span>
-            <Coins className="w-3.5 h-3.5" />
-            <AnimatedCounter
-              value={chrome.coins}
-              className="text-xs font-black tabular-nums"
-            />
-          </span>
-          <span>
-            <Star className="w-3.5 h-3.5 fill-current" />
-            Lv {chrome.level}
-          </span>
-        </div>
-      </header>
+
 
       <AnimatePresence>
         {chrome.mobileOpen && (

@@ -201,7 +201,8 @@ export const WORKER_AUTO_KEYS = {
 };
 
 export function isWorkerActive(state, type) {
-  if (!state?.workers?.[type]) return false;
+  if (!state?.workers?.[type]?.hired) return false;
+  if (state.workers[type].isWorking === false) return false;
   const autoKey = WORKER_AUTO_KEYS[type];
   if (!autoKey) return false;
   return state[autoKey] !== false;

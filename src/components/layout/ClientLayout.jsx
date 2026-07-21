@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useGameStore } from "@/lib/store";
 import { NAV_TABS } from "@/lib/nav";
 import GameSidebar from "@/components/layout/GameSidebar";
+import GameHeader from "@/components/layout/GameHeader";
 import Modals from "@/components/layout/Modals";
 import TutorialOverlay from "@/components/ui/TutorialOverlay";
 import NotificationManager from "@/components/layout/NotificationManager";
@@ -13,6 +14,11 @@ import { cn } from "@/lib/utils";
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     useGameStore.getState().calculateOfflineProgress();
@@ -57,9 +63,10 @@ export default function ClientLayout({ children }) {
 
   return (
     <div id="app" className="shell-app">
-      <GameSidebar />
+      <GameSidebar mobileOpen={mobileMenuOpen} setMobileOpen={setMobileMenuOpen} />
 
       <div className="shell-main">
+        <GameHeader onMobileMenu={() => setMobileMenuOpen(true)} />
         <main id="main" className="shell-content">
           <div className="game-container">{children}</div>
         </main>

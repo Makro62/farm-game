@@ -368,7 +368,7 @@ export default function TabProfil() {
             </div>
             <div className="flex items-center gap-1 font-display text-2xl text-blue-600">
               <Trophy className="w-5 h-5 fill-current" />
-              {Object.values(inventory).filter((q) => q > 0).length}
+              {Object.values(inventory).filter((data) => data.qty > 0).length}
             </div>
             <div className="text-[10px] font-black text-black/40 bg-black/5 px-2 py-0.5 rounded-full mt-1">
               Jenis Item Dimiliki
@@ -491,6 +491,20 @@ export default function TabProfil() {
                         <div className="absolute -top-2 -right-2 bg-gradient-to-b from-[var(--gold)] to-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 min-w-[20px] rounded-full shadow-md border border-white">
                           {item.qty}
                         </div>
+                        {item.quality && item.quality !== "normal" && (
+                          <div
+                            className={`absolute -bottom-1 -left-1 w-3 h-3 rounded-full shadow-sm border border-white ${
+                              item.quality === "iridium"
+                                ? "bg-purple-500"
+                                : item.quality === "emas"
+                                ? "bg-[var(--gold)]"
+                                : item.quality === "perak"
+                                ? "bg-slate-300"
+                                : ""
+                            }`}
+                            title={`Kualitas: ${item.quality}`}
+                          />
+                        )}
                       </div>
                     );
                   })}
@@ -499,7 +513,7 @@ export default function TabProfil() {
             );
           })}
 
-          {Object.values(inventory).every((q) => !q) && (
+          {Object.values(inventory).every((data) => !data.qty) && (
             <div className="text-center py-10 opacity-60">
               <div className="text-4xl mb-2">🕸️</div>
               <p className="font-bold text-[var(--text-secondary)]">
