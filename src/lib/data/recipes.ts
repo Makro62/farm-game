@@ -229,6 +229,28 @@ export const RECIPES: any[] = [
     },
     unlockLevel: 10,
   },
+  {
+    id: "sup_kubis",
+    name: "Sup Kubis",
+    emoji: "🥘",
+    type: "kitchen",
+    time: 200,
+    price: 220,
+    xp: 70,
+    req: { "crops.kubis": 2, "crops.wortel": 1 },
+    unlockLevel: 5,
+  },
+  {
+    id: "sup_ikan",
+    name: "Sup Ikan",
+    emoji: "🍲",
+    type: "fish_kitchen",
+    time: 300,
+    price: 350,
+    xp: 110,
+    req: { "fish.ikan_mas": 1, "crops.kentang": 2 },
+    unlockLevel: 5,
+  },
 
   // ===== TIER 4 (Level 15+) =====
   {

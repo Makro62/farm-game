@@ -293,6 +293,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       SHOP_SEEDS.some((s) => s.cropId === itemId)
     )
       sellPrice *= 1.15;
+    if (activeEvent?.id === "rakyat") sellPrice *= 1.5;
 
     const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
     const comboMult =
@@ -304,6 +305,10 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     INV.remove(cat, itemId, qty);
     set((draft) => {
       draft.coins = safeCoins(draft.coins) + finalEarned;
+      draft.stats = {
+        ...draft.stats,
+        totalRevenue: (draft.stats?.totalRevenue || 0) + finalEarned,
+      };
     });
     if (comboMult > 1) get().resetCombo?.();
     return finalEarned;
@@ -339,6 +344,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
           SHOP_SEEDS.some((s) => s.cropId === itemId)
         )
           sellPrice *= 1.15;
+        if (activeEvent?.id === "rakyat") sellPrice *= 1.5;
         totalEarned += sellPrice * data.qty;
         toSell[`${cat}.${itemId}`] = true;
       }
@@ -356,6 +362,10 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
         delete draft.inventoryByCategory[cat]?.[itemId];
       }
       draft.coins = safeCoins(draft.coins) + finalEarned;
+      draft.stats = {
+        ...draft.stats,
+        totalRevenue: (draft.stats?.totalRevenue || 0) + finalEarned,
+      };
     });
     if (comboMult > 1) get().resetCombo?.();
     return finalEarned;
@@ -396,6 +406,10 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       draft.streak = newStreak;
       draft.lastLogin = today;
       draft.coins = safeCoins(draft.coins) + reward;
+      draft.stats = {
+        ...draft.stats,
+        bestStreak: Math.max(draft.stats?.bestStreak || 0, newStreak),
+      };
     });
     return {
       claimed: true,
@@ -420,6 +434,10 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       draft.combo.count = newCount;
       draft.combo.multiplier = multiplier;
       draft.combo.lastAction = now;
+      draft.stats = {
+        ...draft.stats,
+        maxCombo: Math.max(draft.stats?.maxCombo || 0, newCount),
+      };
     });
     return { count: newCount, multiplier };
   },

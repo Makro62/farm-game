@@ -282,6 +282,16 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
               name: "💎 Demam Emas",
               desc: "Peluang mendapat Emas & Berlian meningkat!",
             },
+            {
+              id: "kebun",
+              name: "🌻 Hari Berkebun",
+              desc: "Semua tanaman tumbuh 2x lebih cepat!",
+            },
+            {
+              id: "rakyat",
+              name: "🎉 Pasar Rakyat",
+              desc: "Semua penjualan +50% hari ini!",
+            },
           ];
           activeEvent = events[Math.floor(Math.random() * events.length)];
         } else {
@@ -391,6 +401,12 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
           coins: currentCoins,
           workers: newWorkers,
           plots: newPlots,
+          ...(activeEvent?.id === "kebun"
+            ? {
+                growthMultiplier: 2,
+                growthMultiplierExpireAt: Date.now() + ticksPerDay * 1000,
+              }
+            : {}),
         };
       }
       return { season: { current, day, tick }, activeEvent };

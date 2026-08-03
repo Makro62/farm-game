@@ -158,6 +158,18 @@ export const CROP_DATA: Record<string, any> = {
     usedInRecipes: ["kue_apel", "es_teh"],
     seed: { id: "bibit_apel", buyPrice: 140, unlockLevel: 7 },
   },
+  kubis: {
+    id: "kubis",
+    name: "Kubis",
+    emoji: "🥬",
+    growthTime: 90,
+    baseSellPrice: 60,
+    preferredSeason: "winter",
+    seasonBonus: { winter: 1.3, summer: 0.4 },
+    weatherEffects: { sunny: 0.9, rainy: 1.2, drought: 0.4 },
+    usedInRecipes: ["sup_kubis", "sup_ikan"],
+    seed: { id: "bibit_kubis", buyPrice: 80, unlockLevel: 3 },
+  },
 };
 
 export const SHOP_SEEDS: any[] = [
@@ -278,5 +290,14 @@ export const SHOP_SEEDS: any[] = [
     price: 180,
     time: 190,
     season: "autumn",
+  },
+  {
+    id: "bibit_kubis",
+    cropId: "kubis",
+    name: "Bibit Kubis",
+    emoji: "🥬",
+    price: 80,
+    time: 90,
+    season: "winter",
   },
 ];

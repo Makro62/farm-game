@@ -170,6 +170,63 @@ export default function TabProfil() {
     enqueueNotification,
   } = useProfile();
 
+  const stats = useGameStore((s) => s.stats);
+  const museumPoints = useGameStore(
+    (s) =>
+      (s.town?.museumDonations || []).reduce(
+        (sum: number, d: any) => sum + (d.points || 0),
+        0,
+      ) || 0,
+  );
+
+  const bestRecords: { label: string; value: string; emoji: string }[] = [
+    {
+      label: "Total Revenue",
+      value: formatNumber(stats?.totalRevenue || 0),
+      emoji: "💰",
+    },
+    {
+      label: "Panen Terbanyak",
+      value: formatNumber(stats?.totalHarvested || 0),
+      emoji: "🌾",
+    },
+    {
+      label: "Mineral Ditambang",
+      value: formatNumber(stats?.totalMined || 0),
+      emoji: "⛏️",
+    },
+    {
+      label: "Ikan Ditangkap",
+      value: formatNumber(stats?.totalFished || 0),
+      emoji: "🎣",
+    },
+    {
+      label: "Masakan Dibuat",
+      value: formatNumber(stats?.totalCooked || 0),
+      emoji: "🍳",
+    },
+    {
+      label: "Order Selesai",
+      value: formatNumber(stats?.totalOrdersFulfilled || 0),
+      emoji: "📦",
+    },
+    {
+      label: "Streak Terbaik",
+      value: `${stats?.bestStreak || 0} hari`,
+      emoji: "🔥",
+    },
+    {
+      label: "Combo Terbaik",
+      value: `${stats?.maxCombo || 0}x`,
+      emoji: "⚡",
+    },
+    {
+      label: "Poin Museum",
+      value: formatNumber(museumPoints),
+      emoji: "🏛️",
+    },
+  ];
+
   const categoriesConfig = [
     { key: "pertanian", title: "Hasil Pertanian", icon: "🌱" },
     { key: "peternakan", title: "Hasil Peternakan", icon: "🐄" },
@@ -373,6 +430,31 @@ export default function TabProfil() {
             <div className="text-[10px] font-black text-black/40 bg-black/5 px-2 py-0.5 rounded-full mt-1">
               Jenis Item Dimiliki
             </div>
+          </div>
+        </div>
+
+        {/* ================= BEST RECORDS (LEADERBOARD) ================= */}
+        <div className="glass-panel p-4 sm:p-5 mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b-2 border-white/30 pb-2">
+            <h3 className="font-display font-bold text-lg text-[var(--text-primary)] flex items-center gap-2">
+              <span>📈</span> Catatan Terbaik
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {bestRecords.map((rec) => (
+              <div
+                key={rec.label}
+                className="bg-white/40 p-3 rounded-2xl border-2 border-white/50 flex flex-col items-center justify-center text-center"
+              >
+                <div className="text-2xl mb-1">{rec.emoji}</div>
+                <div className="text-[10px] font-bold text-[var(--text-secondary)] mb-1">
+                  {rec.label}
+                </div>
+                <div className="font-display text-lg text-[var(--primary-dark)]">
+                  {rec.value}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
