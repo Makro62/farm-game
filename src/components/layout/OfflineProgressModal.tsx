@@ -41,24 +41,43 @@ export default function OfflineProgressModal() {
           onClick={clearOfflineReport}
         />
         <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          initial={{ scale: 0.9, opacity: 0, y: 30 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="relative glass-panel w-full max-w-sm"
+          exit={{ scale: 0.9, opacity: 0, y: 30 }}
+          className="relative glass-panel w-full max-w-sm border-t border-t-white/40 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] overflow-hidden"
         >
-          <div className="flex flex-col items-center">
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-200/20 via-transparent to-transparent opacity-50" />
+          <div className="relative flex flex-col items-center">
             <div className="w-16 h-16 bg-gradient-to-b from-[#ffe08a] to-[#f0b429] rounded-2xl flex items-center justify-center text-4xl mb-4 shadow-[0_4px_0_#b07a10] border-2 border-[#fff1b8]">
               👋
             </div>
 
-            <h2 className="text-2xl font-display font-bold text-[#3E2723] text-center mb-1 drop-shadow-md">
+            <h2 className="text-2xl font-display font-bold text-[#3E2723] text-center mb-1 drop-shadow-sm">
               Selamat Datang Kembali!
             </h2>
-            <p className="text-[#5D4037] text-sm mb-6 text-center font-medium">
+            <p className="text-[#5D4037] text-sm mb-4 text-center font-medium opacity-90">
               Pekerja Anda telah bekerja keras selama Anda pergi ({timeAway}).
             </p>
 
-            <div className="w-full space-y-3 mb-6">
+            {earnedCoins > 0 && (
+              <motion.div 
+                initial={{ scale: 0, rotate: -10 }} 
+                animate={{ scale: 1, rotate: 0 }} 
+                transition={{ type: "spring", delay: 0.2 }}
+                className="mb-6 w-full bg-gradient-to-r from-yellow-400/20 via-yellow-300/30 to-yellow-400/20 border border-yellow-400/50 rounded-xl p-3 flex flex-col items-center justify-center relative overflow-hidden shadow-inner"
+              >
+                <div className="absolute inset-0 bg-yellow-200 opacity-20 mix-blend-overlay animate-pulse" />
+                <span className="text-xs font-bold text-yellow-800 uppercase tracking-wider mb-1">Total Pendapatan</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl drop-shadow-md">💰</span>
+                  <span className="text-3xl font-black text-yellow-600 drop-shadow-sm">
+                    +{earnedCoins.toLocaleString()}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+
+            <div className="w-full space-y-2.5 mb-6">
               {harvestedCrops > 0 && (
                 <div className="flex justify-between items-center glass-card px-4 py-3">
                   <div className="flex items-center gap-3">

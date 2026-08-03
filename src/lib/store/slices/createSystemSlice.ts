@@ -12,6 +12,7 @@ import {
   getAnimalProduceTime,
   rollMineralType,
 } from "@/lib/store/utils";
+import { SHOP_SEEDS } from "@/lib/data/crops";
 import { SHOP_ANIMALS, ANIMAL_FEED } from "@/lib/data/shop";
 import { FISHES } from "@/lib/data/fishes";
 import { RECIPES } from "@/lib/data/recipes";
@@ -311,6 +312,9 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
         let wageNotifications: string[] = [];
         
         Object.keys(newWorkers).forEach((type) => {
+          if (newWorkers[type]) {
+            newWorkers[type] = { ...newWorkers[type] };
+          }
           const worker = newWorkers[type];
           if (worker?.hired) {
             if (currentCoins >= worker.wagePerDay) {
@@ -345,17 +349,17 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
         }, 100);
 
         // --- BANK INTEREST (Fase 3) ---
-        const bankSavings = state.town?.bankSavings || 0;
-        let interest = 0;
-        if (bankSavings > 0) {
-          interest = Math.floor(
-            bankSavings * (state.town?.bankInterestRate || 0.02),
+        const bankBalance = state.town?.bankSavings || 0;
+        let newBankSavings = bankBalance;
+        if (bankBalance > 0) {
+          const interest = Math.floor(
+            bankBalance * (state.town?.bankInterestRate || 0.02),
           );
           if (interest > 0) {
-            state.town.bankSavings = bankSavings + interest;
+            newBankSavings = bankBalance + interest;
             setTimeout(() => {
               get().enqueueNotification(
-                `🏦 Bunga bank +${interest} 💰 (saldo ${state.town.bankSavings})`,
+                `🏦 Bunga bank +${interest} 💰 (saldo ${newBankSavings})`,
                 { type: "success" },
               );
             }, 150);
@@ -401,6 +405,9 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
           coins: currentCoins,
           workers: newWorkers,
           plots: newPlots,
+          ...(newBankSavings !== bankBalance
+            ? { town: { ...state.town, bankSavings: newBankSavings } }
+            : {}),
           ...(activeEvent?.id === "kebun"
             ? {
                 growthMultiplier: 2,
@@ -562,6 +569,7 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
     let harvested = 0;
     let planted = 0;
     let collected = 0;
+    let coinsSpent = 0;
     let plotsChanged = false;
     let animalsChanged = false;
     let queueChanged = false;
@@ -620,18 +628,40 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
         }
 
         if (plots[i].status === "empty") {
-          const seedData = pickAutoSeed(
+          const hasGreenhouse = !!state.buildings?.greenhouse;
+          let seedData = pickAutoSeed(
             state.inventoryByCategory?.seeds || {},
             state.selectedSeed,
             state.season?.current,
-            !!state.buildings?.greenhouse,
+            hasGreenhouse,
           );
+          let autoBought = false;
+          if (!seedData) {
+            const buyable = SHOP_SEEDS.filter(
+              (s) =>
+                state.coins - coinsSpent >= s.price &&
+                (hasGreenhouse ||
+                  s.season === "all" ||
+                  s.season === state.season?.current),
+            );
+            if (buyable.length > 0) {
+              buyable.sort((a, b) => a.time - b.time);
+              seedData = buyable[0];
+              autoBought = true;
+            }
+          }
           if (seedData) {
-            const have = invGet(state, "seeds", seedData.id);
-            if (have > 0) {
+            let canPlant = false;
+            if (autoBought) {
+              coinsSpent += seedData.price;
+              canPlant = true;
+            } else if (invGet(state, "seeds", seedData.id) > 0) {
               if (!catUpdates["seeds"]) catUpdates["seeds"] = {};
               catUpdates["seeds"][seedData.id] =
                 (catUpdates["seeds"][seedData.id] || 0) - 1;
+              canPlant = true;
+            }
+            if (canPlant) {
               plots[i] = {
                 ...plots[i],
                 status: "growing",

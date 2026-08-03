@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/lib/store";
 import { CropIcon } from "@/components/ui/CropIcon";
@@ -10,6 +11,24 @@ export function PlotGrid({ isEditMode, farmTool = "tanam" }) {
   const plots = useGameStore((state) => state.plots);
   const swapPlots = useGameStore((state) => state.swapPlots);
   const { handlePlotClick } = useFarming();
+  const [floatingTexts, setFloatingTexts] = useState<{id: number, plotId: number, text: string, color: string}[]>([]);
+
+  const handlePlotAction = (e: React.MouseEvent, plot: any) => {
+    if (isEditMode) {
+      e.preventDefault();
+      return;
+    }
+    
+    if (farmTool === "panen" && (plot.status === "ready" || (plot.status === "growing" && plot.plantedAt && Date.now() - plot.plantedAt >= plot.growTime))) {
+      const id = Date.now() + Math.random();
+      setFloatingTexts(prev => [...prev, {id, plotId: plot.id, text: "+XP", color: "text-green-300"}]);
+      setTimeout(() => {
+        setFloatingTexts(prev => prev.filter(t => t.id !== id));
+      }, 1000);
+    }
+    
+    handlePlotClick(plot, farmTool);
+  };
 
   return (
     <div
@@ -57,15 +76,9 @@ export function PlotGrid({ isEditMode, farmTool = "tanam" }) {
                   }
                 }
               }}
-              whileHover={!isEditMode ? { scale: 1.05 } : {}}
+              whileHover={!isEditMode ? { scale: 1.05, filter: "brightness(1.1)" } : {}}
               whileTap={!isEditMode ? { scale: 0.95 } : {}}
-              onClick={(e) => {
-                if (isEditMode) {
-                  e.preventDefault();
-                  return;
-                }
-                handlePlotClick(plot, farmTool);
-              }}
+              onClick={(e) => handlePlotAction(e, plot)}
               data-tutorial={
                 plot.status === "empty"
                   ? "farm-plot"
@@ -140,6 +153,17 @@ export function PlotGrid({ isEditMode, farmTool = "tanam" }) {
                   />
                 </div>
               )}
+              {floatingTexts.filter(ft => ft.plotId === plot.id).map(ft => (
+                <motion.div
+                  key={ft.id}
+                  initial={{ opacity: 1, y: 0, scale: 0.5 }}
+                  animate={{ opacity: 0, y: -30, scale: 1.2 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className={cn("absolute inset-x-0 bottom-4 z-50 flex justify-center pointer-events-none text-sm font-black drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]", ft.color)}
+                >
+                  {ft.text}
+                </motion.div>
+              ))}
             </motion.button>
           );
         })}
