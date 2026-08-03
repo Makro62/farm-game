@@ -3,6 +3,17 @@ import { SHOP_SEEDS, CROP_DATA } from "@/lib/data/crops";
 import { rollCropQuality } from "@/lib/data/item-helpers";
 import { GAME_CONSTANTS } from "@/lib/constants";
 
+export const PLOT_LEVEL_MULT: Record<number, number> = {
+  1: 1.0,
+  2: 0.85,
+  3: 0.7,
+};
+
+const PLOT_UPGRADE_COST: Record<number, { coins: number; minerals: Record<string, number> }> = {
+  1: { coins: 300, minerals: { batu: 10, besi: 5 } },
+  2: { coins: 800, minerals: { besi: 10, emas: 5 } },
+};
+
 export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
   setSelectedSeed: (seedId) => set({ selectedSeed: seedId }),
 
@@ -75,6 +86,8 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
     const growthMultiplier =
       state.growthMultiplier > 0 ? state.growthMultiplier : 1;
     let baseGrowTime = (seedData.time * 1000) / growthMultiplier;
+    const plotLevel = state.plots.find((p) => p.id === plotId)?.level || 1;
+    baseGrowTime = Math.floor(baseGrowTime * PLOT_LEVEL_MULT[plotLevel]);
 
     let usedFertilizer = false;
     const pupukQty =
@@ -200,17 +213,18 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
         inventoryByCategory: { ...state.inventoryByCategory, crops: cat },
         plots: state.plots.map((p) =>
           p.id === plotId
-            ? {
-                id: p.id,
-                status: "empty",
-                crop: null,
-                plantedAt: null,
-                growTime: null,
-                watered: false,
-                fertilizer: null,
-                quality: null,
-                pestInfestation: false,
-              }
+              ? {
+                  id: p.id,
+                  status: "empty",
+                  crop: null,
+                  plantedAt: null,
+                  growTime: null,
+                  watered: false,
+                  fertilizer: null,
+                  quality: null,
+                  pestInfestation: false,
+                  level: p.level || 1,
+                }
             : p,
         ),
       };
@@ -233,11 +247,12 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
     const now = Date.now();
     let changed = false;
     const plots = get().plots.map((p) => {
-      const growTime = (p.growTime ?? 0) > 0 ? p.growTime : null;
+      const baseGrow = (p.growTime ?? 0) > 0 ? p.growTime : null;
+      if (baseGrow == null) return p;
+      const growTime = p.pestInfestation ? baseGrow * 2 : baseGrow;
       if (
         p.status === "growing" &&
         p.plantedAt &&
-        growTime != null &&
         now - p.plantedAt >= growTime
       ) {
         changed = true;
@@ -246,6 +261,50 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
       return p;
     });
     if (changed) set({ plots });
+  },
+
+  upgradePlot: (plotId) => {
+    const state = get();
+    const plot = state.plots.find((p) => p.id === plotId);
+    if (!plot) return { ok: false, message: "Petak tidak ditemukan." };
+    if (plot.level >= 3)
+      return { ok: false, message: "Petak sudah level maksimum." };
+    const cost = PLOT_UPGRADE_COST[plot.level];
+    if (!cost) return { ok: false, message: "Upgrade tidak tersedia." };
+    if (state.coins < cost.coins) {
+      return {
+        ok: false,
+        message: `Butuh ${cost.coins} koin untuk upgrade petak.`,
+      };
+    }
+    for (const [mineral, qty] of Object.entries(cost.minerals)) {
+      if ((state.inventoryByCategory?.minerals?.[mineral]?.qty || 0) < qty) {
+        return {
+          ok: false,
+          message: `Butuh ${qty}x ${mineral} untuk upgrade petak.`,
+        };
+      }
+    }
+    set((draft) => {
+      draft.coins -= cost.coins;
+      for (const [mineral, qty] of Object.entries(cost.minerals)) {
+        if (draft.inventoryByCategory.minerals[mineral]) {
+          draft.inventoryByCategory.minerals[mineral].qty -= qty;
+          if (draft.inventoryByCategory.minerals[mineral].qty <= 0) {
+            delete draft.inventoryByCategory.minerals[mineral];
+          }
+        }
+      }
+    });
+    set((s) => ({
+      plots: s.plots.map((p) =>
+        p.id === plotId ? { ...p, level: p.level + 1 } : p,
+      ),
+    }));
+    return {
+      ok: true,
+      message: `Petak naik ke level ${plot.level + 1}! Tumbuh lebih cepat.`,
+    };
   },
 
   updatePlotStatus: (plotId, status) => {

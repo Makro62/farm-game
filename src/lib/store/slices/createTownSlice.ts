@@ -53,6 +53,8 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
     const mineralReq = {
       silo: { batu: 20, besi: 10 },
       greenhouse: { batu: 30, tembaga: 15, emas: 5 },
+      scarecrow: { kayu: 25, batu: 10 },
+      sprinkler: { besi: 15, tembaga: 10 },
     }[buildingId];
     if (mineralReq) {
       for (const [mineral, qty] of Object.entries(mineralReq)) {
@@ -79,6 +81,8 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
     const shape = {
       silo: { unlocked: true, level: 1, maxLevel: 3 },
       greenhouse: { unlocked: true, level: 1, maxLevel: 1 },
+      scarecrow: { unlocked: true, level: 1, maxLevel: 1 },
+      sprinkler: { unlocked: true, level: 1, maxLevel: 1 },
       mill: { unlocked: true, level: 1, queue: [] },
       well: { unlocked: true, level: 1, maxLevel: 3 },
       workshop: { unlocked: true, level: 1, maxLevel: 3 },

@@ -111,6 +111,16 @@ export function PlotGrid({ isEditMode, farmTool = "tanam" }) {
                   💧
                 </span>
               )}
+              {plot.pestInfestation && isGrowing && (
+                <span className="absolute top-0.5 left-0.5 text-[11px] z-20 animate-pulse">
+                  🐛
+                </span>
+              )}
+              {plot.level > 1 && (
+                <span className="absolute bottom-1 right-1 z-20 px-1 rounded-md bg-black/50 text-[8px] font-bold text-yellow-300 leading-tight">
+                  ⭐{plot.level}
+                </span>
+              )}
               {plot.status === "dead" && (
                 <span className="absolute inset-0 flex items-center justify-center text-lg opacity-70 select-none">
                   🥀

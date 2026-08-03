@@ -224,6 +224,12 @@ export function normalizePlot(plot: any, index: any = 0) {
       crop: null,
       plantedAt: null,
       growTime: null,
+      watered: false,
+      fertilizer: null,
+      quality: null,
+      pestInfestation: false,
+      greenhouse: false,
+      level: 1,
     };
   }
 
@@ -238,6 +244,12 @@ export function normalizePlot(plot: any, index: any = 0) {
     crop: plot.crop ?? null,
     plantedAt: plot.plantedAt ?? null,
     growTime: plot.growTime > 0 ? plot.growTime : null,
+    watered: plot.watered ?? false,
+    fertilizer: plot.fertilizer ?? null,
+    quality: plot.quality ?? null,
+    pestInfestation: plot.pestInfestation ?? false,
+    greenhouse: plot.greenhouse ?? false,
+    level: Math.max(1, Math.min(3, plot.level || 1)),
   };
 }
 
@@ -249,6 +261,12 @@ export function normalizePlots(plots: any) {
       crop: null,
       plantedAt: null,
       growTime: null,
+      watered: false,
+      fertilizer: null,
+      quality: null,
+      pestInfestation: false,
+      greenhouse: false,
+      level: 1,
     }));
   }
 
@@ -260,6 +278,12 @@ export function normalizePlots(plots: any) {
       crop: null,
       plantedAt: null,
       growTime: null,
+      watered: false,
+      fertilizer: null,
+      quality: null,
+      pestInfestation: false,
+      greenhouse: false,
+      level: 1,
     });
   }
   return normalized.slice(0, 30);

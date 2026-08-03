@@ -15,6 +15,7 @@ export interface Plot {
   quality: string | null;
   pestInfestation: boolean;
   greenhouse: boolean;
+  level: number;
 }
 
 export interface InventoryStack {

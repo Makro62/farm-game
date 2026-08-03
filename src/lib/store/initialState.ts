@@ -13,6 +13,7 @@ function createEmptyPlots(count = 30): Plot[] {
     quality: null,
     pestInfestation: false,
     greenhouse: false,
+    level: 1,
   }));
 }
 

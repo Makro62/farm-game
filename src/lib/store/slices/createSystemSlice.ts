@@ -18,6 +18,7 @@ import { RECIPES } from "@/lib/data/recipes";
 import { getItemSellPrice } from "@/lib/data/item-helpers";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { PLOT_LEVEL_MULT } from "@/lib/store/slices/createFarmingSlice";
 
 function invGet(state, cat, itemId) {
   return state.inventoryByCategory?.[cat]?.[itemId]?.qty || 0;
@@ -333,12 +334,45 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
           wageNotifications.forEach(msg => get().enqueueNotification(msg, { type: "error" }));
         }, 100);
 
+        // --- PEST & SPRINKLER (Fase 2) ---
+        const newPlots = state.plots.map((p) => ({ ...p }));
+        const hasScarecrow = !!state.buildings?.scarecrow?.unlocked;
+        const hasSprinkler = !!state.buildings?.sprinkler?.unlocked;
+        const pestNotifications: string[] = [];
+
+        if (hasSprinkler) {
+          newPlots.forEach((p) => {
+            if (p.status === "growing") p.watered = true;
+          });
+        }
+
+        if (!hasScarecrow && Math.random() < 0.2) {
+          const growing = newPlots.filter(
+            (p) => p.status === "growing" && !p.pestInfestation,
+          );
+          if (growing.length > 0) {
+            const target =
+              growing[Math.floor(Math.random() * growing.length)];
+            target.pestInfestation = true;
+            pestNotifications.push(
+              "🐛 Hama menyerang ladang! Tanaman kena hama tumbuh lebih lambat.",
+            );
+          }
+        }
+
+        setTimeout(() => {
+          pestNotifications.forEach((msg) =>
+            get().enqueueNotification(msg, { type: "error" }),
+          );
+        }, 200);
+
         return {
           season: { current, day, tick },
           activeEvent,
           energy: state.maxEnergy || 100,
           coins: currentCoins,
           workers: newWorkers,
+          plots: newPlots,
         };
       }
       return { season: { current, day, tick }, activeEvent };
@@ -509,7 +543,8 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
       plots = [...plots];
       for (let i = 0; i < plots.length; i++) {
         const p = normalizePlot(plots[i], i);
-        const growTime = p.growTime > 0 ? p.growTime : null;
+        const baseGrow = p.growTime > 0 ? p.growTime : null;
+        const growTime = p.pestInfestation && baseGrow ? baseGrow * 2 : baseGrow;
         const isReady =
           p.crop &&
           (p.status === "ready" ||
@@ -521,11 +556,13 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
         if (isReady) {
           const crop = p.crop;
           plots[i] = {
-            id: p.id,
+            ...p,
             status: "empty",
             crop: null,
             plantedAt: null,
             growTime: null,
+            watered: false,
+            pestInfestation: false,
           };
           addToCat("crops", crop);
           harvested++;
@@ -536,11 +573,13 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
 
         if (plots[i].status === "dead") {
           plots[i] = {
-            id: plots[i].id,
+            ...plots[i],
             status: "empty",
             crop: null,
             plantedAt: null,
             growTime: null,
+            watered: false,
+            pestInfestation: false,
           };
           plotsChanged = true;
         }
@@ -559,11 +598,16 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
               catUpdates["seeds"][seedData.id] =
                 (catUpdates["seeds"][seedData.id] || 0) - 1;
               plots[i] = {
-                id: plots[i].id,
+                ...plots[i],
                 status: "growing",
                 crop: seedData.cropId,
                 plantedAt: now,
-                growTime: (seedData.time * 1000) / growthMult,
+                growTime: Math.floor(
+                  ((seedData.time * 1000) / growthMult) *
+                    PLOT_LEVEL_MULT[plots[i].level || 1],
+                ),
+                watered: false,
+                pestInfestation: false,
               };
               planted++;
               plotsChanged = true;

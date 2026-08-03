@@ -39,6 +39,20 @@ export const SHOP_BUILDINGS: any[] = [
     price: 5000,
     desc: "Tanam bibit luar musim",
   },
+  {
+    id: "scarecrow",
+    name: "Scarecrow",
+    emoji: "🪄",
+    price: 1500,
+    desc: "Cegah hama menyerang ladang",
+  },
+  {
+    id: "sprinkler",
+    name: "Sprinkler Irigasi",
+    emoji: "🚿",
+    price: 2500,
+    desc: "Siram semua tanaman otomatis setiap hari",
+  },
 ];
 
 export const SHOP_BAIT: any[] = [

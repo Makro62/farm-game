@@ -12,6 +12,7 @@ export function useFarming() {
   const plantSeed = useGameStore((state) => state?.plantSeed);
   const harvest = useGameStore((state) => state?.harvest);
   const waterPlot = useGameStore((state) => state?.waterPlot);
+  const upgradePlot = useGameStore((state) => state?.upgradePlot);
   const sellAllInventory = useGameStore((state) => state?.sellAllInventory);
   const selectedInventoryItem = useGameStore((state) => state?.selectedSeed);
   const setSelectedInventoryItem = useGameStore(
@@ -48,6 +49,14 @@ export function useFarming() {
   };
 
   const handlePlotClick = (plot, farmTool) => {
+    if (farmTool === "upgrade") {
+      const result = upgradePlot(plot.id);
+      if (result.ok)
+        enqueueNotification(result.message, { icon: "⭐", type: "success" });
+      else enqueueNotification(result.message, { icon: "⭐", type: "error" });
+      return;
+    }
+
     if (farmTool === "siram") {
       const result = waterPlot(plot.id);
       if (result.ok)

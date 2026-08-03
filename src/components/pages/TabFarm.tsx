@@ -18,6 +18,7 @@ const FARM_TOOLS = [
   { id: "tanam", label: "Tanam", emoji: "🌱" },
   { id: "siram", label: "Siram", emoji: "💧" },
   { id: "panen", label: "Panen", emoji: "🌾" },
+  { id: "upgrade", label: "Upgrade", emoji: "⭐" },
 ];
 
 const WEATHER_EMOJI = {
@@ -129,6 +130,16 @@ export default function TabFarm() {
               {buildings?.silo?.unlocked && (
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
                   🏚️ Silo Lv{buildings.silo.level || 1}
+                </span>
+              )}
+              {buildings?.scarecrow?.unlocked && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">
+                  🪄 Scarecrow
+                </span>
+              )}
+              {buildings?.sprinkler?.unlocked && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200">
+                  🚿 Sprinkler
                 </span>
               )}
               {workers?.farmer && (
