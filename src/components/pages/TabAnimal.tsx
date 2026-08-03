@@ -231,7 +231,7 @@ export default function TabAnimal() {
                               e.stopPropagation();
                               handleSellAnimal(animal);
                             }}
-                            className="absolute -top-2 -left-2 bg-[#ff7a6b] text-[#3b120c] rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-30 cursor-pointer hover:brightness-110 border border-[#ffb3aa]"
+                            className="absolute -top-2 -left-2 bg-[#ff7a6b] text-[#3b120c] rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md md:opacity-0 md:group-hover:opacity-100 transition-opacity z-30 cursor-pointer hover:brightness-110 border border-[#ffb3aa]"
                           >
                             ✕
                           </span>
@@ -247,7 +247,7 @@ export default function TabAnimal() {
                             className={`absolute -bottom-2 -right-2 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md z-30 border transition-all ${
                               animal.fed
                                 ? "bg-green-400 border-green-200 opacity-80 cursor-default"
-                                : "bg-yellow-300 border-yellow-100 opacity-0 group-hover:opacity-100 cursor-pointer hover:brightness-110"
+                                : "bg-yellow-300 border-yellow-100 md:opacity-0 md:group-hover:opacity-100 cursor-pointer hover:brightness-110"
                             }`}
                           >
                             {animal.fed ? "🟢" : "🌽"}

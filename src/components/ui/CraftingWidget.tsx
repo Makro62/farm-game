@@ -18,6 +18,7 @@ export function CraftingWidget({
   title = "Dapur Produksi",
   icon = "🍳",
   hub = false,
+  queueOnly = false,
 }) {
   const craftingQueue = useGameStore((state) => state.craftingQueue);
   const startCrafting = useGameStore((state) => state.startCrafting);
@@ -44,12 +45,27 @@ export function CraftingWidget({
   }, [type, hub]);
 
   const recipes = RECIPES.filter((r) => r.type === activeType);
-  const activeQueues = craftingQueue.filter(
-    (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === activeType,
-  );
+  const activeQueues = queueOnly
+    ? craftingQueue
+    : craftingQueue.filter(
+        (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === activeType,
+      );
   const slotsLeft = Math.max(0, 3 - activeQueues.length);
 
   const readyCount = recipes.filter(canCook).length;
+
+  if (queueOnly && activeQueues.length === 0) {
+    return (
+      <div className="mb-6">
+        <div className="shop-section-title">
+          <span>{icon}</span> {title}
+        </div>
+        <p className="text-[10px] font-bold text-[var(--text-secondary)] mb-4">
+          Tidak ada antrean masak. Pilih resep di bawah untuk mulai memasak.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-6">
@@ -121,6 +137,9 @@ export function CraftingWidget({
                     {recipe.emoji}
                   </motion.span>
                   Membuat {recipe.name}
+                  <span className="text-[10px] font-bold text-[var(--text-secondary)] ml-1">
+                    {Math.ceil((queue.duration - (currentTime - queue.startTime)) / 1000)}s
+                  </span>
                 </span>
                 <button
                   type="button"
@@ -142,7 +161,8 @@ export function CraftingWidget({
         })}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 gap-2 mb-4">
+      {!queueOnly && (
+        <div className="grid grid-cols-1 gap-2 mb-4">
         {recipes.map((recipe) => {
           const ready = canCook(recipe);
           return (
@@ -203,7 +223,8 @@ export function CraftingWidget({
             </motion.div>
           );
         })}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

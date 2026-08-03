@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useGameStore } from "@/lib/store";
 import { RECIPES } from "@/lib/data/recipes";
 import { getCropEmoji } from "@/lib/data/item-helpers";
@@ -10,6 +11,12 @@ export function ProcessingPlant() {
   const startCrafting = useGameStore((s) => s.startCrafting);
   const enqueueNotification = useGameStore((s) => s.enqueueNotification);
   const craftingQueue = useGameStore((s) => s.craftingQueue || []);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(Date.now()), 100);
+    return () => clearInterval(interval);
+  }, []);
 
   // Filter only processing recipes
   const processingRecipes = RECIPES.filter((r) => r.type === "processing");
@@ -71,8 +78,31 @@ export function ProcessingPlant() {
                         {recipe.emoji}
                       </span>
                       <span className="text-[10px] font-bold text-[#FFE08A] z-10">
-                        Memproses...
+                        {Math.max(
+                          0,
+                          Math.ceil(
+                            (item.duration - (currentTime - item.startTime)) /
+                              1000,
+                          ),
+                        )}
+                        s
                       </span>
+                      <div className="absolute bottom-1 left-1.5 right-1.5 h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/10 z-10">
+                        <div
+                          className="h-full bg-gradient-to-r from-[#6fbf55] to-[#9fd67f]"
+                          style={{
+                            width: `${Math.min(
+                              100,
+                              Math.max(
+                                0,
+                                ((currentTime - item.startTime) /
+                                  item.duration) *
+                                  100,
+                              ),
+                            )}%`,
+                          }}
+                        />
+                      </div>
                       <div className="absolute inset-0 bg-black/40 animate-pulse pointer-events-none" />
                     </>
                   ) : (

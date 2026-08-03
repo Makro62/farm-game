@@ -38,46 +38,6 @@ function MenuBoard() {
   );
 }
 
-function KitchenSlots() {
-  const craftingQueue = useGameStore((s) => s.craftingQueue || []);
-  const slots = Array.from({ length: 3 }, (_, i) => craftingQueue[i] || null);
-
-  return (
-    <>
-      <h3 className="shop-section-title">
-        <span>🍳</span> Dapur Saya
-      </h3>
-      <div className="grid grid-cols-3 gap-2 mb-2">
-        {slots.map((item, i) => {
-          const recipe = item
-            ? RECIPES.find((r) => r.id === item.recipeId)
-            : null;
-          return (
-            <div
-              key={i}
-              className="aspect-square rounded-xl border-2 border-[var(--wood)] bg-[var(--shop-bg)] flex flex-col items-center justify-center gap-1"
-            >
-              {recipe ? (
-                <>
-                  <span className="text-2xl">{recipe.emoji}</span>
-                  <span className="text-[9px] font-bold text-[var(--text-secondary)]">
-                    Masak...
-                  </span>
-                </>
-              ) : (
-                <span className="text-2xl opacity-30">🍳</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <p className="text-[10px] text-[var(--text-secondary)] font-medium mb-4">
-        Slot antrean dapur · maks 3 per jenis menu
-      </p>
-    </>
-  );
-}
-
 function TableGrid() {
   const activeCustomers = useGameStore((s) => s.activeCustomers || []);
   const totalTables = useGameStore((s) => s.totalTables || 4);
@@ -268,7 +228,11 @@ export default function TabRestaurant() {
                     : " Mode atur meja aktif."}
                 </p>
                 <TableGrid />
-                <KitchenSlots />
+                <CraftingWidget
+                  queueOnly
+                  title="Dapur Saya"
+                  icon="🍳"
+                />
               </div>
             </div>
           </div>
@@ -417,7 +381,7 @@ export default function TabRestaurant() {
                                 className={`absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-sm shadow-md z-10 ${
                                   isSelected
                                     ? "bg-yellow-400 text-white scale-110"
-                                    : "bg-white text-gray-400 opacity-0 group-hover:opacity-100 border"
+                                    : "bg-white text-gray-400 md:opacity-0 md:group-hover:opacity-100 border"
                                 }`}
                                 title="Set target masak otomatis"
                               >
