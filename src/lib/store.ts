@@ -10,7 +10,6 @@ import { logger } from "./logger";
 import { createFarmingSlice } from "./store/slices/createFarmingSlice";
 import { createMiningSlice } from "./store/slices/createMiningSlice";
 import { createRanchingSlice } from "./store/slices/createRanchingSlice";
-import { createEconomySlice } from "./store/slices/createEconomySlice";
 import { createPlayerSlice } from "./store/slices/createPlayerSlice";
 import { createTownSlice } from "./store/slices/createTownSlice";
 import { createSystemSlice } from "./store/slices/createSystemSlice";
@@ -31,7 +30,6 @@ export const useGameStore = create<GameStore>()(
         ...createFarmingSlice(s, g),
         ...createMiningSlice(s, g),
         ...createRanchingSlice(s, g),
-        ...createEconomySlice(s, g),
         ...createPlayerSlice(s, g),
         ...createTownSlice(s, g),
         ...createSystemSlice(s, g),

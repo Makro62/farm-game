@@ -198,17 +198,36 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
       consumeMineralReq("bom_besar");
       const regenTime = getMiningRegenMs(get().mining, get().weatherEffects);
       let mined = 0;
+      const mineralGains: Record<string, number> = {};
       const newNodes = get().mining.nodes.map((n) => {
         if (n.status !== "ready") return n;
         mined++;
+        mineralGains[n.type] = (mineralGains[n.type] || 0) + 1;
         get().progressQuest("mine", n.type, 1);
         return { ...n, status: "cooldown", regenAt: Date.now() + regenTime };
       });
       set((draft) => {
+        const mineralCat = { ...(draft.inventoryByCategory?.minerals || {}) };
+        for (const [type, qty] of Object.entries(mineralGains)) {
+          const existing = mineralCat[type] || {
+            qty: 0,
+            quality: "normal",
+            acquiredAt: Date.now(),
+          };
+          mineralCat[type] = { ...existing, qty: existing.qty + qty };
+        }
         draft.mining.nodes = newNodes;
+        draft.inventoryByCategory = {
+          ...draft.inventoryByCategory,
+          minerals: mineralCat,
+        };
         draft.selectedMiningTool = null;
       });
       get().addXP(mined * 15);
+      set((s) => ({
+        stats: { ...s.stats, totalMined: (s.stats?.totalMined || 0) + mined },
+      }));
+      get().checkAchievements?.();
       return {
         ok: true,
         message: `💣 Bom Besar meledak! ${mined} petak ditambang sekaligus.`,
@@ -231,18 +250,35 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
       const regenTime = getMiningRegenMs(get().mining, get().weatherEffects);
       if (node.status === "ready") {
         get().progressQuest("mine", node.type, 1);
-        set({
-          mining: {
-            ...get().mining,
-            nodes: get().mining.nodes.map((n) =>
-              n.id === nodeId
-                ? { ...n, status: "cooldown", regenAt: Date.now() + regenTime }
-                : n,
-            ),
-          },
-          selectedMiningTool: null,
+        set((state) => {
+          const mineralCat = { ...(state.inventoryByCategory?.minerals || {}) };
+          const existing = mineralCat[node.type] || {
+            qty: 0,
+            quality: "normal",
+            acquiredAt: Date.now(),
+          };
+          mineralCat[node.type] = { ...existing, qty: existing.qty + 2 };
+          return {
+            inventoryByCategory: {
+              ...state.inventoryByCategory,
+              minerals: mineralCat,
+            },
+            mining: {
+              ...state.mining,
+              nodes: state.mining.nodes.map((n) =>
+                n.id === nodeId
+                  ? { ...n, status: "cooldown", regenAt: Date.now() + regenTime }
+                  : n,
+              ),
+            },
+            selectedMiningTool: null,
+          };
         });
         get().addXP(20);
+        set((s) => ({
+          stats: { ...s.stats, totalMined: (s.stats?.totalMined || 0) + 1 },
+        }));
+        get().checkAchievements?.();
         return {
           ok: true,
           message: "🧨 Bom Kecil! Hasil tambang ×2 dari petak ini.",

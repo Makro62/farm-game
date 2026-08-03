@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/lib/store";
 import { RECIPES, canCook as canCookRecipe } from "@/lib/data/recipes";
-import { getItemEmoji, getItemDisplayName } from "@/lib/data/item-helpers";
+import { getItemEmoji, getItemDisplayName, getItemCategory } from "@/lib/data/item-helpers";
 import { CraftingWidget } from "@/components/ui/CraftingWidget";
 import { GameAreaHeader, GameActionButton } from "@/components/ui/GameAreaHeader";
 import { QuestPanel } from "@/components/game/QuestPanel";
@@ -95,9 +95,15 @@ function TableGrid() {
 
   const handleUpgrade = () => {
     const cost = totalTables * 1000;
-    openConfirm("Beli Meja Baru", `Beli meja baru seharga ${cost} 💰?`, () => {
-      upgradeTables();
-    });
+    const besiReq = totalTables * 2;
+    const batuReq = totalTables * 5;
+    openConfirm(
+      "Beli Meja Baru",
+      `Beli meja baru seharga ${cost} 💰 + ${besiReq}x Besi + ${batuReq}x Batu?`,
+      () => {
+        upgradeTables();
+      },
+    );
   };
 
   return (
@@ -357,11 +363,13 @@ export default function TabRestaurant() {
                                       const cat =
                                         parts.length === 2 ? parts[0] : null;
                                       const available = cat
-                                        ? useGameStore.getState()
-                                            .inventoryByCategory?.[cat]?.[
-                                            itemId
-                                          ]?.quantity || 0
-                                        : inventory[itemId] || 0;
+                                        ? inventory?.[cat]?.[itemId]?.qty || 0
+                                        : Object.values(inventory || {}).reduce(
+                                            (sum, catInv: any) =>
+                                              sum +
+                                              (catInv?.[itemId]?.qty || 0),
+                                            0,
+                                          );
                                       return (
                                         <span
                                           key={ingredient}
@@ -380,19 +388,25 @@ export default function TabRestaurant() {
                                 </div>
                               </div>
                             </button>
-                            {(inventory[recipe.id] || 0) > 0 && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  eatFood(recipe.id);
-                                }}
-                                className="absolute top-1 left-1 w-6 h-6 rounded-full bg-green-400 text-white flex items-center justify-center text-xs shadow-md z-10 hover:scale-110 transition-transform"
-                                title="Makan untuk pulihkan energi"
-                              >
-                                🍽️
-                              </button>
-                            )}
+                            {(() => {
+                              const recipeCat = getItemCategory(recipe.id);
+                              const owned = recipeCat
+                                ? inventory?.[recipeCat]?.[recipe.id]?.qty || 0
+                                : 0;
+                              return owned > 0 ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    eatFood(recipe.id);
+                                  }}
+                                  className="absolute top-1 left-1 w-6 h-6 rounded-full bg-green-400 text-white flex items-center justify-center text-xs shadow-md z-10 hover:scale-110 transition-transform"
+                                  title="Makan untuk pulihkan energi"
+                                >
+                                  🍽️
+                                </button>
+                              ) : null;
+                            })()}
                             {workers?.chef && isUnlocked && (
                               <button
                                 type="button"

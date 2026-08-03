@@ -78,6 +78,8 @@ export function PlotGrid({ isEditMode, farmTool = "tanam" }) {
                 isEditMode && "cursor-grab hover:ring-4 ring-yellow-400",
                 plot.status === "empty" &&
                   "bg-[#a06a38] border-b-4 border-[#7a4e28] hover:bg-[#b07843]",
+                plot.status === "dead" &&
+                  "bg-[#4a4a3d] border-b-4 border-[#33332a] opacity-80",
                 isGrowing &&
                   !isReady &&
                   "bg-[#5c4033] border-b-4 border-[#3e2b22]",
@@ -107,6 +109,11 @@ export function PlotGrid({ isEditMode, farmTool = "tanam" }) {
               {plot.watered && isGrowing && !isReady && (
                 <span className="absolute top-0.5 right-0.5 text-[10px] z-20">
                   💧
+                </span>
+              )}
+              {plot.status === "dead" && (
+                <span className="absolute inset-0 flex items-center justify-center text-lg opacity-70 select-none">
+                  🥀
                 </span>
               )}
               {isGrowing && !isReady && (

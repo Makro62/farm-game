@@ -100,13 +100,24 @@ function catFor(itemId) {
 }
 
 export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
-  enqueueNotification: (message, options = {}) => {
-    set((state) => ({
-      notificationsQueue: [
-        ...state.notificationsQueue,
-        { id: Date.now() + Math.random().toString(), message, options },
-      ],
-    }));
+  enqueueNotification: (message, options: any = {}) => {
+    const id = options.id || Date.now() + Math.random().toString();
+    set((state) => {
+      const exists = state.notificationsQueue.some((n) => n.id === id);
+      if (exists) {
+        return {
+          notificationsQueue: state.notificationsQueue.map((n) =>
+            n.id === id ? { ...n, message, options } : n,
+          ),
+        };
+      }
+      return {
+        notificationsQueue: [
+          ...state.notificationsQueue,
+          { id, message, options },
+        ],
+      };
+    });
   },
 
   dequeueNotification: (id) => {
@@ -301,6 +312,12 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
               }
               if (worker.happiness < 30) {
                  wageNotifications.push(`⚠️ ${worker.name} tidak bahagia! Performanya menurun.`);
+              }
+              // Worker strike recovery: gaji terbayar lagi → kembali bekerja
+              if (!worker.isWorking) {
+                worker.isWorking = true;
+                worker.happiness = Math.min(100, worker.happiness + 10);
+                wageNotifications.push(`✅ ${worker.name} kembali bekerja!`);
               }
             } else {
               // Not enough money to pay wage
@@ -515,6 +532,17 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
           plotsChanged = true;
           xpGain += GAME_CONSTANTS.XP.HARVEST;
           questEntries.push({ type: "harvest", targetId: crop, amount: 1 });
+        }
+
+        if (plots[i].status === "dead") {
+          plots[i] = {
+            id: plots[i].id,
+            status: "empty",
+            crop: null,
+            plantedAt: null,
+            growTime: null,
+          };
+          plotsChanged = true;
         }
 
         if (plots[i].status === "empty") {

@@ -205,9 +205,7 @@ export const WORKER_AUTO_KEYS = {
 export function isWorkerActive(state: any, type: any) {
   if (!state?.workers?.[type]?.hired) return false;
   if (state.workers[type].isWorking === false) return false;
-  const autoKey = WORKER_AUTO_KEYS[type];
-  if (!autoKey) return false;
-  return state[autoKey] !== false;
+  return state.workers[type].isAutoMode !== false;
 }
 
 export const PLOT_STATE_MAP = {

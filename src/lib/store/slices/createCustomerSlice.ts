@@ -1,14 +1,14 @@
 import type { StoreSet, StoreGet } from "@/types/game";
 import { CUSTOMERS } from "@/lib/data/customers";
 import { RECIPES } from "@/lib/data/recipes";
-import { safePositiveNumber } from "@/lib/store/utils";
+import { safePositiveNumber, safeCoins } from "@/lib/store/utils";
 
 export const createCustomerSlice = (set: StoreSet, get: StoreGet) => ({
   upgradeTables: () => {
     const state = get();
     if (state.totalTables >= 9) return false;
     const cost = state.totalTables * 1000;
-    if (state.coins < cost) {
+    if (safeCoins(state.coins) < cost) {
       get().enqueueNotification("Koin tidak cukup untuk beli meja baru!", {
         type: "error",
       });

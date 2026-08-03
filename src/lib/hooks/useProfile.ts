@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useGameStore } from "@/lib/store";
 import { formatNumber } from "@/lib/utils";
-import { getItemSellPrice } from "@/lib/data/item-helpers";
+import { getItemSellPrice, getItemCategory } from "@/lib/data/item-helpers";
 import { SEASON_META } from "@/lib/nav";
 
 export function useProfile() {
@@ -67,8 +67,8 @@ export function useProfile() {
 
   Object.entries(inventory).forEach(([itemId, data]: [string, any]) => {
     if (data.qty <= 0) return;
-    const category = null as any; // TODO: map from item data
-    const label = CATEGORY_LABELS[category] || "lainnya";
+    const category = getItemCategory(itemId);
+    const label = (category && CATEGORY_LABELS[category]) || "lainnya";
     categorized[label].push({ id: itemId, qty: data.qty, quality: data.quality });
   });
 

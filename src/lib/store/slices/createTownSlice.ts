@@ -76,7 +76,21 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
       });
     }
 
-    set((s) => ({ buildings: { ...(s.buildings || {}), [buildingId]: true } }));
+    const shape = {
+      silo: { unlocked: true, level: 1, maxLevel: 3 },
+      greenhouse: { unlocked: true, level: 1, maxLevel: 1 },
+      mill: { unlocked: true, level: 1, queue: [] },
+      well: { unlocked: true, level: 1, maxLevel: 3 },
+      workshop: { unlocked: true, level: 1, maxLevel: 3 },
+      coop: { unlocked: true, level: 1, maxLevel: 3, capacity: 6 },
+      barn: { unlocked: true, level: 1, maxLevel: 3, capacity: 6 },
+    };
+    set((s) => ({
+      buildings: {
+        ...(s.buildings || {}),
+        [buildingId]: shape[buildingId] || { unlocked: true, level: 1 },
+      },
+    }));
     return { ok: true, message: `${building.name} berhasil dibangun!` };
   },
 
@@ -129,7 +143,16 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
     }
 
     set({
-      npcs: { ...state.npcs, [npcId]: { level: newLevel, points: newPoints } },
+      npcs: {
+        ...state.npcs,
+        [npcId]: {
+          ...currentNpc,
+          level: newLevel,
+          points: newPoints,
+          hearts: Math.max(currentNpc.hearts || 1, newLevel),
+          dailyGiftGiven: true,
+        },
+      },
     });
 
     set((s) => ({

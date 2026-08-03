@@ -273,7 +273,9 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     const qty = Math.min(have, Math.max(0, Number(quantity) || 0));
     if (qty <= 0) return 0;
 
-    let sellPrice = getItemSellPrice(itemId);
+    const quality =
+      state.inventoryByCategory[cat]?.[itemId]?.quality || "normal";
+    let sellPrice = getItemSellPrice(itemId, { quality });
     if (sellPrice == null || !Number.isFinite(sellPrice)) return 0;
 
     const todayPrices = state.todayPrices || {};
@@ -312,7 +314,9 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     for (const [cat, items] of Object.entries(state.inventoryByCategory)) {
       for (const [itemId, data] of Object.entries(items)) {
         if (!isSellableProduce(itemId)) continue;
-        let sellPrice = getItemSellPrice(itemId);
+        let sellPrice = getItemSellPrice(itemId, {
+          quality: data.quality || "normal",
+        });
         if (sellPrice == null) continue;
         if (todayPrices[itemId]) sellPrice = todayPrices[itemId];
         if (
@@ -657,8 +661,15 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
         for (let i = 0; i < quests.length; i++) {
           const q = quests[i];
           if (q.claimed || q.count >= q.required) continue;
-          if (q.type === type && q.targetId === targetId) {
-            quests[i] = { ...q, count: Math.min(q.required, q.count + amount) };
+          if (q.type === "chain" && q.chain) {
+            if (q.chain.some((c) => c.type === type && c.targetId === targetId)) {
+              quests[i] = { ...q, count: q.count + (amount || 1) };
+            }
+          } else if (q.type === type && q.targetId === targetId) {
+            quests[i] = {
+              ...q,
+              count: Math.min(q.required, q.count + amount),
+            };
           }
         }
       }
@@ -921,9 +932,11 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       return;
     }
     const now = Date.now();
-    const newOrders = state.orders.filter(
-      (o) => now - (o.createdAt || 0) <= (o.timer || 0) * 1000,
-    );
+    const newOrders = state.orders.filter((o) => {
+      const timer = (o.timer || 0) * 1000;
+      if (!timer) return true;
+      return now - (o.createdAt || 0) <= timer;
+    });
     if (newOrders.length !== state.orders.length) {
       set((draft) => {
         draft.orders = newOrders;

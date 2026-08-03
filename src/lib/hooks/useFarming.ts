@@ -77,7 +77,7 @@ export function useFarming() {
       return;
     }
 
-    if (plot.status === "empty") {
+    if (plot.status === "empty" || plot.status === "dead") {
       if (!selectedInventoryItem) {
         enqueueNotification("Pilih bibit dari toko samping dulu!", {
           icon: "👆",

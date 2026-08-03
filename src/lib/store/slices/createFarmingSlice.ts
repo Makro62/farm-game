@@ -9,7 +9,11 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
   plant: (plotId, crop, growTime) => {
     const state = get();
     const plot = state.plots.find((p) => p.id === plotId);
-    if (!plot || plot.status !== "empty") return false;
+    if (
+      !plot ||
+      (plot.status !== "empty" && plot.status !== "dead")
+    )
+      return false;
 
     set((state) => ({
       plots: state.plots.map((p) =>
@@ -96,6 +100,10 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
 
     const ok = get().plant(plotId, seedData.cropId, baseGrowTime);
     if (!ok) {
+      // Refund energy
+      set((draft) => {
+        draft.energy = Math.min(draft.maxEnergy || 100, draft.energy + 1);
+      });
       // Refund seed
       set((draft) => {
         if (!draft.inventoryByCategory.seeds[seedId]) {
