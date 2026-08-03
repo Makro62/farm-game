@@ -295,12 +295,17 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       sellPrice *= 1.15;
 
     const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
-    const finalEarned = Math.round(sellPrice * qty * multiplier);
+    const comboMult =
+      state.combo?.count >= 3 ? state.combo.multiplier || 1 : 1;
+    const finalEarned = Math.round(
+      sellPrice * qty * multiplier * comboMult,
+    );
 
     INV.remove(cat, itemId, qty);
     set((draft) => {
       draft.coins = safeCoins(draft.coins) + finalEarned;
     });
+    if (comboMult > 1) get().resetCombo?.();
     return finalEarned;
   },
 
@@ -341,7 +346,9 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
 
     if (totalEarned <= 0) return 0;
     const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
-    const finalEarned = Math.round(totalEarned * multiplier);
+    const comboMult =
+      state.combo?.count >= 3 ? state.combo.multiplier || 1 : 1;
+    const finalEarned = Math.round(totalEarned * multiplier * comboMult);
 
     set((draft) => {
       for (const key of Object.keys(toSell)) {
@@ -350,6 +357,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       }
       draft.coins = safeCoins(draft.coins) + finalEarned;
     });
+    if (comboMult > 1) get().resetCombo?.();
     return finalEarned;
   },
 

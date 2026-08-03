@@ -43,6 +43,8 @@ export default function TabMine() {
     handleToggleAuto,
     handleShopBuy,
     getRegenProgress,
+    handleUnlockSmeltery,
+    handleSmelt,
   } = useMining();
 
   const [selectedFloor, setSelectedFloor] = useState(mining.currentFloor || 1);
@@ -181,22 +183,24 @@ export default function TabMine() {
       </button>
 
       {/* Smeltery Panel */}
-      {mining.smeltery?.unlocked && (
+      {mining.smeltery?.unlocked ? (
         <>
           <ShopSectionTitle icon="🔥">Smeltery</ShopSectionTitle>
-          <div className="glass-card p-2 mb-3 text-xs">
+          <div className="glass-card p-2 mb-2 text-xs">
             <div className="font-bold text-[var(--text-primary)] mb-1">
-              Antrean Peleburan
+              Antrean Peleburan ({mining.smeltery.queue.length}/3)
             </div>
             {mining.smeltery.queue.length === 0 ? (
-              <div className="text-[var(--text-secondary)] italic">Kosong</div>
+              <div className="text-[var(--text-secondary)] italic mb-2">
+                Kosong — lelehkan mineral jadi batangan (jual lebih mahal).
+              </div>
             ) : (
               mining.smeltery.queue.map((job, i) => (
                 <div
                   key={i}
                   className="flex items-center justify-between py-1 border-b border-white/10 last:border-0"
                 >
-                  <span>{job.recipe}</span>
+                  <span>🔥 {job.recipe}</span>
                   <span className="text-[var(--gold-deep)]">
                     {job.completeAt
                       ? Math.ceil((job.completeAt - Date.now()) / 1000) + "s"
@@ -205,6 +209,37 @@ export default function TabMine() {
                 </div>
               ))
             )}
+            {MINERALS.filter((m) => m.smeltRecipe).map((mineral) => (
+              <button
+                key={mineral.id}
+                type="button"
+                onClick={() => handleSmelt(mineral.id)}
+                className="w-full mt-1 flex items-center justify-between gap-2 rounded-lg bg-[var(--primary-light)]/30 border border-[var(--primary)]/30 px-2 py-1.5 hover:bg-[var(--primary-light)]/50"
+              >
+                <span className="font-bold">
+                  {mineral.emoji} {mineral.name} → {mineral.smeltRecipe.output}
+                </span>
+                <span className="text-[9px] text-[var(--text-secondary)]">
+                  ⏱️ {mineral.smeltRecipe.time}s
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <ShopSectionTitle icon="🔥">Smeltery</ShopSectionTitle>
+          <div className="glass-card p-2 mb-3 text-xs">
+            <p className="text-[var(--text-secondary)] mb-2">
+              Lelehkan mineral jadi batangan yang lebih berharga.
+            </p>
+            <button
+              type="button"
+              onClick={handleUnlockSmeltery}
+              className="w-full rounded-lg bg-[#ff9f43] border border-[#d97f2b] text-white font-bold text-xs py-2 shadow"
+            >
+              🔓 Buka Smeltery — 2.500💰 + 10⚫ Besi + 20🪨 Batu
+            </button>
           </div>
         </>
       )}

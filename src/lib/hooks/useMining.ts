@@ -125,6 +125,21 @@ export function useMining() {
     }
   };
 
+  const unlockSmeltery = useGameStore((state) => state?.unlockSmeltery);
+  const smeltItem = useGameStore((state) => state?.smeltItem);
+
+  const handleUnlockSmeltery = () => {
+    const result = unlockSmeltery();
+    if (result.ok) enqueueNotification(result.message, { type: "success" });
+    else enqueueNotification(result.message, { type: "error" });
+  };
+
+  const handleSmelt = (mineralId) => {
+    const result = smeltItem(mineralId);
+    if (result.ok) enqueueNotification(result.message, { type: "success" });
+    else enqueueNotification(result.message, { type: "error" });
+  };
+
   const getRegenProgress = (node) => {
     if (!node.regenAt) return 0;
     const total =
@@ -160,5 +175,7 @@ export function useMining() {
     handleToggleAuto,
     handleShopBuy,
     getRegenProgress,
+    handleUnlockSmeltery,
+    handleSmelt,
   };
 }

@@ -1,6 +1,8 @@
 import type { StoreSet, StoreGet } from "@/types/game";
 import { SHOP_BUILDINGS, SHOP_DECORATIONS } from "@/lib/data/shop";
 import { getItemSellPrice } from "@/lib/data/item-helpers";
+import { MINERALS } from "@/lib/data/minerals";
+import { FISHES } from "@/lib/data/fishes";
 
 export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
   setSelectedBait: (baitId) => set({ selectedBait: baitId }),
@@ -168,6 +170,78 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
     get().checkAchievements?.();
     return { leveledUp, newLevel, pointsGained };
   },
+
+  bankDeposit: (amount) => {
+    const amt = Math.floor(Number(amount) || 0);
+    if (amt <= 0) return { ok: false, message: "Nominal tidak valid." };
+    const state = get();
+    if (state.coins < amt)
+      return { ok: false, message: "Koin di kantong tidak cukup!" };
+    set((draft) => {
+      draft.coins -= amt;
+      draft.town.bankSavings += amt;
+    });
+    return { ok: true, message: `💰 ${amt} koin disimpan di Bank!` };
+  },
+
+  bankWithdraw: (amount) => {
+    const amt = Math.floor(Number(amount) || 0);
+    if (amt <= 0) return { ok: false, message: "Nominal tidak valid." };
+    const state = get();
+    if ((state.town?.bankSavings || 0) < amt)
+      return { ok: false, message: "Saldo Bank tidak cukup!" };
+    set((draft) => {
+      draft.town.bankSavings -= amt;
+      draft.coins += amt;
+    });
+    return { ok: true, message: `💵 ${amt} koin ditarik dari Bank!` };
+  },
+
+  donateToMuseum: (itemId) => {
+    const state = get();
+    const points = getMuseumPoints(itemId);
+    if (!points)
+      return { ok: false, message: "Item ini tidak bisa didonasikan." };
+    const cat = getItemCategory(itemId);
+    if ((state.inventoryByCategory?.[cat]?.[itemId]?.qty || 0) <= 0)
+      return { ok: false, message: "Item tidak ada di inventori." };
+
+    set((draft) => {
+      if (draft.inventoryByCategory[cat]?.[itemId]) {
+        draft.inventoryByCategory[cat][itemId].qty -= 1;
+        if (draft.inventoryByCategory[cat][itemId].qty <= 0) {
+          delete draft.inventoryByCategory[cat][itemId];
+        }
+      }
+      draft.town.museumDonations.push({
+        itemId,
+        points,
+        donatedAt: Date.now(),
+      });
+    });
+
+    get().addXP(points / 5);
+    const totalPoints = (get().town?.museumDonations || []).reduce(
+      (sum, d) => sum + (d.points || 0),
+      0,
+    );
+    const milestones = [100, 300, 600, 1000];
+    const reached = milestones.filter((m) => {
+      const prev = totalPoints - points;
+      return prev < m && totalPoints >= m;
+    });
+    if (reached.length > 0) {
+      const reward = reached.reduce((sum, m) => sum + m, 0);
+      set((draft) => {
+        draft.coins += reward;
+      });
+      get().enqueueNotification(
+        `🏛️ Milestone museum tercapai! Bonus ${reward} 💰`,
+        { type: "success" },
+      );
+    }
+    return { ok: true, points, message: `🏛️ Didonasikan! +${points} poin museum` };
+  },
 });
 
 function getItemCategory(itemId) {
@@ -221,4 +295,11 @@ function getItemCategory(itemId) {
     lele_bakar: "cooked",
   };
   return catMap[itemId] || null;
+}
+
+function getMuseumPoints(itemId: string): number {
+  const mineral = MINERALS.find((m) => m.id === itemId);
+  if (mineral?.museumPoints) return mineral.museumPoints;
+  const fish = FISHES.find((f) => f.id === itemId);
+  return fish?.museumPoints || 0;
 }

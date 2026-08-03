@@ -1,6 +1,7 @@
 import type { StoreSet, StoreGet } from "@/types/game";
 import { getMiningRegenMs, rollMineralType, isWorkerActive } from "@/lib/store/utils";
 import { SHOP_MINING } from "@/lib/data/shop";
+import { MINERALS } from "@/lib/data/minerals";
 import { GAME_CONSTANTS } from "@/lib/constants";
 
 export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
@@ -400,5 +401,128 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
     }
 
     if (changed) set({ mining: { ...state.mining, nodes: newNodes } });
+  },
+
+  unlockSmeltery: () => {
+    const state = get();
+    if (state.mining?.smeltery?.unlocked)
+      return { ok: false, message: "Smeltery sudah terbuka." };
+    if (state.coins < 2500)
+      return { ok: false, message: "Butuh 2.500 koin untuk membuka Smeltery." };
+    const req = { besi: 10, batu: 20 };
+    for (const [mineral, qty] of Object.entries(req)) {
+      if ((state.inventoryByCategory?.minerals?.[mineral]?.qty || 0) < qty) {
+        return {
+          ok: false,
+          message: `Butuh ${qty}x ${mineral} untuk membuka Smeltery.`,
+        };
+      }
+    }
+    set((draft) => {
+      draft.coins -= 2500;
+      for (const [mineral, qty] of Object.entries(req)) {
+        if (draft.inventoryByCategory.minerals[mineral]) {
+          draft.inventoryByCategory.minerals[mineral].qty -= qty;
+          if (draft.inventoryByCategory.minerals[mineral].qty <= 0) {
+            delete draft.inventoryByCategory.minerals[mineral];
+          }
+        }
+      }
+      draft.mining.smeltery.unlocked = true;
+      draft.mining.smeltery.level = 1;
+    });
+    return { ok: true, message: "🔥 Smeltery terbuka! Lelehkan mineral jadi batangan." };
+  },
+
+  smeltItem: (mineralId) => {
+    const state = get();
+    if (!state.mining?.smeltery?.unlocked)
+      return { ok: false, message: "Buka Smeltery dulu!" };
+    const mineral = MINERALS.find((m) => m.id === mineralId);
+    if (!mineral?.smeltRecipe)
+      return { ok: false, message: "Mineral ini tidak bisa dilebur." };
+    const recipe = mineral.smeltRecipe as {
+      input: Record<string, number>;
+      output: string;
+      time: number;
+      fuel: string;
+    };
+    if (state.mining.smeltery.queue.length >= 3)
+      return { ok: false, message: "Antrean Smeltery penuh (maks 3)." };
+
+    for (const [key, qty] of Object.entries(recipe.input)) {
+      const [cat, itemId] = key.split(".");
+      if ((state.inventoryByCategory?.[cat]?.[itemId]?.qty || 0) < qty) {
+        return {
+          ok: false,
+          message: `Bahan tidak cukup: butuh ${qty}x ${itemId}.`,
+        };
+      }
+    }
+    const fuelQty = 5;
+    if ((state.inventoryByCategory?.minerals?.batu?.qty || 0) < fuelQty) {
+      return { ok: false, message: `Butuh ${fuelQty}x batu sebagai bahan bakar.` };
+    }
+
+    set((draft) => {
+      for (const [key, qty] of Object.entries(recipe.input)) {
+        const [cat, itemId] = key.split(".");
+        if (draft.inventoryByCategory[cat]?.[itemId]) {
+          draft.inventoryByCategory[cat][itemId].qty -= qty as number;
+          if (draft.inventoryByCategory[cat][itemId].qty <= 0) {
+            delete draft.inventoryByCategory[cat][itemId];
+          }
+        }
+      }
+      if (draft.inventoryByCategory.minerals.batu) {
+        draft.inventoryByCategory.minerals.batu.qty -= fuelQty;
+        if (draft.inventoryByCategory.minerals.batu.qty <= 0) {
+          delete draft.inventoryByCategory.minerals.batu;
+        }
+      }
+      draft.mining.smeltery.queue.push({
+        recipe: mineral.name,
+        input: recipe.input,
+        output: recipe.output,
+        completeAt: Date.now() + recipe.time * 1000,
+      });
+    });
+    return {
+      ok: true,
+      message: `🔥 ${mineral.name} masuk antrean peleburan (${recipe.time}s).`,
+    };
+  },
+
+  syncSmeltery: () => {
+    const state = get();
+    const smeltery = state.mining?.smeltery;
+    if (!smeltery || smeltery.queue.length === 0) return;
+    const now = Date.now();
+    let finished: any[] = [];
+    let remaining: any[] = [];
+    smeltery.queue.forEach((job) => {
+      if (job.completeAt && now >= job.completeAt) finished.push(job);
+      else remaining.push(job);
+    });
+    if (finished.length === 0) return;
+    set((draft) => {
+      draft.mining.smeltery.queue = remaining;
+      for (const job of finished) {
+        const [cat, itemId] = job.output.split(".");
+        if (!draft.inventoryByCategory[cat][itemId]) {
+          draft.inventoryByCategory[cat][itemId] = {
+            qty: 0,
+            quality: "normal",
+            acquiredAt: Date.now(),
+          };
+        }
+        draft.inventoryByCategory[cat][itemId].qty += 1;
+      }
+    });
+    finished.forEach((job) => {
+      get().enqueueNotification(`🔥 Peleburan selesai: ${job.recipe}`, {
+        type: "success",
+      });
+    });
   },
 });

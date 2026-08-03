@@ -25,6 +25,7 @@ export const FISHES: any[] = [
     },
     usedInRecipes: ["sushi_mas", "sup_ikan"],
     npcGiftValue: { maria: 15, bejo: 25 },
+    museumPoints: 10,
   },
   {
     id: "lele",
@@ -47,6 +48,7 @@ export const FISHES: any[] = [
     },
     usedInRecipes: ["lele_bakar"],
     npcGiftValue: { bejo: 30 },
+    museumPoints: 15,
   },
   {
     id: "ikan_badut",
@@ -69,6 +71,7 @@ export const FISHES: any[] = [
     },
     usedInRecipes: [],
     npcGiftValue: { maria: 35, botan: 20 },
+    museumPoints: 30,
   },
   {
     id: "cumi",
@@ -91,6 +94,7 @@ export const FISHES: any[] = [
     },
     usedInRecipes: ["takoyaki"],
     npcGiftValue: { bejo: 40, maria: 50 },
+    museumPoints: 40,
   },
   {
     id: "gurita",

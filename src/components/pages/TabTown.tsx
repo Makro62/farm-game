@@ -10,6 +10,8 @@ import { TownShop } from "@/components/game/TownShop";
 import { TownPlaza, FishingLake, FishCatchBoard } from "@/components/game/TownPlaza";
 import { ProcessingPlant } from "@/components/game/ProcessingPlant";
 import { OrderBoard } from "@/components/game/OrderBoard";
+import { BankPanel } from "@/components/game/BankPanel";
+import { MuseumPanel } from "@/components/game/MuseumPanel";
 import TabPage, { GameStage } from "@/components/ui/TabPage";
 import SideDock from "@/components/ui/SideDock";
 
@@ -89,6 +91,18 @@ export default function TabTown() {
           <SideDock
             tabs={[
               { id: "toko", label: "Toko", emoji: "🏪", content: <TownShop /> },
+              {
+                id: "bank",
+                label: "Bank",
+                emoji: "🏦",
+                content: <BankPanel />,
+              },
+              {
+                id: "museum",
+                label: "Museum",
+                emoji: "🏛️",
+                content: <MuseumPanel />,
+              },
               {
                 id: "npcs",
                 label: "NPC",

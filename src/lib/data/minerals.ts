@@ -74,5 +74,6 @@ export const MINERALS: any[] = [
     usedInCrafting: ["diamond_pickaxe", "master_ring"],
     spawnEvent: "diamond_rush",
     achievementUnlock: "first_diamond",
+    museumPoints: 150,
   },
 ];

@@ -334,6 +334,24 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
           wageNotifications.forEach(msg => get().enqueueNotification(msg, { type: "error" }));
         }, 100);
 
+        // --- BANK INTEREST (Fase 3) ---
+        const bankSavings = state.town?.bankSavings || 0;
+        let interest = 0;
+        if (bankSavings > 0) {
+          interest = Math.floor(
+            bankSavings * (state.town?.bankInterestRate || 0.02),
+          );
+          if (interest > 0) {
+            state.town.bankSavings = bankSavings + interest;
+            setTimeout(() => {
+              get().enqueueNotification(
+                `🏦 Bunga bank +${interest} 💰 (saldo ${state.town.bankSavings})`,
+                { type: "success" },
+              );
+            }, 150);
+          }
+        }
+
         // --- PEST & SPRINKLER (Fase 2) ---
         const newPlots = state.plots.map((p) => ({ ...p }));
         const hasScarecrow = !!state.buildings?.scarecrow?.unlocked;
@@ -457,6 +475,7 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
       () => get().changeWeather(),
       () => get().syncPlots(),
       () => get().syncMiningNodes(),
+      () => get().syncSmeltery(),
       () => get().runAutoWorkers(),
       () => get().processCraftingQueue(),
       () => get().checkOrders(),
