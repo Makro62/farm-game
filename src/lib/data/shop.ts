@@ -87,7 +87,7 @@ export const SHOP_ANIMALS: any[] = [
     time: 20,
     product: 'telur',
     productEmoji: '🥚',
-    image: '/img/animals/chicken.png',
+    image: '/img/assets_lama/chicken_1786351171451.png',
   },
   {
     id: 'bebek',
@@ -97,7 +97,7 @@ export const SHOP_ANIMALS: any[] = [
     time: 40,
     product: 'telur_bebek',
     productEmoji: '🥚',
-    image: '/img/animals/duck.png',
+    image: '/img/assets_lama/duck_1786351198081.png',
   },
   {
     id: 'sapi',
@@ -107,7 +107,7 @@ export const SHOP_ANIMALS: any[] = [
     time: 60,
     product: 'susu',
     productEmoji: '🥛',
-    image: '/img/animals/cow.png',
+    image: '/img/assets_lama/cow_1786351186917.png',
   },
   {
     id: 'domba',
@@ -117,7 +117,7 @@ export const SHOP_ANIMALS: any[] = [
     time: 90,
     product: 'bulu',
     productEmoji: '🧶',
-    image: '/img/animals/sheep.png',
+    image: '/img/assets_lama/sheep_1786351234993.png',
   },
   {
     id: 'babi',
@@ -127,7 +127,7 @@ export const SHOP_ANIMALS: any[] = [
     time: 120,
     product: 'truffle',
     productEmoji: '🍄',
-    image: '/img/animals/pig.png',
+    image: '/img/assets_lama/pig_1786351221973.png',
   },
   {
     id: 'kuda',
@@ -137,7 +137,7 @@ export const SHOP_ANIMALS: any[] = [
     time: 150,
     product: 'tapal',
     productEmoji: '🧲',
-    image: '/img/animals/horse.png',
+    image: '/img/assets_lama/horse_1786351210220.png',
   },
 ]
 

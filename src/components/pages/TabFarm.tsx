@@ -72,7 +72,14 @@ export default function TabFarm() {
     <TabPage>
       <GameStage
         main={
-          <div className="glass-panel p-3 sm:p-4 stage-play-area">
+          <div 
+            className="glass-panel p-3 sm:p-4 stage-play-area relative overflow-hidden"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255, 252, 245, 0.4), rgba(255, 252, 245, 0.5)), url("/img/backgrounds/farm_bg.png")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
             <GameAreaHeader icon="🌾" title="Ladang">
               <GameActionButton
                 variant="edit"

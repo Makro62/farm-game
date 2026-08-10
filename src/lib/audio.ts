@@ -4,7 +4,7 @@ import { logger } from './logger';
 
 // ─── Settings persistence ─────────────────────────────────────────
 function loadConfig() {
-  return { volume: 0.5, musicVolume: 0.25, enabled: true, musicEnabled: true };
+  return { volume: 0.8, musicVolume: 0.8, enabled: true, musicEnabled: true };
 }
 
 // ─── Musical Constants ────────────────────────────────────────────
@@ -346,7 +346,7 @@ class SynthMusicPlayer {
   private barCount = 0;
   private lookAhead = 0.1; // seconds
   private scheduleInterval: ReturnType<typeof setInterval> | null = null;
-  private volume = 0.25;
+  private volume = 0.8;
 
   constructor(ctx: AudioContext, dest: AudioNode) {
     this.ctx = ctx;

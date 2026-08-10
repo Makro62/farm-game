@@ -97,7 +97,7 @@ export default function TabAnimal() {
             <div
               className={`p-3 sm:p-4 field-frame relative stage-play-frame transition-all bg-cover bg-center ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}
               style={{
-                backgroundImage: "url('/img/backgrounds/animal_bg.png')",
+                backgroundImage: "url('/img/assets_lama/animal_bg_1786351247779.png')",
               }}
             >
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30 pointer-events-none rounded-[22px]" />

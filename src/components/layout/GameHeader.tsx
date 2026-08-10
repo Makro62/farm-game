@@ -88,9 +88,18 @@ export default function GameHeader({
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="shell-header-brand">
-          <img src="/img/logo.png" alt="" className="shell-header-logo" />
-          <span>Farm Tycoon</span>
+        <div className="shell-header-brand flex items-center gap-2 group cursor-pointer">
+          <div className="relative">
+            <div className="absolute inset-0 bg-white/20 rounded-full blur-md group-hover:bg-white/40 transition-all"></div>
+            <img 
+              src="/img/assets_lama/logo_1786351159271.png" 
+              alt="Logo" 
+              className="shell-header-logo relative z-10 hover:scale-110 transition-transform duration-300 drop-shadow-md" 
+            />
+          </div>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-[#FDE68A] font-black drop-shadow-sm">
+            Farm Tycoon
+          </span>
         </div>
 
         <div className="shell-header-stats">
