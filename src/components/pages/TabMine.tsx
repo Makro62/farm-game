@@ -158,7 +158,7 @@ export default function TabMine() {
         <button
           type="button"
           onClick={() => setSelectedMiningTool(null)}
-          className="w-full mb-3 text-xs text-[var(--text-secondary)] underline font-bold"
+          className="w-full mb-3 text-xs text-[var(--text-secondary)] underline font-bold rounded-full"
         >
           Batal pilih alat
         </button>
@@ -219,7 +219,7 @@ export default function TabMine() {
                 key={mineral.id}
                 type="button"
                 onClick={() => handleSmelt(mineral.id)}
-                className="w-full mt-1 flex items-center justify-between gap-2 rounded-lg bg-[var(--primary-light)]/30 border border-[var(--primary)]/30 px-2 py-1.5 hover:bg-[var(--primary-light)]/50"
+                className="w-full mt-1 flex items-center justify-between gap-2 rounded-full bg-[var(--primary-light)]/30 border border-[var(--primary)]/30 px-2 py-1.5 hover:bg-[var(--primary-light)]/50"
               >
                 <span className="font-bold">
                   {mineral.emoji} {mineral.name} → {mineral.smeltRecipe.output}
@@ -241,7 +241,7 @@ export default function TabMine() {
             <button
               type="button"
               onClick={handleUnlockSmeltery}
-              className="w-full rounded-lg bg-[#ff9f43] border border-[#d97f2b] text-white font-bold text-xs py-2 shadow"
+              className="w-full rounded-full bg-[#ff9f43] border border-[#d97f2b] text-white font-bold text-xs py-2 shadow"
             >
               🔓 Buka Smeltery — 2.500💰 + 10⚫ Besi + 20🪨 Batu
             </button>
@@ -286,7 +286,7 @@ export default function TabMine() {
                     key={floor}
                     onClick={() => handleChangeFloor(floor)}
                     disabled={locked}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border-2 transition-all
+                    className={`px-2 py-1 rounded-full text-[10px] font-bold border-2 transition-all
                       ${
                         isCurrent
                           ? "bg-[var(--gold)] text-[var(--text-primary)] border-[var(--gold-deep)] shadow-sm"

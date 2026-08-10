@@ -45,7 +45,7 @@ export function TownPlaza() {
           type="button"
           onClick={handleSpinWheel}
           disabled={spunToday}
-          className={`w-full glass-card p-4 rounded-2xl text-left border-2 transition-transform ${
+          className={`w-full glass-card p-4 rounded-full text-left border-2 transition-transform ${
             spunToday
               ? "opacity-70 cursor-default border-[var(--wood)]/40"
               : "border-[var(--gold)] hover:scale-[1.01]"
@@ -80,7 +80,7 @@ export function TownPlaza() {
                   type="button"
                   whileTap={{ scale: 0.97 }}
                   onClick={() => openNpcGift(npc.id)}
-                  className="glass-card p-3 rounded-2xl text-left hover:brightness-105 transition-colors border-2 border-[var(--wood)]"
+                  className="glass-card p-3 rounded-full text-left hover:brightness-105 transition-colors border-2 border-[var(--wood)]"
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-3xl bg-[var(--shop-bg)] w-12 h-12 rounded-full flex items-center justify-center border-2 border-[var(--wood)]">
@@ -173,7 +173,7 @@ export function FishingLake({
         <button
           type="button"
           onClick={startFishing}
-          className="relative z-10 bg-white/85 backdrop-blur-md px-6 py-4 rounded-2xl border-[3px] border-[var(--wood)] shadow-[0_5px_0_var(--wood-light)] hover:scale-105 transition-transform text-center"
+          className="relative z-10 bg-white/85 backdrop-blur-md px-6 py-4 rounded-full border-[3px] border-[var(--wood)] shadow-[0_5px_0_var(--wood-light)] hover:scale-105 transition-transform text-center"
         >
           <span className="text-5xl drop-shadow-md inline-block mb-2">🎣</span>
           <p className="text-[var(--text-primary)] font-bold text-lg">

@@ -4,6 +4,7 @@ import { useGameStore } from "@/lib/store";
 import { CROP_DATA } from "@/lib/data/crops";
 import { getCropEmoji } from "@/lib/data/item-helpers";
 import toast from "react-hot-toast";
+import Button from "@/components/ui/Button";
 
 export function MarketBoard() {
   const todayPrices = useGameStore((s) => s.todayPrices);
@@ -24,13 +25,15 @@ export function MarketBoard() {
         <span className="flex items-center gap-2">
           <span className="text-xl">📈</span> Papan Harga
         </span>
-        <button
+        <Button
           type="button"
           onClick={handleRefresh}
-          className="btn-gold !px-2.5 !py-1 !text-[10px] uppercase tracking-wide"
+          variant="gold"
+          size="sm"
+          className="uppercase tracking-wide"
         >
           Refresh
-        </button>
+        </Button>
       </div>
 
       {buildings?.silo && (

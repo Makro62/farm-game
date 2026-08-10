@@ -271,7 +271,7 @@
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-1.5 font-bold transition-all duration-200;
-    border-radius: 10px;
+    border-radius: 9999px;
     @apply disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none;
   }
 
@@ -296,7 +296,7 @@
     width: 2.75rem;
     height: 2.75rem;
     font-size: 1.5rem;
-    border-radius: 0.75rem;
+    border-radius: 9999px;
   }
 
   .qty-control-input {
@@ -590,7 +590,7 @@
   .shell-rail--narrow .shell-brand .shell-icon-btn {
     width: 44px;
     height: 44px;
-    border-radius: 12px;
+    border-radius: 9999px;
     padding: 0;
     background: rgba(255, 255, 255, 0.1);
   }
@@ -636,7 +636,7 @@
     justify-content: center;
     width: 28px;
     height: 28px;
-    border-radius: 8px;
+    border-radius: 9999px;
     background: rgba(255, 255, 255, 0.14);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--text-on-dark);
@@ -685,7 +685,7 @@
     width: 100%;
     height: 42px;
     padding: 0 0.65rem;
-    border-radius: 12px;
+    border-radius: 9999px;
     color: color-mix(in srgb, var(--text-on-dark) 85%, transparent);
     text-decoration: none;
     font-family: var(--font-display), sans-serif;
@@ -792,7 +792,7 @@
     height: 34px;
     width: 100%;
     padding: 0 0.35rem;
-    border-radius: 10px;
+    border-radius: 9999px;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.14);
     color: color-mix(in srgb, var(--text-on-dark) 92%, transparent);
@@ -880,7 +880,7 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: 9999px;
     background: rgba(255, 255, 255, 0.14);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--text-on-dark);
@@ -1130,7 +1130,7 @@
     gap: 0.05rem;
     min-height: 44px;
     padding: 0.25rem 0.15rem;
-    border-radius: 10px;
+    border-radius: 9999px;
     color: color-mix(in srgb, var(--text-on-dark) 70%, transparent);
     text-decoration: none;
     font-size: 0.52rem;
@@ -1203,7 +1203,7 @@
     gap: 0.3rem;
     min-height: 34px;
     padding: 0.35rem 0.45rem;
-    border-radius: 10px;
+    border-radius: 9999px;
     font-size: 0.72rem;
     font-weight: 800;
     color: var(--text-secondary);
@@ -1505,7 +1505,7 @@
 
   .btn-qty {
     @apply shrink-0 flex items-center justify-center;
-    @apply rounded-xl text-[var(--text-primary)] font-black transition-colors;
+    @apply rounded-full text-[var(--text-primary)] font-black transition-colors;
     background: linear-gradient(180deg, var(--primary-light), var(--primary));
     border: 2px solid #d4f5d0;
     box-shadow: 0 2px 0 var(--primary-dark);
@@ -1621,7 +1621,7 @@
   .market-row {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 10px;
+    border-radius: 9999px;
   }
 
   .market-row--up {

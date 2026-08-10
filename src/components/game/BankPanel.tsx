@@ -66,20 +66,20 @@ export function BankPanel() {
         min={1}
         value={amount}
         onChange={(e) => setAmount(Math.max(0, Number(e.target.value) || 0))}
-        className="w-full rounded-lg border border-white/60 bg-white/50 px-2 py-1.5 text-sm mb-2"
+        className="w-full rounded-full border border-white/60 bg-white/50 px-3 py-1.5 text-sm mb-2"
       />
       <div className="flex gap-2">
         <button
           type="button"
           onClick={handleDeposit}
-          className="flex-1 rounded-lg bg-emerald-500 border border-emerald-600 text-white font-bold text-xs py-2"
+          className="flex-1 rounded-full bg-emerald-500 border border-emerald-600 text-white font-bold text-xs py-2"
         >
           💰 Simpan
         </button>
         <button
           type="button"
           onClick={handleWithdraw}
-          className="flex-1 rounded-lg bg-sky-500 border border-sky-600 text-white font-bold text-xs py-2"
+          className="flex-1 rounded-full bg-sky-500 border border-sky-600 text-white font-bold text-xs py-2"
         >
           💵 Tarik
         </button>

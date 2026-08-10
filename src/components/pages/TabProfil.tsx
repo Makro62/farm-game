@@ -250,7 +250,7 @@ export default function TabProfil() {
           </h2>
           <button
             onClick={() => setShowSettings(true)}
-            className="bg-white/50 hover:bg-white p-2 rounded-xl border-2 border-white/60 transition-colors shadow-sm"
+            className="bg-white/50 hover:bg-white p-2 rounded-full border-2 border-white/60 transition-colors shadow-sm"
           >
             <Settings className="w-5 h-5 text-[var(--text-secondary)]" />
           </button>

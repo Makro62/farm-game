@@ -191,18 +191,17 @@ export default function TabFarm() {
                 { id: "feedPlots", label: "Pakan", emoji: "🐄" },
                 { id: "kitchenPlots", label: "Dapur", emoji: "🍳" }
               ].map(tab => (
-                <button
+                <Button
                   key={tab.id}
-                  onClick={() => setActivePlotTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-t-lg font-bold text-xs border-b-4 transition-all ${
-                    activePlotTab === tab.id
-                      ? "bg-[var(--primary)] text-white border-[var(--primary-dark)]"
-                      : "bg-black/10 text-[var(--text-secondary)] border-transparent hover:bg-black/20"
-                  }`}
+                  variant={activePlotTab === tab.id ? "primary" : "secondary"}
+                  size="sm"
+                  onClick={() => setActivePlotTab(tab.id as any)}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-none rounded-full border-b-4 border-transparent data-[active=true]:border-[var(--primary-dark)]"
+                  data-active={activePlotTab === tab.id}
                 >
                   <span>{tab.emoji}</span>
                   <span>{tab.label}</span>
-                </button>
+                </Button>
               ))}
             </div>
 

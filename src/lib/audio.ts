@@ -1,20 +1,40 @@
 'use client';
 
-import { Howl, Howler } from 'howler';
 import { logger } from './logger';
 
 // ─── Settings persistence ─────────────────────────────────────────
-// Settings are now managed by Zustand store persist.
-// AudioManager reads from a config object passed in or uses defaults.
 function loadConfig() {
   return { volume: 0.5, musicVolume: 0.25, enabled: true, musicEnabled: true };
 }
 
-// ─── Web Audio Synth Engine ───────────────────────────────────────
-// Each sound is synthesized on-the-fly using Web Audio API oscillators,
-// gain envelopes and filters. No external audio files needed.
+// ─── Musical Constants ────────────────────────────────────────────
+// Note frequencies (Hz)
+const NOTE = {
+  C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00, B3: 246.94,
+  C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, B4: 493.88,
+  C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00, B5: 987.77,
+  C6: 1046.50,
+};
 
-function createOsc(ctx, dest, freq, type, startTime, duration, volume, fadeOut = true) {
+// Scales
+const MAJOR = [0, 2, 4, 5, 7, 9, 11]; // intervals in semitones
+const PENTATONIC = [0, 2, 4, 7, 9];
+
+function noteFreq(root: number, semitones: number): number {
+  return root * Math.pow(2, semitones / 12);
+}
+
+// ─── Web Audio Synth Engine ───────────────────────────────────────
+function createOsc(
+  ctx: AudioContext,
+  dest: AudioNode,
+  freq: number,
+  type: OscillatorType,
+  startTime: number,
+  duration: number,
+  volume: number,
+  fadeOut = true,
+) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
@@ -29,21 +49,27 @@ function createOsc(ctx, dest, freq, type, startTime, duration, volume, fadeOut =
   osc.stop(startTime + duration + 0.01);
 }
 
-// Arpeggio helper
-function arpeggio(ctx, dest, notes, type, noteLen, volume, startOffset = 0) {
+function arpeggio(
+  ctx: AudioContext,
+  dest: AudioNode,
+  notes: number[],
+  type: OscillatorType,
+  noteLen: number,
+  volume: number,
+  startOffset = 0,
+) {
   const t = ctx.currentTime + startOffset;
   notes.forEach((freq, i) => {
     createOsc(ctx, dest, freq, type, t + i * noteLen, noteLen * 1.2, volume);
   });
 }
 
-const SYNTH_SOUNDS = {
-  // 🌾 Harvest — cheerful ascending arpeggio
+// ─── SFX Definitions ─────────────────────────────────────────────
+const SYNTH_SOUNDS: Record<string, (ctx: AudioContext, master: AudioNode) => void> = {
   harvest: (ctx, master) => {
-    arpeggio(ctx, master, [523, 659, 784, 1047], 'sine', 0.08, 0.12);
+    arpeggio(ctx, master, [NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6], 'sine', 0.08, 0.12);
   },
 
-  // 🌱 Plant — soft bubbly pop
   plant: (ctx, master) => {
     const t = ctx.currentTime;
     const osc = ctx.createOscillator();
@@ -60,24 +86,19 @@ const SYNTH_SOUNDS = {
     osc.stop(t + 0.16);
   },
 
-  // 💰 Sell — cash register ka-ching
   sell: (ctx, master) => {
     const t = ctx.currentTime;
-    // Bright bell
     createOsc(ctx, master, 1200, 'sine', t, 0.08, 0.12);
     createOsc(ctx, master, 1500, 'sine', t + 0.06, 0.12, 0.10);
-    // Coin jingle
     createOsc(ctx, master, 2400, 'sine', t + 0.1, 0.15, 0.06);
   },
 
-  // 🛒 Buy — soft confirmation
   buy: (ctx, master) => {
     const t = ctx.currentTime;
-    createOsc(ctx, master, 440, 'sine', t, 0.1, 0.10);
-    createOsc(ctx, master, 554, 'sine', t + 0.08, 0.12, 0.10);
+    createOsc(ctx, master, NOTE.A4, 'sine', t, 0.1, 0.10);
+    createOsc(ctx, master, NOTE.C5, 'sine', t + 0.08, 0.12, 0.10);
   },
 
-  // 👆 Click — subtle tap
   click: (ctx, master) => {
     const t = ctx.currentTime;
     const osc = ctx.createOscillator();
@@ -93,54 +114,46 @@ const SYNTH_SOUNDS = {
     osc.stop(t + 0.06);
   },
 
-  // Hover — very soft tick
   hover: (ctx, master) => {
     const t = ctx.currentTime;
     createOsc(ctx, master, 1000, 'sine', t, 0.03, 0.04);
   },
 
-  // ✅ Success — triumphant 3-note
   success: (ctx, master) => {
-    arpeggio(ctx, master, [523, 659, 784], 'sine', 0.1, 0.14);
+    arpeggio(ctx, master, [NOTE.C5, NOTE.E5, NOTE.G5], 'sine', 0.1, 0.14);
   },
 
-  // ❌ Error — descending buzz
   error: (ctx, master) => {
     const t = ctx.currentTime;
     createOsc(ctx, master, 300, 'square', t, 0.12, 0.08);
     createOsc(ctx, master, 200, 'square', t + 0.1, 0.15, 0.06);
   },
 
-  // 🪙 Coin — bright jingle
   coin: (ctx, master) => {
     const t = ctx.currentTime;
-    createOsc(ctx, master, 1047, 'sine', t, 0.06, 0.10);
-    createOsc(ctx, master, 1319, 'sine', t + 0.05, 0.08, 0.10);
-    createOsc(ctx, master, 1568, 'sine', t + 0.10, 0.10, 0.08);
+    createOsc(ctx, master, NOTE.C6, 'sine', t, 0.06, 0.10);
+    createOsc(ctx, master, NOTE.E5, 'sine', t + 0.05, 0.08, 0.10);
+    createOsc(ctx, master, NOTE.G5, 'sine', t + 0.10, 0.10, 0.08);
   },
 
-  // 🎉 Level Up — epic 4-note fanfare
   levelup: (ctx, master) => {
-    const notes = [523, 659, 784, 1047];
+    const notes = [NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6];
     const t = ctx.currentTime;
     notes.forEach((freq, i) => {
       createOsc(ctx, master, freq, 'sine', t + i * 0.12, 0.18, 0.14);
-      // Harmony layer
       createOsc(ctx, master, freq * 1.5, 'sine', t + i * 0.12, 0.14, 0.05);
     });
   },
 
-  // 🏆 Achievement — celebration fanfare
   achievement: (ctx, master) => {
     const t = ctx.currentTime;
-    const notes = [392, 494, 587, 784, 988];
+    const notes = [NOTE.G4, NOTE.B4, NOTE.D5, NOTE.G5, NOTE.B5];
     notes.forEach((freq, i) => {
       createOsc(ctx, master, freq, 'sine', t + i * 0.1, 0.2, 0.12);
       createOsc(ctx, master, freq * 1.25, 'triangle', t + i * 0.1, 0.15, 0.06);
     });
   },
 
-  // ⚡ Combo — power-up whoosh
   combo: (ctx, master) => {
     const t = ctx.currentTime;
     const osc = ctx.createOscillator();
@@ -157,7 +170,6 @@ const SYNTH_SOUNDS = {
     osc.stop(t + 0.22);
   },
 
-  // 🎡 Wheel — ratchet spin ticking
   wheel: (ctx, master) => {
     const t = ctx.currentTime;
     for (let i = 0; i < 6; i++) {
@@ -167,81 +179,244 @@ const SYNTH_SOUNDS = {
   },
 };
 
-// ─── Music config ─────────────────────────────────────────────────
-const MUSIC_TRACKS = {
-  main: '/music/farm-theme.mp3',
-  menu: '/music/menu-theme.mp3',
-  event: '/music/event-theme.mp3',
+// ─── Synthesized Music Engine ─────────────────────────────────────
+// Generates pleasant background music using Web Audio API oscillators.
+// No external MP3 files needed — music is created in real-time.
+
+interface MusicPattern {
+  // Melody notes (semitone offsets from root)
+  melody: number[];
+  // Bass notes (semitone offsets from root)
+  bass: number[];
+  // Chord notes (semitone offsets from root)
+  chords: number[];
+  // Tempo in BPM
+  tempo: number;
+  // Root note frequency
+  root: number;
+  // Scale intervals
+  scale: number[];
+  // Bar length (number of melody notes per bar)
+  barLength: number;
+  // Number of bars before loop
+  loopBars: number;
+}
+
+const MUSIC_PATTERNS: Record<string, MusicPattern> = {
+  main: {
+    // Cheerful farm melody — like a sunny day in the countryside
+    melody: [0, 2, 4, 7, 4, 2, 0, -1, 0, 4, 7, 9, 7, 4, 2, 0],
+    bass: [0, 0, 4, 4, 5, 5, 7, 7, 0, 0, 4, 4, 5, 7, 4, 0],
+    chords: [0, 4, 7, 4, 0, 4, 7, 4],
+    tempo: 120,
+    root: NOTE.C4,
+    scale: MAJOR,
+    barLength: 8,
+    loopBars: 2,
+  },
+  menu: {
+    // Calm, peaceful menu music
+    melody: [0, 2, 4, 2, 0, -1, 0, 2, 4, 7, 4, 2, 0, 4, 2, 0],
+    bass: [0, 0, 5, 5, 7, 7, 4, 4],
+    chords: [0, 5, 7, 4],
+    tempo: 90,
+    root: NOTE.G4,
+    scale: MAJOR,
+    barLength: 8,
+    loopBars: 2,
+  },
+  event: {
+    // Exciting event music — faster, more energetic
+    melody: [0, 4, 7, 12, 7, 4, 0, 5, 7, 12, 14, 12, 7, 5, 0, 4],
+    bass: [0, 0, 5, 5, 7, 7, 12, 12],
+    chords: [0, 5, 7, 12],
+    tempo: 140,
+    root: NOTE.C4,
+    scale: PENTATONIC,
+    barLength: 8,
+    loopBars: 2,
+  },
 };
+
+class SynthMusicPlayer {
+  private ctx: AudioContext;
+  private dest: AudioNode;
+  private gainNode: GainNode;
+  private isPlaying = false;
+  private currentPattern: string | null = null;
+  private nextNoteTime = 0;
+  private melodyIndex = 0;
+  private bassIndex = 0;
+  private chordIndex = 0;
+  private barCount = 0;
+  private lookAhead = 0.1; // seconds
+  private scheduleInterval: ReturnType<typeof setInterval> | null = null;
+  private volume = 0.25;
+
+  constructor(ctx: AudioContext, dest: AudioNode) {
+    this.ctx = ctx;
+    this.dest = dest;
+    this.gainNode = ctx.createGain();
+    this.gainNode.gain.setValueAtTime(this.volume, ctx.currentTime);
+    this.gainNode.connect(dest);
+  }
+
+  setVolume(v: number) {
+    this.volume = Math.max(0, Math.min(1, v));
+    if (this.gainNode) {
+      this.gainNode.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.1);
+    }
+  }
+
+  play(patternName: string) {
+    const pattern = MUSIC_PATTERNS[patternName];
+    if (!pattern) {
+      logger.warn(`Unknown music pattern: ${patternName}`);
+      return;
+    }
+
+    if (this.isPlaying && this.currentPattern === patternName) return;
+
+    this.stop();
+    this.isPlaying = true;
+    this.currentPattern = patternName;
+    this.melodyIndex = 0;
+    this.bassIndex = 0;
+    this.chordIndex = 0;
+    this.barCount = 0;
+    this.nextNoteTime = this.ctx.currentTime + 0.05;
+
+    // Schedule notes
+    this.scheduleInterval = setInterval(() => this.scheduleNotes(), 50);
+  }
+
+  stop() {
+    this.isPlaying = false;
+    this.currentPattern = null;
+    if (this.scheduleInterval) {
+      clearInterval(this.scheduleInterval);
+      this.scheduleInterval = null;
+    }
+  }
+
+  fadeOut(duration: number = 1000) {
+    if (!this.isPlaying) return;
+    this.gainNode.gain.setTargetAtTime(0, this.ctx.currentTime, duration / 3000);
+    setTimeout(() => this.stop(), duration);
+  }
+
+  fadeIn(duration: number = 1000) {
+    this.gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
+    this.gainNode.gain.setTargetAtTime(this.volume, this.ctx.currentTime, duration / 3000);
+  }
+
+  private scheduleNotes() {
+    if (!this.isPlaying || !this.currentPattern) return;
+
+    const pattern = MUSIC_PATTERNS[this.currentPattern];
+    const beatDuration = 60 / pattern.tempo;
+    const noteDuration = beatDuration * 0.8;
+
+    while (this.nextNoteTime < this.ctx.currentTime + this.lookAhead) {
+      // Schedule melody note
+      const melodySemitone = pattern.melody[this.melodyIndex % pattern.melody.length];
+      if (melodySemitone >= 0) {
+        const melodyFreq = noteFreq(pattern.root, pattern.scale[melodySemitone % pattern.scale.length] || 0);
+        createOsc(this.ctx, this.gainNode, melodyFreq, 'sine', this.nextNoteTime, noteDuration, 0.08);
+        // Add a soft triangle layer for warmth
+        createOsc(this.ctx, this.gainNode, melodyFreq * 0.5, 'triangle', this.nextNoteTime, noteDuration * 0.6, 0.03);
+      }
+      this.melodyIndex++;
+
+      // Schedule bass note (every 2 beats)
+      if (this.melodyIndex % 2 === 0) {
+        const bassSemitone = pattern.bass[this.bassIndex % pattern.bass.length];
+        const bassFreq = noteFreq(pattern.root * 0.5, pattern.scale[bassSemitone % pattern.scale.length] || 0);
+        createOsc(this.ctx, this.gainNode, bassFreq, 'triangle', this.nextNoteTime, beatDuration * 1.8, 0.06);
+        this.bassIndex++;
+      }
+
+      // Schedule chord pad (every bar)
+      if (this.melodyIndex % pattern.barLength === 0) {
+        const chordRoot = pattern.chords[this.chordIndex % pattern.chords.length];
+        const chordNotes = [0, 4, 7].map(interval =>
+          noteFreq(pattern.root, (pattern.scale[chordRoot % pattern.scale.length] || 0) + interval)
+        );
+        chordNotes.forEach(freq => {
+          createOsc(this.ctx, this.gainNode, freq, 'sine', this.nextNoteTime, beatDuration * pattern.barLength * 0.9, 0.025, false);
+        });
+        this.chordIndex++;
+        this.barCount++;
+
+        // Loop check
+        if (this.barCount >= pattern.loopBars) {
+          this.barCount = 0;
+          this.melodyIndex = 0;
+          this.bassIndex = 0;
+          this.chordIndex = 0;
+        }
+      }
+
+      this.nextNoteTime += beatDuration;
+    }
+  }
+
+  get isCurrentlyPlaying() {
+    return this.isPlaying;
+  }
+}
 
 // ─── AudioManager ─────────────────────────────────────────────────
 class AudioManager {
   config: ReturnType<typeof loadConfig>;
   audioCtx: AudioContext | null;
   masterGain: GainNode | null;
-  musicTracks: Record<string, Howl>;
+  synthMusic: SynthMusicPlayer | null;
   currentMusicName: string | null;
-  currentMusic: Howl | null;
   initialized: boolean;
+  private fadeTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.config = loadConfig();
     this.audioCtx = null;
     this.masterGain = null;
-    this.musicTracks = {};
+    this.synthMusic = null;
     this.currentMusicName = null;
-    this.currentMusic = null;
     this.initialized = false;
   }
 
-  // Lazy-init Web Audio context (must happen after user gesture)
   initAudioContext() {
     if (this.audioCtx) return;
     try {
       const AC =
         window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext })
-          .webkitAudioContext;
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.audioCtx = new AC();
       this.masterGain = this.audioCtx.createGain();
       this.masterGain.gain.setValueAtTime(this.config.volume, this.audioCtx.currentTime);
       this.masterGain.connect(this.audioCtx.destination);
+
+      // Initialize synth music player
+      this.synthMusic = new SynthMusicPlayer(this.audioCtx, this.masterGain);
     } catch (e) {
       logger.warn('Web Audio API not available:', e);
     }
   }
 
-  // Lazy-init a single Howl for a music track
-  getMusicTrack(name) {
-    if (!this.musicTracks[name]) {
-      this.musicTracks[name] = new Howl({
-        src: [MUSIC_TRACKS[name]],
-        loop: true,
-        volume: this.config.musicVolume,
-        html5: true, // streaming, no full preload
-      });
-    }
-    return this.musicTracks[name];
-  }
-
-  /** Call once on first user interaction to unlock audio */
   ensureInitialized() {
     if (this.initialized) return;
     this.initialized = true;
     this.initAudioContext();
-    // Resume suspended context (browser autoplay policy)
     if (this.audioCtx?.state === 'suspended') {
       this.audioCtx.resume();
     }
   }
 
   // ─── SFX ──────────────────────────────────────────────
-
-  play(name) {
+  play(name: string) {
     if (!this.config.enabled) return;
     this.ensureInitialized();
     if (!this.audioCtx || !this.masterGain) return;
-    // Resume if needed
     if (this.audioCtx.state === 'suspended') {
       this.audioCtx.resume();
     }
@@ -256,72 +431,67 @@ class AudioManager {
   }
 
   // ─── Music ────────────────────────────────────────────
-
-  playMusic(name, fadeDuration = 1000) {
+  playMusic(name: string, fadeDuration = 1000) {
     if (!this.config.musicEnabled) return;
     this.ensureInitialized();
 
-    const track = this.getMusicTrack(name);
+    if (!this.synthMusic) return;
 
     // If same track is already playing, do nothing
-    if (this.currentMusicName === name && track.playing()) return;
+    if (this.currentMusicName === name && this.synthMusic.isCurrentlyPlaying) return;
 
-    // Fade out current music
-    if (this.currentMusic && this.currentMusic !== track) {
-      const old = this.currentMusic;
-      old.fade(this.config.musicVolume, 0, fadeDuration);
-      setTimeout(() => old.pause(), fadeDuration);
+    // Clear any pending fade timeout
+    if (this.fadeTimeout) {
+      clearTimeout(this.fadeTimeout);
+      this.fadeTimeout = null;
     }
 
-    // Fade in new track
-    track.volume(0);
-    track.play();
-    track.fade(0, this.config.musicVolume, fadeDuration);
-
-    this.currentMusic = track;
-    this.currentMusicName = name;
+    // Fade out current music
+    if (this.synthMusic.isCurrentlyPlaying && this.currentMusicName !== name) {
+      this.synthMusic.fadeOut(fadeDuration);
+      this.fadeTimeout = setTimeout(() => {
+        this.synthMusic?.setVolume(this.config.musicVolume);
+        this.synthMusic?.play(name);
+        this.currentMusicName = name;
+      }, fadeDuration);
+    } else {
+      // Start immediately
+      this.synthMusic.setVolume(this.config.musicVolume);
+      this.synthMusic.play(name);
+      this.currentMusicName = name;
+    }
   }
 
   stopMusic(fadeDuration = 1000) {
-    if (!this.currentMusic) return;
-    const music = this.currentMusic;
-    music.fade(this.config.musicVolume, 0, fadeDuration);
-    setTimeout(() => {
-      music.pause();
-    }, fadeDuration);
-    this.currentMusic = null;
+    if (!this.synthMusic?.isCurrentlyPlaying) return;
+    this.synthMusic.fadeOut(fadeDuration);
     this.currentMusicName = null;
   }
 
   pauseMusic() {
-    this.currentMusic?.pause();
+    this.synthMusic?.stop();
   }
 
   resumeMusic() {
-    if (this.config.musicEnabled && this.currentMusic) {
-      this.currentMusic.play();
+    if (this.config.musicEnabled && this.currentMusicName) {
+      this.synthMusic?.play(this.currentMusicName);
     }
   }
 
   // ─── Volume controls ─────────────────────────────────
-
-  setVolume(volume) {
+  setVolume(volume: number) {
     this.config.volume = Math.max(0, Math.min(1, volume));
     if (this.masterGain && this.audioCtx) {
       this.masterGain.gain.setValueAtTime(this.config.volume, this.audioCtx.currentTime);
     }
   }
 
-  setMusicVolume(volume) {
+  setMusicVolume(volume: number) {
     this.config.musicVolume = Math.max(0, Math.min(1, volume));
-    if (this.currentMusic) {
-      this.currentMusic.volume(this.config.musicVolume);
-    }
+    this.synthMusic?.setVolume(this.config.musicVolume);
   }
 
   // ─── Toggle ───────────────────────────────────────────
-
-  /** Toggle ALL audio (SFX + Music). Returns new enabled state. */
   toggleAll() {
     const newState = !this.config.enabled;
     this.config.enabled = newState;
@@ -330,10 +500,8 @@ class AudioManager {
     if (!newState) {
       this.stopMusic(300);
     } else {
-      // Re-start background music
       this.playMusic(this.currentMusicName || 'main');
     }
-
     return newState;
   }
 
@@ -353,7 +521,6 @@ class AudioManager {
   }
 
   // ─── Getters ──────────────────────────────────────────
-
   getSettings() {
     return { ...this.config };
   }
@@ -366,7 +533,7 @@ class AudioManager {
     return this.config.musicEnabled;
   }
 
-  syncFromStore(settings) {
+  syncFromStore(settings: { soundEnabled?: boolean; musicEnabled?: boolean }) {
     if (settings.soundEnabled !== undefined) {
       this.config.enabled = settings.soundEnabled;
     }
@@ -382,17 +549,18 @@ class AudioManager {
   }
 
   stopAll() {
-    Howler.stop();
+    this.synthMusic?.stop();
+    this.currentMusicName = null;
   }
 
   unload() {
-    Object.values(this.musicTracks).forEach(track => track?.unload());
-    this.musicTracks = {};
+    this.synthMusic?.stop();
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
       this.audioCtx.close();
     }
     this.audioCtx = null;
     this.masterGain = null;
+    this.synthMusic = null;
     this.initialized = false;
   }
 }
@@ -404,7 +572,6 @@ export const audioManager = new AudioManager();
 if (typeof window !== 'undefined') {
   const initOnInteraction = () => {
     audioManager.ensureInitialized();
-    // Only auto-play music if enabled
     if (audioManager.isMusicEnabled()) {
       audioManager.playMusic('main');
     }

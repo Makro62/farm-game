@@ -110,7 +110,7 @@ export default function TutorialOverlay() {
             {tutorialStep === 3 ? (
               <button
                 onClick={() => skipTutorial()}
-                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl font-bold border-b-4 border-green-700 active:border-b-0 active:translate-y-1 transition-all"
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold border-b-4 border-green-700 active:border-b-0 active:translate-y-1 transition-all"
               >
                 Mulai Bermain! 🚀
               </button>
@@ -118,13 +118,13 @@ export default function TutorialOverlay() {
               <>
                 <button
                   onClick={() => completeTutorialStep(tutorialStep)}
-                  className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl font-bold border-b-4 border-amber-700 active:border-b-0 active:translate-y-1 transition-all"
+                  className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-full font-bold border-b-4 border-amber-700 active:border-b-0 active:translate-y-1 transition-all"
                 >
                   Lanjut
                 </button>
                 <button
                   onClick={skipTutorial}
-                  className="text-gray-400 hover:text-gray-600 px-4 py-2 text-sm font-semibold"
+                  className="text-gray-400 hover:text-gray-600 px-4 py-2 text-sm font-semibold rounded-full"
                 >
                   Lewati
                 </button>

@@ -188,7 +188,7 @@ export default function Modals() {
                         key={item}
                         type="button"
                         onClick={() => setSelectedGift(item)}
-                        className={`relative w-16 h-16 rounded-xl flex items-center justify-center transition-all border-2 ${
+                        className={`relative w-16 h-16 rounded-full flex items-center justify-center transition-all border-2 ${
                           selectedGift === item
                             ? "bg-[var(--gold)]/20 border-[var(--gold)] shadow-inner scale-105"
                             : "bg-white/50 border-[var(--wood-light)] hover:bg-white"

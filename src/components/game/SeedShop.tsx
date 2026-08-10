@@ -7,6 +7,7 @@ import { SHOP_SEEDS } from "@/lib/data/crops";
 import { ShopItemCard, ShopSectionTitle } from "@/components/ui/ShopItemCard";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import toast from "react-hot-toast";
+import Button from "@/components/ui/Button";
 
 export function SeedShop() {
   const seeds = useGameStore((state) => state.inventoryByCategory?.seeds || {});
@@ -146,18 +147,15 @@ export function SeedShop() {
               Auto-Farm & Harvest
             </div>
           </div>
-          <button
+          <Button
             type="button"
+            variant={farmer ? "secondary" : "gold"}
+            size="sm"
             onClick={handleHireFarmer}
             disabled={!!farmer}
-            className={`font-bold text-[var(--text-primary)] px-2 py-0.5 rounded-full text-xs whitespace-nowrap border ${
-              farmer
-                ? "bg-gray-300 border-gray-400 opacity-50 cursor-default"
-                : "bg-[var(--gold)] border-[#FFF1B8] hover:scale-105"
-            }`}
           >
             {farmer ? "Dimiliki" : `${GAME_CONSTANTS.COSTS.WORKER_FARMER} 💰`}
-          </button>
+          </Button>
         </div>
         {farmer?.hired && (
           <div className="flex justify-between items-center border-t border-[var(--primary)]/20 pt-2 mt-1">
@@ -169,17 +167,18 @@ export function SeedShop() {
                 : "Nyalakan tombol Auto Kurcaci untuk mulai"}
             </p>
             {farmer.happiness < 100 && (
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                size="sm"
                 onClick={() => {
                   const res = useGameStore.getState().giveKopiWorker?.("farmer");
                   if (res?.ok) toast.success(res.message);
                   else toast.error(res?.message || "Gagal memberi kopi.");
                 }}
-                className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] px-2 py-1 rounded-md font-bold transition-transform hover:scale-105 shadow-sm flex items-center gap-1"
               >
                 <span>☕</span> Beri Kopi
-              </button>
+              </Button>
             )}
           </div>
         )}

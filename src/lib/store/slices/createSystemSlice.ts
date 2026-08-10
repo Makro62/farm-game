@@ -688,17 +688,30 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
             if (!seedData) {
               const coinsAfterBuy = state.coins - coinsSpent;
               const reserveFloor = Math.floor(state.coins * 0.3);
-              const buyable = SHOP_SEEDS.filter(
-                (s) =>
-                  coinsAfterBuy - s.price >= reserveFloor &&
-                  (hasGreenhouse ||
-                    s.season === "all" ||
-                    s.season === state.season?.current),
-              );
-              if (buyable.length > 0) {
-                buyable.sort((a, b) => a.price - b.price);
-                seedData = buyable[0];
+              
+              let preferredSeed = null;
+              if (state.selectedSeed) {
+                const s = SHOP_SEEDS.find(x => x.id === state.selectedSeed);
+                if (s && coinsAfterBuy - s.price >= reserveFloor && (hasGreenhouse || s.season === "all" || s.season === state.season?.current)) {
+                  preferredSeed = s;
+                }
+              }
+
+              if (preferredSeed) {
+                seedData = preferredSeed;
                 autoBought = true;
+              } else {
+                const buyable = SHOP_SEEDS.filter(
+                  (s) =>
+                    coinsAfterBuy - s.price >= reserveFloor &&
+                    (hasGreenhouse ||
+                      s.season === "all" ||
+                      s.season === state.season?.current),
+                );
+                if (buyable.length > 0) {
+                  seedData = buyable[Math.floor(Math.random() * buyable.length)];
+                  autoBought = true;
+                }
               }
             }
             if (seedData) {
