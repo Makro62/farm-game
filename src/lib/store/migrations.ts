@@ -1,5 +1,6 @@
 // @ts-nocheck — incremental TS migration; tighten types later
 import { normalizePlots, normalizeAnimal, safeCoins } from "./utils";
+import { getItemCategory } from "@/lib/data/item-helpers";
 import type { GameStore } from "@/types/game";
 
 export const partializeState = (state: GameStore) => ({
@@ -346,56 +347,3 @@ export const migrateState = (persistedState: any, currentState: GameStore) => {
 
   return merged;
 };
-
-function getItemCategory(itemId) {
-  const catMap = {
-    wortel: "crops",
-    jagung: "crops",
-    tomat: "crops",
-    stroberi: "crops",
-    semangka: "crops",
-    jamur: "crops",
-    nanas: "crops",
-    labu: "crops",
-    kentang: "crops",
-    gandum: "crops",
-    tebu: "crops",
-    tulip: "crops",
-    apel: "crops",
-    telur: "animalProducts",
-    susu: "animalProducts",
-    bulu: "animalProducts",
-    truffle: "animalProducts",
-    tapal: "animalProducts",
-    telur_bebek: "animalProducts",
-    batu: "minerals",
-    tembaga: "minerals",
-    besi: "minerals",
-    emas: "minerals",
-    berlian: "minerals",
-    ikan_mas: "fish",
-    lele: "fish",
-    ikan_badut: "fish",
-    cumi: "fish",
-    gurita: "fish",
-    tepung_jagung: "processed",
-    gula: "processed",
-    saus_tomat: "processed",
-    keju: "processed",
-    sup_wortel: "cooked",
-    nasi_goreng: "cooked",
-    roti_gandum: "cooked",
-    es_teh: "cooked",
-    kue_wortel: "cooked",
-    sushi_mas: "cooked",
-    kue_manis: "cooked",
-    pancake: "cooked",
-    takoyaki: "cooked",
-    nasi_jamur: "cooked",
-    kue_apel: "cooked",
-    kue_stroberi: "cooked",
-    sushi_emas: "cooked",
-    lele_bakar: "cooked",
-  };
-  return catMap[itemId] || null;
-}

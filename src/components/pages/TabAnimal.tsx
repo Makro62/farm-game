@@ -1,20 +1,24 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useGameStore } from "@/lib/store";
-import { getAnimalEmoji, getShopAnimal } from "@/lib/data/item-helpers";
-import { SHOP_ANIMALS, ANIMAL_FEED } from "@/lib/data/shop";
-import { getAnimalProduceTime } from "@/lib/store/utils";
-import { motion, AnimatePresence } from "framer-motion";
-import { ShopItemCard, ShopSectionTitle } from "@/components/ui/ShopItemCard";
-import { AnimalIcon } from "@/components/ui/AnimalIcon";
-import { GameAreaHeader, GameActionButton } from "@/components/ui/GameAreaHeader";
-import { MarketBoard } from "@/components/game/MarketBoard";
-import { QuestPanel } from "@/components/game/QuestPanel";
-import { GAME_CONSTANTS } from "@/lib/constants";
-import TabPage, { GameStage } from "@/components/ui/TabPage";
-import SideDock from "@/components/ui/SideDock";
-import { useRanching } from "@/lib/hooks/useRanching";
+import { useState } from 'react'
+import toast from 'react-hot-toast'
+import { useGameStore } from '@/lib/store'
+import { getAnimalEmoji, getShopAnimal } from '@/lib/data/item-helpers'
+import { SHOP_ANIMALS, ANIMAL_FEED } from '@/lib/data/shop'
+import { getAnimalProduceTime } from '@/lib/store/utils'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ShopItemCard, ShopSectionTitle } from '@/components/ui/ShopItemCard'
+import { AnimalIcon } from '@/components/ui/AnimalIcon'
+import {
+  GameAreaHeader,
+  GameActionButton,
+} from '@/components/ui/GameAreaHeader'
+import { MarketBoard } from '@/components/game/MarketBoard'
+import { QuestPanel } from '@/components/game/QuestPanel'
+import { GAME_CONSTANTS } from '@/lib/constants'
+import TabPage, { GameStage } from '@/components/ui/TabPage'
+import SideDock from '@/components/ui/SideDock'
+import { useRanching } from '@/lib/hooks/useRanching'
 
 export default function TabAnimal() {
   const {
@@ -29,12 +33,12 @@ export default function TabAnimal() {
     handleShopBuy,
     handleCollect,
     handleFeed,
-  } = useRanching();
+  } = useRanching()
 
-  const swapAnimals = useGameStore((state) => state.swapAnimals);
-  const buildings = useGameStore((state) => state.buildings);
-  const [shopAmounts, setShopAmounts] = useState({});
-  const [isEditMode, setIsEditMode] = useState(false);
+  const swapAnimals = useGameStore(state => state.swapAnimals)
+  const buildings = useGameStore(state => state.buildings)
+  const [shopAmounts, setShopAmounts] = useState({})
+  const [isEditMode, setIsEditMode] = useState(false)
 
   return (
     <TabPage>
@@ -47,14 +51,14 @@ export default function TabAnimal() {
                 active={isEditMode}
                 onClick={() => setIsEditMode(!isEditMode)}
               >
-                {isEditMode ? "Selesai Edit" : "Edit Layout"}
+                {isEditMode ? 'Selesai Edit' : 'Edit Layout'}
               </GameActionButton>
               <GameActionButton
                 variant="auto"
                 active={autoFarm}
                 onClick={handleToggleAuto}
               >
-                Auto: {autoFarm ? "ON" : "OFF"}
+                Auto: {autoFarm ? 'ON' : 'OFF'}
               </GameActionButton>
             </GameAreaHeader>
 
@@ -72,7 +76,7 @@ export default function TabAnimal() {
               )}
               {workers?.rancher && (
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
-                  👩‍🌾 Peternak {autoFarm ? "Aktif" : "Istirahat"}
+                  👩‍🌾 Peternak {autoFarm ? 'Aktif' : 'Istirahat'}
                 </span>
               )}
               {animals.length > 0 && (
@@ -83,7 +87,7 @@ export default function TabAnimal() {
             </div>
 
             <div
-              className={`p-3 sm:p-4 field-frame relative stage-play-frame transition-all bg-cover bg-center ${isEditMode ? "ring-4 ring-yellow-400 border-dashed" : ""}`}
+              className={`p-3 sm:p-4 field-frame relative stage-play-frame transition-all bg-cover bg-center ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}
               style={{
                 backgroundImage: "url('/img/backgrounds/animal_bg.png')",
               }}
@@ -91,60 +95,60 @@ export default function TabAnimal() {
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30 pointer-events-none rounded-[22px]" />
               <div className="kandang-grid relative z-10">
                 {Array.from({ length: 36 }).map((_, i) => {
-                  const animal = animals[i];
+                  const animal = animals[i]
                   if (!animal) {
                     return (
                       <div key={`empty-${i}`} className="kandang-empty-cell" />
-                    );
+                    )
                   }
 
-                  const animalData = getShopAnimal(animal.type);
+                  const animalData = getShopAnimal(animal.type)
                   const produceTime = getAnimalProduceTime(
                     animal,
-                    weatherEffects,
-                  );
+                    weatherEffects
+                  )
                   const progress = Math.min(
                     100,
-                    ((currentTime - animal.lastCollected) / produceTime) * 100,
-                  );
-                  const isReady = progress >= 100;
-                  const isHungry = isReady && !animal.fed;
+                    ((currentTime - animal.lastCollected) / produceTime) * 100
+                  )
+                  const isReady = progress >= 100
+                  const isHungry = isReady && !animal.fed
                   return (
                     <motion.button
                       key={animal.id}
                       draggable={isEditMode}
                       onDragStart={(e: any) => {
-                        e.dataTransfer.setData("animalId", animal.id);
-                        e.currentTarget.style.opacity = "0.5";
+                        e.dataTransfer.setData('animalId', animal.id)
+                        e.currentTarget.style.opacity = '0.5'
                       }}
                       onDragEnd={(e: any) => {
-                        e.currentTarget.style.opacity = "1";
+                        e.currentTarget.style.opacity = '1'
                       }}
                       onDragOver={(e: any) => {
-                        if (isEditMode) e.preventDefault();
+                        if (isEditMode) e.preventDefault()
                       }}
                       onDrop={(e: any) => {
-                        e.preventDefault();
+                        e.preventDefault()
                         if (isEditMode) {
-                          const draggedId = e.dataTransfer.getData("animalId");
+                          const draggedId = e.dataTransfer.getData('animalId')
                           if (draggedId && draggedId !== animal.id.toString()) {
-                            swapAnimals(draggedId, animal.id);
+                            swapAnimals(draggedId, animal.id)
                           }
                         }
                       }}
                       whileHover={!isEditMode ? { scale: 1.05 } : {}}
                       whileTap={!isEditMode ? { scale: 0.95 } : {}}
-                      onClick={(e) => {
+                      onClick={e => {
                         if (isEditMode) {
-                          e.preventDefault();
-                          return;
+                          e.preventDefault()
+                          return
                         }
-                        handleCollect(animal);
+                        handleCollect(animal)
                       }}
                       className={`group kandang-animal-cell
-                        ${isEditMode ? "cursor-grab ring-2 ring-yellow-400" : ""}
-                        ${isReady ? (isHungry ? "ring-2 ring-red-400/80" : "ring-2 ring-yellow-400/80 animate-breathe") : ""}
-                        ${animal.health < 50 ? "ring-2 ring-red-600/60" : ""}
+                        ${isEditMode ? 'cursor-grab ring-2 ring-yellow-400' : ''}
+                        ${isReady ? (isHungry ? 'ring-2 ring-red-400/80' : 'ring-2 ring-yellow-400/80 animate-breathe') : ''}
+                        ${animal.health < 50 ? 'ring-2 ring-red-600/60' : ''}
                       `}
                     >
                       {/* Health Indicator */}
@@ -152,7 +156,7 @@ export default function TabAnimal() {
                         <div className="absolute top-0 left-0 right-0 h-1 z-30">
                           <div className="progress-bar !h-1 !rounded-none">
                             <div
-                              className={`progress-fill ${animal.health > 50 ? "bg-green-500" : "bg-red-500"}`}
+                              className={`progress-fill ${animal.health > 50 ? 'bg-green-500' : 'bg-red-500'}`}
                               style={{ width: `${animal.health}%` }}
                             />
                           </div>
@@ -197,7 +201,7 @@ export default function TabAnimal() {
                               {Math.ceil(
                                 (produceTime -
                                   (currentTime - animal.lastCollected)) /
-                                  1000,
+                                  1000
                               )}
                               s ⚡
                             </span>
@@ -213,8 +217,8 @@ export default function TabAnimal() {
                               scale: 2.5,
                               y: -80,
                               opacity: 0,
-                              filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
-                              transition: { duration: 0.6, ease: "easeOut" },
+                              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+                              transition: { duration: 0.6, ease: 'easeOut' },
                             }}
                             className="absolute -top-2 -right-2 text-xl sm:text-2xl animate-bounce drop-shadow-lg z-20"
                           >
@@ -227,9 +231,9 @@ export default function TabAnimal() {
                           {/* Tombol Jual */}
                           <span
                             role="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSellAnimal(animal);
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleSellAnimal(animal)
                             }}
                             className="absolute -top-2 -left-2 bg-[#ff7a6b] text-[#3b120c] rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md md:opacity-0 md:group-hover:opacity-100 transition-opacity z-30 cursor-pointer hover:brightness-110 border border-[#ffb3aa]"
                           >
@@ -240,22 +244,22 @@ export default function TabAnimal() {
                             role="button"
                             title={
                               animal.fed
-                                ? "Sudah kenyang"
-                                : `Beri makan (butuh ${ANIMAL_FEED[animal.type]?.feedQty ?? "?"}x ${ANIMAL_FEED[animal.type]?.feedItem ?? "?"})`
+                                ? 'Sudah kenyang'
+                                : `Beri makan (butuh ${ANIMAL_FEED[animal.type]?.feedQty ?? '?'}x ${ANIMAL_FEED[animal.type]?.feedItem ?? '?'})`
                             }
-                            onClick={(e) => handleFeed(e, animal)}
+                            onClick={e => handleFeed(e, animal)}
                             className={`absolute -bottom-2 -right-2 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md z-30 border transition-all ${
                               animal.fed
-                                ? "bg-green-400 border-green-200 opacity-80 cursor-default"
-                                : "bg-yellow-300 border-yellow-100 md:opacity-0 md:group-hover:opacity-100 cursor-pointer hover:brightness-110"
+                                ? 'bg-green-400 border-green-200 opacity-80 cursor-default'
+                                : 'bg-yellow-300 border-yellow-100 md:opacity-0 md:group-hover:opacity-100 cursor-pointer hover:brightness-110'
                             }`}
                           >
-                            {animal.fed ? "🟢" : "🌽"}
+                            {animal.fed ? '🟢' : '🌽'}
                           </span>
                         </>
                       )}
                     </motion.button>
-                  );
+                  )
                 })}
               </div>
             </div>
@@ -265,15 +269,15 @@ export default function TabAnimal() {
           <SideDock
             tabs={[
               {
-                id: "toko",
-                label: "Toko",
-                emoji: "🐔",
+                id: 'toko',
+                label: 'Toko',
+                emoji: '🐔',
                 content: (
                   <>
                     <ShopSectionTitle icon="🐔">Shop Hewan</ShopSectionTitle>
                     <div className="shop-grid mb-3">
-                      {SHOP_ANIMALS.map((animal) => {
-                        const amt = shopAmounts[animal.id] || 1;
+                      {SHOP_ANIMALS.map(animal => {
+                        const amt = shopAmounts[animal.id] || 1
                         return (
                           <ShopItemCard
                             key={animal.id}
@@ -282,78 +286,86 @@ export default function TabAnimal() {
                             price={animal.price}
                             amount={amt}
                             onDecrease={() =>
-                              setShopAmounts((p) => ({
+                              setShopAmounts(p => ({
                                 ...p,
                                 [animal.id]: Math.max(1, amt - 1),
                               }))
                             }
                             onIncrease={() =>
-                              setShopAmounts((p) => ({
+                              setShopAmounts(p => ({
                                 ...p,
                                 [animal.id]: amt + 1,
                               }))
                             }
                             onBuy={() => handleShopBuy(animal, amt)}
                           />
-                        );
+                        )
                       })}
                     </div>
                     <ShopSectionTitle icon="🧑‍🌾">Pekerja</ShopSectionTitle>
                     <div className="w-full glass-card p-2 flex flex-col transition-colors text-left mb-2 border-[var(--primary)] bg-[var(--primary)]/10">
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <div className="font-bold text-[var(--text-primary)] text-sm">
-                      Peternak Siti {workers?.rancher ? `(Kebahagiaan: ${workers.rancher.happiness}%)` : ""}
+                      <div className="flex justify-between items-center mb-2">
+                        <div>
+                          <div className="font-bold text-[var(--text-primary)] text-sm">
+                            Peternak Siti{' '}
+                            {workers?.rancher
+                              ? `(Kebahagiaan: ${workers.rancher.happiness}%)`
+                              : ''}
+                          </div>
+                          <div className="text-[10px] text-[var(--text-secondary)]">
+                            Beri pakan & panen ternak
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleHireWorker}
+                          disabled={!!workers?.rancher}
+                          className={`font-bold text-[var(--text-primary)] px-2 py-0.5 rounded-full text-xs whitespace-nowrap border ${
+                            workers?.rancher
+                              ? 'bg-gray-300 border-gray-400 opacity-50 cursor-default'
+                              : 'bg-[var(--gold)] border-[#FFF1B8] hover:scale-105'
+                          }`}
+                        >
+                          {workers?.rancher
+                            ? 'Disewa'
+                            : `${GAME_CONSTANTS.COSTS.WORKER_RANCHER}💰`}
+                        </button>
+                      </div>
+                      {workers?.rancher && (
+                        <div className="flex justify-between items-center border-t border-[var(--primary)]/20 pt-2 mt-1">
+                          <p className="text-[10px] text-[var(--text-secondary)] font-medium">
+                            {workers?.rancher?.isAutoMode
+                              ? 'Kurcaci aktif — otomatis ambil telur/susu dll.'
+                              : 'Nyalakan Auto untuk mulai.'}
+                          </p>
+                          {workers.rancher.happiness < 100 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const res = useGameStore
+                                  .getState()
+                                  .giveKopiWorker?.('rancher')
+                                if (res?.ok) toast.success(res.message)
+                                else
+                                  toast.error(
+                                    res?.message || 'Gagal memberi kopi.'
+                                  )
+                              }}
+                              className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] px-2 py-1 rounded-full font-bold transition-transform hover:scale-105 shadow-sm flex items-center gap-1"
+                            >
+                              <span>☕</span> Beri Kopi
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <div className="text-[10px] text-[var(--text-secondary)]">
-                      Beri pakan & panen ternak
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleHireWorker}
-                    disabled={!!workers?.rancher}
-                    className={`font-bold text-[var(--text-primary)] px-2 py-0.5 rounded-full text-xs whitespace-nowrap border ${
-                      workers?.rancher
-                        ? "bg-gray-300 border-gray-400 opacity-50 cursor-default"
-                        : "bg-[var(--gold)] border-[#FFF1B8] hover:scale-105"
-                    }`}
-                  >
-                    {workers?.rancher
-                      ? "Disewa"
-                      : `${GAME_CONSTANTS.COSTS.RANCHER_WORKER}💰`}
-                  </button>
-                </div>
-                {workers?.rancher && (
-                  <div className="flex justify-between items-center border-t border-[var(--primary)]/20 pt-2 mt-1">
-                    <p className="text-[10px] text-[var(--text-secondary)] font-medium">
-                      {workers?.rancher?.isAutoMode
-                        ? "Kurcaci aktif — otomatis ambil telur/susu dll."
-                        : "Nyalakan Auto untuk mulai."}
-                    </p>
-                    {workers.rancher.happiness < 100 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const res = useGameStore.getState().giveKopiWorker?.("rancher");
-                          if (res?.ok) toast.success(res.message);
-                          else toast.error(res?.message || "Gagal memberi kopi.");
-                        }}
-                        className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] px-2 py-1 rounded-full font-bold transition-transform hover:scale-105 shadow-sm flex items-center gap-1"
-                      >
-                        <span>☕</span> Beri Kopi
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
                   </>
                 ),
               },
               {
-                id: "info",
-                label: "Info",
-                emoji: "📋",
+                id: 'info',
+                label: 'Info',
+                emoji: '📋',
                 content: (
                   <>
                     <ShopSectionTitle icon="🐾">Hewan Saya</ShopSectionTitle>
@@ -364,11 +376,11 @@ export default function TabAnimal() {
                         </div>
                       ) : (
                         <div className="grid grid-cols-3 gap-2">
-                          {SHOP_ANIMALS.map((animal) => {
+                          {SHOP_ANIMALS.map(animal => {
                             const count = animals.filter(
-                              (a) => getShopAnimal(a.type)?.id === animal.id,
-                            ).length;
-                            if (count === 0) return null;
+                              a => getShopAnimal(a.type)?.id === animal.id
+                            ).length
+                            if (count === 0) return null
                             return (
                               <div
                                 key={animal.id}
@@ -384,7 +396,7 @@ export default function TabAnimal() {
                                   {animal.name}
                                 </span>
                               </div>
-                            );
+                            )
                           })}
                         </div>
                       )}
@@ -399,5 +411,5 @@ export default function TabAnimal() {
         }
       />
     </TabPage>
-  );
+  )
 }

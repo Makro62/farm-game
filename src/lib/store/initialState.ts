@@ -142,6 +142,7 @@ export const initialState: GameState = {
     tools: {},
     bait: {},
     collectibles: {},
+    consumables: {},
   },
 
   animals: [],
