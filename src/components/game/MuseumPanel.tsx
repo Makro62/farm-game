@@ -89,7 +89,7 @@ export function MuseumPanel() {
                   type="button"
                   disabled={qty <= 0}
                   onClick={() => handleDonate(item.id)}
-                  className="text-[10px] font-bold px-2 py-1 rounded-full bg-[var(--gold)] border border-[var(--gold-deep)] disabled:opacity-30"
+                  className="text-[10px] font-bold px-2 py-1 rounded-lg bg-[var(--gold)] border border-[var(--gold-deep)] disabled:opacity-30"
                 >
                   Donasi
                 </button>

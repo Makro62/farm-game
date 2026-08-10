@@ -154,7 +154,7 @@ export default function TabTown() {
                             <button
                               type="button"
                               onClick={() => openNpcGift(npc.id)}
-                              className="text-[10px] font-bold px-2 py-1 rounded-full bg-[var(--gold)] text-[var(--text-primary)] border border-[var(--gold-deep)] shrink-0"
+                              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-[var(--gold)] text-[var(--text-primary)] border border-[var(--gold-deep)] shrink-0"
                             >
                               🎁
                             </button>

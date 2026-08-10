@@ -71,6 +71,16 @@ export const GAME_CONSTANTS = {
   CRAFTING: {
     MAX_QUEUE_PER_TYPE: 3,
   },
+  RESTAURANT: {
+    MAX_TABLES: 9,
+    TABLE_UPGRADE_BASE_COST: 1000,
+    TABLE_UPGRADE_BESI_MULT: 2,
+    TABLE_UPGRADE_BATU_MULT: 5,
+    TIP_HIGH_THRESHOLD: 0.7,
+    TIP_MED_THRESHOLD: 0.3,
+    TIP_HIGH_MULT: 0.5,
+    TIP_MED_MULT: 0.2,
+  },
   XP: {
     HARVEST: 10,
     MINE: 15,
@@ -79,4 +89,4 @@ export const GAME_CONSTANTS = {
     FEED_BONUS: 3,
     COOK: 0,
   },
-};
+}

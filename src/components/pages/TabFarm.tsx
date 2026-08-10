@@ -150,7 +150,7 @@ export default function TabFarm() {
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-2 mb-2 p-2 rounded-full bg-[var(--wood)]/90 border-2 border-[var(--wood-dark)] shadow-[0_4px_0_var(--wood-dark)]">
+            <div className="flex flex-wrap justify-center gap-2 mb-2 p-2 rounded-xl bg-[var(--wood)]/90 border-2 border-[var(--wood-dark)] shadow-[0_4px_0_var(--wood-dark)]">
               {FARM_TOOLS.map(tool => (
                 <ToolChip
                   key={tool.id}
@@ -206,7 +206,7 @@ export default function TabFarm() {
                   variant={activePlotTab === tab.id ? 'primary' : 'secondary'}
                   size="sm"
                   onClick={() => setActivePlotTab(tab.id as any)}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-none rounded-full border-b-4 border-transparent data-[active=true]:border-[var(--primary-dark)]"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border-b-4 border-transparent data-[active=true]:border-[var(--primary-dark)]"
                   data-active={activePlotTab === tab.id}
                 >
                   <span>{tab.emoji}</span>

@@ -250,7 +250,7 @@ export default function TabProfil() {
           </h2>
           <button
             onClick={() => setShowSettings(true)}
-            className="bg-white/50 hover:bg-white p-2 rounded-full border-2 border-white/60 transition-colors shadow-sm"
+            className="bg-white/50 hover:bg-white p-2 rounded-lg border-2 border-white/60 transition-colors shadow-sm"
           >
             <Settings className="w-5 h-5 text-[var(--text-secondary)]" />
           </button>
@@ -533,7 +533,7 @@ export default function TabProfil() {
               <button
                 key={cat.key}
                 onClick={() => setActiveInvTab(cat.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border-2 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border-2 ${
                   activeInvTab === cat.key
                     ? "bg-gradient-to-b from-[var(--gold)] to-orange-500 text-[var(--text-primary)] border-[#fff1b8] shadow-md scale-105"
                     : "bg-white/40 text-[var(--text-secondary)] border-white/50 hover:bg-white/60"

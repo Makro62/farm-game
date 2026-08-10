@@ -359,7 +359,7 @@ export default function TabAnimal() {
                                     res?.message || 'Gagal memberi kopi.'
                                   )
                               }}
-                              className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] px-2 py-1 rounded-full font-bold transition-transform hover:scale-105 shadow-sm flex items-center gap-1"
+                              className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] px-2 py-1 rounded-lg font-bold transition-colors shadow-sm flex items-center gap-1"
                             >
                               <span>☕</span> Beri Kopi
                             </button>

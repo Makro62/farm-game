@@ -79,6 +79,41 @@ export function invHas(
   return (state.inventoryByCategory[category]?.[itemId]?.qty || 0) >= qty
 }
 
+export function invHasRequirements(
+  state: GameState,
+  requirements: Record<string, number>
+): boolean {
+  for (const [key, amount] of Object.entries(requirements)) {
+    const [cat, itemId] = key.split('.')
+    if (!cat || !itemId) return false
+    if (
+      (state.inventoryByCategory[cat as InventoryCategory]?.[itemId]?.qty ||
+        0) < amount
+    )
+      return false
+  }
+  return true
+}
+
+export function invConsumeRequirements(
+  draft: GameState,
+  requirements: Record<string, number>
+): boolean {
+  if (!invHasRequirements(draft, requirements)) return false
+  for (const [key, amount] of Object.entries(requirements)) {
+    const [cat, itemId] = key.split('.')
+    if (!cat || !itemId) return false
+    invRemove(draft, cat as InventoryCategory, itemId, amount)
+  }
+  return true
+}
+
+export function markSessionAction(draft: GameState, action: string): void {
+  if (!draft.sessionActions)
+    draft.sessionActions = {} as GameState['sessionActions']
+  draft.sessionActions[action] = true
+}
+
 export function incrementStat(
   draft: GameState,
   statName: keyof GameState['stats'],

@@ -78,6 +78,17 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
       return { ok: false, message: `Kehabisan ${seedData.name}!` }
     }
 
+    // Max 5 active plants — harvest dulu sebelum tanam baru
+    const activePlots = (state.plots || []).filter(
+      (p: any) => p.status === 'growing' || p.status === 'ready'
+    ).length
+    if (activePlots >= 5) {
+      return {
+        ok: false,
+        message: 'Max 5 tanaman! Panen dulu sebelum tanam baru.',
+      }
+    }
+
     if (!get().consumeEnergy(1)) {
       return { ok: false, message: 'Energy tidak cukup!' }
     }
@@ -326,6 +337,17 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
     const plots = state[plotListKey] || []
     const seedData = SHOP_SEEDS.find(s => s.id === seedId)
     if (!seedData) return { ok: false, message: 'Pilih bibit terlebih dahulu!' }
+
+    // Max 5 active plants
+    const activePlots = (state.plots || []).filter(
+      (p: any) => p.status === 'growing' || p.status === 'ready'
+    ).length
+    if (activePlots >= 5) {
+      return {
+        ok: false,
+        message: 'Max 5 tanaman! Panen dulu sebelum tanam baru.',
+      }
+    }
 
     const season = state.season?.current
     const hasGreenhouse = !!state.buildings?.greenhouse

@@ -132,7 +132,7 @@ export function ProcessingPlant() {
                   key={recipe.id}
                   onClick={() => handleProcess(recipe)}
                   disabled={!canProcess}
-                  className={`flex items-center gap-3 p-3 rounded-full border-2 transition-all text-left ${canProcess ? "bg-[#5c4033] border-[#a06a4b] hover:border-[#FFE08A] cursor-pointer" : "bg-black/40 border-black/50 grayscale cursor-not-allowed opacity-70"}`}
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${canProcess ? "bg-[#5c4033] border-[#a06a4b] hover:border-[#FFE08A] cursor-pointer" : "bg-black/40 border-black/50 grayscale cursor-not-allowed opacity-70"}`}
                 >
                   <div className="text-4xl drop-shadow-md bg-black/20 p-2 rounded-lg border border-white/10">
                     {recipe.emoji}
