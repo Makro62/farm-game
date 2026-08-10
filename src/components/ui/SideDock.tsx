@@ -28,7 +28,7 @@ export default function SideDock({
     if (!tabs.some((t) => t.id === active) && firstId) {
       setActive(firstId);
     }
-  }, [tabs, active, firstId]);
+  }, [tabs, active, firstId]);  
 
   const current = tabs.find((t) => t.id === active) || tabs[0];
   if (!tabs.length) return null;

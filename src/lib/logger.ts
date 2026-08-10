@@ -14,7 +14,9 @@ function canLog(level: LogLevel) {
 }
 
 export const logger = {
+  // eslint-disable-next-line no-console
   debug: (...args: unknown[]) => canLog("debug") && console.log("[DEBUG]", ...args),
+  // eslint-disable-next-line no-console
   info: (...args: unknown[]) => canLog("info") && console.info("[INFO]", ...args),
   warn: (...args: unknown[]) => canLog("warn") && console.warn("[WARN]", ...args),
   error: (...args: unknown[]) => canLog("error") && console.error("[ERROR]", ...args),

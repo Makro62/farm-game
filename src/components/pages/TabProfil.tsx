@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useGameStore, useInventory } from "@/lib/store";
 import { formatNumber } from "@/lib/utils";
@@ -38,7 +38,13 @@ function ActionWidget() {
   const orders = useGameStore((s) => s.orders || []);
   const inventory = useInventory();
 
-  const now = Date.now();
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const hints: any[] = [];
 
   // 1. Tanaman siap panen?

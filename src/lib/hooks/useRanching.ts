@@ -19,9 +19,10 @@ export function useRanching() {
     (state) => state.enqueueNotification,
   );
 
-  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [currentTime, setCurrentTime] = useState(0);
 
   useEffect(() => {
+    setCurrentTime(Date.now());
     const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);

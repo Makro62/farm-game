@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useGameStore } from "@/lib/store";
 import { RECIPES } from "@/lib/data/recipes";
 import { getCropEmoji } from "@/lib/data/item-helpers";
@@ -9,32 +9,32 @@ import { GAME_CONSTANTS } from "@/lib/constants";
 export function ProcessingPlant() {
   const invByCat = useGameStore((s) => s.inventoryByCategory);
   const startCrafting = useGameStore((s) => s.startCrafting);
-  const enqueueNotification = useGameStore((s) => s.enqueueNotification);
   const craftingQueue = useGameStore((s) => s.craftingQueue || []);
-  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [currentTime, setCurrentTime] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => setCurrentTime(Date.now()), 100);
+    setCurrentTime(Date.now());
+    const interval = setInterval(() => setCurrentTime(Date.now()), 500);
     return () => clearInterval(interval);
   }, []);
 
-  // Filter only processing recipes
-  const processingRecipes = RECIPES.filter((r) => r.type === "processing");
+  const processingRecipes = useMemo(() => RECIPES.filter((r) => r.type === "processing"), []);
 
-  // Filter processing queue
-  const processingQueue = craftingQueue.filter((q) => {
-    const r = RECIPES.find((recipe) => recipe.id === q.recipeId);
-    return r && r.type === "processing";
-  });
+  const processingQueue = useMemo(() =>
+    craftingQueue.filter((q) => {
+      const r = RECIPES.find((recipe) => recipe.id === q.recipeId);
+      return r && r.type === "processing";
+    }), [craftingQueue]);
 
-  const slots = Array.from(
-    { length: GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE },
-    (_, i) => processingQueue[i] || null,
-  );
+  const slots = useMemo(() =>
+    Array.from(
+      { length: GAME_CONSTANTS.CRAFTING.MAX_QUEUE_PER_TYPE },
+      (_, i) => processingQueue[i] || null,
+    ), [processingQueue]);
 
-  const handleProcess = (recipe) => {
+  const handleProcess = useCallback((recipe: typeof RECIPES[0]) => {
     startCrafting(recipe.id);
-  };
+  }, [startCrafting]);
 
   return (
     <div

@@ -21,7 +21,7 @@ export default function Modals() {
   useEffect(() => {
     if (modals.prompt.isOpen) setPromptValue(1);
     if (modals.npcGift.isOpen) setSelectedGift(null);
-  }, [modals.prompt.isOpen, modals.npcGift.isOpen]);
+  }, [modals.prompt.isOpen, modals.npcGift.isOpen]);  
 
   const handlePromptSubmit = () => {
     const val = Number(promptValue);

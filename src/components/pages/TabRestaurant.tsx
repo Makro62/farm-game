@@ -226,6 +226,16 @@ export default function TabRestaurant() {
               </GameActionButton>
             </GameAreaHeader>
 
+            {/* Service Mode Indicator */}
+            <div className={`flex items-center justify-center gap-2 mb-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+              serviceOn
+                ? 'bg-green-100 border border-green-300 text-green-800'
+                : 'bg-gray-100 border border-gray-300 text-gray-600'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${serviceOn ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+              <span>{serviceOn ? 'Service ON — Pelanggan datang!' : 'Service OFF — Mode atur meja'}</span>
+            </div>
+
             <div className="flex items-center justify-between gap-2 mb-2 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-bold">
               <div className="flex items-center gap-2">
                 <span>⭐</span>

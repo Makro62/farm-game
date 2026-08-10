@@ -204,92 +204,132 @@ interface MusicPattern {
 
 const MUSIC_PATTERNS: Record<string, MusicPattern> = {
   farm: {
-    // Cheerful farm melody — sunny countryside vibes
-    melody: [0, 2, 4, 7, 4, 2, 0, -1, 0, 4, 7, 9, 7, 4, 2, 0],
+    // Cheerful farm — bright major, 4-bar A/B structure
+    melody: [
+      0, 2, 4, 7, 4, 2, 0, -1,   // A: ascending then rest
+      0, 4, 7, 9, 7, 4, 2, 0,     // A: higher peak
+      2, 4, 7, 9, 11, 9, 7, 4,    // B: climbing peak
+      7, 4, 2, 0, 4, 2, 0, -1,    // B: resolving
+    ],
     bass: [0, 0, 4, 4, 5, 5, 7, 7, 0, 0, 4, 4, 5, 7, 4, 0],
     chords: [0, 4, 7, 4, 0, 4, 7, 4],
     tempo: 120,
     root: NOTE.C4,
     scale: MAJOR,
     barLength: 8,
-    loopBars: 2,
+    loopBars: 4,
   },
   animal: {
-    // Warm, cozy animal barn — gentle and nurturing
-    melody: [0, 2, 4, 2, 0, 4, 2, 0, 5, 4, 2, 4, 5, 7, 4, 2],
-    bass: [0, 0, 4, 4, 7, 7, 4, 4],
-    chords: [0, 4, 7, 5],
+    // Warm cozy barn — gentle oscillating melody
+    melody: [
+      0, 2, 4, 2, 0, 4, 2, 0,     // A: gentle waves
+      5, 4, 2, 4, 5, 7, 4, 2,     // A: slightly higher
+      0, 2, 4, 5, 7, 5, 4, 2,     // B: smooth ascent
+      4, 2, 0, -1, 0, 2, 4, 2,    // B: peaceful close
+    ],
+    bass: [0, 0, 4, 4, 7, 7, 4, 4, 0, 0, 5, 5, 7, 7, 4, 4],
+    chords: [0, 4, 7, 5, 0, 4, 7, 5],
     tempo: 100,
     root: NOTE.G4,
     scale: MAJOR,
     barLength: 8,
-    loopBars: 2,
+    loopBars: 4,
   },
   mine: {
-    // Deep adventurous mine — mysterious and rhythmic
-    melody: [0, 3, 5, 7, 5, 3, 0, -1, 0, 5, 7, 10, 7, 5, 3, 0],
-    bass: [0, 0, 3, 3, 5, 5, 7, 7],
-    chords: [0, 3, 5, 7],
+    // Deep adventurous — minor key, rhythmic
+    melody: [
+      0, 3, 5, 7, 5, 3, 0, -1,    // A: climbing minor
+      0, 5, 7, 10, 7, 5, 3, 0,    // A: higher peak
+      3, 5, 7, 10, 12, 10, 7, 5,   // B: dramatic peak
+      7, 5, 3, 0, 5, 3, 0, -1,    // B: resolving
+    ],
+    bass: [0, 0, 3, 3, 5, 5, 7, 7, 0, 0, 3, 3, 5, 7, 3, 0],
+    chords: [0, 3, 5, 7, 0, 3, 5, 7],
     tempo: 110,
     root: NOTE.A3,
     scale: [0, 2, 3, 5, 7, 8, 10],
     barLength: 8,
-    loopBars: 2,
+    loopBars: 4,
   },
   restaurant: {
-    // Upbeat cooking vibes — energetic kitchen
-    melody: [0, 4, 7, 4, 0, 5, 7, 5, 0, 4, 7, 12, 7, 4, 0, 2],
-    bass: [0, 0, 5, 5, 7, 7, 4, 4],
-    chords: [0, 5, 7, 4],
+    // Upbeat cooking — energetic but smooth (fixed jarring jump)
+    melody: [
+      0, 4, 7, 4, 0, 5, 7, 5,     // A: bouncy major
+      0, 4, 7, 9, 7, 4, 0, 2,     // A: smooth peak (was 12, now 9)
+      4, 7, 9, 7, 4, 5, 7, 5,     // B: variation
+      0, 2, 4, 7, 4, 2, 0, -1,    // B: resolve
+    ],
+    bass: [0, 0, 5, 5, 7, 7, 4, 4, 0, 0, 5, 5, 7, 4, 5, 0],
+    chords: [0, 5, 7, 4, 0, 5, 7, 4],
     tempo: 130,
     root: NOTE.C4,
     scale: MAJOR,
     barLength: 8,
-    loopBars: 2,
+    loopBars: 4,
   },
   town: {
-    // Peaceful town plaza — community gathering
-    melody: [0, 2, 4, 2, 7, 4, 2, 0, 4, 7, 9, 7, 4, 2, 0, -1],
-    bass: [0, 0, 4, 4, 5, 5, 7, 7],
-    chords: [0, 4, 5, 7],
+    // Peaceful community — different from farm, more lyrical
+    melody: [
+      4, 2, 0, 2, 4, 7, 4, 2,     // A: descending then rise
+      0, -1, 0, 2, 4, 2, 0, -1,   // A: gentle resolution
+      7, 9, 7, 4, 2, 4, 7, 9,     // B: lyrical peak
+      7, 4, 2, 0, -1, 0, 2, 4,    // B: peaceful close
+    ],
+    bass: [0, 0, 4, 4, 5, 5, 7, 7, 0, 0, 4, 4, 5, 7, 4, 0],
+    chords: [0, 4, 5, 7, 0, 4, 5, 7],
     tempo: 95,
     root: NOTE.G4,
     scale: MAJOR,
     barLength: 8,
-    loopBars: 2,
+    loopBars: 4,
   },
   museum: {
-    // Mysterious ancient artifacts — slow and wonderous
-    melody: [0, 3, 7, 5, 3, 0, -1, 0, 7, 5, 3, 0, 5, 3, 0, -1],
-    bass: [0, 0, 5, 5, 3, 3, 7, 7],
-    chords: [0, 3, 5, 7],
+    // Mysterious ancient — slow, spacious, minor
+    melody: [
+      0, 3, 7, 5, 3, 0, -1, 0,    // A: mysterious intervals
+      7, 5, 3, 0, 5, 3, 0, -1,    // A: descending
+      0, 3, 7, 10, 7, 3, 0, -1,   // B: wider intervals
+      5, 3, 0, -1, 0, 3, 5, 3,    // B: ethereal close
+    ],
+    bass: [0, 0, 5, 5, 3, 3, 7, 7, 0, 0, 5, 5, 3, 7, 5, 0],
+    chords: [0, 3, 5, 7, 0, 3, 5, 7],
     tempo: 80,
     root: NOTE.C4,
     scale: [0, 2, 3, 5, 7, 8, 10],
     barLength: 8,
-    loopBars: 2,
+    loopBars: 4,
   },
   menu: {
-    // Calm, peaceful menu music
-    melody: [0, 2, 4, 2, 0, -1, 0, 2, 4, 7, 4, 2, 0, 4, 2, 0],
-    bass: [0, 0, 5, 5, 7, 7, 4, 4],
-    chords: [0, 5, 7, 4],
+    // Calm peaceful — meditative, slow breathing
+    melody: [
+      0, 2, 4, 2, 0, -1, 0, 2,    // A: slow waves
+      4, 7, 4, 2, 0, 4, 2, 0,     // A: gentle peak
+      2, 4, 7, 9, 7, 4, 2, 0,     // B: slight lift
+      -1, 0, 2, 0, -1, -1, -1, -1, // B: breathing space
+    ],
+    bass: [0, 0, 5, 5, 7, 7, 4, 4, 0, 0, 5, 5, 7, 4, 5, 0],
+    chords: [0, 5, 7, 4, 0, 5, 7, 4],
     tempo: 90,
     root: NOTE.G4,
     scale: MAJOR,
     barLength: 8,
-    loopBars: 2,
+    loopBars: 4,
   },
   event: {
-    // Exciting event music — faster, more energetic
-    melody: [0, 4, 7, 12, 7, 4, 0, 5, 7, 12, 14, 12, 7, 5, 0, 4],
-    bass: [0, 0, 5, 5, 7, 7, 12, 12],
-    chords: [0, 5, 7, 12],
+    // Exciting event — energetic, pentatonic, wider range
+    melody: [
+      0, 4, 7, 12, 7, 4, 0, 5,    // A: energetic jumps
+      7, 12, 14, 12, 7, 5, 0, 4,  // A: peak
+      0, 4, 7, 12, 14, 12, 7, 4,  // B: sustained energy
+      7, 12, 7, 4, 0, 4, 7, 0,    // B: triumphant close
+    ],
+    bass: [0, 0, 5, 5, 7, 7, 12, 12, 0, 0, 5, 5, 7, 12, 7, 0],
+    chords: [0, 5, 7, 12, 0, 5, 7, 12],
     tempo: 140,
     root: NOTE.C4,
     scale: PENTATONIC,
     barLength: 8,
-    loopBars: 2,
+    loopBars: 4,
   },
 };
 
@@ -371,15 +411,19 @@ class SynthMusicPlayer {
     const pattern = MUSIC_PATTERNS[this.currentPattern];
     const beatDuration = 60 / pattern.tempo;
     const noteDuration = beatDuration * 0.8;
+    const beatInBar = this.melodyIndex % pattern.barLength;
+
+    // Velocity: strong beats louder, weak beats softer
+    const velocity = beatInBar % 4 === 0 ? 0.10 : beatInBar % 2 === 0 ? 0.08 : 0.06;
 
     while (this.nextNoteTime < this.ctx.currentTime + this.lookAhead) {
-      // Schedule melody note
+      // Schedule melody note with velocity
       const melodySemitone = pattern.melody[this.melodyIndex % pattern.melody.length];
       if (melodySemitone >= 0) {
         const melodyFreq = noteFreq(pattern.root, pattern.scale[melodySemitone % pattern.scale.length] || 0);
-        createOsc(this.ctx, this.gainNode, melodyFreq, 'sine', this.nextNoteTime, noteDuration, 0.08);
-        // Add a soft triangle layer for warmth
-        createOsc(this.ctx, this.gainNode, melodyFreq * 0.5, 'triangle', this.nextNoteTime, noteDuration * 0.6, 0.03);
+        createOsc(this.ctx, this.gainNode, melodyFreq, 'sine', this.nextNoteTime, noteDuration, velocity);
+        // Soft triangle layer for warmth
+        createOsc(this.ctx, this.gainNode, melodyFreq * 0.5, 'triangle', this.nextNoteTime, noteDuration * 0.6, velocity * 0.4);
       }
       this.melodyIndex++;
 
@@ -387,7 +431,8 @@ class SynthMusicPlayer {
       if (this.melodyIndex % 2 === 0) {
         const bassSemitone = pattern.bass[this.bassIndex % pattern.bass.length];
         const bassFreq = noteFreq(pattern.root * 0.5, pattern.scale[bassSemitone % pattern.scale.length] || 0);
-        createOsc(this.ctx, this.gainNode, bassFreq, 'triangle', this.nextNoteTime, beatDuration * 1.8, 0.06);
+        const bassVelocity = beatInBar % 4 === 0 ? 0.07 : 0.05;
+        createOsc(this.ctx, this.gainNode, bassFreq, 'triangle', this.nextNoteTime, beatDuration * 1.8, bassVelocity);
         this.bassIndex++;
       }
 
@@ -398,7 +443,7 @@ class SynthMusicPlayer {
           noteFreq(pattern.root, (pattern.scale[chordRoot % pattern.scale.length] || 0) + interval)
         );
         chordNotes.forEach(freq => {
-          createOsc(this.ctx, this.gainNode, freq, 'sine', this.nextNoteTime, beatDuration * pattern.barLength * 0.9, 0.025, false);
+          createOsc(this.ctx, this.gainNode, freq, 'sine', this.nextNoteTime, beatDuration * pattern.barLength * 0.9, 0.02, false);
         });
         this.chordIndex++;
         this.barCount++;

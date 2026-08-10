@@ -51,7 +51,7 @@ export interface Animal {
   produceTime: number
   fed?: boolean
   happiness?: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   [key: string]: any
 }
 
@@ -156,7 +156,7 @@ export interface OfflineReport {
   seconds?: number
   coins?: number
   summary?: string[]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   [key: string]: any
 }
 
@@ -165,7 +165,7 @@ export interface CraftingJob {
   recipeId?: string
   startTime: number
   duration: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   [key: string]: any
 }
 
@@ -175,13 +175,13 @@ export interface GameOrder {
   reward?: number
   timer?: number
   createdAt?: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   [key: string]: any
 }
 
 export interface ActiveCustomer {
   id: string | number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   [key: string]: any
 }
 
@@ -189,7 +189,7 @@ export interface GameNotification {
   id?: string | number
   message?: string
   type?: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   [key: string]: any
 }
 
@@ -226,7 +226,7 @@ export interface TownState {
 export interface ActiveEvent {
   id?: string
   name?: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   [key: string]: any
 }
 
@@ -304,7 +304,7 @@ export interface GameState {
 }
 
 /** Slice set/get helpers — wide to match zustand+immer call shapes */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export type StoreSet = (...args: any[]) => void
 export type StoreGet = () => GameStore
 
@@ -312,10 +312,10 @@ export type StoreGet = () => GameStore
  * Actions live on the same store object. Use a wide index so slice methods
  * are callable without listing every action signature here.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export type GameActions = {
   resetGame: () => boolean
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   [key: string]: any
 }
 

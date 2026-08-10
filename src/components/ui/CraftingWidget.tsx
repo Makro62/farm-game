@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useGameStore } from "@/lib/store";
 import { RECIPES } from "@/lib/data/recipes";
 import { getCropEmoji } from "@/lib/data/item-helpers";
@@ -26,33 +26,36 @@ export function CraftingWidget({
     (state) => state.removeCraftingQueue,
   );
   const invByCat = useGameStore((state) => state.inventoryByCategory);
-  const canCook = (recipe) =>
+
+  const canCook = useCallback((recipe: typeof RECIPES[0]) =>
     Object.entries(recipe.req).every(([key, qty]) => {
       const [cat, itemId] = key.split(".");
       return (invByCat?.[cat]?.[itemId]?.qty || 0) >= (qty as number);
-    });
+    }), [invByCat]);
 
   const [activeType, setActiveType] = useState(type);
-  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [currentTime, setCurrentTime] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => setCurrentTime(Date.now()), 100);
+    setCurrentTime(Date.now());
+    const interval = setInterval(() => setCurrentTime(Date.now()), 500);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (!hub) setActiveType(type);
-  }, [type, hub]);
+  }, [type, hub]);  
 
-  const recipes = RECIPES.filter((r) => r.type === activeType);
-  const activeQueues = queueOnly
-    ? craftingQueue
-    : craftingQueue.filter(
-        (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === activeType,
-      );
+  const recipes = useMemo(() => RECIPES.filter((r) => r.type === activeType), [activeType]);
+  const activeQueues = useMemo(() =>
+    queueOnly
+      ? craftingQueue
+      : craftingQueue.filter(
+          (q) => RECIPES.find((r) => r.id === q.recipeId)?.type === activeType,
+        ), [queueOnly, craftingQueue, activeType]);
   const slotsLeft = Math.max(0, 3 - activeQueues.length);
 
-  const readyCount = recipes.filter(canCook).length;
+  const readyCount = useMemo(() => recipes.filter(canCook).length, [recipes, canCook]);
 
   if (queueOnly && activeQueues.length === 0) {
     return (

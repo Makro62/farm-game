@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Coins, Flame, Star, Zap, Menu } from "lucide-react";
 import { useGameStore } from "@/lib/store";
 import { SEASON_META } from "@/lib/nav";
@@ -22,6 +23,13 @@ function useHeaderState() {
   const crafting = useGameStore((s) => s?.craftingQueue ?? []);
   const orders = useGameStore((s) => s?.orders ?? []);
 
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const xpProgress = Math.min(100, (xp / Math.max(level * 100, 1)) * 100);
   const energyProgress = Math.min(100, Math.max(0, (energy / maxEnergy) * 100));
   const seasonMeta = SEASON_META[season?.current] || SEASON_META.spring;
@@ -33,14 +41,14 @@ function useHeaderState() {
     animals?.filter(
       (a) =>
         a.status === "producing" &&
-        Date.now() - a.lastCollected >= (a.produceTime || 60000),
+        now - a.lastCollected >= (a.produceTime || 60000),
     ).length || 0;
   if (readyAnimals > 0) summary.push(`🐄 ${readyAnimals} siap diambil`);
   const readyNodes =
     mining?.nodes?.filter((n) => n.status === "ready").length || 0;
   if (readyNodes > 0) summary.push(`⛏️ ${readyNodes} node siap`);
   const doneCrafting =
-    crafting?.filter((c) => Date.now() - c.startTime >= c.duration).length || 0;
+    crafting?.filter((c) => now - c.startTime >= c.duration).length || 0;
   if (doneCrafting > 0) summary.push(`🍳 ${doneCrafting} masakan siap`);
   if (orders?.length > 0) summary.push(`📦 ${orders.length} pesanan aktif`);
 

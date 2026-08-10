@@ -45,6 +45,40 @@
     --text-secondary: #57534E;
     --text-on-dark: #FAFAF9;
 
+    /* Surface & background tokens */
+    --surface: #FFFFFF;
+    --surface-hover: #F9FAFB;
+    --surface-alt: #F3F4F6;
+    --surface-warm: #FFFCF5;
+    --surface-green: #F0FDF4;
+    --surface-green-border: #BBF7D0;
+    --surface-amber: #FEF3C7;
+    --surface-blue: #EFF6FF;
+    --surface-red: #FEF2F2;
+
+    /* Border tokens */
+    --border: #E5E7EB;
+    --border-hover: #D1D5DB;
+    --border-strong: #9CA3AF;
+    --border-green: #86EFAC;
+    --border-amber: #FDE68A;
+    --border-red: #FCA5A5;
+
+    /* Shadow tokens */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-green: 0 4px 14px rgba(34, 197, 94, 0.25);
+    --shadow-amber: 0 4px 14px rgba(251, 191, 36, 0.25);
+
+    /* Radius tokens */
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 16px;
+    --radius-2xl: 22px;
+
     /* Shell layout sizes */
     --shell-rail: 212px;
     --shell-rail-narrow: 72px;
@@ -71,9 +105,9 @@
     background:
       linear-gradient(
         180deg,
-        rgba(186, 230, 253, 0.6) 0%,
-        rgba(255, 255, 255, 0.8) 38%,
-        rgba(134, 239, 172, 0.5) 100%
+        var(--sky-top) 0%,
+        var(--card) 38%,
+        var(--sky-bot) 100%
       ),
       url("/img/backgrounds/farm_bg.png") center top / cover no-repeat fixed;
   }
@@ -168,7 +202,7 @@
 @layer components {
   .btn {
     @apply px-4 py-2 font-extrabold;
-    border-radius: 10px;
+    border-radius: var(--radius);
     min-height: 44px;
     min-width: 44px;
     touch-action: manipulation;
@@ -177,6 +211,7 @@
     justify-content: center;
     @apply disabled:opacity-50 disabled:cursor-not-allowed;
     @apply focus:outline-none;
+    @apply focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary)];
   }
 
   .btn-primary {
@@ -212,7 +247,7 @@
   .btn-danger {
     @apply btn text-white;
     background: var(--danger);
-    border: 2px solid #b33a2e;
+    border: 2px solid #DC2626;
   }
 
   .btn-danger:hover {
@@ -278,20 +313,20 @@
 
   .tool-chip {
     @apply px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-extrabold transition-all border-2;
-    background: rgba(92, 58, 34, 0.4);
-    color: #fff1d6;
+    background: var(--wood);
+    color: var(--text-on-dark);
     border-color: transparent;
   }
 
   .tool-chip:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--wood-light);
   }
 
   .tool-chip--active {
-    background: linear-gradient(180deg, #ffe9a0 0%, var(--gold) 100%);
+    background: linear-gradient(180deg, var(--gold-rim) 0%, var(--gold) 100%);
     color: var(--text-primary);
-    border-color: #fff1b8;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    border-color: var(--gold-deep);
+    box-shadow: var(--shadow-amber);
   }
 
   .tool-chip-emoji {
@@ -300,35 +335,29 @@
 
   /* Kayu / panel game — soft cream seperti mockup */
   .glass-panel {
-    background: rgba(255, 249, 239, 0.95);
+    background: var(--surface-warm);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 3px solid var(--gold-rim);
-    border-radius: 20px;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.85),
-      0 10px 24px rgba(62, 42, 26, 0.14);
+    border: 3px solid var(--border);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-lg);
     @apply p-3 sm:p-4 text-[var(--text-primary)];
   }
 
   .glass-card {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--surface);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border-radius: 16px;
-    border: 2px solid #E5E7EB;
+    border-radius: var(--radius-xl);
+    border: 2px solid var(--border);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-sm);
   }
 
   .glass-card:hover {
-    background: rgba(255, 255, 255, 0.95);
-    border-color: #D1D5DB;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 1),
-      0 4px 12px rgba(0, 0, 0, 0.08);
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow);
   }
 
   .stat-chip {
@@ -385,11 +414,9 @@
   }
 
   .field-frame {
-    border: 5px solid var(--wood);
-    border-radius: 24px;
-    box-shadow:
-      inset 0 0 0 3px #c4a074,
-      0 12px 28px rgba(40, 20, 10, 0.28);
+    border: 3px solid var(--border);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-lg);
   }
 
   .inventory-leather {
@@ -513,7 +540,7 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
-    border-right: 3px solid #15803D;
+    border-right: 3px solid var(--chalk);
     box-shadow: 6px 0 20px rgba(21, 128, 61, 0.15);
     overflow: hidden;
   }
@@ -531,7 +558,7 @@
     height: var(--shell-top);
     min-height: var(--shell-top);
     padding: 0 0.65rem;
-    border-bottom: 3px solid #15803D;
+    border-bottom: 3px solid var(--chalk);
     background: rgba(0, 0, 0, 0.14);
     flex-shrink: 0;
   }
@@ -810,7 +837,7 @@
     width: 100%;
     flex-shrink: 0;
     z-index: 30;
-    border-bottom: 3px solid #15803D;
+    border-bottom: 3px solid var(--chalk);
   }
 
   .shell-header-bar {
@@ -1073,8 +1100,8 @@
     gap: 0.1rem;
     height: auto;
     padding: 0.3rem 0.15rem max(env(safe-area-inset-bottom), 0.3rem);
-    background: linear-gradient(180deg, #22C55E, #15803D);
-    border-top: 3px solid #166534;
+    background: linear-gradient(180deg, var(--primary), var(--chalk));
+    border-top: 3px solid var(--chalk-deep);
   }
 
   .shell-bottom-link {
@@ -1085,7 +1112,7 @@
     gap: 0.05rem;
     min-height: 44px;
     padding: 0.25rem 0.15rem;
-    border-radius: 10px;
+    border-radius: var(--radius);
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
     font-size: 0.52rem;
@@ -1141,9 +1168,9 @@
     display: flex;
     gap: 0.3rem;
     padding: 0.25rem;
-    border-radius: 14px;
-    background: #F0FDF4;
-    border: 2px solid #BBF7D0;
+    border-radius: var(--radius-lg);
+    background: var(--surface-green);
+    border: 2px solid var(--surface-green-border);
   }
 
   .dock-tab {
@@ -1154,21 +1181,21 @@
     gap: 0.3rem;
     min-height: 34px;
     padding: 0.35rem 0.45rem;
-    border-radius: 10px;
+    border-radius: var(--radius);
     font-size: 0.72rem;
     font-weight: 800;
     color: var(--text-secondary);
   }
 
   .dock-tab:hover {
-    background: rgba(255, 255, 255, 0.7);
+    background: var(--surface-hover);
     color: var(--text-primary);
   }
 
   .dock-tab--on {
-    background: linear-gradient(180deg, #BBF7D0, #86EFAC);
-    color: #166534;
-    border: 1px solid #4ADE80;
+    background: linear-gradient(180deg, var(--surface-green-border), var(--primary-light));
+    color: var(--chalk-deep);
+    border: 1px solid var(--primary-light);
     box-shadow: none;
   }
 
@@ -1333,14 +1360,14 @@
 
   .kandang-empty-cell {
     @apply aspect-[4/3] w-full relative flex items-center justify-center transition-all cursor-pointer;
-    background: rgba(139, 94, 60, 0.15); /* dirt tint */
-    border: 4px dashed var(--wood-light);
-    border-radius: 16px;
-    box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+    border: 4px dashed var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
   }
   .kandang-empty-cell:hover {
-    background: rgba(139, 94, 60, 0.25);
-    border-color: var(--wood);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--border-hover);
   }
   .kandang-empty-cell::after {
     content: "+";
@@ -1458,7 +1485,7 @@
     @apply shrink-0 flex items-center justify-center;
     @apply rounded-full text-[var(--text-primary)] font-black transition-colors;
     background: linear-gradient(180deg, var(--primary-light), var(--primary));
-    border: 2px solid #d4f5d0;
+    border: 2px solid var(--surface-green-border);
     box-shadow: 0 2px 0 var(--primary-dark);
     width: clamp(1.6rem, 5vw, 1.85rem);
     height: clamp(1.6rem, 5vw, 1.85rem);
@@ -1533,14 +1560,14 @@
   }
 
   .game-action-btn--miner {
-    background: linear-gradient(180deg, #a8b0bc, #6b7280);
+    background: linear-gradient(180deg, var(--leather), var(--leather-deep));
     color: white;
-    border-color: #4b5563;
-    box-shadow: 0 3px 0 #374151;
+    border-color: var(--wood-dark);
+    box-shadow: 0 3px 0 var(--wood-edge);
   }
 
   .game-action-btn--muted {
-    background: linear-gradient(180deg, #f5f0e6, #e8dfd0);
+    background: linear-gradient(180deg, var(--surface-warm), var(--surface-alt));
     opacity: 0.85;
   }
 
@@ -1548,31 +1575,28 @@
   .market-board {
     background: linear-gradient(
       180deg,
-      #4a7a45 0%,
+      var(--primary-light) 0%,
       var(--chalk) 40%,
       var(--chalk-deep) 100%
     );
     border: 4px solid var(--wood);
-    border-radius: 16px;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 6px 0 var(--wood-dark),
-      0 10px 18px rgba(40, 20, 10, 0.25);
-    color: #f4f7e8;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    color: var(--text-on-dark);
   }
 
   .market-row {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 9999px;
+    border-radius: var(--radius);
   }
 
   .market-row--up {
-    box-shadow: inset 3px 0 0 #9fe870;
+    box-shadow: inset 3px 0 0 var(--primary-light);
   }
 
   .market-row--down {
-    box-shadow: inset 3px 0 0 #ff8a7a;
+    box-shadow: inset 3px 0 0 var(--danger);
   }
 
   .animate-glow {

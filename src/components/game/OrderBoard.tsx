@@ -14,9 +14,10 @@ export function OrderBoard() {
   const fulfillOrder = useGameStore((state) => state.fulfillOrder);
   const inventory = useInventory();
 
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(0);
 
   useEffect(() => {
+    setNow(Date.now());
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);

@@ -38,7 +38,7 @@ function useSidebarChrome(
   useEffect(() => {
     setMobileOpen(false);
     setBoostOpen(false);
-  }, [pathname, setMobileOpen]);
+  }, [pathname, setMobileOpen]);  
 
   useEffect(() => {
     try {
@@ -46,7 +46,7 @@ function useSidebarChrome(
     } catch {
       /* ignore */
     }
-  }, []);
+  }, []);  
 
   const toggleCollapsed = () => {
     const next = !collapsed;
@@ -81,15 +81,23 @@ function useAreaBadges() {
   const mining = useGameStore((s) => s?.mining ?? null);
   const orders = useGameStore((s) => s?.orders ?? []);
   const crafting = useGameStore((s) => s?.craftingQueue ?? []);
+
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return {
     pertanian: plots?.some((p) => p.status === "ready"),
     peternakan: animals?.some(
       (a) =>
         a.status === "producing" &&
-        Date.now() - a.lastCollected >= (a.produceTime || 60000),
+        now - a.lastCollected >= (a.produceTime || 60000),
     ),
     tambang: mining?.nodes?.some((n) => n.status === "ready"),
-    restoran: crafting?.some((c) => Date.now() - c.startTime >= c.duration),
+    restoran: crafting?.some((c) => now - c.startTime >= c.duration),
     kota: orders?.length > 0,
   };
 }

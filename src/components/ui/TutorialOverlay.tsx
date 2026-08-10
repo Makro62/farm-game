@@ -65,7 +65,7 @@ export default function TutorialOverlay() {
     // Polling to keep it attached to the target even if it moves/re-renders
     const interval = setInterval(updateRect, 500);
     return () => clearInterval(interval);
-  }, [tutorialStep, currentStep]);
+  }, [tutorialStep, currentStep]);  
 
   if (
     tutorialStep === undefined ||

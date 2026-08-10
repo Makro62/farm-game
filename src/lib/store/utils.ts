@@ -1,5 +1,5 @@
 // @ts-nocheck — incremental TS migration; tighten types later
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { SHOP_SEEDS } from "@/lib/data/crops";
 import { SHOP_ANIMALS } from "@/lib/data/shop";
 import { GAME_CONSTANTS } from "@/lib/constants";

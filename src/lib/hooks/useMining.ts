@@ -26,10 +26,11 @@ export function useMining() {
     (state) => state?.enqueueNotification,
   );
 
-  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [currentTime, setCurrentTime] = useState(0);
   const [shopAmounts, setShopAmounts] = useState({});
 
   useEffect(() => {
+    setCurrentTime(Date.now());
     const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
@@ -42,6 +43,8 @@ export function useMining() {
     : 0;
   const ownedTools = SHOP_MINING.filter((t) => (toolsInv[t.id]?.qty || 0) > 0);
 
+   
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- useMiningTool is a store action, not a React hook
   const handleUseTool = (toolId, nodeId = null) => {
     const result = useMiningTool(toolId, nodeId);
     if (result.ok) {

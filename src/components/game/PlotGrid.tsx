@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
@@ -13,6 +13,13 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
   const swapPlots = useGameStore((state) => state.swapPlots);
   const { handlePlotClick } = useFarming();
   const [floatingTexts, setFloatingTexts] = useState<{id: number, plotId: number, text: string, color: string}[]>([]);
+  const [now, setNow] = useState(0);
+
+  useEffect(() => {
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handlePlotAction = (e: React.MouseEvent, plot: any) => {
     if (isEditMode) {
@@ -20,8 +27,9 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
       return;
     }
     
-    if (farmTool === "panen" && (plot.status === "ready" || (plot.status === "growing" && plot.plantedAt && Date.now() - plot.plantedAt >= plot.growTime))) {
-      const id = Date.now() + Math.random();
+    if (farmTool === "panen" && (plot.status === "ready" || (plot.status === "growing" && plot.plantedAt && now - plot.plantedAt >= plot.growTime))) {
+      // eslint-disable-next-line react-hooks/purity -- This is in an event handler, not render
+      const id = now + Math.random();
       setFloatingTexts(prev => [...prev, {id, plotId: plot.id, text: "+XP", color: "text-green-300"}]);
       setTimeout(() => {
         setFloatingTexts(prev => prev.filter(t => t.id !== id));
@@ -50,7 +58,7 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
           const isGrowing = plot.status === "growing";
           const isReady = plot.status === "ready";
           const timeElapsed = plot.plantedAt
-            ? Math.max(0, Date.now() - plot.plantedAt)
+            ? Math.max(0, now - plot.plantedAt)
             : 0;
 
           return (

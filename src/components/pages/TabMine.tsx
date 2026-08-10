@@ -26,6 +26,7 @@ const FLOOR_META = {
 
 export default function TabMine() {
   const [isMounted, setIsMounted] = useState(false);
+  const [now, setNow] = useState(0);
   const music = useMusic('mine');
 
   useEffect(() => {
@@ -35,7 +36,10 @@ export default function TabMine() {
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);  
   const {
     mining,
     inventory,
@@ -215,7 +219,7 @@ export default function TabMine() {
                   <span>🔥 {job.recipe}</span>
                   <span className="text-[var(--gold-deep)]">
                     {job.completeAt
-                      ? Math.ceil((job.completeAt - Date.now()) / 1000) + "s"
+                      ? Math.ceil((job.completeAt - now) / 1000) + "s"
                       : "Selesai"}
                   </span>
                 </div>
