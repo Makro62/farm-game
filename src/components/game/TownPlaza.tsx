@@ -31,81 +31,132 @@ export function TownPlaza() {
   );
 
   return (
-    <div
-      className="p-4 sm:p-5 field-frame relative min-h-[420px] overflow-hidden"
-      style={{
-        backgroundImage:
-          "linear-gradient(165deg, rgba(184,228,255,0.55) 0%, rgba(200,232,168,0.65) 45%, rgba(143,203,122,0.7) 100%)",
-      }}
-    >
-      <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-[var(--wood)]/20 pointer-events-none rounded-[22px]" />
+    <div className="p-4 sm:p-5 relative min-h-[420px] overflow-hidden rounded-xl border-2 border-green-200 bg-gradient-to-b from-sky-100 via-green-50 to-emerald-100">
+      {/* Floating clouds */}
+      <motion.div
+        className="absolute top-4 text-4xl opacity-30 pointer-events-none"
+        animate={{ x: [0, 30, 0] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      >
+        ☁️
+      </motion.div>
+      <motion.div
+        className="absolute top-12 right-8 text-2xl opacity-20 pointer-events-none"
+        animate={{ x: [0, -20, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+      >
+        ☁️
+      </motion.div>
+      <motion.div
+        className="absolute top-2 left-1/3 text-lg opacity-15 pointer-events-none"
+        animate={{ x: [0, 15, 0] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+      >
+        ☁️
+      </motion.div>
+
+      {/* Floating birds */}
+      <motion.div
+        className="absolute top-8 right-1/4 text-sm opacity-25 pointer-events-none"
+        animate={{ x: [0, 40, 0], y: [0, -5, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+      >
+        🐦
+      </motion.div>
+      <motion.div
+        className="absolute top-16 left-1/4 text-xs opacity-20 pointer-events-none"
+        animate={{ x: [0, -30, 0], y: [0, 3, 0] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      >
+        🐦
+      </motion.div>
 
       <div className="relative z-10 space-y-4">
-        <button
+        {/* Spin Wheel */}
+        <motion.button
           type="button"
           onClick={handleSpinWheel}
           disabled={spunToday}
-          className={`w-full glass-card p-4 rounded-full text-left border-2 transition-transform ${
+          whileTap={!spunToday ? { scale: 0.98 } : undefined}
+          className={`w-full rounded-xl text-left border-2 transition-all overflow-hidden relative ${
             spunToday
-              ? "opacity-70 cursor-default border-[var(--wood)]/40"
-              : "border-[var(--gold)] hover:scale-[1.01]"
+              ? "bg-gray-50 opacity-70 cursor-default border-gray-200"
+              : "bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-300 hover:border-amber-400 hover:shadow-md cursor-pointer"
           }`}
         >
-          <div className="flex items-center gap-3">
-            <div className="text-4xl">{spunToday ? "✅" : "🎡"}</div>
+          <div className="p-4 flex items-center gap-3">
+            <motion.div
+              className="text-4xl"
+              animate={!spunToday ? { rotate: [0, 10, -10, 0] } : undefined}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              {spunToday ? "✅" : "🎡"}
+            </motion.div>
             <div>
-              <div className="font-display font-bold text-[var(--text-primary)] text-lg">
+              <div className="font-display font-bold text-amber-900 text-lg">
                 Roda Harian
               </div>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              <p className="text-xs text-amber-700 mt-0.5">
                 {spunToday
                   ? "Sudah diputar hari ini — kembali besok!"
                   : "1× putaran gratis · hadiah koin"}
               </p>
             </div>
           </div>
-        </button>
+        </motion.button>
 
+        {/* NPCs */}
         <div>
-          <h4 className="font-display font-bold text-[var(--text-primary)] mb-2 flex items-center gap-2">
+          <h4 className="font-display font-bold text-green-900 mb-2 flex items-center gap-2">
             <span>👥</span> Warga Kota
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {NPC_LIST.map((npc) => {
+            {NPC_LIST.map((npc, i) => {
               const data = npcs[npc.id] || { level: 1, points: 0 };
               const maxPoints = data.level * 100;
               return (
                 <motion.button
                   key={npc.id}
                   type="button"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => openNpcGift(npc.id)}
-                  className="glass-card p-3 rounded-full text-left hover:brightness-105 transition-colors border-2 border-[var(--wood)]"
+                  className="bg-white rounded-xl text-left hover:shadow-md transition-all border-2 border-green-100 hover:border-green-300"
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-3xl bg-[var(--shop-bg)] w-12 h-12 rounded-full flex items-center justify-center border-2 border-[var(--wood)]">
-                      {npc.emoji}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="font-bold text-[var(--text-primary)] text-sm truncate">
-                        {npc.name}
-                      </div>
-                      <div className="text-[10px] text-[var(--text-secondary)] truncate">
-                        {npc.role}
+                  <div className="p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <motion.span
+                        className="text-3xl bg-green-50 w-12 h-12 rounded-xl flex items-center justify-center border-2 border-green-200"
+                        animate={{ y: [0, -2, 0] }}
+                        transition={{ duration: 3, repeat: Infinity, delay: i * 0.3 }}
+                      >
+                        {npc.emoji}
+                      </motion.span>
+                      <div className="min-w-0">
+                        <div className="font-bold text-green-900 text-sm truncate">
+                          {npc.name}
+                        </div>
+                        <div className="text-[10px] text-green-600 truncate">
+                          {npc.role}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)] mb-1 font-bold">
-                    <span>Lv {data.level}</span>
-                    <span>Beri hadiah</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-[var(--wood)]/25 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[var(--primary)]"
-                      style={{
-                        width: `${Math.min(100, (data.points / maxPoints) * 100)}%`,
-                      }}
-                    />
+                    <div className="flex items-center justify-between text-[10px] text-green-600 mb-1 font-bold">
+                      <span>Lv {data.level}</span>
+                      <span className="text-amber-600">🎁 Hadiah</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-green-100 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${Math.min(100, (data.points / maxPoints) * 100)}%`,
+                        }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    </div>
                   </div>
                 </motion.button>
               );
@@ -113,32 +164,41 @@ export function TownPlaza() {
           </div>
         </div>
 
-        <div className="glass-card rounded-2xl p-3">
-          <h4 className="font-bold text-sm text-[var(--text-primary)] mb-2">
-            Kota Kamu
+        {/* City buildings */}
+        <div className="bg-white rounded-xl p-3 border-2 border-green-100">
+          <h4 className="font-bold text-sm text-green-900 mb-2 flex items-center gap-2">
+            🏘️ Kota Kamu
           </h4>
           {ownedBuildings.length === 0 && ownedDecor.length === 0 ? (
-            <p className="text-xs text-[var(--text-secondary)] italic">
-              Belum ada bangunan/dekorasi. Beli di toko samping untuk menghias
-              kota.
+            <p className="text-xs text-green-600 italic text-center py-3">
+              Belum ada bangunan. Beli di toko samping untuk menghias kota!
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {[...ownedBuildings, ...ownedDecor].map((item) => (
-                <span
+              {[...ownedBuildings, ...ownedDecor].map((item, i) => (
+                <motion.span
                   key={item.id}
-                  className="inline-flex items-center gap-1.5 bg-[var(--shop-bg)] border-2 border-[var(--wood)] rounded-xl px-2.5 py-1.5 text-sm font-bold text-[var(--text-primary)]"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: i * 0.05, type: "spring" }}
+                  className="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-lg px-2.5 py-1.5 text-sm font-bold text-green-800"
                 >
-                  <span className="text-xl">{item.emoji}</span> {item.name}
-                </span>
+                  <motion.span
+                    className="text-xl"
+                    animate={{ y: [0, -2, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                  >
+                    {item.emoji}
+                  </motion.span>
+                  {item.name}
+                </motion.span>
               ))}
             </div>
           )}
         </div>
 
-        <div className="text-[11px] text-center text-[var(--text-secondary)] font-medium">
-          Tip: kasih hadiah yang disukai warga → naik level → bonus XP · Mancing
-          lewat tombol Danau
+        <div className="text-[11px] text-center text-green-600 font-medium">
+          💡 Kasih hadiah warga → naik level → bonus XP · Mancing lewat Danau
         </div>
       </div>
     </div>
@@ -158,77 +218,102 @@ export function FishingLake({
 }) {
   return (
     <div
-      className="p-4 field-frame relative min-h-[420px] overflow-hidden flex items-center justify-center bg-cover bg-center"
+      className="p-4 relative min-h-[420px] overflow-hidden flex items-center justify-center bg-cover bg-center rounded-xl border-2 border-blue-200"
       style={{ backgroundImage: "url('/img/backgrounds/lake_bg.png')" }}
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/10 to-black/30 pointer-events-none rounded-[22px]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-sky-200/30 via-transparent to-blue-300/40 pointer-events-none rounded-xl" />
+
+      {/* Animated water ripples */}
+      <motion.div
+        className="absolute bottom-8 left-1/4 w-20 h-3 bg-blue-400/20 rounded-full pointer-events-none"
+        animate={{ scaleX: [1, 1.3, 1], opacity: [0.3, 0.1, 0.3] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
+      <motion.div
+        className="absolute bottom-12 right-1/3 w-16 h-2 bg-blue-400/15 rounded-full pointer-events-none"
+        animate={{ scaleX: [1, 1.2, 1], opacity: [0.2, 0.1, 0.2] }}
+        transition={{ duration: 4, repeat: Infinity, delay: 1 }}
+      />
 
       {(activeBait || selectedBaitLabel) && fishState === "idle" && (
-        <div className="absolute top-3 left-3 z-20 text-[11px] font-bold bg-[var(--panel)] text-[var(--text-primary)] px-2.5 py-1 rounded-xl border-2 border-[var(--wood)] shadow-md">
+        <div className="absolute top-3 left-3 z-20 text-[11px] font-bold bg-white/90 text-blue-800 px-2.5 py-1 rounded-lg border border-blue-200 shadow-sm">
           Umpan: {selectedBaitLabel || `${activeBait.emoji} ${activeBait.name}`}
         </div>
       )}
 
       {fishState === "idle" && (
-        <button
+        <motion.button
           type="button"
           onClick={startFishing}
-          className="relative z-10 bg-white/85 backdrop-blur-md px-6 py-4 rounded-full border-[3px] border-[var(--wood)] shadow-[0_5px_0_var(--wood-light)] hover:scale-105 transition-transform text-center"
+          whileTap={{ scale: 0.95 }}
+          className="relative z-10 bg-white/90 backdrop-blur-md px-6 py-4 rounded-xl border-2 border-blue-300 shadow-md hover:shadow-lg transition-all text-center"
         >
-          <span className="text-5xl drop-shadow-md inline-block mb-2">🎣</span>
-          <p className="text-[var(--text-primary)] font-bold text-lg">
+          <motion.span
+            className="text-5xl drop-shadow-md inline-block mb-2"
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            🎣
+          </motion.span>
+          <p className="text-blue-900 font-bold text-lg">
             Lempar Kail!
           </p>
-          <p className="text-[var(--text-secondary)] text-xs mt-1">
+          <p className="text-blue-600 text-xs mt-1">
             Pilih umpan di kiri dulu (opsional)
           </p>
-        </button>
+        </motion.button>
       )}
 
       {fishState === "waiting" && (
         <div className="relative z-10 text-center">
-          <span className="text-5xl drop-shadow-md animate-bounce inline-block">
+          <motion.span
+            className="text-5xl drop-shadow-md inline-block"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
             🎣
-          </span>
-          <p className="text-white font-bold mt-3 text-lg bg-black/40 px-4 py-1 rounded-full">
+          </motion.span>
+          <p className="text-white font-bold mt-3 text-lg bg-blue-900/60 px-4 py-1 rounded-lg">
             Menunggu gigitan{activeBait ? ` · ${activeBait.emoji}` : ""}...
           </p>
         </div>
       )}
 
       {fishState === "bite" && (
-        <button
+        <motion.button
           type="button"
           onClick={startMinigame}
-          className="relative z-10 btn-danger px-8 py-4 rounded-full border-4 border-[#ffb3aa] shadow-xl hover:scale-110 animate-pulse text-center"
+          initial={{ scale: 0.8 }}
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+          className="relative z-10 bg-red-500 text-white px-8 py-4 rounded-xl border-2 border-red-600 shadow-lg text-center"
         >
           <span className="text-5xl drop-shadow-md inline-block mb-2">💦</span>
           <p className="font-black text-2xl">TARIK SEKARANG!</p>
-        </button>
+        </motion.button>
       )}
 
       {fishState === "minigame" && (
-        <div className="relative z-10 w-full max-w-sm glass-card p-5 rounded-2xl shadow-2xl flex flex-col items-center">
-          <h3 className="font-bold mb-3 text-[var(--text-primary)] text-center leading-tight">
+        <div className="relative z-10 w-full max-w-sm bg-white/95 backdrop-blur-md p-5 rounded-xl shadow-xl border-2 border-blue-200 flex flex-col items-center">
+          <h3 className="font-bold mb-3 text-blue-900 text-center leading-tight">
             Tahan tombol saat garis merah
             <br />
             di area HIJAU!
           </h3>
 
-          <div className="w-full h-10 bg-[var(--wood)]/30 rounded-full relative overflow-hidden mb-5 border-2 border-[var(--wood)] shadow-inner">
-            <div className="absolute left-[35%] right-[35%] top-0 bottom-0 bg-[var(--primary)] opacity-60 border-l-2 border-r-2 border-[var(--primary-light)]" />
+          <div className="w-full h-10 bg-blue-100 rounded-full relative overflow-hidden mb-5 border-2 border-blue-200">
+            <div className="absolute left-[35%] right-[35%] top-0 bottom-0 bg-green-400 opacity-60 border-l-2 border-r-2 border-green-500" />
             <div
-              className="absolute w-2 h-full bg-[#ff7a6b] top-0 shadow-md transition-all duration-75 z-10 border-x border-[#ffb3aa]"
+              className="absolute w-2 h-full bg-red-500 top-0 shadow-md transition-all duration-75 z-10"
               style={{ left: `calc(${indicatorPos}%)` }}
             />
           </div>
 
-          <div className="w-full h-4 bg-[var(--wood)]/30 rounded-full mb-5 overflow-hidden shadow-inner border border-[var(--wood)]">
-            <div
-              className="h-full bg-gradient-to-r from-[var(--gold)] to-[var(--primary)] transition-all duration-100"
-              style={{
-                width: `${(score / GAME_CONSTANTS.FISHING.WIN_THRESHOLD) * 100}%`,
-              }}
+          <div className="w-full h-4 bg-blue-100 rounded-full mb-5 overflow-hidden border border-blue-200">
+            <motion.div
+              className="h-full bg-gradient-to-r from-amber-400 to-green-500 rounded-full"
+              animate={{ width: `${(score / GAME_CONSTANTS.FISHING.WIN_THRESHOLD) * 100}%` }}
+              transition={{ duration: 0.1 }}
             />
           </div>
 
@@ -237,8 +322,10 @@ export function FishingLake({
             onPointerDown={() => setIsHolding(true)}
             onPointerUp={() => setIsHolding(false)}
             onPointerLeave={() => setIsHolding(false)}
-            className={`w-full py-4 text-lg btn-primary touch-none select-none ${
-              isHolding ? "brightness-90" : ""
+            className={`w-full py-4 text-lg font-bold rounded-xl transition-all touch-none select-none ${
+              isHolding
+                ? "bg-blue-700 text-white"
+                : "bg-blue-500 text-white hover:bg-blue-600"
             }`}
           >
             {isHolding ? "MENARIK..." : "TAHAN (KLIK)"}
@@ -269,19 +356,19 @@ export function FishCatchBoard() {
   const owned = FISHES.filter((f) => (inventory[f.id] || 0) > 0);
 
   return (
-    <div className="market-board p-3 mb-5">
-      <div className="font-display font-bold text-base mb-3 flex items-center gap-2 border-b-2 border-[var(--wood)]/40 pb-2 text-[var(--text-primary)]">
+    <div className="bg-white rounded-xl p-3 border-2 border-blue-200 mb-5">
+      <div className="font-display font-bold text-base mb-3 flex items-center gap-2 border-b border-blue-100 pb-2 text-blue-900">
         <span className="text-xl">🐟</span> Pasar Ikan
       </div>
 
       {bahari && (
-        <p className="text-[10px] font-bold text-[var(--primary-dark)] mb-2 bg-[var(--primary-light)]/35 rounded-lg px-2 py-1">
+        <p className="text-[10px] font-bold text-blue-700 mb-2 bg-blue-50 rounded-lg px-2 py-1">
           Hari Bahari — harga jual ikan ×2!
         </p>
       )}
 
       {owned.length === 0 ? (
-        <div className="text-sm text-[var(--text-secondary)] italic text-center py-4 font-bold">
+        <div className="text-sm text-blue-400 italic text-center py-4 font-bold">
           Belum ada tangkapan. Mancing di danau dulu!
         </div>
       ) : (
@@ -292,20 +379,20 @@ export function FishCatchBoard() {
             return (
               <div
                 key={fish.id}
-                className="market-row market-row--up px-2.5 py-2 flex items-center justify-between gap-2"
+                className="px-2.5 py-2 flex items-center justify-between gap-2 rounded-lg hover:bg-blue-50 transition-colors"
               >
                 <div className="min-w-0">
-                  <div className="text-sm font-extrabold text-[var(--text-primary)] truncate">
+                  <div className="text-sm font-extrabold text-blue-900 truncate">
                     {fish.emoji} {fish.name} ×{count}
                   </div>
-                  <div className="text-[10px] text-[var(--text-secondary)]">
+                  <div className="text-[10px] text-blue-600">
                     {unit}💰 / ekor
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleSell(fish)}
-                  className="btn-gold !text-[10px] !px-2.5 !py-1.5 uppercase tracking-wide whitespace-nowrap"
+                  className="bg-amber-400 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg hover:bg-amber-500 transition-colors whitespace-nowrap"
                 >
                   Jual
                 </button>

@@ -51,6 +51,12 @@ export function useMusic(musicName) {
   return { play, stop, pause, resume };
 }
 
-export const useMainMenuMusic = () => useMusic('main');
+export const useMainMenuMusic = () => useMusic('menu');
 export const useMenuMusic = () => useMusic('menu');
 export const useEventMusic = () => useMusic('event');
+export const useFarmMusic = () => useMusic('farm');
+export const useAnimalMusic = () => useMusic('animal');
+export const useMineMusic = () => useMusic('mine');
+export const useRestaurantMusic = () => useMusic('restaurant');
+export const useTownMusic = () => useMusic('town');
+export const useMuseumMusic = () => useMusic('museum');

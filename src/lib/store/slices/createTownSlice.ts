@@ -1,6 +1,6 @@
 import type { StoreSet, StoreGet } from '@/types/game'
 import { SHOP_DECORATIONS } from '@/lib/data/shop'
-import { getItemSellPrice, getItemCategory } from '@/lib/data/item-helpers'
+import { getItemSellPrice } from '@/lib/data/item-helpers'
 import {
   getBuildingConfig,
   getBuildingMineralReq,
@@ -8,6 +8,12 @@ import {
 } from '@/lib/data/buildings'
 import { MINERALS } from '@/lib/data/minerals'
 import { FISHES } from '@/lib/data/fishes'
+import {
+  getItemCategory,
+  invHas,
+  invRemove,
+  incrementStat,
+} from '@/lib/utils/inventory'
 
 export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
   setSelectedBait: baitId => set({ selectedBait: baitId }),
@@ -69,17 +75,12 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
     if (state.coins < building.price)
       return { ok: false, message: 'Koin tidak cukup!' }
 
-    const mineralReq = getBuildingMineralReq(buildingId)
-    if (mineralReq) {
-      for (const [mineral, qty] of Object.entries(mineralReq)) {
-        if (
-          (state.inventoryByCategory?.minerals?.[mineral]?.qty || 0) <
-          (qty as number)
-        ) {
-          return {
-            ok: false,
-            message: `Butuh ${qty}x ${mineral} dari Tambang untuk membangun ${building.name}!`,
-          }
+    const mineralReq = getBuildingMineralReq(buildingId) || {}
+    for (const [mineral, qty] of Object.entries(mineralReq)) {
+      if (!invHas(state, 'minerals', mineral, qty as number)) {
+        return {
+          ok: false,
+          message: `Butuh ${qty}x ${mineral} dari Tambang untuk membangun ${building.name}!`,
         }
       }
     }
@@ -88,15 +89,8 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
 
     set(draft => {
       draft.coins -= building.price
-      if (mineralReq) {
-        for (const [mineral, qty] of Object.entries(mineralReq)) {
-          if (draft.inventoryByCategory.minerals[mineral]) {
-            draft.inventoryByCategory.minerals[mineral].qty -= qty as number
-            if (draft.inventoryByCategory.minerals[mineral].qty <= 0) {
-              delete draft.inventoryByCategory.minerals[mineral]
-            }
-          }
-        }
+      for (const [mineral, qty] of Object.entries(mineralReq)) {
+        invRemove(draft, 'minerals', mineral, qty as number)
       }
       draft.buildings = {
         ...(draft.buildings || {}),
@@ -126,22 +120,9 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
   giveGift: (npcId, itemId, isLiked) => {
     const state = get()
     const itemCategory = getItemCategory(itemId)
-    if (
-      !itemCategory ||
-      (state.inventoryByCategory?.[itemCategory]?.[itemId]?.qty || 0) <= 0
-    )
-      return null
+    if (!itemCategory || !invHas(state, itemCategory, itemId, 1)) return null
 
-    set(draft => {
-      if (draft.inventoryByCategory[itemCategory]?.[itemId]) {
-        draft.inventoryByCategory[itemCategory][itemId].qty -= 1
-        if (draft.inventoryByCategory[itemCategory][itemId].qty <= 0) {
-          delete draft.inventoryByCategory[itemCategory][itemId]
-        }
-      }
-    })
-
-    const currentNpc = state.npcs[npcId] || { level: 1, points: 0 }
+    const currentNpc = state.npcs[npcId] || { level: 1, points: 0, hearts: 1 }
     const pointsGained = isLiked ? 50 : 10
     let newPoints = currentNpc.points + pointsGained
     let newLevel = currentNpc.level
@@ -152,28 +133,23 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
       newPoints -= maxPoints
       newLevel += 1
       leveledUp = true
-      get().addXP(100 * newLevel)
     }
 
-    set({
-      npcs: {
-        ...state.npcs,
-        [npcId]: {
-          ...currentNpc,
-          level: newLevel,
-          points: newPoints,
-          hearts: Math.max(currentNpc.hearts || 1, newLevel),
-          dailyGiftGiven: true,
-        },
-      },
+    set(draft => {
+      invRemove(draft, itemCategory, itemId, 1)
+
+      draft.npcs[npcId] = {
+        ...currentNpc,
+        level: newLevel,
+        points: newPoints,
+        hearts: Math.max(currentNpc.hearts || 1, newLevel),
+        dailyGiftGiven: true,
+      }
+
+      incrementStat(draft, 'totalGiftsGiven', 1)
     })
 
-    set(s => ({
-      stats: {
-        ...s.stats,
-        totalGiftsGiven: (s.stats?.totalGiftsGiven || 0) + 1,
-      },
-    }))
+    if (leveledUp) get().addXP(100 * newLevel)
     get().checkAchievements?.()
     return { leveledUp, newLevel, pointsGained }
   },
@@ -210,16 +186,11 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
     if (!points)
       return { ok: false, message: 'Item ini tidak bisa didonasikan.' }
     const cat = getItemCategory(itemId)
-    if (!cat || (state.inventoryByCategory?.[cat]?.[itemId]?.qty || 0) <= 0)
+    if (!cat || !invHas(state, cat, itemId, 1))
       return { ok: false, message: 'Item tidak ada di inventori.' }
 
     set(draft => {
-      if (cat && draft.inventoryByCategory[cat]?.[itemId]) {
-        draft.inventoryByCategory[cat][itemId].qty -= 1
-        if (draft.inventoryByCategory[cat][itemId].qty <= 0) {
-          delete draft.inventoryByCategory[cat][itemId]
-        }
-      }
+      invRemove(draft, cat, itemId, 1)
       draft.town.museumDonations.push({
         itemId,
         points,

@@ -8,42 +8,42 @@
     --font-display: "Fredoka", "Comic Sans MS", system-ui, sans-serif;
     --font-body: "Nunito", "Arial", system-ui, sans-serif;
 
-    /* Mockup cozy farm — cream + kayu + rumput */
-    --primary: #5dbe4a;
-    --primary-light: #8fd96a;
-    --primary-dark: #3a9a32;
-    --secondary: #f4c430;
-    --danger: #e85d4c;
-    --info: #7ec8f0;
-    --success: #6bcb5a;
-    --warning: #e8a020;
-    --orange: #e8893a;
-    --gold: #f6c94a;
-    --gold-deep: #d4a017;
-    --gold-rim: #e8c76a;
+    /* Bright nature-modern palette — cheerful & clean */
+    --primary: #22C55E;
+    --primary-light: #4ADE80;
+    --primary-dark: #16A34A;
+    --secondary: #F59E0B;
+    --danger: #EF4444;
+    --info: #38BDF8;
+    --success: #22C55E;
+    --warning: #F59E0B;
+    --orange: #F97316;
+    --gold: #FBBF24;
+    --gold-deep: #D97706;
+    --gold-rim: #FDE68A;
 
-    --sky-top: #c8e8ff;
-    --sky-mid: #e8f6c8;
-    --sky-bot: #9fd67f;
-    --wood: #8b5e3c;
-    --wood-light: #a67c52;
-    --wood-mid: #c49563;
-    --wood-dark: #5c3a22;
-    --wood-edge: #2e1a0c;
-    --wood-deep: #4a2c18;
-    --panel: #fdf6e8;
-    --panel-border: #8b5e3c;
-    --card: #fff9ef;
-    --shop-bg: #fff8ec;
-    --tab-shell: #a67c52;
-    --leather: #6b4423;
-    --leather-deep: #4a2e18;
-    --chalk: #3d6b3a;
-    --chalk-deep: #2f5230;
-    --parchment: #f3e2b8;
-    --text-primary: #3e2a1a;
-    --text-secondary: #6b5344;
-    --text-on-dark: #fff8ec;
+    --sky-top: #BAE6FD;
+    --sky-mid: #D9F99D;
+    --sky-bot: #86EFAC;
+    --wood: #A16207;
+    --wood-light: #CA8A04;
+    --wood-mid: #EAB308;
+    --wood-dark: #854D0E;
+    --wood-edge: #713F12;
+    --wood-deep: #92400E;
+    --panel: #FFFEF5;
+    --panel-border: #D4D4D8;
+    --card: #FFFFFF;
+    --shop-bg: #F8FAFC;
+    --tab-shell: #CA8A04;
+    --leather: #78716C;
+    --leather-deep: #57534E;
+    --chalk: #15803D;
+    --chalk-deep: #166534;
+    --parchment: #FEF3C7;
+    --text-primary: #1C1917;
+    --text-secondary: #57534E;
+    --text-on-dark: #FAFAF9;
 
     /* Shell layout sizes */
     --shell-rail: 212px;
@@ -71,9 +71,9 @@
     background:
       linear-gradient(
         180deg,
-        rgba(200, 232, 255, 0.55) 0%,
-        rgba(253, 246, 232, 0.72) 38%,
-        rgba(159, 214, 127, 0.45) 100%
+        rgba(186, 230, 253, 0.6) 0%,
+        rgba(255, 255, 255, 0.8) 38%,
+        rgba(134, 239, 172, 0.5) 100%
       ),
       url("/img/backgrounds/farm_bg.png") center top / cover no-repeat fixed;
   }
@@ -494,17 +494,17 @@
     backdrop-filter: blur(4px);
   }
 
-  /* Shared wood chrome */
+  /* Shared wood chrome — bright modern green */
   .shell-panel,
   .shell-header {
     color: var(--text-on-dark);
     background:
-      linear-gradient(180deg, rgba(255, 248, 236, 0.1), transparent 42%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 42%),
       linear-gradient(
         180deg,
-        var(--wood-mid) 0%,
-        var(--wood) 42%,
-        var(--wood-deep) 100%
+        #22C55E 0%,
+        #16A34A 42%,
+        #15803D 100%
       );
   }
 

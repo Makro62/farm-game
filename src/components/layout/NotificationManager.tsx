@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useGameStore } from "@/lib/store";
 import toast from "react-hot-toast";
 
@@ -9,26 +9,32 @@ export default function NotificationManager() {
   const dequeueNotification = useGameStore(
     (state) => state.dequeueNotification,
   );
+  const busy = useRef(false);
 
   useEffect(() => {
-    if (notificationsQueue && notificationsQueue.length > 0) {
-      notificationsQueue.forEach((notif) => {
-        const { type = "success", ...options } = notif.options || {};
+    if (busy.current) return;
+    if (!notificationsQueue || notificationsQueue.length === 0) return;
 
-        // Show toast
-        const message = notif.message ?? "";
-        if (type === "error") {
-          toast.error(message, options);
-        } else if (type === "success") {
-          toast.success(message, options);
-        } else {
-          toast(message, options);
-        }
+    const notif = notificationsQueue[0];
+    busy.current = true;
 
-        // Remove from queue
-        dequeueNotification(notif.id);
-      });
-    }
+    const { type = "success", duration = 2800, ...options } =
+      notif.options || {};
+    const message = notif.message ?? "";
+
+    const toastFn =
+      type === "error"
+        ? toast.error
+        : type === "success"
+          ? toast.success
+          : toast;
+
+    toastFn(message, { ...options, duration });
+
+    setTimeout(() => {
+      dequeueNotification(notif.id);
+      busy.current = false;
+    }, duration + 200);
   }, [notificationsQueue, dequeueNotification]);
 
   return null;

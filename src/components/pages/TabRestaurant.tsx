@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/lib/store";
-import { RECIPES, canCook as canCookRecipe } from "@/lib/data/recipes";
-import { getItemEmoji, getItemDisplayName, getItemCategory } from "@/lib/data/item-helpers";
+import { RECIPES } from "@/lib/data/recipes";
+import { getItemEmoji, getItemCategory } from "@/lib/data/item-helpers";
 import { CraftingWidget } from "@/components/ui/CraftingWidget";
 import { GameAreaHeader, GameActionButton } from "@/components/ui/GameAreaHeader";
 import { QuestPanel } from "@/components/game/QuestPanel";
@@ -12,6 +12,7 @@ import { GAME_CONSTANTS } from "@/lib/constants";
 import TabPage, { GameStage } from "@/components/ui/TabPage";
 import SideDock from "@/components/ui/SideDock";
 import { useRestaurant } from "@/lib/hooks/useRestaurant";
+import { useMusic } from "@/lib/hooks/useSound";
 
 function MenuBoard() {
   return (
@@ -46,7 +47,6 @@ function TableGrid() {
   const openConfirm = useGameStore((s) => s.openConfirm);
   const tables = Array.from({ length: 9 }, (_, i) => i);
 
-  // Force re-render for progress bar animation
   const [, setTick] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 1000);
@@ -67,7 +67,7 @@ function TableGrid() {
   };
 
   return (
-    <div className="grid grid-cols-3 gap-3 w-full max-w-lg mx-auto mb-6 mt-2">
+    <div className="grid grid-cols-3 gap-2.5 w-full max-w-lg mx-auto mb-6 mt-2">
       {tables.map((tableId) => {
         const isLocked = tableId >= totalTables;
         const customer = activeCustomers.find((c) => c.tableId === tableId);
@@ -77,56 +77,85 @@ function TableGrid() {
             <div
               key={tableId}
               onClick={tableId === totalTables ? handleUpgrade : undefined}
-              className={`relative aspect-[3/2] bg-[#7a4629] rounded-xl border-4 border-[#5c331a] shadow-[inset_0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center opacity-70 ${tableId === totalTables ? "cursor-pointer hover:opacity-100 hover:scale-105 transition-transform" : "cursor-not-allowed"}`}
+              className={`relative aspect-[4/3] rounded-xl border-2 border-dashed flex items-center justify-center transition-all ${
+                tableId === totalTables
+                  ? "border-amber-400 bg-amber-50/50 cursor-pointer hover:bg-amber-100/60"
+                  : "border-gray-300 bg-gray-100/30 cursor-not-allowed opacity-50"
+              }`}
             >
-              <div className="text-3xl opacity-50">🔒</div>
+              <div className="text-2xl opacity-40">🪑</div>
               {tableId === totalTables && (
-                <div className="absolute -bottom-2 bg-[var(--gold)] text-black text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white/20 whitespace-nowrap shadow-sm hover:scale-110 transition-transform">
-                  Beli {totalTables * 1000}💰
+                <div className="absolute -bottom-2 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full border-2 border-amber-600 whitespace-nowrap shadow-md">
+                  + Meja {totalTables * 1000}💰
                 </div>
               )}
             </div>
           );
         }
 
+        const patienceRatio = customer
+          ? Math.max(0, customer.patience / customer.maxPatience)
+          : 0;
+
         return (
           <div
             key={tableId}
-            className="relative aspect-[3/2] bg-[#a86540] rounded-xl border-4 border-[#7a4629] shadow-[inset_0_4px_8px_rgba(0,0,0,0.3)] flex items-center justify-center"
+            className="relative aspect-[4/3] rounded-xl border-2 flex items-center justify-center overflow-hidden transition-all"
+            style={{
+              background: customer
+                ? "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)"
+                : "linear-gradient(180deg, #F5F0E6 0%, #EDE4D4 100%)",
+              borderColor: customer ? "#F59E0B" : "#D1C7B7",
+            }}
           >
-            {/* Table detail */}
-            <div className="absolute inset-1.5 bg-[#8b5233] rounded pointer-events-none border border-[#9b6343]" />
+            {!customer && (
+              <div className="relative z-10 flex flex-col items-center gap-1 opacity-30">
+                <span className="text-2xl">🍽️</span>
+                <span className="text-[9px] font-bold text-amber-700">Kosong</span>
+              </div>
+            )}
 
             <AnimatePresence>
               {customer && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.5, y: -20 }}
+                  initial={{ opacity: 0, scale: 0.3, y: -30 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.5, y: -20 }}
+                  exit={{ opacity: 0, scale: 0.3, y: 20 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   onClick={() => serveCustomer(customer.id)}
-                  className="relative cursor-pointer hover:scale-105 transition-transform z-10"
+                  className="relative cursor-pointer z-10 flex flex-col items-center"
                 >
-                  <span className="text-4xl drop-shadow-lg">
-                    {customer.emoji}
-                  </span>
-
-                  {/* Speech bubble */}
-                  <div className="absolute -top-10 -right-6 bg-white rounded-xl p-1.5 shadow-lg border-2 border-gray-200 animate-bounce flex flex-col items-center">
-                    <span className="text-xl leading-none">
-                      {RECIPES.find((r) => r.id === customer.recipeId)?.emoji}
+                  <div className="relative">
+                    <span className="text-4xl drop-shadow-md block">
+                      {customer.emoji}
                     </span>
-                    <div className="w-1.5 h-1.5 bg-white border-r-2 border-b-2 border-gray-200 absolute -bottom-1 left-3 rotate-45" />
+
+                    <div className="absolute -top-9 -right-5 bg-white rounded-lg px-1.5 py-1 shadow-md border border-gray-200 flex flex-col items-center animate-bounce">
+                      <span className="text-lg leading-none">
+                        {RECIPES.find((r) => r.id === customer.recipeId)?.emoji}
+                      </span>
+                      <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white absolute -bottom-1 left-2" />
+                    </div>
                   </div>
 
-                  {/* Patience bar */}
-                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-14 h-2 bg-black/40 rounded-full overflow-hidden border border-white/20">
+                  <div className="mt-1 w-16 h-2 bg-black/20 rounded-full overflow-hidden border border-white/30">
                     <div
-                      className={`h-full transition-all duration-1000 ease-linear ${customer.patience / customer.maxPatience > 0.5 ? "bg-[#7BC47F]" : customer.patience / customer.maxPatience > 0.25 ? "bg-[#FFE08A]" : "bg-red-400"}`}
+                      className="h-full rounded-full transition-all duration-1000 ease-linear"
                       style={{
-                        width: `${Math.max(0, (customer.patience / customer.maxPatience) * 100)}%`,
+                        width: `${patienceRatio * 100}%`,
+                        backgroundColor:
+                          patienceRatio > 0.5
+                            ? "#4ADE80"
+                            : patienceRatio > 0.25
+                              ? "#FBBF24"
+                              : "#EF4444",
                       }}
                     />
                   </div>
+
+                  <span className="text-[8px] font-bold text-amber-800 mt-0.5">
+                    {customer.name}
+                  </span>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -138,8 +167,14 @@ function TableGrid() {
 }
 
 export default function TabRestaurant() {
+  const music = useMusic('restaurant');
+
+  useEffect(() => {
+    music.play();
+    return () => music.stop();
+  }, []);
+
   const {
-    inventory,
     workers,
     autoChef,
     selectedRecipe,
@@ -147,6 +182,7 @@ export default function TabRestaurant() {
     menuFilter,
     serviceOn,
     recipes,
+    inventory,
     setMenuFilter,
     setServiceOn,
     canCook,
@@ -190,43 +226,39 @@ export default function TabRestaurant() {
               </GameActionButton>
             </GameAreaHeader>
 
-            {/* Restaurant Stats */}
-            <div className="flex items-center justify-between gap-2 mb-2 px-3 py-1.5 rounded-xl bg-[var(--primary-light)]/20 border border-[var(--primary)]/30 text-xs font-bold">
+            <div className="flex items-center justify-between gap-2 mb-2 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-bold">
               <div className="flex items-center gap-2">
                 <span>⭐</span>
-                <span className="text-[var(--text-primary)]">
+                <span className="text-amber-800">
                   Reputasi: {restaurant?.reputation || 0}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <span>🍽️</span>
-                <span className="text-[var(--text-primary)]">
+                <span className="text-amber-800">
                   {totalServed} dilayani
                 </span>
-                <span className="text-[var(--text-secondary)]">
+                <span className="text-amber-600">
                   {activeCustomers.length} sekarang
                 </span>
               </div>
             </div>
 
-            <div
-              className="field-frame relative stage-play-frame overflow-hidden bg-cover bg-center"
-              style={{
-                backgroundImage:
-                  "linear-gradient(165deg, rgba(253,246,232,0.75), rgba(232,240,200,0.55)), url(/img/backgrounds/farm_bg.png)",
-              }}
-            >
+            <div className="field-frame relative stage-play-frame overflow-hidden rounded-xl border-2 border-amber-200 bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100">
               <div className="relative z-10 p-4 sm:p-5 flex flex-col items-center justify-center h-full min-h-[200px] text-center gap-3">
-                <div className="text-5xl">🍽️</div>
-                <p className="font-display font-bold text-xl text-[var(--text-primary)]">
-                  Dapur Dewi Hidangan
-                </p>
-                <p className="text-sm text-[var(--text-secondary)] font-medium max-w-md mb-2">
-                  Pilih menu di panel samping untuk memasak.
-                  {serviceOn
-                    ? " Sajikan ke pelanggan dengan mengkliknya!"
-                    : " Mode atur meja aktif."}
-                </p>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="text-4xl">👨‍🍳</div>
+                  <div>
+                    <p className="font-display font-bold text-lg text-amber-900">
+                      Dapur Dewi Hidangan
+                    </p>
+                    <p className="text-xs text-amber-700 font-medium">
+                      {serviceOn
+                        ? "Sajikan ke pelanggan dengan mengkliknya!"
+                        : "Mode atur meja aktif"}
+                    </p>
+                  </div>
+                </div>
                 <TableGrid />
                 <CraftingWidget
                   queueOnly
@@ -287,13 +319,21 @@ export default function TabRestaurant() {
                                 handleCook(recipe.id);
                               }}
                               disabled={!ready && isUnlocked}
-                              className={`shop-item-card text-left w-full ${!isUnlocked ? "filter grayscale opacity-60 cursor-not-allowed" : ""} ${
+                              className={`shop-item-card text-left w-full ${
+                                !isUnlocked
+                                  ? "filter grayscale opacity-60 cursor-not-allowed"
+                                  : ""
+                              } ${
                                 ready
                                   ? "ring-2 ring-[var(--primary)]"
                                   : isUnlocked
                                     ? "opacity-75"
                                     : ""
-                              } ${isSelected ? "ring-4 ring-yellow-400 !border-yellow-500 bg-yellow-50" : ""}`}
+                              } ${
+                                isSelected
+                                  ? "ring-4 ring-yellow-400 !border-yellow-500 bg-yellow-50"
+                                  : ""
+                              }`}
                             >
                               <div className="shop-item-info relative">
                                 <span className="shop-item-icon">
@@ -315,7 +355,9 @@ export default function TabRestaurant() {
                                 )}
 
                                 <div
-                                  className={`flex flex-wrap gap-0.5 justify-center mt-1 ${!isUnlocked ? "opacity-0" : ""}`}
+                                  className={`flex flex-wrap gap-0.5 justify-center mt-1 ${
+                                    !isUnlocked ? "opacity-0" : ""
+                                  }`}
                                 >
                                   {Object.entries(recipe.req).map(
                                     ([ingredient, qty]: [string, any]) => {
@@ -328,7 +370,9 @@ export default function TabRestaurant() {
                                         parts.length === 2 ? parts[0] : null;
                                       const available = cat
                                         ? inventory?.[cat]?.[itemId]?.qty || 0
-                                        : Object.values(inventory || {}).reduce(
+                                        : Object.values(
+                                            inventory || {},
+                                          ).reduce(
                                             (sum, catInv: any) =>
                                               sum +
                                               (catInv?.[itemId]?.qty || 0),
@@ -364,7 +408,7 @@ export default function TabRestaurant() {
                                     e.stopPropagation();
                                     eatFood(recipe.id);
                                   }}
-                                  className="absolute top-1 left-1 w-6 h-6 rounded-full bg-green-400 text-white flex items-center justify-center text-xs shadow-md z-10 hover:scale-110 transition-transform"
+                                  className="absolute top-1 left-1 w-6 h-6 rounded-lg bg-green-400 text-white flex items-center justify-center text-xs shadow-md z-10 transition-colors"
                                   title="Makan untuk pulihkan energi"
                                 >
                                   🍽️
@@ -378,9 +422,9 @@ export default function TabRestaurant() {
                                   e.stopPropagation();
                                   handleSetTarget(recipe, isSelected);
                                 }}
-                                className={`absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-sm shadow-md z-10 ${
+                                className={`absolute -top-2 -right-2 w-7 h-7 rounded-lg flex items-center justify-center text-sm shadow-md z-10 transition-colors ${
                                   isSelected
-                                    ? "bg-yellow-400 text-white scale-110"
+                                    ? "bg-yellow-400 text-white"
                                     : "bg-white text-gray-400 md:opacity-0 md:group-hover:opacity-100 border"
                                 }`}
                                 title="Set target masak otomatis"
@@ -412,7 +456,7 @@ export default function TabRestaurant() {
                           Auto-Cooking
                         </div>
                       </div>
-                      <span className="font-bold bg-[var(--gold)] px-2 py-0.5 rounded-full text-xs border border-[#FFF1B8]">
+                      <span className="font-bold bg-[var(--gold)] px-2 py-0.5 rounded-lg text-xs border border-[#FFF1B8]">
                         {workers?.chef
                           ? "Dimiliki"
                           : `${GAME_CONSTANTS.COSTS.WORKER_CHEF} 💰`}

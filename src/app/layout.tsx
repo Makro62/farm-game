@@ -59,38 +59,37 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             toastOptions={{
               duration: 2800,
               style: {
-                background: "#FFF9EC",
+                background: "#FFFCF5",
                 color: "#4A3428",
-                borderRadius: "18px",
-                border: "3px solid #C4A574",
-                padding: "12px 16px",
-                fontSize: "14px",
+                borderRadius: "12px",
+                border: "2px solid #D4C4A8",
+                padding: "10px 14px",
+                fontSize: "13px",
                 fontWeight: "700",
-                boxShadow:
-                  "0 6px 0 #A67C52, 0 10px 24px rgba(74, 52, 40, 0.15)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
               },
               success: {
                 duration: 2400,
                 iconTheme: {
-                  primary: "#7BC47F",
-                  secondary: "#FFF9EC",
+                  primary: "#22C55E",
+                  secondary: "#F0FDF4",
                 },
                 style: {
-                  background: "#E8F5D8",
-                  color: "#3D8B4F",
-                  border: "3px solid #7BC47F",
+                  background: "#F0FDF4",
+                  color: "#166534",
+                  border: "2px solid #86EFAC",
                 },
               },
               error: {
                 duration: 3000,
                 iconTheme: {
-                  primary: "#EF5350",
-                  secondary: "#fff",
+                  primary: "#EF4444",
+                  secondary: "#FEF2F2",
                 },
                 style: {
-                  background: "#FFEBEE",
-                  color: "#C62828",
-                  border: "3px solid #EF5350",
+                  background: "#FEF2F2",
+                  color: "#991B1B",
+                  border: "2px solid #FCA5A5",
                 },
               },
             }}

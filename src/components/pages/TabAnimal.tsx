@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useGameStore } from '@/lib/store'
+import { useMusic } from '@/lib/hooks/useSound'
 import { getAnimalEmoji, getShopAnimal } from '@/lib/data/item-helpers'
 import { SHOP_ANIMALS, ANIMAL_FEED } from '@/lib/data/shop'
 import { getAnimalProduceTime } from '@/lib/store/utils'
@@ -21,6 +22,13 @@ import SideDock from '@/components/ui/SideDock'
 import { useRanching } from '@/lib/hooks/useRanching'
 
 export default function TabAnimal() {
+  const music = useMusic('animal')
+
+  useEffect(() => {
+    music.play()
+    return () => music.stop()
+  }, [])
+
   const {
     animals,
     autoFarm,

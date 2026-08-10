@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useGameStore } from '@/lib/store'
+import { useMusic } from '@/lib/hooks/useSound'
 import {
   GameAreaHeader,
   GameActionButton,
@@ -37,6 +38,13 @@ const WEATHER_EMOJI = {
 }
 
 export default function TabFarm() {
+  const music = useMusic('farm')
+
+  useEffect(() => {
+    music.play()
+    return () => music.stop()
+  }, [])
+
   const { autoFarm, handleToggleAuto } = useFarming()
   const buildings = useGameStore(state => state.buildings)
   const season = useGameStore(state => state.season)

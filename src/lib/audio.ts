@@ -203,14 +203,69 @@ interface MusicPattern {
 }
 
 const MUSIC_PATTERNS: Record<string, MusicPattern> = {
-  main: {
-    // Cheerful farm melody — like a sunny day in the countryside
+  farm: {
+    // Cheerful farm melody — sunny countryside vibes
     melody: [0, 2, 4, 7, 4, 2, 0, -1, 0, 4, 7, 9, 7, 4, 2, 0],
     bass: [0, 0, 4, 4, 5, 5, 7, 7, 0, 0, 4, 4, 5, 7, 4, 0],
     chords: [0, 4, 7, 4, 0, 4, 7, 4],
     tempo: 120,
     root: NOTE.C4,
     scale: MAJOR,
+    barLength: 8,
+    loopBars: 2,
+  },
+  animal: {
+    // Warm, cozy animal barn — gentle and nurturing
+    melody: [0, 2, 4, 2, 0, 4, 2, 0, 5, 4, 2, 4, 5, 7, 4, 2],
+    bass: [0, 0, 4, 4, 7, 7, 4, 4],
+    chords: [0, 4, 7, 5],
+    tempo: 100,
+    root: NOTE.G4,
+    scale: MAJOR,
+    barLength: 8,
+    loopBars: 2,
+  },
+  mine: {
+    // Deep adventurous mine — mysterious and rhythmic
+    melody: [0, 3, 5, 7, 5, 3, 0, -1, 0, 5, 7, 10, 7, 5, 3, 0],
+    bass: [0, 0, 3, 3, 5, 5, 7, 7],
+    chords: [0, 3, 5, 7],
+    tempo: 110,
+    root: NOTE.A3,
+    scale: [0, 2, 3, 5, 7, 8, 10],
+    barLength: 8,
+    loopBars: 2,
+  },
+  restaurant: {
+    // Upbeat cooking vibes — energetic kitchen
+    melody: [0, 4, 7, 4, 0, 5, 7, 5, 0, 4, 7, 12, 7, 4, 0, 2],
+    bass: [0, 0, 5, 5, 7, 7, 4, 4],
+    chords: [0, 5, 7, 4],
+    tempo: 130,
+    root: NOTE.C4,
+    scale: MAJOR,
+    barLength: 8,
+    loopBars: 2,
+  },
+  town: {
+    // Peaceful town plaza — community gathering
+    melody: [0, 2, 4, 2, 7, 4, 2, 0, 4, 7, 9, 7, 4, 2, 0, -1],
+    bass: [0, 0, 4, 4, 5, 5, 7, 7],
+    chords: [0, 4, 5, 7],
+    tempo: 95,
+    root: NOTE.G4,
+    scale: MAJOR,
+    barLength: 8,
+    loopBars: 2,
+  },
+  museum: {
+    // Mysterious ancient artifacts — slow and wonderous
+    melody: [0, 3, 7, 5, 3, 0, -1, 0, 7, 5, 3, 0, 5, 3, 0, -1],
+    bass: [0, 0, 5, 5, 3, 3, 7, 7],
+    chords: [0, 3, 5, 7],
+    tempo: 80,
+    root: NOTE.C4,
+    scale: [0, 2, 3, 5, 7, 8, 10],
     barLength: 8,
     loopBars: 2,
   },
@@ -500,7 +555,7 @@ class AudioManager {
     if (!newState) {
       this.stopMusic(300);
     } else {
-      this.playMusic(this.currentMusicName || 'main');
+      this.playMusic(this.currentMusicName || 'menu');
     }
     return newState;
   }
@@ -515,7 +570,7 @@ class AudioManager {
     if (!this.config.musicEnabled) {
       this.stopMusic(300);
     } else {
-      this.playMusic(this.currentMusicName || 'main');
+      this.playMusic(this.currentMusicName || 'menu');
     }
     return this.config.musicEnabled;
   }
@@ -541,7 +596,7 @@ class AudioManager {
       const wasEnabled = this.config.musicEnabled;
       this.config.musicEnabled = settings.musicEnabled;
       if (!wasEnabled && settings.musicEnabled) {
-        this.playMusic(this.currentMusicName || 'main');
+        this.playMusic(this.currentMusicName || 'menu');
       } else if (wasEnabled && !settings.musicEnabled) {
         this.stopMusic(300);
       }
@@ -573,7 +628,7 @@ if (typeof window !== 'undefined') {
   const initOnInteraction = () => {
     audioManager.ensureInitialized();
     if (audioManager.isMusicEnabled()) {
-      audioManager.playMusic('main');
+      audioManager.playMusic('menu');
     }
     document.removeEventListener('click', initOnInteraction);
     document.removeEventListener('touchstart', initOnInteraction);

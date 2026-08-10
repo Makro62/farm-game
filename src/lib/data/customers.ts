@@ -2,7 +2,7 @@ export const CUSTOMERS: any[] = [
   {
     id: "bapak_kumis",
     name: "Bapak Kumis",
-    emoji: "🧔",
+    emoji: "👨",
     basePatience: 45000,
     tipMultiplier: 1.2,
     preferences: ["sup_wortel", "roti_gandum", "jus_semangka"],
@@ -34,7 +34,7 @@ export const CUSTOMERS: any[] = [
   {
     id: "pengusaha",
     name: "Boss Besar",
-    emoji: "🕴️",
+    emoji: "🧑‍💼",
     basePatience: 25000,
     tipMultiplier: 2.5,
     preferences: ["kue_stroberi", "sushi_emas", "pancake"],
@@ -42,7 +42,7 @@ export const CUSTOMERS: any[] = [
   {
     id: "remaja",
     name: "Remaja",
-    emoji: "🎧",
+    emoji: "🧑",
     basePatience: 20000,
     tipMultiplier: 0.8,
     preferences: ["es_teh", "nasi_goreng", "takoyaki"],
@@ -50,7 +50,7 @@ export const CUSTOMERS: any[] = [
   {
     id: "turis",
     name: "Turis Asing",
-    emoji: "📸",
+    emoji: "🧑‍🦱",
     basePatience: 50000,
     tipMultiplier: 1.8,
     preferences: ["nasi_goreng", "sushi_mas", "kue_manis"],
@@ -66,7 +66,7 @@ export const CUSTOMERS: any[] = [
   {
     id: "nelayan_tamu",
     name: "Nelayan Tamu",
-    emoji: "🎣",
+    emoji: "🧑‍🔧",
     basePatience: 55000,
     tipMultiplier: 1.3,
     preferences: ["sushi_mas", "lele_bakar", "sushi_emas"],

@@ -12,6 +12,7 @@ import { GAME_CONSTANTS } from "@/lib/constants";
 import TabPage, { GameStage } from "@/components/ui/TabPage";
 import SideDock from "@/components/ui/SideDock";
 import { useMining } from "@/lib/hooks/useMining";
+import { useMusic } from "@/lib/hooks/useSound";
 
 const TARGET_TOOLS = new Set(["bom_kecil", "tali"]);
 
@@ -25,7 +26,13 @@ const FLOOR_META = {
 
 export default function TabMine() {
   const [isMounted, setIsMounted] = useState(false);
-  
+  const music = useMusic('mine');
+
+  useEffect(() => {
+    music.play();
+    return () => music.stop();
+  }, []);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);

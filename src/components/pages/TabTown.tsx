@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useGameStore } from "@/lib/store";
 import { useTown } from "@/lib/hooks/useTown";
 import { NPC_LIST } from "@/lib/data/npcs";
@@ -14,8 +15,16 @@ import { BankPanel } from "@/components/game/BankPanel";
 import { MuseumPanel } from "@/components/game/MuseumPanel";
 import TabPage, { GameStage } from "@/components/ui/TabPage";
 import SideDock from "@/components/ui/SideDock";
+import { useMusic } from "@/lib/hooks/useSound";
 
 export default function TabTown() {
+  const music = useMusic('town');
+
+  useEffect(() => {
+    music.play();
+    return () => music.stop();
+  }, []);
+
   const {
     area,
     setArea,
