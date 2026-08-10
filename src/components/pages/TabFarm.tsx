@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useGameStore } from "@/lib/store";
 import { GameAreaHeader, GameActionButton } from "@/components/ui/GameAreaHeader";
+import toast from "react-hot-toast";
 import { SeedShop } from "@/components/game/SeedShop";
 import { PlotGrid } from "@/components/game/PlotGrid";
 import { QuestPanel } from "@/components/game/QuestPanel";
@@ -40,8 +41,13 @@ export default function TabFarm() {
   const enqueueNotification = useGameStore(
     (state) => state.enqueueNotification,
   );
+  const harvestAll = useGameStore((state) => state.harvestAll);
+  const plantAll = useGameStore((state) => state.plantAll);
+  const selectedSeed = useGameStore((state) => state.selectedSeed);
+  const level = useGameStore((state) => state.level);
   const [isEditMode, setIsEditMode] = useState(false);
   const [farmTool, setFarmTool] = useState("tanam");
+  const [activePlotTab, setActivePlotTab] = useState("plots");
 
   const seasonMeta = SEASON_META[season?.current] || SEASON_META.spring;
   const growthSpeed = getCropGrowthSpeed(
@@ -72,6 +78,36 @@ export default function TabFarm() {
               >
                 Auto: {autoFarm ? "ON" : "OFF"}
               </GameActionButton>
+              {level >= 5 && (
+                <>
+                  <GameActionButton
+                    variant="edit"
+                    active={false}
+                    onClick={() => {
+                      const res = harvestAll(activePlotTab);
+                      if (res?.ok) toast.success(res.message);
+                      else toast.error(res?.message || "Gagal panen.");
+                    }}
+                  >
+                    🌾 Panen Semua
+                  </GameActionButton>
+                  <GameActionButton
+                    variant="edit"
+                    active={false}
+                    onClick={() => {
+                      if (!selectedSeed) {
+                        toast.error("Pilih bibit dari tas terlebih dahulu!");
+                        return;
+                      }
+                      const res = plantAll(activePlotTab, selectedSeed);
+                      if (res?.ok) toast.success(res.message);
+                      else toast.error(res?.message || "Gagal menanam.");
+                    }}
+                  >
+                    🌱 Tanam Semua
+                  </GameActionButton>
+                </>
+              )}
             </GameAreaHeader>
 
             {/* Weather & Season Banner */}
@@ -149,8 +185,29 @@ export default function TabFarm() {
               )}
             </div>
 
+            <div className="flex gap-2 mb-3">
+              {[
+                { id: "plots", label: "Utama", emoji: "🌾" },
+                { id: "feedPlots", label: "Pakan", emoji: "🐄" },
+                { id: "kitchenPlots", label: "Dapur", emoji: "🍳" }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActivePlotTab(tab.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-t-lg font-bold text-xs border-b-4 transition-all ${
+                    activePlotTab === tab.id
+                      ? "bg-[var(--primary)] text-white border-[var(--primary-dark)]"
+                      : "bg-black/10 text-[var(--text-secondary)] border-transparent hover:bg-black/20"
+                  }`}
+                >
+                  <span>{tab.emoji}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
             <div className="stage-play-frame">
-              <PlotGrid isEditMode={isEditMode} farmTool={farmTool} />
+              <PlotGrid isEditMode={isEditMode} farmTool={farmTool} plotListKey={activePlotTab} />
             </div>
           </div>
         }

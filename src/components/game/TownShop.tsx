@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useGameStore, useInventory } from "@/lib/store";
-import { SHOP_BAIT, SHOP_BUILDINGS, SHOP_DECORATIONS } from "@/lib/data/shop";
+import { SHOP_BAIT, SHOP_BUILDINGS, SHOP_DECORATIONS, SHOP_CONSUMABLES } from "@/lib/data/shop";
 import { ShopItemCard, ShopSectionTitle } from "@/components/ui/ShopItemCard";
 import { GameActionButton } from "@/components/ui/GameAreaHeader";
 import { GAME_CONSTANTS } from "@/lib/constants";
@@ -23,7 +23,7 @@ export function TownShop() {
   const addXP = useGameStore((s) => s.addXP);
 
   const [shopAmounts, setShopAmounts] = useState({});
-  const [shopTab, setShopTab] = useState("bangunan"); // bangunan | umpan
+  const [shopTab, setShopTab] = useState("bangunan"); // bangunan | umpan | konsumsi
 
   const ownedBlueprints = [
     ...SHOP_BUILDINGS.filter((b) => buildings?.[b.id]),
@@ -94,6 +94,14 @@ export function TownShop() {
         >
           Umpan
         </GameActionButton>
+        <GameActionButton
+          variant="toggle"
+          active={shopTab === "konsumsi"}
+          onClick={() => setShopTab("konsumsi")}
+          className="flex-1"
+        >
+          Konsumsi
+        </GameActionButton>
       </div>
 
       {shopTab === "bangunan" ? (
@@ -153,7 +161,7 @@ export function TownShop() {
             )}
           </div>
         </>
-      ) : (
+      ) : shopTab === "umpan" ? (
         <>
           <ShopSectionTitle icon="🎣">Shop Umpan</ShopSectionTitle>
           <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
@@ -223,39 +231,88 @@ export function TownShop() {
             )}
           </div>
         </>
+      ) : (
+        <>
+          <ShopSectionTitle icon="☕">Shop Konsumsi</ShopSectionTitle>
+          <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
+            Beli item untuk memulihkan stamina/kebahagiaan pekerja.
+          </p>
+          <div className="shop-grid mb-6">
+            {SHOP_CONSUMABLES.map((item) => {
+              const amt = shopAmounts[item.id] || 1;
+              return (
+                <ShopItemCard
+                  key={item.id}
+                  icon={item.emoji}
+                  name={item.name}
+                  price={item.price}
+                  amount={amt}
+                  onDecrease={() =>
+                    setShopAmounts((p) => ({
+                      ...p,
+                      [item.id]: Math.max(1, amt - 1),
+                    }))
+                  }
+                  onIncrease={() =>
+                    setShopAmounts((p) => ({ ...p, [item.id]: amt + 1 }))
+                  }
+                  onBuy={() => handleShopBuy(item, amt)}
+                />
+              );
+            })}
+          </div>
+        </>
       )}
 
       <ShopSectionTitle icon="🧑‍🌾">Pekerja (Auto)</ShopSectionTitle>
-      <button
-        type="button"
-        onClick={handleHireFisher}
-        className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left mb-2 ${
-          workers?.fisher
-            ? "border-[var(--primary)] bg-[var(--primary)]/10"
-            : ""
-        }`}
-      >
-        <div>
-          <div className="font-bold text-[var(--text-primary)] text-sm">
-            Pemancing Kota
+      <div className="w-full glass-card p-2 flex flex-col transition-colors text-left mb-2 border-[var(--primary)] bg-[var(--primary)]/10">
+        <div className="flex justify-between items-center mb-2">
+          <div>
+            <div className="font-bold text-[var(--text-primary)] text-sm">
+              Pemancing Kota {workers?.fisher ? `(Kebahagiaan: ${workers.fisher.happiness}%)` : ""}
+            </div>
+            <div className="text-[10px] text-[var(--text-secondary)]">
+              Auto-mancing di danau
+            </div>
           </div>
-          <div className="text-[10px] text-[var(--text-secondary)]">
-            Auto-mancing di danau
-          </div>
+          <button
+            type="button"
+            onClick={handleHireFisher}
+            disabled={!!workers?.fisher}
+            className={`font-bold text-[var(--text-primary)] px-2 py-0.5 rounded-full text-xs whitespace-nowrap border ${
+              workers?.fisher
+                ? "bg-gray-300 border-gray-400 opacity-50 cursor-default"
+                : "bg-[var(--gold)] border-[#FFF1B8] hover:scale-105"
+            }`}
+          >
+            {workers?.fisher
+              ? "Disewa"
+              : `${GAME_CONSTANTS.COSTS.FISHER_WORKER}💰`}
+          </button>
         </div>
-        <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-full text-xs whitespace-nowrap border border-[#FFF1B8]">
-          {workers?.fisher
-            ? "Disewa"
-            : `${GAME_CONSTANTS.COSTS.FISHER_WORKER}💰`}
-        </span>
-      </button>
-      {workers?.fisher && (
-        <p className="text-[10px] text-[var(--text-secondary)] font-medium">
-          {workers?.fisher?.isAutoMode
-            ? "Kurcaci aktif — mancing otomatis"
-            : "Nyalakan Auto di Pusat Kota"}
-        </p>
-      )}
+        {workers?.fisher && (
+          <div className="flex justify-between items-center border-t border-[var(--primary)]/20 pt-2 mt-1">
+            <p className="text-[10px] text-[var(--text-secondary)] font-medium">
+              {workers?.fisher?.isAutoMode
+                ? "Aktif — mancing otomatis"
+                : "Nyalakan Auto di Pusat Kota"}
+            </p>
+            {workers.fisher.happiness < 100 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const res = useGameStore.getState().giveKopiWorker?.("fisher");
+                  if (res?.ok) toast.success(res.message);
+                  else toast.error(res?.message || "Gagal memberi kopi.");
+                }}
+                className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] px-2 py-1 rounded-md font-bold transition-transform hover:scale-105 shadow-sm flex items-center gap-1"
+              >
+                <span>☕</span> Beri Kopi
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </>
   );
 }

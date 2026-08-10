@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 
 import { useGameStore, useInventory } from "@/lib/store";
 import { formatNumber } from "@/lib/utils";
@@ -129,7 +130,7 @@ function ActionWidget() {
   if (hints.length === 0) return null;
 
   return (
-    <div className="glass-panel p-4 mb-5">
+    <div className="glass-card p-4 mb-5">
       <h3 className="font-display font-bold text-sm text-[var(--text-primary)] flex items-center gap-2 mb-3">
         <span className="text-lg">📊</span> Apa yang bisa kukerjakan sekarang?
       </h3>
@@ -236,6 +237,8 @@ export default function TabProfil() {
     { key: "bibit", title: "Bibit Tanaman", icon: "🌰" },
     { key: "lainnya", title: "Lainnya", icon: "📦" },
   ];
+
+  const [activeInvTab, setActiveInvTab] = useState(categoriesConfig[0].key);
 
   return (
     <TabPage>
@@ -382,7 +385,7 @@ export default function TabProfil() {
           </div>
         )}
 
-        <div className="glass-panel p-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="glass-card p-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-white/40 p-3 rounded-2xl border-2 border-white/50 flex flex-col items-center justify-center text-center">
             <div className="text-sm font-bold text-[var(--text-secondary)] mb-1">
               Level Pemain
@@ -434,7 +437,7 @@ export default function TabProfil() {
         </div>
 
         {/* ================= BEST RECORDS (LEADERBOARD) ================= */}
-        <div className="glass-panel p-4 sm:p-5 mb-8">
+        <div className="glass-card p-4 sm:p-5 mb-8">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b-2 border-white/30 pb-2">
             <h3 className="font-display font-bold text-lg text-[var(--text-primary)] flex items-center gap-2">
               <span>📈</span> Catatan Terbaik
@@ -459,7 +462,7 @@ export default function TabProfil() {
         </div>
 
         {/* ================= ACHIEVEMENT SECTION ================= */}
-        <div className="glass-panel p-4 sm:p-5 mb-8">
+        <div className="glass-card p-4 sm:p-5 mb-8">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-5 border-b-2 border-white/30 pb-2">
             <h3 className="font-display font-bold text-lg text-[var(--text-primary)] flex items-center gap-2">
               <span>🏆</span> Pencapaian (Achievements)
@@ -513,9 +516,9 @@ export default function TabProfil() {
           </div>
         </div>
 
-        <div className="glass-panel p-4 sm:p-5 mb-8">
+        <div className="glass-card p-4 sm:p-5 mb-8">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-5 border-b-2 border-white/30 pb-2">
-            <h3 className="font-display font-bold text-lg text-[var(--text-primary)] flex items-center gap-2">
+            <h3 className="font-display font-bold text-lg text-[var(--text-primary)] flex items-center gap-2 drop-shadow-md">
               <span>🎒</span> Isi Tas / Gudang
             </h3>
             {hasSellable && (
@@ -525,84 +528,117 @@ export default function TabProfil() {
             )}
           </div>
 
-          {categoriesConfig.map(({ key, title, icon }) => {
-            const items = categorized[key];
-            if (items.length === 0) return null;
+          <div className="flex flex-wrap gap-2 mb-4">
+            {categoriesConfig.map((cat) => (
+              <button
+                key={cat.key}
+                onClick={() => setActiveInvTab(cat.key)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border-2 ${
+                  activeInvTab === cat.key
+                    ? "bg-gradient-to-b from-[var(--gold)] to-orange-500 text-[var(--text-primary)] border-[#fff1b8] shadow-md scale-105"
+                    : "bg-white/40 text-[var(--text-secondary)] border-white/50 hover:bg-white/60"
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span className="hidden sm:inline">{cat.title}</span>
+              </button>
+            ))}
+          </div>
 
-            return (
-              <div key={key} className="mb-6 last:mb-0">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-[13px] font-black text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-2">
-                    {icon} {title}
-                    <span className="text-[10px] bg-[var(--wood)] text-[#FFE08A] px-2 py-0.5 rounded-full">
-                      {items.length} Jenis
-                    </span>
-                  </h4>
-                  <Button
-                    variant="shop"
-                    size="sm"
-                    onClick={() => handleSellCategory(key, items)}
-                  >
-                    Jual Kategori Ini
-                  </Button>
+          <div className="bg-white/40 rounded-xl p-3 sm:p-4 min-h-[200px] border-2 border-white/50 shadow-inner">
+            {categoriesConfig.filter(c => c.key === activeInvTab).map(({ key, title, icon }) => {
+              const items = categorized[key];
+              if (items.length === 0) return (
+                <div key={key} className="flex flex-col items-center justify-center h-full opacity-60 text-[var(--text-secondary)] py-10">
+                  <div className="text-4xl mb-2">🕸️</div>
+                  <p className="font-bold text-sm">Tas Anda masih kosong...</p>
                 </div>
+              );
 
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
-                  {items.map((item) => {
-                    const name = getItemDisplayName(item.id);
-                    const emoji = getItemEmoji(item.id);
-                    const price = getItemSellPrice(item.id);
-
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={() => handleSellItem(item.id, name, item.qty)}
-                        className="bg-[var(--card)] hover:bg-[#fff7e6] hover:-translate-y-1 transition-all cursor-pointer border-2 border-[var(--wood-light)] hover:border-[var(--gold)] rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center text-center relative shadow-sm group"
-                        title={
-                          price
-                            ? `Klik untuk jual\nHarga: ${price}💰/ea`
-                            : "Tidak bisa dijual"
-                        }
+              return (
+                <div key={key}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-[13px] font-black text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2 drop-shadow-md">
+                      {icon} {title}
+                      <span className="text-[10px] bg-white/60 text-[var(--text-secondary)] px-2 py-0.5 rounded-full border border-white">
+                        {items.length} Jenis
+                      </span>
+                    </h4>
+                    {items.some((it) => getItemSellPrice(it.id) > 0) && (
+                      <Button
+                        variant="gold"
+                        size="sm"
+                        onClick={() => handleSellCategory(key, items)}
                       >
-                        <div className="text-3xl sm:text-4xl mb-1 drop-shadow-sm group-hover:scale-110 transition-transform">
-                          {emoji}
-                        </div>
-                        <div className="text-[9px] sm:text-[10px] font-bold text-[var(--text-primary)] leading-tight max-w-full truncate w-full">
-                          {name}
-                        </div>
-                        <div className="absolute -top-2 -right-2 bg-gradient-to-b from-[var(--gold)] to-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 min-w-[20px] rounded-full shadow-md border border-white">
-                          {item.qty}
-                        </div>
-                        {item.quality && item.quality !== "normal" && (
-                          <div
-                            className={`absolute -bottom-1 -left-1 w-3 h-3 rounded-full shadow-sm border border-white ${
-                              item.quality === "iridium"
-                                ? "bg-purple-500"
-                                : item.quality === "emas"
-                                ? "bg-[var(--gold)]"
-                                : item.quality === "perak"
-                                ? "bg-slate-300"
-                                : ""
-                            }`}
-                            title={`Kualitas: ${item.quality}`}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+                        Jual Kategori Ini
+                      </Button>
+                    )}
+                  </div>
 
-          {Object.values(inventory).every((data: any) => !data.qty) && (
-            <div className="text-center py-10 opacity-60">
-              <div className="text-4xl mb-2">🕸️</div>
-              <p className="font-bold text-[var(--text-secondary)]">
-                Tas Anda masih kosong...
-              </p>
-            </div>
-          )}
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
+                    {items.map((item) => {
+                      const name = getItemDisplayName(item.id);
+                      const emoji = getItemEmoji(item.id);
+                      const price = getItemSellPrice(item.id);
+                      const sellable = !!price && price > 0;
+
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() =>
+                            sellable && handleSellItem(item.id, name, item.qty)
+                          }
+                          className={`relative flex flex-col items-center justify-center text-center rounded-2xl p-2 sm:p-3 shadow-sm border-2 transition-all group ${
+                            sellable
+                              ? "bg-[var(--card)] hover:bg-[#fff7e6] hover:-translate-y-1 cursor-pointer border-[var(--wood-light)] hover:border-[var(--gold)]"
+                              : "bg-black/20 border-black/30 opacity-70 grayscale"
+                          }`}
+                          title={
+                            sellable
+                              ? `Klik untuk jual\nHarga: ${price}💰/ea`
+                              : "Tidak bisa dijual"
+                          }
+                        >
+                          <div className="text-3xl sm:text-4xl mb-1 drop-shadow-sm group-hover:scale-110 transition-transform">
+                            {emoji}
+                          </div>
+                          <div className="text-[9px] sm:text-[10px] font-bold text-[var(--text-primary)] leading-tight max-w-full truncate w-full">
+                            {name}
+                          </div>
+                          {sellable ? (
+                            <div className="mt-1 text-[9px] font-black text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-1.5 py-0.5 leading-none">
+                              💰 {price}
+                            </div>
+                          ) : (
+                            <div className="mt-1 text-[9px] font-bold text-black/40 bg-black/5 rounded-full px-1.5 py-0.5 leading-none">
+                              🔒
+                            </div>
+                          )}
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-b from-[var(--gold)] to-orange-500 text-[var(--text-primary)] text-[10px] font-black px-1.5 py-0.5 min-w-[20px] rounded-full shadow-md border border-white">
+                            {item.qty}
+                          </div>
+                          {item.quality && item.quality !== "normal" && (
+                            <div
+                              className={`absolute -bottom-1 -left-1 w-3 h-3 rounded-full shadow-sm border border-white ${
+                                item.quality === "iridium"
+                                  ? "bg-purple-500"
+                                  : item.quality === "emas"
+                                    ? "bg-[var(--gold)]"
+                                    : item.quality === "perak"
+                                      ? "bg-slate-300"
+                                      : ""
+                              }`}
+                              title={`Kualitas: ${item.quality}`}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </TabPage>

@@ -55,7 +55,7 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
     const mineralReq = {
       silo: { batu: 20, besi: 10 },
       greenhouse: { batu: 30, tembaga: 15, emas: 5 },
-      scarecrow: { kayu: 25, batu: 10 },
+      scarecrow: { batu: 35, besi: 5 },
       sprinkler: { besi: 15, tembaga: 10 },
     }[buildingId];
     if (mineralReq) {

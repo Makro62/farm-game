@@ -180,6 +180,29 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
       };
     }),
 
+  giveKopiWorker: (type) => {
+    const state = get();
+    const w = state.workers[type];
+    if (!w?.hired) return { ok: false, message: "Pekerja belum disewa." };
+    if (w.happiness >= 100) return { ok: false, message: "Pekerja sudah sangat bahagia!" };
+    
+    const kopiCount = state.inventoryByCategory?.consumables?.kopi?.qty || 0;
+    if (kopiCount <= 0) return { ok: false, message: "Tidak punya Kopi Kurcaci." };
+
+    set((draft) => {
+      draft.inventoryByCategory.consumables.kopi.qty -= 1;
+      if (draft.inventoryByCategory.consumables.kopi.qty <= 0) {
+        delete draft.inventoryByCategory.consumables.kopi;
+      }
+      draft.workers[type].happiness = Math.min(100, draft.workers[type].happiness + 50);
+      if (!draft.workers[type].isWorking) {
+        draft.workers[type].isWorking = true;
+      }
+    });
+    
+    return { ok: true, message: `${w.name} meminum kopi dan kembali bersemangat! ☕` };
+  },
+
   setSelectedRecipe: (recipeId) => set({ selectedRecipe: recipeId }),
 
   hireWorker: (type, cost) => {
@@ -560,7 +583,9 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
     const state = get();
     const now = Date.now();
     const growthMult = getGrowthMultiplier(state);
-    let plots = normalizePlots(state.plots);
+    let plots = normalizePlots(state.plots, 30, 0);
+    let feedPlots = normalizePlots(state.feedPlots, 12, 100);
+    let kitchenPlots = normalizePlots(state.kitchenPlots, 12, 200);
     let animals = Array.isArray(state.animals)
       ? state.animals.map(normalizeAnimal)
       : [];
@@ -570,7 +595,7 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
     let planted = 0;
     let collected = 0;
     let coinsSpent = 0;
-    let plotsChanged = false;
+    let anyPlotsChanged = false;
     let animalsChanged = false;
     let queueChanged = false;
     const questEntries: any[] = [];
@@ -581,101 +606,128 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
       catUpdates[cat][itemId] = (catUpdates[cat][itemId] || 0) + qty;
     }
 
+    const allPlotsArrays = [
+      { key: "plots", arr: [...plots] },
+      { key: "feedPlots", arr: [...feedPlots] },
+      { key: "kitchenPlots", arr: [...kitchenPlots] }
+    ];
+
     // --- 1. KURCACI PERTANIAN ---
     if (isWorkerActive(state, "farmer")) {
-      plots = [...plots];
-      for (let i = 0; i < plots.length; i++) {
-        const p = normalizePlot(plots[i], i);
-        const baseGrow = p.growTime > 0 ? p.growTime : null;
-        const growTime = p.pestInfestation && baseGrow ? baseGrow * 2 : baseGrow;
-        const isReady =
-          p.crop &&
-          (p.status === "ready" ||
-            (p.status === "growing" &&
-              p.plantedAt &&
-              growTime != null &&
-              now - p.plantedAt >= growTime));
+      for (const plotData of allPlotsArrays) {
+        const pArr = plotData.arr;
+        for (let i = 0; i < pArr.length; i++) {
+          const p = normalizePlot(pArr[i], pArr[i].id);
+          const baseGrow = p.growTime > 0 ? p.growTime : null;
+          const growTime = p.pestInfestation && baseGrow ? baseGrow * 2 : baseGrow;
+          const isReady =
+            p.crop &&
+            (p.status === "ready" ||
+              (p.status === "growing" &&
+                p.plantedAt &&
+                growTime != null &&
+                now - p.plantedAt >= growTime));
 
-        if (isReady) {
-          const crop = p.crop;
-          plots[i] = {
-            ...p,
-            status: "empty",
-            crop: null,
-            plantedAt: null,
-            growTime: null,
-            watered: false,
-            pestInfestation: false,
-          };
-          addToCat("crops", crop);
-          harvested++;
-          plotsChanged = true;
-          xpGain += GAME_CONSTANTS.XP.HARVEST;
-          questEntries.push({ type: "harvest", targetId: crop, amount: 1 });
-        }
-
-        if (plots[i].status === "dead") {
-          plots[i] = {
-            ...plots[i],
-            status: "empty",
-            crop: null,
-            plantedAt: null,
-            growTime: null,
-            watered: false,
-            pestInfestation: false,
-          };
-          plotsChanged = true;
-        }
-
-        if (plots[i].status === "empty") {
-          const hasGreenhouse = !!state.buildings?.greenhouse;
-          let seedData = pickAutoSeed(
-            state.inventoryByCategory?.seeds || {},
-            state.selectedSeed,
-            state.season?.current,
-            hasGreenhouse,
-          );
-          let autoBought = false;
-          if (!seedData) {
-            const buyable = SHOP_SEEDS.filter(
-              (s) =>
-                state.coins - coinsSpent >= s.price &&
-                (hasGreenhouse ||
-                  s.season === "all" ||
-                  s.season === state.season?.current),
-            );
-            if (buyable.length > 0) {
-              buyable.sort((a, b) => a.time - b.time);
-              seedData = buyable[0];
-              autoBought = true;
-            }
+          if (isReady) {
+            const crop = p.crop;
+            pArr[i] = {
+              ...p,
+              status: "empty",
+              crop: null,
+              plantedAt: null,
+              growTime: null,
+              watered: false,
+              pestInfestation: false,
+            };
+            addToCat("crops", crop);
+            harvested++;
+            anyPlotsChanged = true;
+            xpGain += GAME_CONSTANTS.XP.HARVEST;
+            questEntries.push({ type: "harvest", targetId: crop, amount: 1 });
           }
-          if (seedData) {
-            let canPlant = false;
-            if (autoBought) {
-              coinsSpent += seedData.price;
-              canPlant = true;
-            } else if (invGet(state, "seeds", seedData.id) > 0) {
-              if (!catUpdates["seeds"]) catUpdates["seeds"] = {};
-              catUpdates["seeds"][seedData.id] =
-                (catUpdates["seeds"][seedData.id] || 0) - 1;
-              canPlant = true;
+
+          if (pArr[i].status === "dead") {
+            pArr[i] = {
+              ...pArr[i],
+              status: "empty",
+              crop: null,
+              plantedAt: null,
+              growTime: null,
+              watered: false,
+              pestInfestation: false,
+            };
+            anyPlotsChanged = true;
+          }
+
+          // Auto-water: kurcaci petani menyiram tanaman yang belum disiram
+          if (
+            pArr[i].status === "growing" &&
+            !pArr[i].watered &&
+            (pArr[i].growTime ?? 0) > 0
+          ) {
+            const boost = Math.floor(
+              (pArr[i].growTime || 0) * GAME_CONSTANTS.CHANCES.WATER_BOOST,
+            );
+            pArr[i] = {
+              ...pArr[i],
+              watered: true,
+              plantedAt: (pArr[i].plantedAt || now) - boost,
+            };
+            anyPlotsChanged = true;
+          }
+
+          if (pArr[i].status === "empty") {
+            const hasGreenhouse = !!state.buildings?.greenhouse;
+            let seedData = pickAutoSeed(
+              state.inventoryByCategory?.seeds || {},
+              state.selectedSeed,
+              state.season?.current,
+              hasGreenhouse,
+            );
+            let autoBought = false;
+            if (!seedData) {
+              const coinsAfterBuy = state.coins - coinsSpent;
+              const reserveFloor = Math.floor(state.coins * 0.3);
+              const buyable = SHOP_SEEDS.filter(
+                (s) =>
+                  coinsAfterBuy - s.price >= reserveFloor &&
+                  (hasGreenhouse ||
+                    s.season === "all" ||
+                    s.season === state.season?.current),
+              );
+              if (buyable.length > 0) {
+                buyable.sort((a, b) => a.price - b.price);
+                seedData = buyable[0];
+                autoBought = true;
+              }
             }
-            if (canPlant) {
-              plots[i] = {
-                ...plots[i],
-                status: "growing",
-                crop: seedData.cropId,
-                plantedAt: now,
-                growTime: Math.floor(
-                  ((seedData.time * 1000) / growthMult) *
-                    PLOT_LEVEL_MULT[plots[i].level || 1],
-                ),
-                watered: false,
-                pestInfestation: false,
-              };
-              planted++;
-              plotsChanged = true;
+            if (seedData) {
+              let canPlant = false;
+              if (autoBought) {
+                coinsSpent += seedData.price;
+                canPlant = true;
+              } else if (invGet(state, "seeds", seedData.id) > 0) {
+                if (!catUpdates["seeds"]) catUpdates["seeds"] = {};
+                catUpdates["seeds"][seedData.id] =
+                  (catUpdates["seeds"][seedData.id] || 0) - 1;
+                canPlant = true;
+              }
+              if (canPlant) {
+                pArr[i] = {
+                  ...pArr[i],
+                  status: "growing",
+                  crop: seedData.cropId,
+                  plantedAt: now,
+                  growTime: Math.floor(
+                    ((seedData.time * 1000) / growthMult) *
+                      PLOT_LEVEL_MULT[pArr[i].level || 1],
+                  ),
+                  watered: false,
+                  pestInfestation: false,
+                };
+                planted++;
+                anyPlotsChanged = true;
+              }
             }
           }
         }
@@ -735,9 +787,16 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
       }
     }
 
-    if (plotsChanged || animalsChanged || queueChanged) {
+    if (anyPlotsChanged || animalsChanged || queueChanged || coinsSpent > 0) {
       set((draft) => {
-        if (plotsChanged) draft.plots = plots;
+        if (coinsSpent > 0) {
+          draft.coins = Math.max(0, safeCoins(draft.coins) - coinsSpent);
+        }
+        if (anyPlotsChanged) {
+          draft.plots = allPlotsArrays[0].arr;
+          draft.feedPlots = allPlotsArrays[1].arr;
+          draft.kitchenPlots = allPlotsArrays[2].arr;
+        }
         if (animalsChanged) draft.animals = animals;
         if (queueChanged) draft.craftingQueue = craftingQueue;
         for (const [cat, items] of Object.entries(catUpdates) as [string, any][]) {
@@ -869,17 +928,38 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
     let harvestedCrops = 0;
     let collectedProducts = 0;
     let newPlots = [...state.plots];
+    let newFeedPlots = [...(state.feedPlots || [])];
+    let newKitchenPlots = [...(state.kitchenPlots || [])];
     let newAnimals = Array.isArray(state.animals) ? [...state.animals] : [];
     const offlineItems: any[] = [];
 
+    const allNewPlotsArrays = [
+      { key: "plots", arr: newPlots },
+      { key: "feedPlots", arr: newFeedPlots },
+      { key: "kitchenPlots", arr: newKitchenPlots }
+    ];
+
     if (isWorkerActive(state, "farmer")) {
-      for (let i = 0; i < newPlots.length; i++) {
-        const p = newPlots[i];
-        if (p.crop && p.status === "growing" && p.growTime) {
-          if ((p.plantedAt as number) + p.growTime <= now) {
+      for (const plotData of allNewPlotsArrays) {
+        const pArr = plotData.arr;
+        for (let i = 0; i < pArr.length; i++) {
+          const p = pArr[i];
+          if (p.crop && p.status === "growing" && p.growTime) {
+            if ((p.plantedAt as number) + p.growTime <= now) {
+              offlineItems.push({ cat: "crops", id: p.crop, qty: 1 });
+              harvestedCrops++;
+              pArr[i] = {
+                ...p,
+                status: "empty",
+                crop: null,
+                plantedAt: null,
+                growTime: null,
+              };
+            }
+          } else if (p.crop && p.status === "ready") {
             offlineItems.push({ cat: "crops", id: p.crop, qty: 1 });
             harvestedCrops++;
-            newPlots[i] = {
+            pArr[i] = {
               ...p,
               status: "empty",
               crop: null,
@@ -887,16 +967,6 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
               growTime: null,
             };
           }
-        } else if (p.crop && p.status === "ready") {
-          offlineItems.push({ cat: "crops", id: p.crop, qty: 1 });
-          harvestedCrops++;
-          newPlots[i] = {
-            ...p,
-            status: "empty",
-            crop: null,
-            plantedAt: null,
-            growTime: null,
-          };
         }
       }
     }
@@ -981,6 +1051,8 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
     ) {
       set((draft) => {
         draft.plots = newPlots;
+        draft.feedPlots = newFeedPlots;
+        draft.kitchenPlots = newKitchenPlots;
         draft.animals = newAnimals;
         draft.lastSavedAt = now;
         for (const item of offlineItems) {

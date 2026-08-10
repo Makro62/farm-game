@@ -251,6 +251,8 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     if (!Number.isFinite(delta) || delta <= 0) return;
     set((draft) => {
       draft.coins = safeCoins(draft.coins) + Math.floor(delta);
+      if (!draft.stats) draft.stats = {};
+      draft.stats.totalRevenue = (draft.stats.totalRevenue || 0) + Math.floor(delta);
     });
   },
 
@@ -297,7 +299,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
 
     const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
     const comboMult =
-      state.combo?.count >= 3 ? state.combo.multiplier || 1 : 1;
+      state.combo?.count >= GAME_CONSTANTS.COMBO.THRESHOLD ? state.combo.multiplier || 1 : 1;
     const finalEarned = Math.round(
       sellPrice * qty * multiplier * comboMult,
     );
@@ -306,7 +308,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     set((draft) => {
       draft.coins = safeCoins(draft.coins) + finalEarned;
       draft.stats = {
-        ...draft.stats,
+        ...(draft.stats || {}),
         totalRevenue: (draft.stats?.totalRevenue || 0) + finalEarned,
       };
     });
@@ -353,7 +355,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     if (totalEarned <= 0) return 0;
     const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
     const comboMult =
-      state.combo?.count >= 3 ? state.combo.multiplier || 1 : 1;
+      state.combo?.count >= GAME_CONSTANTS.COMBO.THRESHOLD ? state.combo.multiplier || 1 : 1;
     const finalEarned = Math.round(totalEarned * multiplier * comboMult);
 
     set((draft) => {
@@ -363,7 +365,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       }
       draft.coins = safeCoins(draft.coins) + finalEarned;
       draft.stats = {
-        ...draft.stats,
+        ...(draft.stats || {}),
         totalRevenue: (draft.stats?.totalRevenue || 0) + finalEarned,
       };
     });
@@ -407,7 +409,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       draft.lastLogin = today;
       draft.coins = safeCoins(draft.coins) + reward;
       draft.stats = {
-        ...draft.stats,
+        ...(draft.stats || {}),
         bestStreak: Math.max(draft.stats?.bestStreak || 0, newStreak),
       };
     });
@@ -435,7 +437,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       draft.combo.multiplier = multiplier;
       draft.combo.lastAction = now;
       draft.stats = {
-        ...draft.stats,
+        ...(draft.stats || {}),
         maxCombo: Math.max(draft.stats?.maxCombo || 0, newCount),
       };
     });
@@ -999,9 +1001,9 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     return true;
   },
 
-  recordFishingCatch: (caughtFish, bait) => {
+  recordFishingCatch: (caughtFish, bait, sizeTier = "normal") => {
     const cat = "fish";
-    INV.add(cat, caughtFish.id, 1);
+    INV.add(cat, caughtFish.id, 1, sizeTier);
     get().addXP(15 + (bait ? 5 : 0));
     get().progressQuest("fish", caughtFish.id, 1);
     set((draft) => {

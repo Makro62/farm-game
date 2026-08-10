@@ -70,7 +70,6 @@ Action baru: `bankDeposit`, `bankWithdraw`, `donateToMuseum` (town slice); `unlo
 ---
 
 ## Fase 4 — Leaderboard & Konten Baru (commit `d13e32e`)
-
 1. **Catatan Terbaik (📈)** — section di Profil menampilkan: Total Revenue, Panen, Mineral, Ikan, Masakan, Order selesai, Streak terbaik, Combo terbaik & Poin Museum. Tracking baru: `stats.totalRevenue`, `stats.bestStreak`, `stats.maxCombo`.
 2. **Event musiman baru** (di `advanceSeasonTick`):
    - 🌻 **Hari Berkebun** — semua tanaman tumbuh **2×** (via `growthMultiplier`).

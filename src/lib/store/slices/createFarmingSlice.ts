@@ -14,12 +14,19 @@ const PLOT_UPGRADE_COST: Record<number, { coins: number; minerals: Record<string
   2: { coins: 800, minerals: { besi: 10, emas: 5 } },
 };
 
+function getPlotArrayKey(plotId: number): "plots" | "feedPlots" | "kitchenPlots" {
+  if (plotId >= 200) return "kitchenPlots";
+  if (plotId >= 100) return "feedPlots";
+  return "plots";
+}
+
 export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
   setSelectedSeed: (seedId) => set({ selectedSeed: seedId }),
 
   plant: (plotId, crop, growTime) => {
     const state = get();
-    const plot = state.plots.find((p) => p.id === plotId);
+    const listKey = getPlotArrayKey(plotId);
+    const plot = state[listKey].find((p) => p.id === plotId);
     if (
       !plot ||
       (plot.status !== "empty" && plot.status !== "dead")
@@ -27,7 +34,7 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
       return false;
 
     set((state) => ({
-      plots: state.plots.map((p) =>
+      [listKey]: state[listKey].map((p) =>
         p.id === plotId
           ? {
               ...p,
@@ -86,7 +93,8 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
     const growthMultiplier =
       state.growthMultiplier > 0 ? state.growthMultiplier : 1;
     let baseGrowTime = (seedData.time * 1000) / growthMultiplier;
-    const plotLevel = state.plots.find((p) => p.id === plotId)?.level || 1;
+    const listKey = getPlotArrayKey(plotId);
+    const plotLevel = state[listKey].find((p) => p.id === plotId)?.level || 1;
     baseGrowTime = Math.floor(baseGrowTime * PLOT_LEVEL_MULT[plotLevel]);
 
     let usedFertilizer = false;
@@ -154,7 +162,8 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
 
   waterPlot: (plotId) => {
     const state = get();
-    const plot = state.plots.find((p) => p.id === plotId);
+    const listKey = getPlotArrayKey(plotId);
+    const plot = state[listKey].find((p) => p.id === plotId);
     if (!plot || plot.status !== "growing")
       return {
         ok: false,
@@ -168,7 +177,7 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
       (plot.growTime || 0) * GAME_CONSTANTS.CHANCES.WATER_BOOST,
     );
     set((s) => ({
-      plots: s.plots.map((p) =>
+      [listKey]: s[listKey].map((p) =>
         p.id === plotId
           ? {
               ...p,
@@ -183,7 +192,8 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
 
   harvest: (plotId) => {
     const state = get();
-    const plot = state.plots.find((p) => p.id === plotId);
+    const listKey = getPlotArrayKey(plotId);
+    const plot = state[listKey].find((p) => p.id === plotId);
     if (!plot || !plot.crop) return null;
 
     const isReady =
@@ -211,7 +221,7 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
 
       return {
         inventoryByCategory: { ...state.inventoryByCategory, crops: cat },
-        plots: state.plots.map((p) =>
+        [listKey]: state[listKey].map((p) =>
           p.id === plotId
               ? {
                   id: p.id,
@@ -243,29 +253,172 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
     return crop;
   },
 
+  harvestAll: (plotListKey) => {
+    const state = get();
+    const plots = state[plotListKey] || [];
+    let harvestedCount = 0;
+    const now = Date.now();
+    const weather = state.weather?.current?.replace(/[^a-zA-Z]/g, "").toLowerCase() || "sunny";
+
+    const newPlots = [...plots];
+    const cat = { ...(state.inventoryByCategory?.crops || {}) };
+
+    for (let i = 0; i < newPlots.length; i++) {
+      const plot = newPlots[i];
+      const isReady =
+        plot.status === "ready" ||
+        (plot.status === "growing" &&
+          plot.plantedAt &&
+          now - plot.plantedAt >= (plot.growTime ?? 0));
+          
+      if (isReady && plot.crop) {
+        if (!get().consumeEnergy(1)) break; // Stop if no energy
+        
+        const crop = plot.crop;
+        const quality = rollCropQuality(weather, plot.fertilizer);
+        
+        const existing = cat[crop] || { qty: 0, quality: null, acquiredAt: now };
+        cat[crop] = { qty: existing.qty + 1, quality, acquiredAt: now };
+        
+        newPlots[i] = {
+          ...plot,
+          status: "empty",
+          crop: null,
+          plantedAt: null,
+          growTime: null,
+          watered: false,
+          fertilizer: null,
+          quality: null,
+          pestInfestation: false,
+        };
+        
+        harvestedCount++;
+        get().progressQuest("harvest", crop, 1);
+      }
+    }
+
+    if (harvestedCount > 0) {
+      set((s) => ({
+        inventoryByCategory: { ...s.inventoryByCategory, crops: cat },
+        [plotListKey]: newPlots,
+        stats: { ...s.stats, totalHarvested: (s.stats?.totalHarvested || 0) + harvestedCount },
+      }));
+      get().addXP(GAME_CONSTANTS.XP.HARVEST * harvestedCount);
+      get().markSessionAction?.("harvested");
+      get().checkAchievements?.();
+      return { ok: true, message: `Berhasil memanen ${harvestedCount} tanaman sekaligus!` };
+    }
+    return { ok: false, message: "Tidak ada tanaman siap panen atau energy habis." };
+  },
+
+  plantAll: (plotListKey, seedId) => {
+    const state = get();
+    const plots = state[plotListKey] || [];
+    const seedData = SHOP_SEEDS.find((s) => s.id === seedId);
+    if (!seedData) return { ok: false, message: "Pilih bibit terlebih dahulu!" };
+
+    const season = state.season?.current;
+    const hasGreenhouse = !!state.buildings?.greenhouse;
+    if (!hasGreenhouse && seedData.season !== "all" && seedData.season !== season) {
+      return { ok: false, message: "Bibit ini tidak cocok musim ini (butuh Greenhouse)." };
+    }
+
+    let availableSeeds = state.inventoryByCategory?.seeds?.[seedId]?.qty || 0;
+    if (availableSeeds <= 0) return { ok: false, message: `Kehabisan ${seedData.name}!` };
+
+    let plantedCount = 0;
+    const newPlots = [...plots];
+    const now = Date.now();
+    const growthMultiplier = state.growthMultiplier > 0 ? state.growthMultiplier : 1;
+    
+    // Pupuk logic
+    let availablePupuk = state.inventoryByCategory?.collectibles?.pupuk_kandang?.qty || 0;
+    let pupukUsed = 0;
+
+    for (let i = 0; i < newPlots.length; i++) {
+      const plot = newPlots[i];
+      if ((plot.status === "empty" || plot.status === "dead") && availableSeeds > 0) {
+        if (!get().consumeEnergy(1)) break;
+        
+        let baseGrowTime = (seedData.time * 1000) / growthMultiplier;
+        baseGrowTime = Math.floor(baseGrowTime * PLOT_LEVEL_MULT[plot.level || 1]);
+        
+        let fertilizer = null;
+        if (availablePupuk > 0) {
+          baseGrowTime = Math.floor(baseGrowTime * 0.85);
+          fertilizer = "pupuk_kandang";
+          availablePupuk--;
+          pupukUsed++;
+        }
+
+        newPlots[i] = {
+          ...plot,
+          status: "growing",
+          crop: seedData.cropId,
+          plantedAt: now,
+          growTime: baseGrowTime,
+          watered: false,
+          fertilizer,
+          quality: null,
+          pestInfestation: false,
+        };
+        
+        availableSeeds--;
+        plantedCount++;
+      }
+    }
+
+    if (plantedCount > 0) {
+      set((draft) => {
+        draft[plotListKey] = newPlots;
+        draft.inventoryByCategory.seeds[seedId].qty -= plantedCount;
+        if (draft.inventoryByCategory.seeds[seedId].qty <= 0) {
+          delete draft.inventoryByCategory.seeds[seedId];
+        }
+        
+        if (pupukUsed > 0 && draft.inventoryByCategory.collectibles?.pupuk_kandang) {
+          draft.inventoryByCategory.collectibles.pupuk_kandang.qty -= pupukUsed;
+          if (draft.inventoryByCategory.collectibles.pupuk_kandang.qty <= 0) {
+            delete draft.inventoryByCategory.collectibles.pupuk_kandang;
+          }
+          draft.stats = { ...draft.stats, totalFertilizerUsed: (draft.stats?.totalFertilizerUsed || 0) + pupukUsed };
+        }
+      });
+      return { ok: true, message: `Menanam ${plantedCount} ${seedData.name} sekaligus!` };
+    }
+
+    return { ok: false, message: "Tidak ada lahan kosong atau energy habis." };
+  },
+
   syncPlots: () => {
     const now = Date.now();
-    let changed = false;
-    const plots = get().plots.map((p) => {
-      const baseGrow = (p.growTime ?? 0) > 0 ? p.growTime : null;
-      if (baseGrow == null) return p;
-      const growTime = p.pestInfestation ? baseGrow * 2 : baseGrow;
-      if (
-        p.status === "growing" &&
-        p.plantedAt &&
-        now - p.plantedAt >= growTime
-      ) {
-        changed = true;
-        return { ...p, status: "ready" };
-      }
-      return p;
-    });
-    if (changed) set({ plots });
+    const syncList = (listKey: "plots" | "feedPlots" | "kitchenPlots") => {
+      let changedList = false;
+      const newPlots = get()[listKey].map((p) => {
+        const baseGrow = (p.growTime ?? 0) > 0 ? p.growTime : null;
+        if (baseGrow == null) return p;
+        const growTime = p.pestInfestation ? baseGrow * 2 : baseGrow;
+        if (
+          p.status === "growing" &&
+          p.plantedAt &&
+          now - p.plantedAt >= growTime
+        ) {
+          changedList = true;
+          return { ...p, status: "ready" };
+        }
+        return p;
+      });
+      if (changedList) set({ [listKey]: newPlots });
+    };
+    syncList("plots");
+    syncList("feedPlots");
+    syncList("kitchenPlots");
   },
 
   upgradePlot: (plotId) => {
     const state = get();
-    const plot = state.plots.find((p) => p.id === plotId);
+    const listKey = getPlotArrayKey(plotId);
+    const plot = state[listKey].find((p) => p.id === plotId);
     if (!plot) return { ok: false, message: "Petak tidak ditemukan." };
     if (plot.level >= 3)
       return { ok: false, message: "Petak sudah level maksimum." };
@@ -297,7 +450,7 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
       }
     });
     set((s) => ({
-      plots: s.plots.map((p) =>
+      [listKey]: s[listKey].map((p) =>
         p.id === plotId ? { ...p, level: p.level + 1 } : p,
       ),
     }));
@@ -308,19 +461,23 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
   },
 
   updatePlotStatus: (plotId, status) => {
+    const listKey = getPlotArrayKey(plotId);
     set((state) => ({
-      plots: state.plots.map((p) => (p.id === plotId ? { ...p, status } : p)),
+      [listKey]: state[listKey].map((p) => (p.id === plotId ? { ...p, status } : p)),
     }));
   },
 
   swapPlots: (id1, id2) => {
+    const listKey1 = getPlotArrayKey(id1);
+    const listKey2 = getPlotArrayKey(id2);
+    if (listKey1 !== listKey2) return;
     set((state) => {
-      const newPlots = [...state.plots];
+      const newPlots = [...state[listKey1]];
       const idx1 = newPlots.findIndex((p) => p.id === id1);
       const idx2 = newPlots.findIndex((p) => p.id === id2);
       if (idx1 !== -1 && idx2 !== -1)
         [newPlots[idx1], newPlots[idx2]] = [newPlots[idx2], newPlots[idx1]];
-      return { plots: newPlots };
+      return { [listKey1]: newPlots };
     });
   },
 });

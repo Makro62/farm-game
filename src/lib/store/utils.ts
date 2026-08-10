@@ -253,10 +253,10 @@ export function normalizePlot(plot: any, index: any = 0) {
   };
 }
 
-export function normalizePlots(plots: any) {
+export function normalizePlots(plots: any, maxLength = 30, startId = 0) {
   if (!Array.isArray(plots)) {
-    return Array.from({ length: 30 }, (_, i) => ({
-      id: i,
+    return Array.from({ length: maxLength }, (_, i) => ({
+      id: startId + i,
       status: "empty",
       crop: null,
       plantedAt: null,
@@ -270,10 +270,10 @@ export function normalizePlots(plots: any) {
     }));
   }
 
-  const normalized = plots.map((p, i) => normalizePlot(p, i));
-  while (normalized.length < 30) {
+  const normalized = plots.map((p, i) => normalizePlot(p, typeof p === "object" && p && "id" in p ? p.id : startId + i));
+  while (normalized.length < maxLength) {
     normalized.push({
-      id: normalized.length,
+      id: startId + normalized.length,
       status: "empty",
       crop: null,
       plantedAt: null,
@@ -286,7 +286,7 @@ export function normalizePlots(plots: any) {
       level: 1,
     });
   }
-  return normalized.slice(0, 30);
+  return normalized.slice(0, maxLength);
 }
 
 export function normalizeAnimal(animal: any) {

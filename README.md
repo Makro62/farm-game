@@ -36,6 +36,8 @@ Navigasi lewat **sidebar** (desktop) atau **bottom nav** (mobile):
 - **Sistem Pertanian Real-Time:** Tanam bibit, siram, panen — loop game di `store-provider.js`
 - **Pekerja Otomatis:** Sewa kurcaci petani / peternak / penambang / pemancing / koki
 - **Cuaca & Musim:** Ditampilkan di sidebar; mempengaruhi pertumbuhan tanaman
+- **Visual Premium & Animasi:** Antarmuka dengan efek *Glassmorphism*, *floating text* XP/Koin saat aksi, dan animasi dinamis yang mulus (smooth transitions).
+- **Offline Progress Interaktif:** Laporan *offline* yang memuaskan secara visual lengkap dengan total pendapatan saat Anda kembali.
 - **Auto-Save:** Zustand Persist ke LocalStorage
 - **PWA:** *(Dalam tahap perbaikan Service Worker)*. Fitur instalasi PWA dinonaktifkan sementara.
 

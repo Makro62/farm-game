@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import { CropIcon } from "@/components/ui/CropIcon";
 import { cn } from "@/lib/utils";
 import { useFarming } from "@/lib/hooks/useFarming";
 
-export function PlotGrid({ isEditMode, farmTool = "tanam" }) {
-  const plots = useGameStore((state) => state.plots);
+export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots" }) {
+  const plots = useGameStore(useShallow((state) => state[plotListKey] || state.plots));
   const swapPlots = useGameStore((state) => state.swapPlots);
   const { handlePlotClick } = useFarming();
   const [floatingTexts, setFloatingTexts] = useState<{id: number, plotId: number, text: string, color: string}[]>([]);

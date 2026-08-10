@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
@@ -53,135 +54,141 @@ export const useGameStore = create<GameStore>()(
           return true;
         },
 
-        dev: {
-          addCoins: (amount: number) => {
-            s((state) => {
-              state.coins += amount;
-            });
-          },
-          addEnergy: (amount: number) => {
-            s((state) => {
-              state.energy = Math.min(state.energy + amount, state.maxEnergy);
-            });
-          },
-          setLevel: (level: number) => {
-            s({ level, xp: 0 });
-          },
-          resetPlots: () => {
-            s({ plots: initialState.plots.map((p) => ({ ...p })) });
-          },
-          instantGrow: () => {
-            s((state) => {
-              state.plots.forEach((p) => {
-                if (p.status === "growing") p.plantedAt = 0;
-              });
-            });
-          },
-          unlockAll: () => {
-            s({
-              workers: {
-                farmer: {
-                  name: "Kurcaci Budi",
-                  role: "farmer",
-                  level: 1,
-                  xp: 0,
-                  xpToNext: 200,
-                  stamina: 100,
-                  happiness: 80,
-                  wagePerDay: 50,
-                  daysEmployed: 0,
-                  totalWagesPaid: 0,
-                  loyalty: 60,
-                  skills: {},
-                  isWorking: true,
-                  isAutoMode: true,
-                  hired: true,
-                  maxStamina: 100,
+        dev:
+          process.env.NODE_ENV === "production"
+            ? null
+            : {
+                addCoins: (amount: number) => {
+                  s((state) => {
+                    state.coins += amount;
+                  });
                 },
-                rancher: {
-                  name: "Kurcaci Siti",
-                  role: "rancher",
-                  level: 1,
-                  xp: 0,
-                  xpToNext: 200,
-                  stamina: 100,
-                  happiness: 80,
-                  wagePerDay: 50,
-                  daysEmployed: 0,
-                  totalWagesPaid: 0,
-                  loyalty: 60,
-                  skills: {},
-                  isWorking: true,
-                  isAutoMode: true,
-                  hired: true,
-                  maxStamina: 100,
+                addEnergy: (amount: number) => {
+                  s((state) => {
+                    state.energy = Math.min(
+                      state.energy + amount,
+                      state.maxEnergy,
+                    );
+                  });
                 },
-                fisher: {
-                  name: "Kurcaci Mamat",
-                  role: "fisher",
-                  level: 1,
-                  xp: 0,
-                  xpToNext: 200,
-                  stamina: 100,
-                  happiness: 80,
-                  wagePerDay: 50,
-                  daysEmployed: 0,
-                  totalWagesPaid: 0,
-                  loyalty: 60,
-                  skills: {},
-                  isWorking: true,
-                  isAutoMode: true,
-                  hired: true,
-                  maxStamina: 100,
+                setLevel: (level: number) => {
+                  s({ level, xp: 0 });
                 },
-                miner: {
-                  name: "Kurcaci Tarjo",
-                  role: "miner",
-                  level: 1,
-                  xp: 0,
-                  xpToNext: 200,
-                  stamina: 100,
-                  happiness: 80,
-                  wagePerDay: 50,
-                  daysEmployed: 0,
-                  totalWagesPaid: 0,
-                  loyalty: 60,
-                  skills: {},
-                  isWorking: true,
-                  isAutoMode: true,
-                  hired: true,
-                  maxStamina: 100,
+                resetPlots: () => {
+                  s({ plots: initialState.plots.map((p) => ({ ...p })) });
                 },
-                chef: {
-                  name: "Kurcaci Juna",
-                  role: "chef",
-                  level: 1,
-                  xp: 0,
-                  xpToNext: 200,
-                  stamina: 100,
-                  happiness: 80,
-                  wagePerDay: 50,
-                  daysEmployed: 0,
-                  totalWagesPaid: 0,
-                  loyalty: 60,
-                  skills: {},
-                  isWorking: true,
-                  isAutoMode: true,
-                  hired: true,
-                  maxStamina: 100,
+                instantGrow: () => {
+                  s((state) => {
+                    state.plots.forEach((p) => {
+                      if (p.status === "growing") p.plantedAt = 0;
+                    });
+                  });
+                },
+                unlockAll: () => {
+                  s({
+                    workers: {
+                      farmer: {
+                        name: "Kurcaci Budi",
+                        role: "farmer",
+                        level: 1,
+                        xp: 0,
+                        xpToNext: 200,
+                        stamina: 100,
+                        happiness: 80,
+                        wagePerDay: 50,
+                        daysEmployed: 0,
+                        totalWagesPaid: 0,
+                        loyalty: 60,
+                        skills: {},
+                        isWorking: true,
+                        isAutoMode: true,
+                        hired: true,
+                        maxStamina: 100,
+                      },
+                      rancher: {
+                        name: "Kurcaci Siti",
+                        role: "rancher",
+                        level: 1,
+                        xp: 0,
+                        xpToNext: 200,
+                        stamina: 100,
+                        happiness: 80,
+                        wagePerDay: 50,
+                        daysEmployed: 0,
+                        totalWagesPaid: 0,
+                        loyalty: 60,
+                        skills: {},
+                        isWorking: true,
+                        isAutoMode: true,
+                        hired: true,
+                        maxStamina: 100,
+                      },
+                      fisher: {
+                        name: "Kurcaci Mamat",
+                        role: "fisher",
+                        level: 1,
+                        xp: 0,
+                        xpToNext: 200,
+                        stamina: 100,
+                        happiness: 80,
+                        wagePerDay: 50,
+                        daysEmployed: 0,
+                        totalWagesPaid: 0,
+                        loyalty: 60,
+                        skills: {},
+                        isWorking: true,
+                        isAutoMode: true,
+                        hired: true,
+                        maxStamina: 100,
+                      },
+                      miner: {
+                        name: "Kurcaci Tarjo",
+                        role: "miner",
+                        level: 1,
+                        xp: 0,
+                        xpToNext: 200,
+                        stamina: 100,
+                        happiness: 80,
+                        wagePerDay: 50,
+                        daysEmployed: 0,
+                        totalWagesPaid: 0,
+                        loyalty: 60,
+                        skills: {},
+                        isWorking: true,
+                        isAutoMode: true,
+                        hired: true,
+                        maxStamina: 100,
+                      },
+                      chef: {
+                        name: "Kurcaci Juna",
+                        role: "chef",
+                        level: 1,
+                        xp: 0,
+                        xpToNext: 200,
+                        stamina: 100,
+                        happiness: 80,
+                        wagePerDay: 50,
+                        daysEmployed: 0,
+                        totalWagesPaid: 0,
+                        loyalty: 60,
+                        skills: {},
+                        isWorking: true,
+                        isAutoMode: true,
+                        hired: true,
+                        maxStamina: 100,
+                      },
+                    },
+                    buildings: {
+                      ...initialState.buildings,
+                      silo: { ...initialState.buildings.silo, unlocked: true },
+                      greenhouse: {
+                        ...initialState.buildings.greenhouse,
+                        unlocked: true,
+                      },
+                    },
+                  });
                 },
               },
-              buildings: {
-                ...initialState.buildings,
-                silo: { ...initialState.buildings.silo, unlocked: true },
-                greenhouse: {
-                  ...initialState.buildings.greenhouse,
-                  unlocked: true,
-                },
-              },
-            });
-          },
-        },
       } as GameStore;
     }),
     {
@@ -242,11 +249,13 @@ export const useMineralsInventory = () =>
 export const useFishInventory = () =>
   useGameStore((s) => s.inventoryByCategory?.fish || {});
 export const useSettings = () =>
-  useGameStore((s) => ({
-    soundEnabled: s.soundEnabled,
-    musicEnabled: s.musicEnabled,
-    notificationsEnabled: s.notificationsEnabled,
-  }));
+  useGameStore(
+    useShallow((s) => ({
+      soundEnabled: s.soundEnabled,
+      musicEnabled: s.musicEnabled,
+      notificationsEnabled: s.notificationsEnabled,
+    }))
+  );
 export const useSeason = () => useGameStore((s) => s.season);
 export const useWeather = () => useGameStore((s) => s.weather);
 export const useMining = () => useGameStore((s) => s.mining);

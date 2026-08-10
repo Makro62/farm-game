@@ -20,8 +20,8 @@ export interface Plot {
 
 export interface InventoryStack {
   qty: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  quality?: string | null;
+  acquiredAt?: number;
 }
 
 export type InventoryCategory =
@@ -71,8 +71,8 @@ export interface Worker {
   skills: Record<string, number>;
   isWorking: boolean;
   isAutoMode: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  hired?: boolean;
+  maxStamina?: number;
 }
 
 export interface MiningNode {
@@ -243,6 +243,8 @@ export interface GameState {
   offlineReport: OfflineReport | null;
 
   plots: Plot[];
+  feedPlots: Plot[];
+  kitchenPlots: Plot[];
   inventoryByCategory: InventoryByCategory;
   animals: Animal[];
 

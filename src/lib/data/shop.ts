@@ -1,5 +1,15 @@
 import { SHOP_SEEDS } from "./crops";
 
+export const SHOP_CONSUMABLES: any[] = [
+  {
+    id: "kopi",
+    name: "Kopi Kurcaci",
+    emoji: "☕",
+    price: 150,
+    desc: "Memulihkan kebahagiaan pekerja +50",
+  },
+];
+
 export const SHOP_DECORATIONS: any[] = [
   {
     id: "bunga",
@@ -319,6 +329,22 @@ export const SHOP: Record<string, any> = {
           emoji: d.emoji,
           price: d.price,
           desc: d.desc,
+        },
+      ]),
+    ),
+  },
+  consumables: {
+    icon: "☕",
+    unlockLevel: 1,
+    items: Object.fromEntries(
+      SHOP_CONSUMABLES.map((c) => [
+        c.id,
+        {
+          id: c.id,
+          name: c.name,
+          emoji: c.emoji,
+          price: c.price,
+          desc: c.desc,
         },
       ]),
     ),

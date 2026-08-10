@@ -12,6 +12,8 @@ export const partializeState = (state: GameStore) => ({
   streak: state.streak,
   lastLogin: state.lastLogin,
   plots: state.plots,
+  feedPlots: state.feedPlots,
+  kitchenPlots: state.kitchenPlots,
   inventoryByCategory: state.inventoryByCategory,
   animals: state.animals,
   soundEnabled: state.soundEnabled,
@@ -26,6 +28,7 @@ export const partializeState = (state: GameStore) => ({
   selectedSeed: state.selectedSeed,
   selectedBait: state.selectedBait,
   selectedRecipe: state.selectedRecipe,
+  selectedMiningTool: state.selectedMiningTool,
   season: state.season,
   weather: state.weather,
   mining: state.mining
@@ -116,7 +119,9 @@ function migrateLegacyWorker(val) {
 
 export const migrateState = (persistedState: any, currentState: GameStore) => {
   let merged = { ...currentState, ...persistedState };
-  merged.plots = normalizePlots(merged.plots);
+  merged.plots = normalizePlots(merged.plots, 30, 0);
+  merged.feedPlots = normalizePlots(merged.feedPlots, 12, 100);
+  merged.kitchenPlots = normalizePlots(merged.kitchenPlots, 12, 200);
 
   if (merged.mining) {
     if (merged.mining.pickaxeLevel == null) merged.mining.pickaxeLevel = 1;

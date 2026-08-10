@@ -136,33 +136,54 @@ export function SeedShop() {
       </div>
 
       <ShopSectionTitle icon="🧑‍🌾">Pekerja (Auto)</ShopSectionTitle>
-      <button
-        onClick={handleHireFarmer}
-        className={`w-full glass-card p-2 flex justify-between items-center transition-colors text-left mb-2 ${
-          farmer ? "border-[var(--primary)] bg-[var(--primary)]/10" : ""
-        }`}
-      >
-        <div>
-          <div className="font-bold text-[var(--text-primary)] text-sm">
-            Petani Budi
+      <div className="w-full glass-card p-2 flex flex-col transition-colors text-left mb-2 border-[var(--primary)] bg-[var(--primary)]/10">
+        <div className="flex justify-between items-center mb-2">
+          <div>
+            <div className="font-bold text-[var(--text-primary)] text-sm">
+              Petani Budi {farmer ? `(Kebahagiaan: ${farmer.happiness}%)` : ""}
+            </div>
+            <div className="text-[10px] text-[var(--text-secondary)]">
+              Auto-Farm & Harvest
+            </div>
           </div>
-          <div className="text-[10px] text-[var(--text-secondary)]">
-            Auto-Farm & Harvest
-          </div>
+          <button
+            type="button"
+            onClick={handleHireFarmer}
+            disabled={!!farmer}
+            className={`font-bold text-[var(--text-primary)] px-2 py-0.5 rounded-full text-xs whitespace-nowrap border ${
+              farmer
+                ? "bg-gray-300 border-gray-400 opacity-50 cursor-default"
+                : "bg-[var(--gold)] border-[#FFF1B8] hover:scale-105"
+            }`}
+          >
+            {farmer ? "Dimiliki" : `${GAME_CONSTANTS.COSTS.WORKER_FARMER} 💰`}
+          </button>
         </div>
-        <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-xl text-xs whitespace-nowrap border border-[#FFF1B8]">
-          {farmer ? "Dimiliki" : `${GAME_CONSTANTS.COSTS.WORKER_FARMER} 💰`}
-        </span>
-      </button>
-      {farmer?.hired && (
-        <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
-          {farmer.isAutoMode
-            ? SHOP_SEEDS.some((s) => (seeds[s.id]?.qty || 0) > 0)
-              ? "Kurcaci aktif — panen & tanam otomatis"
-              : "Auto ON — beli bibit agar bisa menanam"
-            : "Nyalakan tombol Auto Kurcaci untuk mulai"}
-        </p>
-      )}
+        {farmer?.hired && (
+          <div className="flex justify-between items-center border-t border-[var(--primary)]/20 pt-2 mt-1">
+            <p className="text-[10px] text-[var(--text-secondary)] font-medium">
+              {farmer.isAutoMode
+                ? SHOP_SEEDS.some((s) => (seeds[s.id]?.qty || 0) > 0)
+                  ? "Kurcaci aktif — panen & tanam otomatis"
+                  : "Auto ON — beli bibit agar bisa menanam"
+                : "Nyalakan tombol Auto Kurcaci untuk mulai"}
+            </p>
+            {farmer.happiness < 100 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const res = useGameStore.getState().giveKopiWorker?.("farmer");
+                  if (res?.ok) toast.success(res.message);
+                  else toast.error(res?.message || "Gagal memberi kopi.");
+                }}
+                className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] px-2 py-1 rounded-md font-bold transition-transform hover:scale-105 shadow-sm flex items-center gap-1"
+              >
+                <span>☕</span> Beri Kopi
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </>
   );
 }

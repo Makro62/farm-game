@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { GameProvider } from "@/lib/store-provider";
 import { Toaster } from "react-hot-toast";
 import ClientLayout from "@/components/layout/ClientLayout";
-import ClearServiceWorker from "@/components/layout/ClearServiceWorker";
 
 export const metadata: Metadata = {
   title: "🌾 Farm Tycoon - Game Bertani Seru!",
@@ -47,7 +46,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="apple-mobile-web-app-title" content="Farm Tycoon" />
       </head>
       <body className="font-body">
-        <ClearServiceWorker />
         <GameProvider>
           <ClientLayout>{children}</ClientLayout>
           <Toaster

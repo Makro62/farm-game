@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { FISHES } from "@/lib/data/fishes";
+import { rollFishSize } from "@/lib/data/item-helpers";
 import { SHOP_BAIT } from "@/lib/data/shop";
 import { useGameStore } from "@/lib/store";
 import { GAME_CONSTANTS } from "@/lib/constants";
@@ -9,7 +10,7 @@ function rollFish(rareBonus = 0) {
   // Rare fish (last 2) get boosted chance; common fish share the rest
   const weights = FISHES.map((fish, i) => {
     const isRare = i >= FISHES.length - 2;
-    return isRare ? fish.chance * (1 + rareBonus * 3) : fish.chance;
+    return isRare ? fish.baseChance * (1 + rareBonus * 3) : fish.baseChance;
   });
   const total = weights.reduce((a, b) => a + b, 0);
   let rand = Math.random() * total;
@@ -127,9 +128,14 @@ export function useFishingMinigame() {
         ? weatherEffects.fishingRare - 1
         : 0;
       const caughtFish = rollFish((bait?.rareBonus || 0) + weatherRareBonus);
-      useGameStore.getState().recordFishingCatch(caughtFish, bait);
+      const sizeTier = rollFishSize(caughtFish.id);
+      
+      const sizeLabels = { small: "Kecil", normal: "Biasa", big: "Besar", trophy: "Trophy 🏆" };
+      const sizeStr = sizeTier !== "normal" ? ` (${sizeLabels[sizeTier as keyof typeof sizeLabels]})` : "";
+      
+      useGameStore.getState().recordFishingCatch(caughtFish, bait, sizeTier);
       toast.success(
-        `Berhasil menangkap ${caughtFish.emoji} ${caughtFish.name}!`,
+        `Berhasil menangkap ${caughtFish.emoji} ${caughtFish.name}${sizeStr}!`,
         { duration: 4000 },
       );
     } else {

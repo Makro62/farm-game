@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MINERALS } from "@/lib/data/minerals";
 import { SHOP_MINING } from "@/lib/data/shop";
 import { motion } from "framer-motion";
@@ -24,6 +24,11 @@ const FLOOR_META = {
 };
 
 export default function TabMine() {
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   const {
     mining,
     inventory,
@@ -252,6 +257,8 @@ export default function TabMine() {
       <QuestPanel />
     </>
   );
+
+  if (!isMounted) return null;
 
   return (
     <TabPage>

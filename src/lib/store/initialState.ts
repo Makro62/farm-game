@@ -1,9 +1,9 @@
 import type { GameState, Plot, MiningNode, Worker, WorkerRole } from "@/types/game";
 import { rollMineralType } from "./utils";
 
-function createEmptyPlots(count = 30): Plot[] {
+function createEmptyPlots(count = 30, startId = 0): Plot[] {
   return Array.from({ length: count }, (_, i) => ({
-    id: i,
+    id: startId + i,
     status: "empty",
     crop: null,
     plantedAt: null,
@@ -127,7 +127,9 @@ export const initialState: GameState = {
   lastSavedAt: Date.now(),
   offlineReport: null,
 
-  plots: createEmptyPlots(),
+  plots: createEmptyPlots(30, 0),
+  feedPlots: createEmptyPlots(12, 100),
+  kitchenPlots: createEmptyPlots(12, 200),
 
   inventoryByCategory: {
     crops: {},
