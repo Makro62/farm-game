@@ -1,6 +1,11 @@
 import type { StoreSet, StoreGet } from '@/types/game'
-import { SHOP_BUILDINGS, SHOP_DECORATIONS } from '@/lib/data/shop'
+import { SHOP_DECORATIONS } from '@/lib/data/shop'
 import { getItemSellPrice, getItemCategory } from '@/lib/data/item-helpers'
+import {
+  getBuildingConfig,
+  getBuildingMineralReq,
+  getBuildingInitialShape,
+} from '@/lib/data/buildings'
 import { MINERALS } from '@/lib/data/minerals'
 import { FISHES } from '@/lib/data/fishes'
 
@@ -53,8 +58,9 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
   },
 
   buyBuilding: buildingId => {
-    const building = SHOP_BUILDINGS.find(b => b.id === buildingId)
-    if (!building) return { ok: false, message: 'Bangunan tidak dikenal.' }
+    const building = getBuildingConfig(buildingId)
+    if (!building || !building.buyable)
+      return { ok: false, message: 'Bangunan tidak dikenal.' }
 
     const state = get()
     if (state.buildings?.[buildingId])
@@ -63,13 +69,7 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
     if (state.coins < building.price)
       return { ok: false, message: 'Koin tidak cukup!' }
 
-    const mineralReq = {
-      silo: { batu: 20, besi: 10 },
-      greenhouse: { batu: 30, tembaga: 15, emas: 5 },
-      scarecrow: { batu: 35, besi: 5 },
-      sprinkler: { besi: 15, tembaga: 10 },
-    }[buildingId]
-
+    const mineralReq = getBuildingMineralReq(buildingId)
     if (mineralReq) {
       for (const [mineral, qty] of Object.entries(mineralReq)) {
         if (
@@ -84,17 +84,7 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
       }
     }
 
-    const shape = {
-      silo: { unlocked: true, level: 1, maxLevel: 3 },
-      greenhouse: { unlocked: true, level: 1, maxLevel: 1 },
-      scarecrow: { unlocked: true, level: 1, maxLevel: 1 },
-      sprinkler: { unlocked: true, level: 1, maxLevel: 1 },
-      mill: { unlocked: true, level: 1, queue: [] },
-      well: { unlocked: true, level: 1, maxLevel: 3 },
-      workshop: { unlocked: true, level: 1, maxLevel: 3 },
-      coop: { unlocked: true, level: 1, maxLevel: 3, capacity: 6 },
-      barn: { unlocked: true, level: 1, maxLevel: 3, capacity: 6 },
-    }
+    const initialShape = getBuildingInitialShape(buildingId)
 
     set(draft => {
       draft.coins -= building.price
@@ -110,7 +100,7 @@ export const createTownSlice = (set: StoreSet, get: StoreGet) => ({
       }
       draft.buildings = {
         ...(draft.buildings || {}),
-        [buildingId]: shape[buildingId] || { unlocked: true, level: 1 },
+        [buildingId]: initialShape,
       }
     })
 

@@ -167,8 +167,8 @@
 
 @layer components {
   .btn {
-    @apply px-4 py-2 font-extrabold transition-all duration-200;
-    border-radius: 9999px;
+    @apply px-4 py-2 font-extrabold;
+    border-radius: 10px;
     min-height: 44px;
     min-width: 44px;
     touch-action: manipulation;
@@ -181,97 +181,54 @@
 
   .btn-primary {
     @apply btn text-white;
-    background: linear-gradient(
-      180deg,
-      var(--primary-light) 0%,
-      var(--primary) 55%,
-      var(--primary-dark) 100%
-    );
-    border: 2px solid #c8f0b0;
-    box-shadow:
-      0 4px 0 var(--primary-dark),
-      0 8px 16px rgba(58, 154, 50, 0.25);
+    background: var(--primary);
+    border: 2px solid var(--primary-dark);
   }
 
   .btn-primary:hover {
-    filter: brightness(1.06);
-    transform: translateY(-1px);
-  }
-
-  .btn-primary:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 var(--primary-dark);
+    filter: brightness(1.05);
   }
 
   .btn-gold {
     @apply btn text-[var(--text-primary)];
-    background: linear-gradient(
-      180deg,
-      #ffe9a0 0%,
-      var(--gold) 55%,
-      var(--gold-deep) 100%
-    );
-    border: 2px solid #fff3c4;
-    box-shadow:
-      0 4px 0 #b8860b,
-      0 8px 14px rgba(184, 134, 11, 0.22);
+    background: var(--gold);
+    border: 2px solid var(--gold-deep);
   }
 
   .btn-gold:hover {
     filter: brightness(1.05);
-    transform: translateY(-1px);
-  }
-
-  .btn-gold:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #b8860b;
   }
 
   .btn-secondary {
     @apply btn text-[var(--text-on-dark)];
-    background: linear-gradient(180deg, #a67c52 0%, var(--wood-dark) 100%);
-    border: 2px solid #c4a074;
-    box-shadow: 0 3px 0 #3e2414;
+    background: var(--wood);
+    border: 2px solid var(--wood-dark);
   }
 
   .btn-secondary:hover {
     filter: brightness(1.08);
-    transform: translateY(-1px);
-  }
-
-  .btn-secondary:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 #3e2414;
   }
 
   .btn-danger {
     @apply btn text-white;
-    background: linear-gradient(180deg, #ff9a8a 0%, var(--danger) 100%);
-    border: 2px solid #ffc4ba;
-    box-shadow: 0 4px 0 #b33a2e;
+    background: var(--danger);
+    border: 2px solid #b33a2e;
   }
 
   .btn-danger:hover {
     filter: brightness(1.05);
-    transform: translateY(-1px);
-  }
-
-  .btn-danger:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #b33a2e;
   }
 
   .btn-wood {
     @apply btn text-[var(--text-on-dark)] !text-xs sm:!text-sm;
-    background: linear-gradient(180deg, #8b5e3c 0%, #5c3a22 100%);
-    border: 2px solid #c4a074;
-    box-shadow: 0 3px 0 #3e2414;
+    background: var(--wood);
+    border: 2px solid var(--wood-dark);
     padding: 0.4rem 0.85rem;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-1.5 font-bold transition-all duration-200;
-    border-radius: 9999px;
+    @apply inline-flex items-center justify-center gap-1.5 font-bold;
+    border-radius: 10px;
     @apply disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none;
   }
 
@@ -296,7 +253,7 @@
     width: 2.75rem;
     height: 2.75rem;
     font-size: 1.5rem;
-    border-radius: 9999px;
+    border-radius: 10px;
   }
 
   .qty-control-input {
@@ -320,7 +277,7 @@
   }
 
   .tool-chip {
-    @apply px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold transition-all border-2;
+    @apply px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-extrabold transition-all border-2;
     background: rgba(92, 58, 34, 0.4);
     color: #fff1d6;
     border-color: transparent;
@@ -335,7 +292,6 @@
     color: var(--text-primary);
     border-color: #fff1b8;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    transform: scale(1.05);
   }
 
   .tool-chip-emoji {
@@ -370,7 +326,6 @@
   .glass-card:hover {
     background: rgba(255, 244, 216, 0.95);
     border-color: var(--wood-light);
-    transform: translateY(-4px) scale(1.02);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.9),
       0 10px 20px rgba(62, 42, 26, 0.15);
@@ -1555,38 +1510,30 @@
   }
 
   .game-action-btn {
-    @apply font-extrabold transition-all;
+    @apply font-extrabold;
     @apply px-3 py-1.5 sm:px-3.5 sm:py-2;
-    border-radius: 9999px;
-    background: linear-gradient(180deg, #ffffff 0%, var(--card) 100%);
+    border-radius: 10px;
+    background: var(--card);
     border: 2px solid var(--wood);
     color: var(--text-primary);
     font-size: clamp(0.7rem, 2vw, 0.85rem);
     min-height: 2.15rem;
-    box-shadow: 0 3px 0 var(--wood-dark);
   }
 
   .game-action-btn:hover {
-    transform: translateY(-1px);
-  }
-
-  .game-action-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 var(--wood-dark);
+    filter: brightness(1.05);
   }
 
   .game-action-btn--edit {
-    background: linear-gradient(180deg, #ffe9a0, var(--gold));
+    background: var(--gold);
     color: var(--text-primary);
     border-color: var(--gold-deep);
-    box-shadow: 0 3px 0 #b8860b;
   }
 
   .game-action-btn--auto {
-    background: linear-gradient(180deg, var(--primary-light), var(--primary));
+    background: var(--primary);
     color: white;
     border-color: var(--primary-dark);
-    box-shadow: 0 3px 0 var(--primary-dark);
   }
 
   .game-action-btn--miner {
