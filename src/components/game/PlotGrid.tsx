@@ -14,6 +14,12 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
   const { handlePlotClick } = useFarming();
   const [floatingTexts, setFloatingTexts] = useState<{id: number, plotId: number, text: string, color: string}[]>([]);
   const [now, setNow] = useState(0);
+  // Tap-to-swap untuk touchscreen (drag HTML5 tidak jalan di mobile)
+  const [editSelected, setEditSelected] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isEditMode) setEditSelected(null);
+  }, [isEditMode]);
 
   useEffect(() => {
     setNow(Date.now());
@@ -24,6 +30,15 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
   const handlePlotAction = (e: React.MouseEvent, plot: any) => {
     if (isEditMode) {
       e.preventDefault();
+      // Touch fallback: tap pilih → tap kedua untuk tukar posisi
+      if (editSelected == null) {
+        setEditSelected(plot.id);
+      } else if (editSelected === plot.id) {
+        setEditSelected(null);
+      } else {
+        swapPlots(editSelected, plot.id);
+        setEditSelected(null);
+      }
       return;
     }
     
@@ -52,6 +67,13 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
       <div className="absolute bottom-3 left-3 z-20 text-4xl sm:text-5xl drop-shadow-lg pointer-events-none select-none">
         👨‍🌾
       </div>
+
+      {isEditMode && (
+        <p className="relative z-10 mb-2 text-center text-[11px] font-bold text-yellow-100 bg-black/45 rounded-lg px-2 py-1">
+          Mode edit: ketuk 2 petak untuk menukar posisi
+          {editSelected != null ? " · 1 terpilih, ketuk target…" : ""}
+        </p>
+      )}
 
       <div className="game-plot-grid relative z-10">
         {plots.map((plot) => {
@@ -97,7 +119,10 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
               }
               className={cn(
                 "game-plot-cell overflow-hidden",
-                isEditMode && "cursor-grab hover:ring-4 ring-yellow-400",
+                isEditMode && "cursor-pointer hover:ring-4 ring-yellow-400",
+                isEditMode &&
+                  editSelected === plot.id &&
+                  "ring-4 ring-sky-300 scale-105 z-10",
                 plot.status === "empty" &&
                   "bg-[#a06a38] border-b-4 border-[#7a4e28] hover:bg-[#b07843]",
                 plot.status === "dead" &&

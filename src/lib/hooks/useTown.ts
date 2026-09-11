@@ -1,4 +1,3 @@
-// @ts-nocheck — incremental TS migration; tighten types later
 import { useState } from "react";
 import { useGameStore } from "@/lib/store";
 import { SHOP_BAIT } from "@/lib/data/shop";
@@ -17,7 +16,8 @@ export function useTown() {
   const fishingProps = useFishingMinigame();
 
   const baitData = SHOP_BAIT.find((b) => b.id === selectedBait);
-  const baitQty = baitData ? baitInv[selectedBait]?.qty || 0 : 0;
+  const baitQty =
+    baitData && selectedBait ? baitInv[selectedBait]?.qty || 0 : 0;
   const selectedBaitLabel =
     baitData && baitQty > 0
       ? `${baitData.emoji} ${baitData.name} ×${baitQty}`

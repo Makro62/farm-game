@@ -1,4 +1,3 @@
-// @ts-nocheck — incremental TS migration; tighten types later
 import { useState, useEffect } from "react";
 import { useGameStore } from "@/lib/store";
 import { MINERALS } from "@/lib/data/minerals";
@@ -35,17 +34,19 @@ export function useMining() {
     return () => clearInterval(interval);
   }, []);
 
-  const pickaxe = PICKAXE_LABELS[mining?.pickaxeLevel] || PICKAXE_LABELS[1];
-  const lanternActive =
-    mining.lanternUntil && mining.lanternUntil > currentTime;
-  const lanternSecs = lanternActive
-    ? Math.ceil((mining.lanternUntil - currentTime) / 1000)
-    : 0;
+  const pickaxe = PICKAXE_LABELS[mining?.pickaxeLevel ?? 1] || PICKAXE_LABELS[1];
+  const lanternActive = Boolean(
+    mining?.lanternUntil && mining.lanternUntil > currentTime,
+  );
+  const lanternSecs =
+    mining?.lanternUntil && mining.lanternUntil > currentTime
+      ? Math.ceil((mining.lanternUntil - currentTime) / 1000)
+      : 0;
   const ownedTools = SHOP_MINING.filter((t) => (toolsInv[t.id]?.qty || 0) > 0);
 
    
   // eslint-disable-next-line react-hooks/rules-of-hooks -- useMiningTool is a store action, not a React hook
-  const handleUseTool = (toolId, nodeId = null) => {
+  const handleUseTool = (toolId: string, nodeId: number | null = null) => {
     const result = useMiningTool(toolId, nodeId);
     if (result.ok) {
       enqueueNotification(result.message, { type: "success" });
@@ -61,7 +62,7 @@ export function useMining() {
     }
   };
 
-  const handleMine = (node) => {
+  const handleMine = (node: { id: number; status: string }) => {
     if (selectedMiningTool) {
       handleUseTool(selectedMiningTool, node.id);
       return;
@@ -71,7 +72,7 @@ export function useMining() {
     if (minedType) {
       const mineral = MINERALS.find((m) => m.id === minedType);
       enqueueNotification(
-        `Berhasil menambang ${mineral.emoji} ${mineral.name}!`,
+        `Berhasil menambang ${mineral?.emoji ?? "⛏️"} ${mineral?.name ?? minedType}!`,
         { type: "success" },
       );
     }

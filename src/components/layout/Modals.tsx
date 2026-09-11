@@ -40,10 +40,15 @@ export default function Modals() {
     if (!selectedGift) return;
     const npcId = modals.npcGift.npcId;
     const npcData = NPC_LIST.find((n) => n.id === npcId);
+    if (!npcId || !npcData) {
+      toast.error("NPC tidak ditemukan.");
+      return;
+    }
 
+    const likes = npcData.likes ?? [];
     const isLiked =
-      npcData.likes.includes(selectedGift) ||
-      npcData.likes.some((like) => selectedGift.includes(like));
+      likes.includes(selectedGift) ||
+      likes.some((like) => selectedGift.includes(like));
 
     const result = giveGift(npcId, selectedGift, isLiked);
 
@@ -175,9 +180,9 @@ export default function Modals() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-5 gap-2 mb-6 max-h-[150px] overflow-y-auto p-3 glass-card rounded-xl">
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 mb-6 max-h-[180px] overflow-y-auto p-3 glass-card rounded-xl justify-items-center">
                 {Object.keys(inventory).length === 0 && (
-                  <div className="col-span-5 text-center text-xs text-[var(--text-secondary)] py-4 font-bold">
+                  <div className="col-span-4 sm:col-span-5 text-center text-xs text-[var(--text-secondary)] py-4 font-bold">
                     Inventory kosong...
                   </div>
                 )}
@@ -188,7 +193,7 @@ export default function Modals() {
                         key={item}
                         type="button"
                         onClick={() => setSelectedGift(item)}
-                        className={`relative w-16 h-16 rounded-full flex items-center justify-center transition-all border-2 ${
+                        className={`relative w-full aspect-square max-w-16 min-h-[3.5rem] rounded-full flex items-center justify-center transition-all border-2 ${
                           selectedGift === item
                             ? "bg-[var(--gold)]/20 border-[var(--gold)] shadow-inner scale-105"
                             : "bg-white/50 border-[var(--wood-light)] hover:bg-white"

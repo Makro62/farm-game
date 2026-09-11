@@ -12,7 +12,9 @@
  * - secret: boolean — tersembunyi sampai di-unlock
  */
 
-export const ACHIEVEMENTS: any[] = [
+import type { AchievementDef } from '@/types/items';
+
+export const ACHIEVEMENTS: AchievementDef[] = [
   // ===== 🌾 LADANG =====
   {
     id: "first_harvest",

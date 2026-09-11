@@ -35,5 +35,21 @@
     "tailwindcss": "^3.4.0",
     "typescript": "^5",
     "vitest": "^4.1.10"
-  }
+  },
+  "description": "![License](https://img.shields.io/badge/License-MIT-blue.svg) ![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg) ![Stack](https://img.shields.io/badge/Next.js-16+-black?logo=next.js) ![React](https://img.shields.io/badge/React-18-blue?logo=react) ![Tailwind](https://img.shields.io/badge/TailwindCSS-3-38bdf8?logo=tailwindcss)",
+  "main": "next.config.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Makro62/farm-game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Makro62/farm-game/issues"
+  },
+  "homepage": "https://github.com/Makro62/farm-game#readme"
 }

@@ -2,9 +2,13 @@ import { CROP_DATA } from "@/lib/data/crops";
 import { MINERALS } from "@/lib/data/minerals";
 import { FISHES } from "@/lib/data/fishes";
 import { RECIPES } from "@/lib/data/recipes";
-import { QUALITY_MULTIPLIERS } from "@/lib/data/item-helpers";
+import {
+  QUALITY_MULTIPLIERS,
+  getItemSellPrice,
+} from "@/lib/data/item-helpers";
+import type { GameState } from "@/types/game";
 
-const SEASON_PRICE_MODIFIERS = {
+const SEASON_PRICE_MODIFIERS: Record<string, Record<string, number>> = {
   wortel: { spring: 1.1, summer: 1.0, autumn: 0.9, winter: 0.8 },
   jagung: { spring: 0.8, summer: 1.3, autumn: 1.0, winter: 0.3 },
   tomat: { spring: 0.9, summer: 1.2, autumn: 1.0, winter: 0.2 },
@@ -19,7 +23,31 @@ const SEASON_PRICE_MODIFIERS = {
   apel: { autumn: 1.2, spring: 0.6 },
 };
 
-export function getCropGrowthSpeed(season, weather, buildings, workers) {
+interface GrowthContext {
+  season?: unknown;
+  weather?: string | null;
+  buildings?: {
+    greenhouse?: { active?: boolean; unlocked?: boolean };
+    silo?: { unlocked?: boolean; level?: number };
+  } | null;
+  workers?: { farmer?: { skills?: { watering?: number } } | null } | null;
+  activeEvent?: { id?: string } | null;
+  market?: { supply?: Record<string, number>; demand?: Record<string, number> };
+}
+
+/**
+ * Price layers (jangan dicampur aduk):
+ * - `getItemSellPrice` (item-helpers): harga dasar statis + quality/season/silo.
+ * - `calculateSellPrice` (sini): harga dinamis + event + saturasi pasar.
+ *   Fallback ke `getItemSellPrice` untuk item yang tidak dicover
+ *   (produk hewan, umpan, bibit) agar tidak ada dua sumber kebenaran.
+ */
+export function getCropGrowthSpeed(
+  _season: unknown,
+  weather: string | null | undefined,
+  buildings: GrowthContext["buildings"],
+  workers: GrowthContext["workers"],
+): number {
   let speed = 1.0;
 
   if (weather?.includes("Hujan") || weather?.includes("rainy")) {
@@ -33,15 +61,24 @@ export function getCropGrowthSpeed(season, weather, buildings, workers) {
   if (buildings?.greenhouse?.active) speed *= 1.2;
   if (buildings?.greenhouse?.unlocked) speed *= 1.1;
 
-  if (workers?.farmer?.skills?.watering >= 3) speed *= 1.05;
+  if ((workers?.farmer?.skills?.watering ?? 0) >= 3) speed *= 1.05;
 
   return speed;
 }
 
-export function calculateSellPrice(itemId, gameState) {
+type PriceGameState = Pick<
+  GameState,
+  "season" | "buildings" | "activeEvent"
+> &
+  Partial<Pick<GameState, "inventoryByCategory">> &
+  GrowthContext;
+
+export function calculateSellPrice(
+  itemId: string,
+  gameState: PriceGameState | null | undefined,
+): number | null {
   if (!gameState) return null;
-  const { season, buildings, activeEvent, market, inventoryByCategory } =
-    gameState;
+  const { season, buildings, activeEvent, market } = gameState;
   const currentSeason = season?.current;
   const event = activeEvent;
   const supply = market?.supply?.[itemId] || 0;
@@ -54,7 +91,7 @@ export function calculateSellPrice(itemId, gameState) {
     let price = cropData.baseSellPrice;
 
     if (currentSeason && SEASON_PRICE_MODIFIERS[itemId]?.[currentSeason]) {
-      price *= SEASON_PRICE_MODIFIERS[itemId][currentSeason];
+      price *= SEASON_PRICE_MODIFIERS[itemId][currentSeason] as number;
     }
 
     if (buildings?.silo?.unlocked) {
@@ -92,17 +129,33 @@ export function calculateSellPrice(itemId, gameState) {
     return Math.floor(price);
   }
 
-  return null;
+  // Fallback ke harga dasar statis (produk hewan, umpan, bibit, dsb)
+  // agar satu pintu harga dinamis tetap konsisten dengan item-helpers.
+  return getItemSellPrice(itemId);
 }
 
-export function calculateSellPriceWithQuality(itemId, quality, gameState) {
+export function calculateSellPriceWithQuality(
+  itemId: string,
+  quality: string | null | undefined,
+  gameState: PriceGameState | null | undefined,
+): number | null {
   const base = calculateSellPrice(itemId, gameState);
   if (base === null) return null;
-  const mult = QUALITY_MULTIPLIERS[quality] || 1.0;
+  const mult = (quality && QUALITY_MULTIPLIERS[quality]) || 1.0;
   return Math.floor(base * mult);
 }
 
-export function getDynamicPrice(itemId, category, gameState) {
+export function getDynamicPrice(
+  itemId: string,
+  category: string,
+  gameState:
+    | (PriceGameState & {
+        shop?: Record<string, { items?: Record<string, { price: number }> }>;
+        town?: { reputation?: number };
+      })
+    | null
+    | undefined,
+): number | null {
   const item = gameState?.shop?.[category]?.items?.[itemId];
   if (!item) return null;
   const basePrice = item.price;
@@ -118,8 +171,11 @@ export function getDynamicPrice(itemId, category, gameState) {
   const repDiscount = Math.min((gameState?.town?.reputation || 0) / 10000, 0.2);
   finalPrice *= 1 - repDiscount;
 
-  if (gameState?.activeEvent?.priceModifiers?.[itemId]) {
-    finalPrice *= gameState.activeEvent.priceModifiers[itemId];
+  if (gameState?.activeEvent && "priceModifiers" in gameState.activeEvent) {
+    const mods = (
+      gameState.activeEvent as { priceModifiers?: Record<string, number> }
+    ).priceModifiers;
+    if (mods?.[itemId]) finalPrice *= mods[itemId] as number;
   }
 
   return Math.floor(finalPrice);

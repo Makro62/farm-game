@@ -1,16 +1,54 @@
-import type { GameState, InventoryCategory } from '@/types/game'
+import type { GameState, InventoryCategory, InventoryStack } from '@/types/game'
 import { SHOP_SEEDS } from '@/lib/data/crops'
 import {
   SHOP_ANIMALS,
   SHOP_BAIT,
   SHOP_MINING,
+  SHOP_CONSUMABLES,
+  SHOP_DECORATIONS,
   SPECIAL_ITEMS,
 } from '@/lib/data/shop'
 import { FISHES } from '@/lib/data/fishes'
 import { MINERALS } from '@/lib/data/minerals'
 import { RECIPES } from '@/lib/data/recipes'
 
+const KNOWN_CATEGORIES: ReadonlySet<string> = new Set([
+  'crops',
+  'animalProducts',
+  'minerals',
+  'fish',
+  'processed',
+  'cooked',
+  'seeds',
+  'tools',
+  'bait',
+  'collectibles',
+  'consumables',
+]);
+
+/**
+ * Parse a requirement key like "crops.wortel" into a typed
+ * `{ cat, itemId }` pair. Returns null for malformed/unknown keys
+ * instead of letting callers cast `as any`.
+ */
+export function parseRequirementKey(
+  key: string,
+): { cat: InventoryCategory; itemId: string } | null {
+  const dot = key.indexOf('.');
+  if (dot <= 0 || dot === key.length - 1) return null;
+  const cat = key.slice(0, dot);
+  const itemId = key.slice(dot + 1);
+  if (!KNOWN_CATEGORIES.has(cat)) return null;
+  return { cat: cat as InventoryCategory, itemId };
+}
+
+/**
+ * Canonical item -> inventory category resolver.
+ * Single source of truth — other modules (`item-helpers`, `recipes`)
+ * must re-export this instead of maintaining their own maps.
+ */
 export function getItemCategory(itemId: string): InventoryCategory | null {
+  if (!itemId) return null
   if (SHOP_SEEDS.some(s => s.id === itemId)) return 'seeds'
   if (SHOP_SEEDS.some(s => s.cropId === itemId)) return 'crops'
   if (FISHES.some(f => f.id === itemId)) return 'fish'
@@ -18,6 +56,8 @@ export function getItemCategory(itemId: string): InventoryCategory | null {
   if (SHOP_ANIMALS.some(a => a.product === itemId)) return 'animalProducts'
   if (SHOP_BAIT.some(b => b.id === itemId)) return 'bait'
   if (SHOP_MINING.some(m => m.id === itemId)) return 'tools'
+  if (SHOP_CONSUMABLES.some(c => c.id === itemId)) return 'consumables'
+  if (SHOP_DECORATIONS.some(d => d.id === itemId)) return 'collectibles'
 
   const recipe = RECIPES.find(r => r.id === itemId)
   if (recipe) return recipe.type === 'processing' ? 'processed' : 'cooked'
@@ -25,7 +65,6 @@ export function getItemCategory(itemId: string): InventoryCategory | null {
   if (SPECIAL_ITEMS[itemId]) return 'collectibles'
   if (itemId === 'pupuk_kandang') return 'collectibles'
 
-  console.warn(`[getItemCategory] Unknown itemId: "${itemId}"`)
   return null
 }
 
@@ -38,7 +77,7 @@ export function invAdd(
 ): void {
   if (qty <= 0) return
   if (!draft.inventoryByCategory[category]) {
-    draft.inventoryByCategory[category] = {} as Record<string, any>
+    draft.inventoryByCategory[category] = {} as Record<string, InventoryStack>
   }
 
   const existing = draft.inventoryByCategory[category][itemId]
@@ -84,11 +123,11 @@ export function invHasRequirements(
   requirements: Record<string, number>
 ): boolean {
   for (const [key, amount] of Object.entries(requirements)) {
-    const [cat, itemId] = key.split('.')
-    if (!cat || !itemId) return false
+    const parsed = parseRequirementKey(key)
+    if (!parsed) return false
     if (
-      (state.inventoryByCategory[cat as InventoryCategory]?.[itemId]?.qty ||
-        0) < amount
+      (state.inventoryByCategory[parsed.cat]?.[parsed.itemId]?.qty || 0) <
+      amount
     )
       return false
   }
@@ -101,9 +140,9 @@ export function invConsumeRequirements(
 ): boolean {
   if (!invHasRequirements(draft, requirements)) return false
   for (const [key, amount] of Object.entries(requirements)) {
-    const [cat, itemId] = key.split('.')
-    if (!cat || !itemId) return false
-    invRemove(draft, cat as InventoryCategory, itemId, amount)
+    const parsed = parseRequirementKey(key)
+    if (!parsed) return false
+    invRemove(draft, parsed.cat, parsed.itemId, amount)
   }
   return true
 }
@@ -120,6 +159,6 @@ export function incrementStat(
   amount: number = 1
 ): void {
   if (!draft.stats) draft.stats = {} as GameState['stats']
-  const current = (draft.stats[statName] as number) || 0
-  ;(draft.stats as any)[statName] = current + amount
+  const current = draft.stats[statName] ?? 0
+  draft.stats[statName] = current + amount
 }

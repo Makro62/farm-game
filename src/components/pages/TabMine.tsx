@@ -233,10 +233,10 @@ export default function TabMine() {
                 className="w-full mt-1 flex items-center justify-between gap-2 rounded-xl bg-[var(--primary-light)]/30 border border-[var(--primary)]/30 px-2 py-1.5 hover:bg-[var(--primary-light)]/50"
               >
                 <span className="font-bold">
-                  {mineral.emoji} {mineral.name} → {mineral.smeltRecipe.output}
+                  {mineral.emoji} {mineral.name} → {mineral.smeltRecipe?.output}
                 </span>
                 <span className="text-[9px] text-[var(--text-secondary)]">
-                  ⏱️ {mineral.smeltRecipe.time}s
+                  ⏱️ {mineral.smeltRecipe?.time}s
                 </span>
               </button>
             ))}
@@ -287,7 +287,7 @@ export default function TabMine() {
             </GameAreaHeader>
 
             {/* Floor Selector */}
-            <div className="flex flex-wrap justify-center gap-1 mb-2">
+            <div className="grid grid-cols-5 gap-1 mb-2">
               {[1, 2, 3, 4, 5].map((floor) => {
                 const meta = FLOOR_META[floor];
                 const locked = !canEnterFloor(floor);
@@ -297,7 +297,7 @@ export default function TabMine() {
                     key={floor}
                     onClick={() => handleChangeFloor(floor)}
                     disabled={locked}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border-2 transition-all
+                    className={`min-w-0 min-h-[3.25rem] px-1 py-1 rounded-lg text-[9px] sm:text-[10px] font-bold border-2 transition-all flex flex-col items-center justify-center gap-0.5
                       ${
                         isCurrent
                           ? "bg-[var(--gold)] text-[var(--text-primary)] border-[var(--gold-deep)] shadow-sm"
@@ -306,9 +306,11 @@ export default function TabMine() {
                             : "bg-[#5c5952] text-[var(--text-primary)] border-[#3d3b36] hover:bg-[#6b6861]"
                       }`}
                   >
-                    <div className="text-xs">{meta.emoji}</div>
-                    <div>{meta.name}</div>
-                    {locked && <div className="text-[8px]">🔒</div>}
+                    <div className="text-xs leading-none">{meta.emoji}</div>
+                    <div className="leading-tight text-center break-words">
+                      {locked && "🔒 "}
+                      {meta.name}
+                    </div>
                   </button>
                 );
               })}

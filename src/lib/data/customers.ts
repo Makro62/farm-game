@@ -1,4 +1,6 @@
-export const CUSTOMERS: any[] = [
+import type { CustomerDef } from '@/types/items';
+
+export const CUSTOMERS: CustomerDef[] = [
   {
     id: "bapak_kumis",
     name: "Bapak Kumis",
@@ -72,3 +74,24 @@ export const CUSTOMERS: any[] = [
     preferences: ["sushi_mas", "lele_bakar", "sushi_emas"],
   },
 ];
+
+export interface ReputationTier {
+  min: number;
+  name: string;
+  emoji: string;
+}
+
+export const REPUTATION_TIERS: ReputationTier[] = [
+  { min: 0, name: "Warung Baru", emoji: "🌱" },
+  { min: 50, name: "Warung Favorit", emoji: "⭐" },
+  { min: 150, name: "Resto Populer", emoji: "🌟" },
+  { min: 300, name: "Resto Bintang Lima", emoji: "👑" },
+];
+
+export function getReputationTier(rep: number): ReputationTier {
+  let tier = REPUTATION_TIERS[0];
+  for (const t of REPUTATION_TIERS) {
+    if (rep >= t.min) tier = t;
+  }
+  return tier;
+}

@@ -1,4 +1,6 @@
-export const MINERALS: any[] = [
+import type { MineralDef } from '@/types/items';
+
+export const MINERALS: MineralDef[] = [
   {
     id: "batu",
     name: "Batu",

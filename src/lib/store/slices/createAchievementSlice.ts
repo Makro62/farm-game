@@ -17,7 +17,7 @@ export const createAchievementSlice = (set: StoreSet, get: StoreGet) => ({
       if (ach.condition.stat) {
         // Stats-based condition
         const current = stats[ach.condition.stat] || 0
-        met = current >= ach.condition.value
+        met = current >= (ach.condition.value ?? Number.POSITIVE_INFINITY)
       } else if (ach.condition.type === 'custom') {
         // Custom conditions
         switch (ach.condition.key) {

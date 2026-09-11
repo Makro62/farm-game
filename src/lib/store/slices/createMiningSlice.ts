@@ -96,13 +96,14 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
       };
 
     const mining = state.mining;
-    const lanternActive =
-      mining.lanternUntil && mining.lanternUntil > Date.now();
+    const lanternActive = Boolean(
+      mining.lanternUntil && mining.lanternUntil > Date.now(),
+    );
 
     const checkMineralReq = (shopItemId) => {
       const shopItem = SHOP_MINING.find((m) => m.id === shopItemId);
       if (!shopItem?.mineralReq) return null;
-      for (const [mineral, qty] of Object.entries(shopItem.mineralReq)) {
+      for (const [mineral, qty] of Object.entries(shopItem.mineralReq ?? {})) {
         if ((state.inventoryByCategory?.minerals?.[mineral]?.qty || 0) < (qty as number)) {
           return `Butuh ${qty}x ${mineral} untuk memakai ini!`;
         }
@@ -114,7 +115,7 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
       const shopItem = SHOP_MINING.find((m) => m.id === shopItemId);
       if (!shopItem?.mineralReq) return;
       set((draft) => {
-        for (const [mineral, qty] of Object.entries(shopItem.mineralReq)) {
+        for (const [mineral, qty] of Object.entries(shopItem.mineralReq ?? {})) {
           if (draft.inventoryByCategory.minerals[mineral]) {
             draft.inventoryByCategory.minerals[mineral].qty -= qty as number;
             if (draft.inventoryByCategory.minerals[mineral].qty <= 0) {
@@ -350,8 +351,10 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
         now >= n.regenAt
       ) {
         changed = true;
-        const lanternActive =
-          state.mining.lanternUntil && state.mining.lanternUntil > Date.now();
+        const lanternActive = Boolean(
+          state.mining.lanternUntil &&
+            state.mining.lanternUntil > Date.now(),
+        );
         const eventId = state.activeEvent?.id || null;
         return {
           ...n,

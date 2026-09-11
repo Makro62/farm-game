@@ -80,6 +80,27 @@ export const GAME_CONSTANTS = {
     TIP_MED_THRESHOLD: 0.3,
     TIP_HIGH_MULT: 0.5,
     TIP_MED_MULT: 0.2,
+    /** reputation: +TIP per point, capped */
+    REP_TIP_PER_POINT: 0.002,
+    REP_TIP_MAX: 0.3,
+    /** reputation: spawn chance bonus, capped */
+    REP_SPAWN_PER_POINT: 1 / 400,
+    REP_SPAWN_MAX_BONUS: 0.5,
+    /** rep gained per serve: base + patienceRatio * bonus */
+    REP_SERVE_BASE: 2,
+    REP_SERVE_PATIENCE_BONUS: 3,
+    REP_LEAVE_PENALTY: 3,
+    /** daily special dish pays this x base price */
+    SPECIAL_PRICE_MULT: 1.5,
+    /** golden VIP: spawn chance, price mult, patience mult */
+    VIP_CHANCE: 0.07,
+    VIP_PRICE_MULT: 2,
+    VIP_PATIENCE_MULT: 0.7,
+    /** rush hour: consecutive-serve combo */
+    RUSH_STREAK: 3,
+    RUSH_STREAK_WINDOW_MS: 45000,
+    RUSH_DURATION_MS: 30000,
+    RUSH_TIP_MULT: 2,
   },
   XP: {
     HARVEST: 10,

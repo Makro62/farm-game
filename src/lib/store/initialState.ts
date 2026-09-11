@@ -298,6 +298,10 @@ export const initialState: GameState = {
     reputation: 0,
     dailySpecial: null,
     serviceOn: true,
+    rushUntil: 0,
+    lastSpecialDay: -1,
+    serveStreak: 0,
+    lastServedAt: 0,
   },
 
   town: {

@@ -17,8 +17,25 @@ import TabPage, { GameStage } from "@/components/ui/TabPage";
 import SideDock from "@/components/ui/SideDock";
 import { useMusic } from "@/lib/hooks/useSound";
 
-export default function TabTown() {
-  const music = useMusic('town');
+const AREA_META: Record<string, { emoji: string; title: string; desc: string }> = {
+  plaza: {
+    emoji: "🏘️",
+    title: "Plaza Kota",
+    desc: "Temui warga, putar roda hadiah, dan donasi ke museum.",
+  },
+  fishing: {
+    emoji: "🎣",
+    title: "Danau Pancing",
+    desc: "Lempar kail dan menangkan mini-game memancing!",
+  },
+  processing: {
+    emoji: "🏭",
+    title: "Pabrik Pengolahan",
+    desc: "Ubah bahan mentah menjadi bahan baku restoran.",
+  },
+};
+
+export default function TabTown() {  const music = useMusic('town');
 
   useEffect(() => {
     music.play();
@@ -74,25 +91,47 @@ export default function TabTown() {
               </GameActionButton>
             </GameAreaHeader>
 
-            <div className="stage-play-frame flex flex-col gap-3">
-              {area === "plaza" ? (
-                <TownPlaza />
-              ) : area === "processing" ? (
-                <ProcessingPlant />
-              ) : (
-                <FishingLake
-                  fishState={fishingProps.fishState}
-                  indicatorPos={fishingProps.indicatorPos}
-                  score={fishingProps.score}
-                  isHolding={fishingProps.isHolding}
-                  setIsHolding={fishingProps.setIsHolding}
-                  startFishing={fishingProps.startFishing}
-                  startMinigame={fishingProps.startMinigame}
-                  activeBait={fishingProps.activeBait}
-                  selectedBaitLabel={selectedBaitLabel}
-                />
-              )}
-              <OrderBoard />
+            <div className="stage-play-frame flex flex-col gap-4 sm:gap-5">
+              {/* ── Zona 1: Area aktif ── */}
+              <section>
+                <div className="flex items-center gap-2 px-1 pb-2">
+                  <span className="text-xl">
+                    {(AREA_META[area] || AREA_META.plaza).emoji}
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="font-display font-bold text-base text-[var(--text-primary)] leading-tight">
+                      {(AREA_META[area] || AREA_META.plaza).title}
+                    </h3>
+                    <p className="text-[11px] text-[var(--text-secondary)] font-medium truncate">
+                      {(AREA_META[area] || AREA_META.plaza).desc}
+                    </p>
+                  </div>
+                </div>
+                {area === "plaza" ? (
+                  <TownPlaza />
+                ) : area === "processing" ? (
+                  <ProcessingPlant />
+                ) : (
+                  <FishingLake
+                    fishState={fishingProps.fishState}
+                    indicatorPos={fishingProps.indicatorPos}
+                    score={fishingProps.score}
+                    isHolding={fishingProps.isHolding}
+                    setIsHolding={fishingProps.setIsHolding}
+                    startFishing={fishingProps.startFishing}
+                    startMinigame={fishingProps.startMinigame}
+                    activeBait={fishingProps.activeBait}
+                    selectedBaitLabel={selectedBaitLabel}
+                  />
+                )}
+              </section>
+
+              <div className="border-t-2 border-dashed border-[var(--wood)]/30" />
+
+              {/* ── Zona 2: Papan Pesanan ── */}
+              <section>
+                <OrderBoard />
+              </section>
             </div>
           </div>
         }
@@ -170,11 +209,13 @@ export default function TabTown() {
                 label: "Info",
                 emoji: "📋",
                 content: (
-                  <>
+                  <div className="flex flex-col gap-5">
                     <FishCatchBoard />
+                    <div className="border-t-2 border-dashed border-[var(--wood)]/30" />
                     <MarketBoard />
+                    <div className="border-t-2 border-dashed border-[var(--wood)]/30" />
                     <QuestPanel />
-                  </>
+                  </div>
                 ),
               },
             ]}

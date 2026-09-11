@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useGameStore } from "@/lib/store";
 import { getShopAnimal } from "@/lib/data/item-helpers";
+import { ANIMAL_FEED } from "@/lib/data/shop";
 import { getAnimalProduceTime } from "@/lib/store/utils";
 import { GAME_CONSTANTS } from "@/lib/constants";
 
@@ -114,13 +115,67 @@ export function useRanching() {
     }
   };
 
-  const handleFeed = (e, animal) => {
-    e.stopPropagation();
+  const handleFeed = (e: any, animal: any) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    if (!animal) return;
     const result = feedAnimal(animal.id);
     if (result.ok) {
       enqueueNotification(result.message, { icon: "🌽", type: "success" });
+      return;
+    }
+
+    if (animal.fed) {
+      enqueueNotification("Hewan ini sudah kenyang! 🟢", {
+        icon: "🟢",
+        type: "info",
+      });
+      return;
+    }
+
+    const animalData = getShopAnimal(animal.type);
+    const animalName = animalData?.name || animal.type;
+    const feedData = ANIMAL_FEED[animal.type];
+    const coinCost =
+      animal.type === "sapi" || animal.type === "domba" ? 50 : 30;
+
+    openConfirm(
+      `Beri Makan ${animalName}`,
+      `${result.message}\n\nIngin beli pakan instan seharga ${coinCost} 💰 untuk langsung memberi makan ${animalName}?`,
+      () => {
+        const res = (useGameStore.getState() as any).feedAnimalWithCoins?.(
+          animal.id,
+          coinCost,
+        );
+        if (res?.ok) {
+          enqueueNotification(res.message, { icon: "🌽", type: "success" });
+        } else {
+          enqueueNotification(
+            res?.message || "Koin tidak cukup! Tanam pakan di area Pertanian.",
+            { type: "error" },
+          );
+        }
+      },
+    );
+  };
+
+  const handleBuyFeed = (
+    feedItem: string,
+    qty: number,
+    price: number,
+    name: string,
+  ) => {
+    const success = (useGameStore.getState() as any).buyFeed?.(
+      feedItem,
+      qty,
+      price,
+    );
+    if (success) {
+      enqueueNotification(`Berhasil membeli ${qty}x ${name}! 🌽`, {
+        icon: "🌽",
+        type: "success",
+      });
     } else {
-      enqueueNotification(result.message, { icon: "😢", type: "error" });
+      enqueueNotification("Koin tidak cukup!", { type: "error" });
     }
   };
 
@@ -136,5 +191,6 @@ export function useRanching() {
     handleShopBuy,
     handleCollect,
     handleFeed,
+    handleBuyFeed,
   };
 }

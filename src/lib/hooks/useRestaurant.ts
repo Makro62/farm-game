@@ -21,9 +21,10 @@ export function useRestaurant() {
   );
   const eatFood = useGameStore((state) => state.eatFood);
   const level = useGameStore((state) => state.level || 1);
+  const serviceOn = useGameStore((state) => state.restaurant?.serviceOn !== false);
+  const setServiceOn = useGameStore((state) => state.setServiceOn);
 
   const [menuFilter, setMenuFilter] = useState("all");
-  const [serviceOn, setServiceOn] = useState(true);
 
   const recipes =
     menuFilter === "all"

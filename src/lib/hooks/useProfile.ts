@@ -73,7 +73,7 @@ export function useProfile() {
   });
 
   const hasSellable = Object.entries(inventory).some(
-    ([id, data]: [string, any]) => data.qty > 0 && getItemSellPrice(id) > 0,
+    ([id, data]: [string, any]) => data.qty > 0 && (getItemSellPrice(id) ?? 0) > 0,
   );
 
   const handleSellItem = (itemId, name, qty) => {
@@ -128,7 +128,7 @@ export function useProfile() {
         let totalEarned = 0;
         let soldCount = 0;
         itemsList.forEach((item) => {
-          const price = getItemSellPrice(item.id);
+          const price = getItemSellPrice(item.id) ?? 0;
           if (price > 0 && item.qty > 0) {
             const earned = sellItem(item.id, item.qty);
             if (earned > 0) {

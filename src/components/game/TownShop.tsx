@@ -279,7 +279,7 @@ export function TownShop() {
             type="button"
             onClick={handleHireFisher}
             disabled={!!workers?.fisher}
-            className={`font-bold text-[var(--text-primary)] px-2 py-0.5 rounded-full text-xs whitespace-nowrap border ${
+            className={`font-bold text-[var(--text-primary)] px-3 py-1.5 rounded-full text-xs whitespace-nowrap border min-h-[2.25rem] ${
               workers?.fisher
                 ? "bg-gray-300 border-gray-400 opacity-50 cursor-default"
                 : "bg-[var(--gold)] border-[#FFF1B8] hover:scale-105"

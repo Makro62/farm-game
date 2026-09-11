@@ -57,6 +57,9 @@ export const createRanchingSlice = (set: StoreSet, get: StoreGet) => ({
       return {
         ok: false,
         message: `Butuh ${feedQty}x ${feedItem} untuk memberi makan ${animal.type}. Kamu hanya punya ${have}.`,
+        neededItem: feedItem,
+        neededQty: feedQty,
+        haveQty: have,
       }
     }
 
@@ -72,6 +75,40 @@ export const createRanchingSlice = (set: StoreSet, get: StoreGet) => ({
       ok: true,
       message: `${animal.type} kenyang! +25% chance bonus produksi saat panen.`,
     }
+  },
+
+  feedAnimalWithCoins: (animalId, coinPrice) => {
+    const state = get()
+    const animal = state.animals.find(a => a.id === animalId)
+    if (!animal) return { ok: false, message: 'Hewan tidak ditemukan.' }
+    if (animal.fed) return { ok: false, message: 'Hewan ini sudah kenyang!' }
+    if (safeCoins(state.coins) < coinPrice) {
+      return { ok: false, message: `Koin tidak cukup! Butuh ${coinPrice} 💰.` }
+    }
+
+    set(draft => {
+      draft.coins = safeCoins(draft.coins) - coinPrice
+      draft.animals = draft.animals.map(a =>
+        a.id === animalId ? { ...a, fed: true } : a
+      )
+      incrementStat(draft, 'totalAnimalsFed', 1)
+    })
+    get().checkAchievements?.()
+    return {
+      ok: true,
+      message: `Beli pakan instan (${coinPrice} 💰)! ${animal.type} sekarang kenyang & siap dipanen.`,
+    }
+  },
+
+  buyFeed: (feedItem, qty, price) => {
+    const state = get()
+    if (safeCoins(state.coins) < price) return false
+    const cat = getItemCategory(feedItem) || 'crops'
+    set(draft => {
+      draft.coins = safeCoins(draft.coins) - price
+      invAdd(draft, cat, feedItem, qty)
+    })
+    return true
   },
 
   collectAnimal: (animalId, productType) => {

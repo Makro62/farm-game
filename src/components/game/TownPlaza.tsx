@@ -356,7 +356,7 @@ export function FishCatchBoard() {
   const owned = FISHES.filter((f) => (inventory[f.id] || 0) > 0);
 
   return (
-    <div className="bg-white rounded-xl p-3 border-2 border-blue-200 mb-5">
+    <div className="bg-white rounded-xl p-3 border-2 border-blue-200">
       <div className="font-display font-bold text-base mb-3 flex items-center gap-2 border-b border-blue-100 pb-2 text-blue-900">
         <span className="text-xl">🐟</span> Pasar Ikan
       </div>

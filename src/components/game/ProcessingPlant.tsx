@@ -49,7 +49,7 @@ export function ProcessingPlant() {
       <div className="relative z-10 w-full max-w-md flex flex-col gap-5">
         {/* Header */}
         <div className="text-center">
-          <h2 className="text-3xl font-display font-black text-[#FFE08A] drop-shadow-md flex items-center justify-center gap-2">
+          <h2 className="text-2xl sm:text-3xl font-display font-black text-[#FFE08A] drop-shadow-md flex items-center justify-center gap-2">
             <span>⚙️</span> Pabrik Pengolahan
           </h2>
           <p className="text-white/80 text-xs mt-1 font-medium">

@@ -1,4 +1,7 @@
-export const RECIPES: any[] = [
+import type { InventoryByCategory } from '@/types/game';
+import type { RecipeDef } from '@/types/items';
+
+export const RECIPES: RecipeDef[] = [
   // ===== TIER 1 (Level 1+) =====
   {
     id: "sup_wortel",
@@ -282,56 +285,87 @@ export const RECIPES: any[] = [
   },
 ];
 
-export function canCook(recipeId, inventoryByCategory) {
+export function canCook(
+  recipeId: string,
+  inventoryByCategory: InventoryByCategory | null | undefined,
+) {
   return canCraft(recipeId, inventoryByCategory);
 }
 
-export function canCraft(recipeId, inventoryByCategory) {
+export function canCraft(
+  recipeId: string,
+  inventoryByCategory: InventoryByCategory | null | undefined,
+): { canCraft: boolean; reason?: string; missing?: string } {
   const recipe = RECIPES.find((r) => r.id === recipeId);
-  if (!recipe) return { canCraft: false, reason: "Recipe not found" };
+  if (!recipe) return { canCraft: false, reason: 'Recipe not found' };
 
   for (const [ingredient, amount] of Object.entries(recipe.req)) {
-    const [cat, itemId] = ingredient.split(".");
-    const available = inventoryByCategory?.[cat]?.[itemId]?.qty || 0;
-    if (available < (amount as number)) {
+    const [cat, itemId] = ingredient.split('.');
+    const available =
+      (inventoryByCategory as Record<string, Record<string, { qty: number }>>)
+        ?.[cat]?.[itemId]?.qty || 0;
+    if (available < amount) {
       return { canCraft: false, missing: ingredient };
     }
   }
   return { canCraft: true };
 }
 
-export function hasRequirements(requirements, inventoryByCategory) {
+export function hasRequirements(
+  requirements: Record<string, number>,
+  inventoryByCategory: InventoryByCategory | null | undefined,
+): boolean {
   for (const [key, amount] of Object.entries(requirements)) {
-    const [cat, itemId] = key.split(".");
-    if ((inventoryByCategory?.[cat]?.[itemId]?.qty || 0) < (amount as number)) return false;
+    const [cat, itemId] = key.split('.');
+    if (
+      ((inventoryByCategory as Record<string, Record<string, { qty: number }>>)
+        ?.[cat]?.[itemId]?.qty || 0) < amount
+    )
+      return false;
   }
   return true;
 }
 
-export function consumeRequirements(requirements, inventoryByCategory) {
+export function consumeRequirements(
+  requirements: Record<string, number>,
+  inventoryByCategory: InventoryByCategory | null | undefined,
+): InventoryByCategory | false {
   for (const [key, amount] of Object.entries(requirements)) {
-    const [cat, itemId] = key.split(".");
-    if ((inventoryByCategory?.[cat]?.[itemId]?.qty || 0) < (amount as number)) return false;
+    const [cat, itemId] = key.split('.');
+    if (
+      ((inventoryByCategory as Record<string, Record<string, { qty: number }>>)
+        ?.[cat]?.[itemId]?.qty || 0) < amount
+    )
+      return false;
   }
-  const newCat: any = {};
+  const newCat: Record<string, Record<string, { qty: number }>> = {};
   for (const [cat, items] of Object.entries(inventoryByCategory || {})) {
-    newCat[cat] = { ...(items as any) };
-    for (const [itemId] of Object.entries(items as any)) {
-      newCat[cat][itemId] = { ...(items as any)[itemId] };
+    newCat[cat] = { ...(items as Record<string, { qty: number }>) };
+    for (const [itemId] of Object.entries(
+      items as Record<string, { qty: number }>,
+    )) {
+      newCat[cat][itemId] = {
+        ...(items as Record<string, { qty: number }>)[itemId],
+      };
     }
   }
   for (const [key, amount] of Object.entries(requirements)) {
-    const [cat, itemId] = key.split(".");
-    newCat[cat][itemId].qty -= amount as number;
+    const [cat, itemId] = key.split('.');
+    newCat[cat][itemId].qty -= amount;
     if (newCat[cat][itemId].qty <= 0) {
       delete newCat[cat][itemId];
     }
   }
-  return newCat;
+  return newCat as InventoryByCategory;
 }
 
-export function getItemCategory(itemId) {
-  const catMap = {
+/**
+ * @deprecated Use `getItemCategory` from `@/lib/utils/inventory` (canonical).
+ * Kept here for backward-compat; delegates at runtime to avoid a
+ * recipes <-> inventory import cycle at module init.
+ */
+export function getItemCategory(itemId: string) {
+  const legacyMap: Record<string, string> = {
     wortel: "crops",
     jagung: "crops",
     tomat: "crops",
@@ -381,16 +415,32 @@ export function getItemCategory(itemId) {
     lele_bakar: "cooked",
     kentang_goreng: "cooked",
     jus_semangka: "cooked",
+    sup_kubis: "cooked",
+    sup_ikan: "cooked",
+    kubis: "crops",
   };
-  return catMap[itemId] || null;
+  return legacyMap[itemId] || null;
 }
 
-export const getRecipeIngredient = (recipeId) => {
+export const getRecipeIngredient = (recipeId: string): Record<string, number> => {
   const recipe = RECIPES.find((r) => r.id === recipeId);
   return recipe?.req || {};
 };
 
-export const ORDER_TEMPLATES: any[] = [
+export interface OrderTemplateItem {
+  id: string;
+  qty: number;
+}
+
+export interface OrderTemplate {
+  tier: number;
+  timer: number;
+  items: OrderTemplateItem[];
+  coins: number;
+  xp: number;
+}
+
+export const ORDER_TEMPLATES: OrderTemplate[] = [
   {
     tier: 1,
     timer: 600,

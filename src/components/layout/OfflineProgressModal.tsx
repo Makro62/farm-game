@@ -12,14 +12,14 @@ export default function OfflineProgressModal() {
   if (!offlineReport) return null;
 
   const {
-    deltaSeconds,
-    harvestedCrops,
-    collectedProducts,
-    caughtFishes,
-    minedGems,
-    maturedCrops,
-    maturedNodes,
-    earnedCoins,
+    deltaSeconds = 0,
+    harvestedCrops = 0,
+    collectedProducts = 0,
+    caughtFishes = 0,
+    minedGems = 0,
+    maturedCrops = 0,
+    maturedNodes = 0,
+    earnedCoins = 0,
   } = offlineReport;
 
   // Format time (e.g. 1h 30m)

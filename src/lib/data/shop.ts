@@ -1,8 +1,30 @@
 import { SHOP_SEEDS } from './crops'
 import { SHOP_BUILDINGS } from './buildings'
+import type {
+  ShopAnimalDef,
+  ShopBaitDef,
+  ShopMiningToolDef,
+  SpecialItemDef,
+} from '@/types/items'
 export { SHOP_BUILDINGS }
 
-export const SHOP_CONSUMABLES: any[] = [
+export interface ShopConsumableDef {
+  id: string
+  name: string
+  emoji: string
+  price: number
+  desc: string
+}
+
+export interface ShopDecorationDef {
+  id: string
+  name: string
+  emoji: string
+  price: number
+  desc: string
+}
+
+export const SHOP_CONSUMABLES: ShopConsumableDef[] = [
   {
     id: 'kopi',
     name: 'Kopi Kurcaci',
@@ -12,7 +34,7 @@ export const SHOP_CONSUMABLES: any[] = [
   },
 ]
 
-export const SHOP_DECORATIONS: any[] = [
+export const SHOP_DECORATIONS: ShopDecorationDef[] = [
   {
     id: 'bunga',
     name: 'Pot Bunga',
@@ -36,7 +58,7 @@ export const SHOP_DECORATIONS: any[] = [
   },
 ]
 
-export const SHOP_BAIT: any[] = [
+export const SHOP_BAIT: ShopBaitDef[] = [
   {
     id: 'umpan_biasa',
     name: 'Umpan Biasa',
@@ -78,7 +100,7 @@ export const SHOP_BAIT: any[] = [
   },
 ]
 
-export const SHOP_ANIMALS: any[] = [
+export const SHOP_ANIMALS: ShopAnimalDef[] = [
   {
     id: 'ayam',
     name: 'Ayam',
@@ -141,7 +163,7 @@ export const SHOP_ANIMALS: any[] = [
   },
 ]
 
-export const SHOP_MINING: any[] = [
+export const SHOP_MINING: ShopMiningToolDef[] = [
   {
     id: 'bom_kecil',
     name: 'Bom Kecil',
@@ -190,14 +212,35 @@ export const SHOP_MINING: any[] = [
   },
 ]
 
-export const PICKAXE_LABELS: Record<string, any> = {
+export interface PickaxeLabel {
+  name: string
+  emoji: string
+  regen: string
+}
+
+export const PICKAXE_LABELS: Record<string, PickaxeLabel> = {
   1: { name: 'Cangkul Kayu', emoji: '🪨', regen: '120 detik' },
   2: { name: 'Pickaxe Besi', emoji: '⛏️', regen: '90 detik' },
   3: { name: 'Pickaxe Emas', emoji: '🛠️', regen: '60 detik' },
 }
 
+export interface ShopCategoryItem {
+  id: string
+  name: string
+  emoji: string
+  price: number
+  desc?: string
+  [key: string]: unknown
+}
+
+export interface ShopCategory {
+  icon: string
+  unlockLevel: number
+  items: Record<string, ShopCategoryItem>
+}
+
 // ===== UNIFIED SHOP OBJECT =====
-export const SHOP: Record<string, any> = {
+export const SHOP: Record<string, ShopCategory> = {
   seeds: {
     icon: '🌱',
     unlockLevel: 1,
@@ -322,7 +365,7 @@ export const SHOP: Record<string, any> = {
   },
 }
 
-export function getShopItem(itemId) {
+export function getShopItem(itemId: string): ShopCategoryItem | null {
   for (const category of Object.values(SHOP)) {
     if (category.items?.[itemId]) return category.items[itemId]
   }
@@ -332,7 +375,7 @@ export function getShopItem(itemId) {
 // ===== Item Lintas-Sistem: tidak dijual di toko, tapi eksis dalam ekosistem game =====
 // cacing: drop dari Tambang (batu) → dipakai untuk crafting umpan_cacing
 // pupuk_kandang: drop dari Ternak → otomatis dipakai saat tanam di Ladang
-export const SPECIAL_ITEMS: Record<string, any> = {
+export const SPECIAL_ITEMS: Record<string, SpecialItemDef> = {
   cacing: {
     id: 'cacing',
     name: 'Cacing Tanah',
@@ -351,7 +394,13 @@ export const SPECIAL_ITEMS: Record<string, any> = {
 // Memberi makan hewan = opsional, tapi memberikan bonus produksi
 // feedItem: ID crop yang dipakai sebagai pakan
 // feedQty: jumlah yang dikonsumsi per sesi makan
-export const ANIMAL_FEED: Record<string, any> = {
+export interface AnimalFeedDef {
+  feedItem: string
+  feedQty: number
+  bonusDesc: string
+}
+
+export const ANIMAL_FEED: Record<string, AnimalFeedDef> = {
   ayam: {
     feedItem: 'jagung',
     feedQty: 2,

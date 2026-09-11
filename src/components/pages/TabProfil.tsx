@@ -509,7 +509,7 @@ export default function TabProfil() {
                           +{ach.rewardXp} XP
                         </span>
                       )}
-                      {ach.rewardCoins > 0 && (
+                      {(ach.rewardCoins ?? 0) > 0 && (
                         <span className="text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
                           +{ach.rewardCoins} 💰
                         </span>
@@ -534,19 +534,19 @@ export default function TabProfil() {
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
             {categoriesConfig.map((cat) => (
               <button
                 key={cat.key}
                 onClick={() => setActiveInvTab(cat.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border-2 ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all border-2 shrink-0 min-h-[2.5rem] ${
                   activeInvTab === cat.key
                     ? "bg-gradient-to-b from-[var(--gold)] to-orange-500 text-[var(--text-primary)] border-[#fff1b8] shadow-md scale-105"
                     : "bg-white/40 text-[var(--text-secondary)] border-white/50 hover:bg-white/60"
                 }`}
               >
                 <span>{cat.icon}</span>
-                <span className="hidden sm:inline">{cat.title}</span>
+                <span className="whitespace-nowrap">{cat.title}</span>
               </button>
             ))}
           </div>
@@ -570,7 +570,7 @@ export default function TabProfil() {
                         {items.length} Jenis
                       </span>
                     </h4>
-                    {items.some((it) => getItemSellPrice(it.id) > 0) && (
+                    {items.some((it) => (getItemSellPrice(it.id) ?? 0) > 0) && (
                       <Button
                         variant="gold"
                         size="sm"

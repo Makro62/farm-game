@@ -178,13 +178,13 @@ export function CraftingWidget({
                   : ""
               }`}
             >
-              <div className="flex justify-between items-center mb-2">
-                <div className="font-bold text-[var(--text-primary)] text-sm flex items-center gap-2">
-                  <span className="text-2xl">{recipe.emoji}</span>
-                  <span>
+              <div className="flex justify-between items-center gap-2 mb-2">
+                <div className="font-bold text-[var(--text-primary)] text-sm flex items-center gap-2 min-w-0 flex-1">
+                  <span className="text-2xl shrink-0">{recipe.emoji}</span>
+                  <span className="truncate">
                     {recipe.name}
                     {ready && (
-                      <span className="ml-1.5 text-[10px] font-black uppercase text-[var(--primary-dark)] bg-[var(--primary-light)]/50 px-1.5 py-0.5 rounded-full">
+                      <span className="ml-1.5 text-[10px] font-black uppercase text-[var(--primary-dark)] bg-[var(--primary-light)]/50 px-1.5 py-0.5 rounded-full whitespace-nowrap">
                         Siap
                       </span>
                     )}
@@ -194,7 +194,7 @@ export function CraftingWidget({
                   type="button"
                   onClick={() => startCrafting(recipe.id)}
                   disabled={!ready || slotsLeft <= 0}
-                  className="btn-gold !px-3 !py-1.5 !text-xs"
+                  className="btn-gold !px-3 !py-1.5 !text-xs shrink-0 !min-h-[2.5rem]"
                 >
                   Masak
                 </button>

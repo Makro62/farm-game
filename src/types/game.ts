@@ -51,8 +51,10 @@ export interface Animal {
   produceTime: number
   fed?: boolean
   happiness?: number
-   
-  [key: string]: any
+  health?: number
+  readyToCollect?: boolean
+
+  [key: string]: unknown
 }
 
 export type WorkerRole = 'farmer' | 'rancher' | 'fisher' | 'miner' | 'chef'
@@ -84,11 +86,26 @@ export interface MiningNode {
   hazard: string | null
 }
 
+export interface SmelteryJob {
+  recipe: string
+  input: Record<string, number>
+  output: string
+  completeAt: number
+}
+
 export interface SmelteryState {
   unlocked: boolean
   level: number
-  queue: any[]
+  queue: SmelteryJob[]
   fuel: number
+}
+
+export interface MiningHazard {
+  id?: string | number
+  type: string
+  nodeId?: number
+
+  [key: string]: unknown
 }
 
 export interface MiningState {
@@ -97,7 +114,7 @@ export interface MiningState {
   nodes: MiningNode[]
   pickaxeLevel: number
   lanternUntil: number | null
-  hazards: any[]
+  hazards: MiningHazard[]
   smeltery: SmelteryState
 }
 
@@ -114,7 +131,7 @@ export interface BuildingLevel {
   level: number
   maxLevel?: number
   capacity?: number
-  queue?: any[]
+  queue?: CraftingJob[]
 }
 
 export interface WeatherEffects {
@@ -156,8 +173,16 @@ export interface OfflineReport {
   seconds?: number
   coins?: number
   summary?: string[]
-   
-  [key: string]: any
+  deltaSeconds?: number
+  earnedCoins?: number
+  harvestedCrops?: number
+  collectedProducts?: number
+  caughtFishes?: number
+  minedGems?: number
+  maturedCrops?: number
+  maturedNodes?: number
+
+  [key: string]: unknown
 }
 
 export interface CraftingJob {
@@ -165,32 +190,55 @@ export interface CraftingJob {
   recipeId?: string
   startTime: number
   duration: number
-   
-  [key: string]: any
+
+  [key: string]: unknown
+}
+
+export interface GameOrderItem {
+  id: string
+  qty: number
+
+  [key: string]: unknown
 }
 
 export interface GameOrder {
   id: string | number
-  items?: { id: string; qty: number; [key: string]: any }[]
+  items?: GameOrderItem[]
   reward?: number
+  /** legacy template fields carried over by generateOrders */
+  coins?: number
+  xp?: number
+  tier?: number
   timer?: number
   createdAt?: number
-   
-  [key: string]: any
+
+  [key: string]: unknown
 }
 
 export interface ActiveCustomer {
   id: string | number
-   
-  [key: string]: any
+  typeId?: string
+  name?: string
+  emoji?: string
+  recipeId: string
+  tableId?: number
+  patience: number
+  maxPatience: number
+  spawnTime?: number
+  tipMultiplier: number
+  /** golden VIP: pays VIP_PRICE_MULT, shorter patience */
+  isVip?: boolean
+
+  [key: string]: unknown
 }
 
 export interface GameNotification {
   id?: string | number
   message?: string
   type?: string
-   
-  [key: string]: any
+  options?: NotificationOptions
+
+  [key: string]: unknown
 }
 
 export interface SeasonState {
@@ -215,10 +263,23 @@ export interface RestaurantState {
   reputation: number
   dailySpecial: string | null
   serviceOn: boolean
+  /** timestamp ms until which rush-hour tips apply */
+  rushUntil?: number
+  /** game day number the dailySpecial was rolled for */
+  lastSpecialDay?: number
+  /** consecutive serves for rush combo */
+  serveStreak?: number
+  lastServedAt?: number
+}
+
+export interface MuseumDonation {
+  itemId: string
+  points: number
+  donatedAt?: number
 }
 
 export interface TownState {
-  museumDonations: any[]
+  museumDonations: MuseumDonation[]
   bankSavings: number
   bankInterestRate: number
 }
@@ -226,8 +287,59 @@ export interface TownState {
 export interface ActiveEvent {
   id?: string
   name?: string
-   
-  [key: string]: any
+  priceModifiers?: Record<string, number>
+
+  [key: string]: unknown
+}
+
+export type MarketTrend = 'boom' | 'crash' | 'up' | 'down' | string
+
+export interface DailyQuestChain {
+  type: string
+  targetId: string
+  amount: number
+}
+
+export interface DailyQuest {
+  id?: string
+  type: string
+  action: string
+  targetId: string
+  targetName?: string
+  count: number
+  required: number
+  rewardCoins: number
+  rewardXp: number
+  claimed: boolean
+  completed?: boolean
+  chain?: DailyQuestChain[]
+}
+
+export interface DecorationItem {
+  id: string
+  boughtAt?: number
+
+  [key: string]: unknown
+}
+
+export interface QuestProgressEntry {
+  type: string
+  targetId: string
+  amount?: number
+}
+
+export interface NotificationOptions {
+  id?: string | number
+  icon?: string
+  duration?: number
+  type?: string
+}
+
+export interface AchievementState {
+  unlocked?: boolean
+  unlockedAt?: number
+
+  [key: string]: unknown
 }
 
 /** Persisted / base game state (no actions) */
@@ -239,7 +351,7 @@ export interface GameState {
   maxEnergy: number
   day: number
   streak: number
-  lastLogin: number | null
+  lastLogin: string | number | null
   lastSavedAt: number
   offlineReport: OfflineReport | null
 
@@ -254,9 +366,11 @@ export interface GameState {
   notificationsEnabled: boolean
 
   todayPrices: Record<string, number>
-  marketTrend: Record<string, any>
+  marketTrend: Record<string, MarketTrend>
 
-  lastWheelSpin: number | null
+  // NB: lastLogin/lastWheelSpin hold date strings (toDateString) at runtime
+  // for streak/spin checks, despite the numeric-looking names.
+  lastWheelSpin: string | number | null
   coinMultiplier: number
   growthMultiplier: number
 
@@ -280,7 +394,7 @@ export interface GameState {
   npcs: Record<string, NpcRelation>
   activeEvent: ActiveEvent | null
 
-  dailyQuests: any[]
+  dailyQuests: DailyQuest[]
   lastQuestDate: string | null
   workerAutoMigrated: boolean
 
@@ -289,11 +403,11 @@ export interface GameState {
 
   totalTables: number
   buildings: Record<string, BuildingLevel>
-  decorations: any[]
+  decorations: string[]
   tutorialStep: number
 
-  achievements: Record<string, any>
-  sessionActions: Record<string, any>
+  achievements: Record<string, AchievementState>
+  sessionActions: Record<string, boolean>
   weatherEffects: WeatherEffects
   stats: GameStats
   activeCustomers: ActiveCustomer[]

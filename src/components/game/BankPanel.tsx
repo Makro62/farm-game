@@ -45,13 +45,13 @@ export function BankPanel() {
       <div className="text-[9px] text-[var(--text-secondary)] mb-2">
         Bunga 2% per hari game. Aman & menguntungkan!
       </div>
-      <div className="flex flex-wrap gap-1 mb-2">
+      <div className="flex flex-wrap gap-1.5 mb-2">
         {quick.map((q) => (
           <button
             key={q}
             type="button"
             onClick={() => setAmount(q)}
-            className={`text-[10px] font-bold px-2 py-1 rounded-lg border ${
+            className={`text-[10px] font-bold px-2.5 py-1.5 rounded-lg border min-h-[2rem] ${
               amount === q
                 ? "bg-[var(--gold)] border-[var(--gold-deep)]"
                 : "bg-white/40 border-white/60"
@@ -66,20 +66,20 @@ export function BankPanel() {
         min={1}
         value={amount}
         onChange={(e) => setAmount(Math.max(0, Number(e.target.value) || 0))}
-        className="w-full rounded-lg border border-white/60 bg-white/50 px-3 py-1.5 text-sm mb-2"
+        className="w-full rounded-lg border border-white/60 bg-white/50 px-3 py-2 text-sm mb-2 min-h-[2.75rem]"
       />
       <div className="flex gap-2">
         <button
           type="button"
           onClick={handleDeposit}
-          className="flex-1 rounded-lg bg-emerald-500 border border-emerald-600 text-white font-bold text-xs py-2"
+          className="flex-1 rounded-lg bg-emerald-500 border border-emerald-600 text-white font-bold text-xs py-2.5 min-h-[2.75rem]"
         >
           💰 Simpan
         </button>
         <button
           type="button"
           onClick={handleWithdraw}
-          className="flex-1 rounded-lg bg-sky-500 border border-sky-600 text-white font-bold text-xs py-2"
+          className="flex-1 rounded-lg bg-sky-500 border border-sky-600 text-white font-bold text-xs py-2.5 min-h-[2.75rem]"
         >
           💵 Tarik
         </button>

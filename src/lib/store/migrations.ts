@@ -1,7 +1,6 @@
-// @ts-nocheck — incremental TS migration; tighten types later
 import { normalizePlots, normalizeAnimal, safeCoins } from "./utils";
-import { getItemCategory } from "@/lib/data/item-helpers";
-import type { GameStore } from "@/types/game";
+import { getItemCategory } from "@/lib/utils/inventory";
+import type { GameStore, GameState, Worker, WorkerRole } from "@/types/game";
 
 export const partializeState = (state: GameStore) => ({
   coins: state.coins,
@@ -58,10 +57,17 @@ export const partializeState = (state: GameStore) => ({
   tutorialStep: state.tutorialStep,
 });
 
-function migrateLegacyWorker(val) {
+type LegacyRecord = Record<string, unknown>;
+
+function asRecord(v: unknown): LegacyRecord {
+  return (v ?? {}) as LegacyRecord;
+}
+
+function migrateLegacyWorker(val: unknown): Worker | null {
   if (!val) return null;
-  if (typeof val === "object" && val.hired) return val;
-  const templates = {
+  if (typeof val === "object" && (val as LegacyRecord).hired)
+    return val as Worker;
+  const templates: Record<WorkerRole, Pick<Worker, "name" | "role" | "skills">> = {
     farmer: {
       name: "Kurcaci Budi",
       role: "farmer",
@@ -88,26 +94,27 @@ function migrateLegacyWorker(val) {
       skills: { cooking: 1, baking: 1, prep: 1 },
     },
   };
-  const role = typeof val === "object" ? val.role || val.type : null;
-  const t = role ? templates[role] : null;
+  const rec = asRecord(val);
+  const role = typeof val === "object" ? ((rec.role ?? rec.type) as string | null) : null;
+  const t = role ? templates[role as WorkerRole] : null;
   if (!t) return null;
   return {
     hired: true,
     ...t,
-    level: val.level || 1,
-    xp: val.xp || 0,
+    level: (rec.level as number) || 1,
+    xp: (rec.xp as number) || 0,
     xpToNext: 200,
-    stamina: val.stamina ?? 100,
-    maxStamina: val.maxStamina ?? 100,
+    stamina: (rec.stamina as number) ?? 100,
+    maxStamina: (rec.maxStamina as number) ?? 100,
     staminaRegenPerHour: 10,
-    happiness: val.happiness ?? 80,
+    happiness: (rec.happiness as number) ?? 80,
     maxHappiness: 100,
     wagePerDay: 50,
-    daysEmployed: val.daysEmployed || 0,
-    totalWagesPaid: val.totalWagesPaid || 0,
-    loyalty: val.loyalty ?? 60,
-    isWorking: val.isWorking ?? true,
-    isAutoMode: val.isAutoMode ?? true,
+    daysEmployed: (rec.daysEmployed as number) || 0,
+    totalWagesPaid: (rec.totalWagesPaid as number) || 0,
+    loyalty: (rec.loyalty as number) ?? 60,
+    isWorking: (rec.isWorking as boolean) ?? true,
+    isAutoMode: (rec.isAutoMode as boolean) ?? true,
     schedule: {
       workStart: 6,
       workEnd: 18,
@@ -115,11 +122,17 @@ function migrateLegacyWorker(val) {
       sleepStart: 22,
       sleepEnd: 5,
     },
-  };
+  } as Worker;
 }
 
-export const migrateState = (persistedState: any, currentState: GameStore) => {
-  let merged = { ...currentState, ...persistedState };
+type MigratableState = GameState & LegacyRecord;
+
+export const migrateState = (
+  persistedState: unknown,
+  currentState: GameStore,
+): GameStore => {
+  const persisted = asRecord(persistedState);
+  const merged = { ...currentState, ...persisted } as MigratableState;
   merged.plots = normalizePlots(merged.plots, 30, 0);
   merged.feedPlots = normalizePlots(merged.feedPlots, 12, 100);
   merged.kitchenPlots = normalizePlots(merged.kitchenPlots, 12, 200);
@@ -231,6 +244,19 @@ export const migrateState = (persistedState: any, currentState: GameStore) => {
   if (!Array.isArray(merged.activeCustomers)) merged.activeCustomers = [];
   if (!Number.isFinite(merged.totalTables) || merged.totalTables < 4)
     merged.totalTables = 4;
+  // Restaurant state defaults for old saves
+  merged.restaurant = Object.assign(
+    {
+      reputation: 0,
+      dailySpecial: null,
+      serviceOn: true,
+      rushUntil: 0,
+      lastSpecialDay: -1,
+      serveStreak: 0,
+      lastServedAt: 0,
+    },
+    merged.restaurant || {}
+  );
 
   if (merged.mining && merged.mining.nodes && merged.mining.nodes.length < 30) {
     const newNodes = [...merged.mining.nodes];
@@ -240,12 +266,13 @@ export const migrateState = (persistedState: any, currentState: GameStore) => {
         status: "ready",
         regenAt: null,
         type: "batu",
+        hazard: null,
       });
     }
     merged.mining.nodes = newNodes;
   }
 
-  const legacyAnimalTypes = {
+  const legacyAnimalTypes: Record<string, string> = {
     chicken: "ayam",
     duck: "bebek",
     cow: "sapi",
@@ -262,7 +289,7 @@ export const migrateState = (persistedState: any, currentState: GameStore) => {
 
   // Migrate flat inventory to inventoryByCategory
   if (merged.inventory && !merged.inventoryByCategory) {
-    const cat = {
+    const cat: GameState["inventoryByCategory"] = {
       crops: {},
       animalProducts: {},
       minerals: {},
@@ -273,9 +300,13 @@ export const migrateState = (persistedState: any, currentState: GameStore) => {
       tools: {},
       bait: {},
       collectibles: {},
+      consumables: {},
     };
-    for (const [itemId, qty] of Object.entries(merged.inventory)) {
-      if (qty <= 0) continue;
+    for (const [itemId, qtyRaw] of Object.entries(
+      merged.inventory as Record<string, unknown>,
+    )) {
+      const qty = Number(qtyRaw);
+      if (!Number.isFinite(qty) || qty <= 0) continue;
       const c = getItemCategory(itemId);
       if (c)
         cat[c][itemId] = { qty, quality: "normal", acquiredAt: Date.now() };
@@ -302,14 +333,16 @@ export const migrateState = (persistedState: any, currentState: GameStore) => {
       tools: {},
       bait: {},
       collectibles: {},
+      consumables: {},
     };
   }
   delete merged.inventory;
 
   if (!merged.achievements || typeof merged.achievements !== "object")
     merged.achievements = {};
-  if (!merged.stats || typeof merged.stats !== "object") merged.stats = {};
-  const defaultStats = {
+  if (!merged.stats || typeof merged.stats !== "object")
+    merged.stats = {} as GameState["stats"];
+  const defaultStats: GameState["stats"] = {
     totalHarvested: 0,
     totalMined: 0,
     totalFished: 0,
@@ -337,13 +370,13 @@ export const migrateState = (persistedState: any, currentState: GameStore) => {
     customerRate: 1.0,
   };
   merged.npcs = {
-    maria: { level: 1, points: 0 },
-    botan: { level: 1, points: 0 },
-    hadi: { level: 1, points: 0 },
-    bejo: { level: 1, points: 0 },
-    dodi: { level: 1, points: 0 },
-    ...(merged.npcs || {}),
+    maria: { level: 1, points: 0, hearts: 1, dailyGiftGiven: false, questsCompleted: [] },
+    botan: { level: 1, points: 0, hearts: 1, dailyGiftGiven: false, questsCompleted: [] },
+    hadi: { level: 1, points: 0, hearts: 1, dailyGiftGiven: false, questsCompleted: [] },
+    bejo: { level: 1, points: 0, hearts: 1, dailyGiftGiven: false, questsCompleted: [] },
+    dodi: { level: 1, points: 0, hearts: 1, dailyGiftGiven: false, questsCompleted: [] },
+    ...((merged.npcs || {}) as GameState["npcs"]),
   };
 
-  return merged;
+  return merged as unknown as GameStore;
 };

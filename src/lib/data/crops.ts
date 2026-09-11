@@ -1,4 +1,6 @@
-export const CROP_DATA: Record<string, any> = {
+import type { CropDef, ShopSeed } from '@/types/items';
+
+export const CROP_DATA: Record<string, CropDef> = {
   wortel: {
     id: "wortel",
     name: "Wortel",
@@ -172,9 +174,9 @@ export const CROP_DATA: Record<string, any> = {
   },
 };
 
-export const SHOP_SEEDS = Object.values(CROP_DATA)
-  .filter((c: any) => c.seed)
-  .map((c: any) => ({
+export const SHOP_SEEDS: ShopSeed[] = Object.values(CROP_DATA)
+  .filter((c) => c.seed)
+  .map((c) => ({
     id: c.seed.id,
     cropId: c.id,
     name: `Bibit ${c.name}`,

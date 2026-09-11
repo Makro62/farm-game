@@ -1,4 +1,6 @@
-export const NPC_LIST: any[] = [
+import type { NpcDef } from '@/types/items';
+
+export const NPC_LIST: NpcDef[] = [
   {
     id: "maria",
     name: "Chef Maria",

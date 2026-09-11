@@ -41,12 +41,16 @@ export default function TabAnimal() {
     handleShopBuy,
     handleCollect,
     handleFeed,
+    handleBuyFeed,
   } = useRanching()
 
   const swapAnimals = useGameStore(state => state.swapAnimals)
   const buildings = useGameStore(state => state.buildings)
+  const inventoryByCategory = useGameStore(state => state.inventoryByCategory)
   const [shopAmounts, setShopAmounts] = useState({})
   const [isEditMode, setIsEditMode] = useState(false)
+  // Tap-to-swap untuk touchscreen (drag HTML5 tidak jalan di mobile)
+  const [editSelected, setEditSelected] = useState<string | number | null>(null)
 
   return (
     <TabPage>
@@ -57,7 +61,10 @@ export default function TabAnimal() {
               <GameActionButton
                 variant="edit"
                 active={isEditMode}
-                onClick={() => setIsEditMode(!isEditMode)}
+                onClick={() => {
+                  setEditSelected(null)
+                  setIsEditMode(!isEditMode)
+                }}
               >
                 {isEditMode ? 'Selesai Edit' : 'Edit Layout'}
               </GameActionButton>
@@ -101,6 +108,12 @@ export default function TabAnimal() {
               }}
             >
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30 pointer-events-none rounded-[22px]" />
+              {isEditMode && (
+                <p className="relative z-10 mb-2 text-center text-[11px] font-bold text-yellow-100 bg-black/45 rounded-lg px-2 py-1">
+                  Mode edit: ketuk 2 hewan untuk menukar posisi
+                  {editSelected != null ? " · 1 terpilih, ketuk target…" : ""}
+                </p>
+              )}
               <div className="kandang-grid relative z-10">
                 {Array.from({ length: 36 }).map((_, i) => {
                   const animal = animals[i]
@@ -111,6 +124,7 @@ export default function TabAnimal() {
                   }
 
                   const animalData = getShopAnimal(animal.type)
+                  const feedDef = ANIMAL_FEED[animal.type]
                   const produceTime = getAnimalProduceTime(
                     animal,
                     weatherEffects
@@ -121,9 +135,39 @@ export default function TabAnimal() {
                   )
                   const isReady = progress >= 100
                   const isHungry = isReady && !animal.fed
+
+                  const handleCellClick = (e: any) => {
+                    if (isEditMode) {
+                      e.preventDefault()
+                      // Touch fallback: tap pilih → tap kedua untuk tukar posisi
+                      if (editSelected == null) {
+                        setEditSelected(animal.id)
+                      } else if (editSelected === animal.id) {
+                        setEditSelected(null)
+                      } else {
+                        swapAnimals(editSelected, animal.id)
+                        setEditSelected(null)
+                      }
+                      return
+                    }
+                    if (isHungry) {
+                      handleFeed(e, animal)
+                      return
+                    }
+                    if (isReady) {
+                      handleCollect(animal)
+                      return
+                    }
+                    if (!animal.fed) {
+                      handleFeed(e, animal)
+                    }
+                  }
+
                   return (
-                    <motion.button
+                    <motion.div
                       key={animal.id}
+                      role="button"
+                      tabIndex={0}
                       draggable={isEditMode}
                       onDragStart={(e: any) => {
                         e.dataTransfer.setData('animalId', animal.id)
@@ -146,17 +190,18 @@ export default function TabAnimal() {
                       }}
                       whileHover={!isEditMode ? { scale: 1.05 } : {}}
                       whileTap={!isEditMode ? { scale: 0.95 } : {}}
-                      onClick={e => {
-                        if (isEditMode) {
+                      onClick={handleCellClick}
+                      onKeyDown={(e: any) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
-                          return
+                          handleCellClick(e)
                         }
-                        handleCollect(animal)
                       }}
-                      className={`group kandang-animal-cell
-                        ${isEditMode ? 'cursor-grab ring-2 ring-yellow-400' : ''}
-                        ${isReady ? (isHungry ? 'ring-2 ring-red-400/80' : 'ring-2 ring-yellow-400/80 animate-breathe') : ''}
-                        ${animal.health < 50 ? 'ring-2 ring-red-600/60' : ''}
+                      className={`group kandang-animal-cell cursor-pointer relative select-none
+                        ${isEditMode ? 'cursor-pointer ring-2 ring-yellow-400' : ''}
+                        ${isEditMode && editSelected === animal.id ? 'ring-4 ring-sky-300 scale-105 z-10' : ''}
+                        ${isReady ? (isHungry ? 'ring-2 ring-red-500/90 animate-pulse' : 'ring-2 ring-yellow-400/80 animate-breathe') : ''}
+                        ${(animal.health ?? 100) < 50 ? 'ring-2 ring-red-600/60' : ''}
                       `}
                     >
                       {/* Health Indicator */}
@@ -184,20 +229,41 @@ export default function TabAnimal() {
                       >
                         <AnimalIcon type={animal.type} />
                       </motion.div>
+
+                      {/* Tombol Butuh Makan / Beri Makan jika lapar */}
                       {isHungry && (
-                        <div className="absolute bottom-0 left-0 right-0 h-4 bg-red-500/80 z-20 flex items-center justify-center">
-                          <span className="text-[9px] font-black text-white drop-shadow-md">
-                            Butuh Makan! 🌽
+                        <button
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleFeed(e, animal)
+                          }}
+                          title={`Beri makan (butuh ${feedDef?.feedQty ?? 2}x ${feedDef?.feedItem ?? 'pakan'})`}
+                          className="absolute bottom-0 left-0 right-0 h-5 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 active:scale-95 z-20 flex items-center justify-center cursor-pointer transition-all shadow-md"
+                        >
+                          <span className="text-[9px] font-black text-white drop-shadow flex items-center gap-0.5 animate-bounce">
+                            <span>Beri Makan!</span> 🌽
                           </span>
-                        </div>
+                        </button>
                       )}
+
+                      {/* Banner Siap Panen jika sudah kenyang & siap */}
                       {isReady && !isHungry && (
-                        <div className="absolute bottom-0 left-0 right-0 h-4 bg-green-500/80 z-20 flex items-center justify-center">
-                          <span className="text-[9px] font-black text-white drop-shadow-md">
-                            Siap Diambil ✨
+                        <button
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleCollect(animal)
+                          }}
+                          className="absolute bottom-0 left-0 right-0 h-5 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 active:scale-95 z-20 flex items-center justify-center cursor-pointer transition-all shadow-md"
+                        >
+                          <span className="text-[9px] font-black text-white drop-shadow flex items-center gap-0.5">
+                            <span>Siap Diambil</span> ✨
                           </span>
-                        </div>
+                        </button>
                       )}
+
+                      {/* Bar Progress Produksi jika belum siap */}
                       {!isReady && (
                         <div className="absolute bottom-0 left-0 right-0 h-4 progress-bar !rounded-none overflow-hidden border-t border-white/10 z-20 flex items-center justify-center">
                           <div
@@ -216,6 +282,7 @@ export default function TabAnimal() {
                           </span>
                         </div>
                       )}
+
                       <AnimatePresence mode="popLayout">
                         {isReady && (
                           <motion.div
@@ -234,39 +301,47 @@ export default function TabAnimal() {
                           </motion.div>
                         )}
                       </AnimatePresence>
+
                       {!isEditMode && (
                         <>
                           {/* Tombol Jual */}
-                          <span
-                            role="button"
+                          <button
+                            type="button"
                             onClick={e => {
                               e.stopPropagation()
                               handleSellAnimal(animal)
                             }}
-                            className="absolute -top-2 -left-2 bg-[#ff7a6b] text-[#3b120c] rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md md:opacity-0 md:group-hover:opacity-100 transition-opacity z-30 cursor-pointer hover:brightness-110 border border-[#ffb3aa]"
+                            title="Jual hewan"
+                            aria-label="Jual hewan"
+                            className="absolute -top-2 -left-2 bg-[#ff7a6b] text-[#3b120c] rounded-full w-7 h-7 flex items-center justify-center text-xs shadow-md md:opacity-0 md:group-hover:opacity-100 transition-opacity z-30 cursor-pointer hover:brightness-110 border border-[#ffb3aa]"
                           >
                             ✕
-                          </span>
+                          </button>
                           {/* Tombol Beri Makan */}
-                          <span
-                            role="button"
+                          <button
+                            type="button"
                             title={
                               animal.fed
-                                ? 'Sudah kenyang'
-                                : `Beri makan (butuh ${ANIMAL_FEED[animal.type]?.feedQty ?? '?'}x ${ANIMAL_FEED[animal.type]?.feedItem ?? '?'})`
+                                ? 'Sudah kenyang (Bonus panen aktif)'
+                                : `Beri makan (butuh ${feedDef?.feedQty ?? '?'}x ${feedDef?.feedItem ?? '?'})`
                             }
-                            onClick={e => handleFeed(e, animal)}
-                            className={`absolute -bottom-2 -right-2 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md z-30 border transition-all ${
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleFeed(e, animal)
+                            }}
+                            className={`absolute -bottom-2 -right-2 rounded-full w-7 h-7 flex items-center justify-center text-xs shadow-md z-30 border transition-all ${
                               animal.fed
                                 ? 'bg-green-400 border-green-200 opacity-80 cursor-default'
-                                : 'bg-yellow-300 border-yellow-100 md:opacity-0 md:group-hover:opacity-100 cursor-pointer hover:brightness-110'
+                                : isHungry
+                                  ? 'bg-amber-400 border-amber-200 cursor-pointer hover:scale-110 shadow-lg animate-pulse'
+                                  : 'bg-yellow-300 border-yellow-100 cursor-pointer hover:scale-110'
                             }`}
                           >
                             {animal.fed ? '🟢' : '🌽'}
-                          </span>
+                          </button>
                         </>
                       )}
-                    </motion.button>
+                    </motion.div>
                   )
                 })}
               </div>
@@ -310,6 +385,44 @@ export default function TabAnimal() {
                         )
                       })}
                     </div>
+
+                    <ShopSectionTitle icon="🌽">Pakan Ternak</ShopSectionTitle>
+                    <div className="grid grid-cols-1 gap-2 mb-3">
+                      {[
+                        { id: 'jagung', name: 'Jagung (Pakan Ayam/Bebek)', icon: '🌽', qty: 2, price: 40 },
+                        { id: 'gandum', name: 'Gandum (Pakan Sapi/Domba)', icon: '🌾', qty: 2, price: 80 },
+                        { id: 'wortel', name: 'Wortel (Pakan Babi/Kuda)', icon: '🥕', qty: 2, price: 30 },
+                      ].map(feed => {
+                        const owned = inventoryByCategory?.crops?.[feed.id]?.qty || 0
+                        return (
+                          <div
+                            key={feed.id}
+                            className="glass-card p-2 flex items-center justify-between text-xs rounded-xl"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl">{feed.icon}</span>
+                              <div>
+                                <div className="font-bold text-[var(--text-primary)]">
+                                  {feed.name}
+                                </div>
+                                <div className="text-[10px] text-amber-500 font-semibold">
+                                  Di tas: {owned} buah
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleBuyFeed(feed.id, feed.qty, feed.price, feed.name)
+                              }
+                              className="px-2.5 py-1 rounded-lg bg-[var(--gold)] text-[var(--text-primary)] font-bold text-xs hover:scale-105 transition-transform border border-[#FFF1B8]"
+                            >
+                              +{feed.qty} ({feed.price}💰)
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
                     <ShopSectionTitle icon="🧑‍🌾">Pekerja</ShopSectionTitle>
                     <div className="w-full glass-card p-2 flex flex-col transition-colors text-left mb-2 border-[var(--primary)] bg-[var(--primary)]/10">
                       <div className="flex justify-between items-center mb-2">
@@ -328,7 +441,7 @@ export default function TabAnimal() {
                           type="button"
                           onClick={handleHireWorker}
                           disabled={!!workers?.rancher}
-                          className={`font-bold text-[var(--text-primary)] px-2 py-0.5 rounded-full text-xs whitespace-nowrap border ${
+                          className={`font-bold text-[var(--text-primary)] px-3 py-1.5 rounded-full text-xs whitespace-nowrap border min-h-[2.25rem] ${
                             workers?.rancher
                               ? 'bg-gray-300 border-gray-400 opacity-50 cursor-default'
                               : 'bg-[var(--gold)] border-[#FFF1B8] hover:scale-105'

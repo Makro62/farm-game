@@ -1,4 +1,6 @@
-export const FISHES: any[] = [
+import type { FishDef } from '@/types/items';
+
+export const FISHES: FishDef[] = [
   {
     id: "ikan_mas",
     name: "Ikan Mas",

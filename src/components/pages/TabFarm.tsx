@@ -128,19 +128,19 @@ export default function TabFarm() {
             </GameAreaHeader>
 
             {/* Weather & Season Banner */}
-            <div className="flex items-center justify-between gap-2 mb-2 px-3 py-1.5 rounded-xl bg-[var(--primary-light)]/20 border border-[var(--primary)]/30 text-xs font-bold">
-              <div className="flex items-center gap-2">
-                <span>{seasonMeta.emoji}</span>
-                <span className="text-[var(--text-primary)]">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mb-2 px-3 py-1.5 rounded-xl bg-[var(--primary-light)]/20 border border-[var(--primary)]/30 text-xs font-bold">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="shrink-0">{seasonMeta.emoji}</span>
+                <span className="text-[var(--text-primary)] truncate">
                   {seasonMeta.label}
                 </span>
-                <span className="text-[var(--text-secondary)]">
+                <span className="text-[var(--text-secondary)] whitespace-nowrap">
                   Hari {season?.day || 1}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span>{weatherEmoji}</span>
-                <span className="text-[var(--text-primary)]">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="shrink-0">{weatherEmoji}</span>
+                <span className="text-[var(--text-primary)] truncate max-w-[7rem] sm:max-w-none">
                   {weather?.current || 'Cerah'}
                 </span>
                 <span

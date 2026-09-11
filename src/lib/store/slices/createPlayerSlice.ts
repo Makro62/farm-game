@@ -1,10 +1,16 @@
-import type { StoreSet, StoreGet } from "@/types/game";
+import type { StoreSet, StoreGet, InventoryCategory, GameOrder, DailyQuest } from "@/types/game";
 import { RECIPES, ORDER_TEMPLATES } from "@/lib/data/recipes";
 import { FISHES } from "@/lib/data/fishes";
 import { SHOP_SEEDS } from "@/lib/data/crops";
 import { SHOP_BAIT } from "@/lib/data/shop";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import { safeCoins, safePositiveNumber } from "@/lib/store/utils";
+import {
+  invAdd as canonicalInvAdd,
+  invRemove as canonicalInvRemove,
+  invHasRequirements as canonicalInvHasRequirements,
+  parseRequirementKey,
+} from "@/lib/utils/inventory";
 import {
   getItemCategory,
   getItemSellPrice,
@@ -16,67 +22,53 @@ let set!: StoreSet;
 let get!: StoreGet;
 
 const INV = {
-  has: (cat, itemId) => {
+  has: (cat: InventoryCategory, itemId: string) => {
     const state = get();
     return !!state.inventoryByCategory[cat]?.[itemId]?.qty;
   },
-  get: (cat, itemId) => {
+  get: (cat: InventoryCategory, itemId: string) => {
     const state = get();
     return state.inventoryByCategory[cat]?.[itemId]?.qty || 0;
   },
-  add: (cat, itemId, qty = 1, quality = "normal") => {
+  add: (
+    cat: InventoryCategory,
+    itemId: string,
+    qty = 1,
+    quality = "normal",
+  ) => {
     set((draft) => {
-      if (!draft.inventoryByCategory[cat][itemId]) {
-        draft.inventoryByCategory[cat][itemId] = {
-          qty: 0,
-          quality,
-          acquiredAt: Date.now(),
-        };
-      }
-      draft.inventoryByCategory[cat][itemId].qty += qty;
+      canonicalInvAdd(draft, cat, itemId, qty, quality);
     });
   },
-  remove: (cat, itemId, qty = 1) => {
+  remove: (cat: InventoryCategory, itemId: string, qty = 1) => {
     let success = false;
     set((draft) => {
-      const item = draft.inventoryByCategory[cat]?.[itemId];
-      if (!item || item.qty < qty) return;
-      item.qty -= qty;
-      if (item.qty === 0) delete draft.inventoryByCategory[cat][itemId];
-      success = true;
+      success = canonicalInvRemove(draft, cat, itemId, qty);
     });
     return success;
   },
-  hasReq: (requirements) => {
-    const state = get();
-    for (const [key, amount] of Object.entries(requirements)) {
-      const [cat, itemId] = key.split(".");
-      if ((state.inventoryByCategory[cat as any]?.[itemId]?.qty || 0) < (amount as number))
-        return false;
-    }
-    return true;
+  hasReq: (requirements: Record<string, number>) => {
+    return canonicalInvHasRequirements(get(), requirements);
   },
-  consumeReq: (requirements) => {
+  consumeReq: (requirements: Record<string, number>) => {
     const state = get();
-    for (const [key, amount] of Object.entries(requirements)) {
-      const [cat, itemId] = key.split(".");
-      if ((state.inventoryByCategory[cat as any]?.[itemId]?.qty || 0) < (amount as number))
-        return false;
-    }
+    if (!canonicalInvHasRequirements(state, requirements)) return false;
     set((draft) => {
       for (const [key, amount] of Object.entries(requirements)) {
-        const [cat, itemId] = key.split(".");
-        const item = draft.inventoryByCategory[cat as any]?.[itemId];
+        const parsed = parseRequirementKey(key);
+        if (!parsed) continue;
+        const item = draft.inventoryByCategory[parsed.cat]?.[parsed.itemId];
         if (!item) continue;
-        item.qty -= amount as number;
-        if (item.qty <= 0) delete draft.inventoryByCategory[cat][itemId];
+        item.qty -= amount;
+        if (item.qty <= 0)
+          delete draft.inventoryByCategory[parsed.cat][parsed.itemId];
       }
     });
     return true;
   },
   getFlat: () => {
     const state = get();
-    const flat = {};
+    const flat: Record<string, number> = {};
     for (const [cat, items] of Object.entries(state.inventoryByCategory)) {
       for (const [itemId, data] of Object.entries(items)) {
         flat[itemId] = (flat[itemId] || 0) + (data.qty || 0);
@@ -398,10 +390,10 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     const today = new Date().toDateString();
     const yesterday = new Date(Date.now() - 86400000).toDateString();
     const state = get();
-    if ((state.lastLogin as any) === today)
+    if (state.lastLogin === today)
       return { claimed: false, message: "Sudah klaim hari ini" };
     let newStreak = 1;
-    if ((state.lastLogin as any) === yesterday) newStreak = state.streak + 1;
+    if (state.lastLogin === yesterday) newStreak = state.streak + 1;
     const rewards = [100, 200, 300, 400, 500, 750, 1500];
     const reward = rewards[Math.min(newStreak - 1, 6)] ?? 100;
     set((draft) => {
@@ -462,7 +454,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     )
       return;
     const level = state.level || 1;
-    const possibleQuests: any[] = [
+    const possibleQuests: DailyQuest[] = [
       {
         type: "harvest",
         action: "Panen",
@@ -752,8 +744,12 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
 
     if (!INV.hasReq(recipe.req)) {
       const missing = Object.entries(recipe.req).filter(([key, amt]) => {
-        const [cat, itemId] = key.split(".");
-        return (state.inventoryByCategory[cat as any]?.[itemId]?.qty || 0) < (amt as number);
+        const parsed = parseRequirementKey(key);
+        if (!parsed) return true;
+        return (
+          (state.inventoryByCategory[parsed.cat]?.[parsed.itemId]?.qty || 0) <
+          amt
+        );
       });
       get().enqueueNotification(
         `Bahan tidak cukup: ${missing.map(([k]) => k.split(".")[1]).join(", ")}`,
@@ -789,8 +785,9 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
 
     // Refund ingredients
     for (const [key, qty] of Object.entries(recipe.req)) {
-      const [cat, itemId] = key.split(".");
-      INV.add(cat, itemId, qty as number);
+      const parsed = parseRequirementKey(key);
+      if (!parsed) continue;
+      INV.add(parsed.cat, parsed.itemId, qty);
     }
 
     set((draft) => {
@@ -806,7 +803,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     if (!state.craftingQueue || state.craftingQueue.length === 0) return;
     const now = Date.now();
     let changed = false;
-    const completed: any[] = [];
+    const completed: Array<string | number | undefined> = [];
     let xpGained = 0;
 
     for (const item of state.craftingQueue) {
@@ -892,12 +889,15 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       if (level < 10) return t.tier <= 2;
       return true;
     });
-    const isCookedItem = (itemId) => RECIPES.some((r) => r.id === itemId);
+    const isCookedItem = (itemId: string) => {
+      const bare = parseRequirementKey(itemId)?.itemId ?? itemId;
+      return RECIPES.some((r) => r.id === bare);
+    };
     const filteredTemplates = templates.filter((t) => {
       if (t.tier === 1) return true;
       return t.items.every((item) => isCookedItem(item.id));
     });
-    const newOrders: any[] = [];
+    const newOrders: GameOrder[] = [];
     for (let i = 0; i < 3; i++) {
       const pool = filteredTemplates.length > 0 ? filteredTemplates : templates;
       const t = pool[Math.floor(Math.random() * pool.length)];
@@ -905,7 +905,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
         id: Math.random().toString(36).substring(2, 9),
         ...t,
         createdAt: Date.now(),
-      });
+      } as GameOrder);
     }
     set((draft) => {
       draft.orders = newOrders;
@@ -918,11 +918,21 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     if (orderIndex === -1) return false;
     const order = state.orders[orderIndex];
 
+    // Order item ids are dotted ("crops.wortel") — parse them instead of
+    // treating the whole string as an item id (old code always failed here).
+    // Falls back to a category lookup so legacy bare ids still work.
+    const resolveOrderItem = (id: string) => {
+      const parsed = parseRequirementKey(id);
+      if (parsed) return parsed;
+      const cat = getItemCategory(id);
+      return cat ? { cat, itemId: id } : null;
+    };
     for (const item of order.items || []) {
-      const cat = getItemCategory(item.id);
+      const resolved = resolveOrderItem(item.id);
       if (
-        !cat ||
-        (state.inventoryByCategory[cat as any]?.[item.id]?.qty || 0) < item.qty
+        !resolved ||
+        (state.inventoryByCategory[resolved.cat]?.[resolved.itemId]?.qty ||
+          0) < item.qty
       ) {
         get().enqueueNotification(
           `Bahan tidak cukup: ${item.qty}x ${item.id}`,
@@ -933,12 +943,13 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     }
 
     for (const item of order.items || []) {
-      const cat = getItemCategory(item.id);
-      INV.remove(cat, item.id, item.qty);
+      const resolved = resolveOrderItem(item.id);
+      if (!resolved) continue;
+      INV.remove(resolved.cat, resolved.itemId, item.qty);
     }
 
-    get().addCoins(order.coins);
-    get().addXP(order.xp);
+    get().addCoins(order.coins ?? order.reward ?? 0);
+    get().addXP(order.xp ?? 0);
 
     set((draft) => {
       draft.orders.splice(orderIndex, 1);
@@ -946,10 +957,13 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
         (draft.stats.totalOrdersFulfilled || 0) + 1;
     });
     get().checkAchievements?.();
-    get().enqueueNotification(`Pesanan selesai! +${order.coins} 💰`, {
-      icon: "📦",
-      type: "success",
-    });
+    get().enqueueNotification(
+      `Pesanan selesai! +${order.coins ?? order.reward ?? 0} 💰`,
+      {
+        icon: "📦",
+        type: "success",
+      },
+    );
     return true;
   },
 

@@ -10,13 +10,14 @@ function rollFish(rareBonus = 0) {
   // Rare fish (last 2) get boosted chance; common fish share the rest
   const weights = FISHES.map((fish, i) => {
     const isRare = i >= FISHES.length - 2
-    return isRare ? fish.baseChance * (1 + rareBonus * 3) : fish.baseChance
+    const base = fish.baseChance ?? fish.chance ?? 0.1
+    return isRare ? base * (1 + rareBonus * 3) : base
   })
   const total = weights.reduce((a, b) => a + b, 0)
   let rand = Math.random() * total
   for (let i = 0; i < FISHES.length; i++) {
-    rand -= weights[i]
-    if (rand <= 0) return FISHES[i]
+    rand -= weights[i] ?? 0
+    if (rand <= 0) return FISHES[i] ?? FISHES[0]
   }
   return FISHES[0]
 }

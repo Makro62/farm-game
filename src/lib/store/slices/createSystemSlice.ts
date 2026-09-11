@@ -1,4 +1,5 @@
-import type { StoreSet, StoreGet } from '@/types/game'
+import type { StoreSet, StoreGet, GameState, InventoryCategory, QuestProgressEntry, NotificationOptions } from '@/types/game'
+import type { ShopSeed } from '@/types/items'
 import {
   getMiningRegenMs,
   isWorkerActive,
@@ -12,44 +13,59 @@ import {
   getAnimalProduceTime,
   rollMineralType,
 } from '@/lib/store/utils'
+import {
+  invAdd as canonicalInvAdd,
+  invRemove as canonicalInvRemove,
+  getItemCategory as canonicalGetItemCategory,
+  parseRequirementKey,
+} from '@/lib/utils/inventory'
 import { SHOP_SEEDS } from '@/lib/data/crops'
 import { SHOP_ANIMALS, ANIMAL_FEED } from '@/lib/data/shop'
 import { FISHES } from '@/lib/data/fishes'
 import { RECIPES } from '@/lib/data/recipes'
-import { getItemSellPrice, getItemCategory } from '@/lib/data/item-helpers'
+import { getItemSellPrice } from '@/lib/data/item-helpers'
 import { GAME_CONSTANTS } from '@/lib/constants'
 import { logger } from '@/lib/logger'
 import { PLOT_LEVEL_MULT } from '@/lib/store/slices/createFarmingSlice'
 
-function invGet(state, cat, itemId) {
-  return state.inventoryByCategory?.[cat]?.[itemId]?.qty || 0
+// Thin typed wrappers over canonical inventory utils — keeps existing
+// call sites (`invGet`/`invSet`/`invRemove`/`catFor`) working without
+// maintaining a second copy of the inventory logic.
+function invGet(
+  state: Pick<GameState, 'inventoryByCategory'>,
+  cat: InventoryCategory | string,
+  itemId: string,
+): number {
+  return (
+    state.inventoryByCategory?.[cat as InventoryCategory]?.[itemId]?.qty || 0
+  )
 }
 
-function invSet(draft, cat, itemId, qty = 1, quality = 'normal') {
-  if (!draft.inventoryByCategory[cat][itemId]) {
-    draft.inventoryByCategory[cat][itemId] = {
-      qty: 0,
-      quality,
-      acquiredAt: Date.now(),
-    }
-  }
-  draft.inventoryByCategory[cat][itemId].qty += qty
+function invSet(
+  draft: GameState,
+  cat: InventoryCategory | string,
+  itemId: string,
+  qty = 1,
+  quality = 'normal',
+): void {
+  canonicalInvAdd(draft, cat as InventoryCategory, itemId, qty, quality)
 }
 
-function invRemove(draft, cat, itemId, qty = 1) {
-  const item = draft.inventoryByCategory[cat]?.[itemId]
-  if (!item || item.qty < qty) return false
-  item.qty -= qty
-  if (item.qty <= 0) delete draft.inventoryByCategory[cat][itemId]
-  return true
+function invRemove(
+  draft: GameState,
+  cat: InventoryCategory | string,
+  itemId: string,
+  qty = 1,
+): boolean {
+  return canonicalInvRemove(draft, cat as InventoryCategory, itemId, qty)
 }
 
-function catFor(itemId) {
-  return getItemCategory(itemId) || 'collectibles'
+function catFor(itemId: string): InventoryCategory {
+  return canonicalGetItemCategory(itemId) || 'collectibles'
 }
 
 export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
-  enqueueNotification: (message, options: any = {}) => {
+  enqueueNotification: (message: string, options: NotificationOptions = {}) => {
     const id = options.id || Date.now() + Math.random().toString()
     set(state => {
       const exists = state.notificationsQueue.some(n => n.id === id)
@@ -219,7 +235,7 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
   spinWheel: () => {
     const today = new Date().toDateString()
     const state = get()
-    if ((state.lastWheelSpin as any) === today) {
+    if (state.lastWheelSpin === today) {
       return { success: false, message: 'Sudah spin hari ini' }
     }
     const roll = Math.random() * 100
@@ -486,8 +502,21 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
       () => get().processCraftingQueue(),
       () => get().checkOrders(),
       () => {
+        get().rollDailySpecial?.()
+        // Closed restaurant: customers wait patiently, nobody new comes
+        if (get().restaurant && get().restaurant.serviceOn === false) return
         get().tickCustomers(1000)
-        if (Math.random() < 0.1 * (get().weatherEffects?.customerRate || 1))
+        const rep = get().restaurant?.reputation || 0
+        const spawnBoost =
+          1 +
+          Math.min(
+            rep * GAME_CONSTANTS.RESTAURANT.REP_SPAWN_PER_POINT,
+            GAME_CONSTANTS.RESTAURANT.REP_SPAWN_MAX_BONUS
+          )
+        if (
+          Math.random() <
+          0.1 * (get().weatherEffects?.customerRate || 1) * spawnBoost
+        )
           get().spawnCustomer()
       },
       () => {
@@ -558,10 +587,10 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
     let anyPlotsChanged = false
     let animalsChanged = false
     let queueChanged = false
-    const questEntries: any[] = []
-    const catUpdates = {}
+    const questEntries: QuestProgressEntry[] = []
+    const catUpdates: Record<string, Record<string, number>> = {}
 
-    function addToCat(cat, itemId, qty = 1) {
+    function addToCat(cat: string, itemId: string, qty = 1) {
       if (!catUpdates[cat]) catUpdates[cat] = {}
       catUpdates[cat][itemId] = (catUpdates[cat][itemId] || 0) + qty
     }
@@ -578,7 +607,7 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
         const pArr = plotData.arr
         for (let i = 0; i < pArr.length; i++) {
           const p = normalizePlot(pArr[i], pArr[i].id)
-          const baseGrow = p.growTime > 0 ? p.growTime : null
+          const baseGrow = (p.growTime ?? 0) > 0 ? p.growTime : null
           const growTime =
             p.pestInfestation && baseGrow ? baseGrow * 2 : baseGrow
           const isReady =
@@ -589,8 +618,8 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
                 growTime != null &&
                 now - p.plantedAt >= growTime))
 
-          if (isReady) {
-            const crop = p.crop
+          if (isReady && p.crop) {
+            const crop = p.crop as string
             pArr[i] = {
               ...p,
               status: 'empty',
@@ -650,7 +679,7 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
               const coinsAfterBuy = state.coins - coinsSpent
               const reserveFloor = Math.floor(state.coins * 0.3)
 
-              let preferredSeed: any = null
+              let preferredSeed: ShopSeed | null = null
               if (state.selectedSeed) {
                 const s = SHOP_SEEDS.find(x => x.id === state.selectedSeed)
                 if (
@@ -779,12 +808,14 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
         }
         if (animalsChanged) draft.animals = animals
         if (queueChanged) draft.craftingQueue = craftingQueue
-        for (const [cat, items] of Object.entries(catUpdates) as [
-          string,
-          any,
-        ][]) {
+        for (const [cat, items] of Object.entries(catUpdates)) {
           for (const [itemId, delta] of Object.entries(items)) {
-            const invCat = draft.inventoryByCategory[cat as any]
+            const parsed = parseRequirementKey(`${cat}.${itemId}`)
+            const invCat =
+              draft.inventoryByCategory[
+                (parsed?.cat ?? cat) as InventoryCategory
+              ]
+            if (!invCat) continue
             if (!invCat[itemId]) {
               invCat[itemId] = {
                 qty: 0,
@@ -792,7 +823,7 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
                 acquiredAt: Date.now(),
               }
             }
-            invCat[itemId].qty += delta as number
+            invCat[itemId].qty += delta
             if (invCat[itemId].qty <= 0) {
               delete invCat[itemId]
             }
@@ -822,7 +853,7 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
         let cumulative = 0
         let caughtFish = FISHES[0]
         for (const fish of FISHES) {
-          cumulative += fish.chance
+          cumulative += fish.baseChance ?? fish.chance ?? 0.1
           if (rand <= cumulative) {
             caughtFish = fish
             break
@@ -860,18 +891,20 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
         if (typeQueue.length < 3) {
           const inv = get().inventoryByCategory
           const canCraft = Object.entries(recipe.req).every(([key, amt]) => {
-            const [cat, itemId] = key.split('.')
-            return (inv[cat as any]?.[itemId]?.qty || 0) >= (amt as number)
+            const parsed = parseRequirementKey(key)
+            if (!parsed) return false
+            return (inv[parsed.cat]?.[parsed.itemId]?.qty || 0) >= amt
           })
           if (canCraft) {
             set(draft => {
               for (const [key, amt] of Object.entries(recipe.req)) {
-                const [cat, itemId] = key.split('.')
-                if (draft.inventoryByCategory[cat as any]?.[itemId]) {
-                  draft.inventoryByCategory[cat as any][itemId].qty -=
-                    amt as number
-                  if (draft.inventoryByCategory[cat][itemId].qty <= 0) {
-                    delete draft.inventoryByCategory[cat][itemId]
+                const parsed = parseRequirementKey(key)
+                if (!parsed) continue
+                if (draft.inventoryByCategory[parsed.cat]?.[parsed.itemId]) {
+                  draft.inventoryByCategory[parsed.cat][parsed.itemId].qty -=
+                    amt
+                  if (draft.inventoryByCategory[parsed.cat][parsed.itemId].qty <= 0) {
+                    delete draft.inventoryByCategory[parsed.cat][parsed.itemId]
                   }
                 }
               }
@@ -915,7 +948,7 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
     let newFeedPlots = [...(state.feedPlots || [])]
     let newKitchenPlots = [...(state.kitchenPlots || [])]
     let newAnimals = Array.isArray(state.animals) ? [...state.animals] : []
-    const offlineItems: any[] = []
+    const offlineItems: Array<{ cat: string; id: string; qty: number }> = []
 
     const allNewPlotsArrays = [
       { key: 'plots', arr: newPlots },
@@ -929,7 +962,10 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
         for (let i = 0; i < pArr.length; i++) {
           const p = pArr[i]
           if (p.crop && p.status === 'growing' && p.growTime) {
-            if ((p.plantedAt as number) + p.growTime <= now) {
+            if (
+              p.plantedAt != null &&
+              p.plantedAt + p.growTime <= now
+            ) {
               offlineItems.push({ cat: 'crops', id: p.crop, qty: 1 })
               harvestedCrops++
               pArr[i] = {
@@ -990,7 +1026,7 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
           const rand = Math.random()
           let cumulative = 0
           for (const fish of FISHES) {
-            cumulative += fish.chance
+            cumulative += fish.baseChance ?? fish.chance ?? 0.1
             if (rand <= cumulative) {
               offlineItems.push({ cat: 'fish', id: fish.id, qty: 1 })
               break
@@ -1008,8 +1044,9 @@ export const createSystemSlice = (set: StoreSet, get: StoreGet) => ({
     if (isWorkerActive(state, 'miner')) {
       if (mineAttempts > 0) {
         minedGems = Math.floor(mineAttempts * 0.5)
-        const lanternActive =
-          state.mining.lanternUntil && state.mining.lanternUntil > now
+        const lanternActive = Boolean(
+          state.mining.lanternUntil && state.mining.lanternUntil > now,
+        )
         const eventId = state.activeEvent?.id || null
         for (let m = 0; m < minedGems; m++) {
           const mineralType = rollMineralType(
