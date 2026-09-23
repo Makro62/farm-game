@@ -76,6 +76,7 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
     }));
     get().markSessionAction?.("mined");
     get().checkAchievements?.();
+    get().addToCollection?.("minerals", node.type);
     if (dropsWorm)
       get().enqueueNotification(
         "🪱 Dapat Cacing Tanah! Bisa jadi umpan pancing.",
@@ -230,6 +231,9 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
         stats: { ...s.stats, totalMined: (s.stats?.totalMined || 0) + mined },
       }));
       get().checkAchievements?.();
+      for (const type of Object.keys(mineralGains)) {
+        get().addToCollection?.("minerals", type);
+      }
       return {
         ok: true,
         message: `💣 Bom Besar meledak! ${mined} petak ditambang sekaligus.`,
@@ -281,6 +285,7 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
           stats: { ...s.stats, totalMined: (s.stats?.totalMined || 0) + 1 },
         }));
         get().checkAchievements?.();
+        get().addToCollection?.("minerals", node.type);
         return {
           ok: true,
           message: "🧨 Bom Kecil! Hasil tambang ×2 dari petak ini.",
@@ -384,7 +389,6 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
             ? { ...n, status: "cooldown", regenAt: now + regenTime }
             : n,
         );
-        changed = true;
 
         set((draft) => {
           draft.mining.nodes = newNodes;
@@ -399,6 +403,7 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
         });
         get().addXP(GAME_CONSTANTS.XP.MINE);
         get().progressQuest("mine", minedType, 1);
+        get().addToCollection?.("minerals", minedType);
         return;
       }
     }
@@ -501,8 +506,8 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
     const smeltery = state.mining?.smeltery;
     if (!smeltery || smeltery.queue.length === 0) return;
     const now = Date.now();
-    let finished: any[] = [];
-    let remaining: any[] = [];
+    const finished: any[] = [];
+    const remaining: any[] = [];
     smeltery.queue.forEach((job) => {
       if (job.completeAt && now >= job.completeAt) finished.push(job);
       else remaining.push(job);
@@ -526,6 +531,10 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
       get().enqueueNotification(`🔥 Peleburan selesai: ${job.recipe}`, {
         type: "success",
       });
+      const [cat, itemId] = String(job.output).split(".");
+      if (cat === "processed" && itemId) {
+        get().addToCollection?.("recipes", itemId);
+      }
     });
   },
 });

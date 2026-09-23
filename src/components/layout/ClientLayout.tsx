@@ -11,6 +11,9 @@ import GameHeader from "@/components/layout/GameHeader";
 import Modals from "@/components/layout/Modals";
 import TutorialOverlay from "@/components/ui/TutorialOverlay";
 import NotificationManager from "@/components/layout/NotificationManager";
+import ComboFx from "@/components/game/ComboFx";
+import LevelUpModal from "@/components/game/LevelUpModal";
+import WeatherOverlay from "@/components/game/WeatherOverlay";
 import { cn } from "@/lib/utils";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
@@ -112,7 +115,10 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
         })}
       </nav>
 
+      <WeatherOverlay />
+      <ComboFx />
       <Modals />
+      <LevelUpModal />
       <NotificationManager />
       <TutorialOverlay />
     </div>

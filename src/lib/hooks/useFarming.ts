@@ -76,6 +76,7 @@ export function useFarming() {
         if (crop)
           enqueueNotification(`Panen ${getItemEmoji(crop)}!`, {
             type: "success",
+            sfx: "harvest",
           });
       } else {
         enqueueNotification("Petak belum siap panen", {
@@ -100,6 +101,7 @@ export function useFarming() {
           icon: "🌱",
           id: "plant",
           type: "success",
+          sfx: "plant",
         });
       } else {
         enqueueNotification(result.message, { type: "error" });

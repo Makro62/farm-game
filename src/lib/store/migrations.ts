@@ -50,11 +50,14 @@ export const partializeState = (state: GameStore) => ({
   decorations: state.decorations,
   activeCustomers: state.activeCustomers,
   achievements: state.achievements,
+  collection: state.collection,
   stats: state.stats,
   sessionActions: state.sessionActions,
   weatherEffects: state.weatherEffects,
   totalTables: state.totalTables,
   tutorialStep: state.tutorialStep,
+  prestigePoints: state.prestigePoints,
+  prestigeCount: state.prestigeCount,
 });
 
 type LegacyRecord = Record<string, unknown>;
@@ -199,6 +202,16 @@ export const migrateState = (
     merged.coinMultiplier = 1;
   if (merged.energy == null) merged.energy = 100;
   if (merged.maxEnergy == null) merged.maxEnergy = 100;
+  if (
+    !Number.isFinite(Number(merged.prestigePoints)) ||
+    Number(merged.prestigePoints) < 0
+  )
+    merged.prestigePoints = 0;
+  if (
+    !Number.isFinite(Number(merged.prestigeCount)) ||
+    Number(merged.prestigeCount) < 0
+  )
+    merged.prestigeCount = 0;
 
   const oldBuildings = merged.buildings || {};
   merged.buildings = {
@@ -287,41 +300,7 @@ export const migrateState = (
     }));
   }
 
-  // Migrate flat inventory to inventoryByCategory
-  if (merged.inventory && !merged.inventoryByCategory) {
-    const cat: GameState["inventoryByCategory"] = {
-      crops: {},
-      animalProducts: {},
-      minerals: {},
-      fish: {},
-      processed: {},
-      cooked: {},
-      seeds: {},
-      tools: {},
-      bait: {},
-      collectibles: {},
-      consumables: {},
-    };
-    for (const [itemId, qtyRaw] of Object.entries(
-      merged.inventory as Record<string, unknown>,
-    )) {
-      const qty = Number(qtyRaw);
-      if (!Number.isFinite(qty) || qty <= 0) continue;
-      const c = getItemCategory(itemId);
-      if (c)
-        cat[c][itemId] = { qty, quality: "normal", acquiredAt: Date.now() };
-      else
-        cat.collectibles[itemId] = {
-          qty,
-          quality: "normal",
-          acquiredAt: Date.now(),
-        };
-    }
-    merged.inventoryByCategory = cat;
-  } else if (
-    !merged.inventoryByCategory ||
-    typeof merged.inventoryByCategory !== "object"
-  ) {
+  if (!merged.inventoryByCategory || typeof merged.inventoryByCategory !== "object") {
     merged.inventoryByCategory = {
       crops: {},
       animalProducts: {},
@@ -336,10 +315,39 @@ export const migrateState = (
       consumables: {},
     };
   }
+  if (merged.inventory && typeof merged.inventory === "object") {
+    merged.inventoryByCategory = structuredClone(
+      merged.inventoryByCategory as GameState["inventoryByCategory"],
+    );
+    const cat = merged.inventoryByCategory as GameState["inventoryByCategory"];
+    for (const [itemId, qtyRaw] of Object.entries(
+      merged.inventory as Record<string, unknown>,
+    )) {
+      const qty = Number(qtyRaw);
+      if (!Number.isFinite(qty) || qty <= 0) continue;
+      const c = getItemCategory(itemId) || "collectibles";
+      if (!cat[c]) cat[c] = {};
+      const existing = cat[c][itemId];
+      if (existing) existing.qty += qty;
+      else
+        cat[c][itemId] = { qty, quality: "normal", acquiredAt: Date.now() };
+    }
+  }
   delete merged.inventory;
 
   if (!merged.achievements || typeof merged.achievements !== "object")
     merged.achievements = {};
+  const legacyCollection = (merged.collection ??
+    {}) as Partial<GameState["collection"]>;
+  const asStringArray = (v: unknown): string[] =>
+    Array.isArray(v) ? (v as string[]) : [];
+  merged.collection = {
+    crops: asStringArray(legacyCollection.crops),
+    fish: asStringArray(legacyCollection.fish),
+    minerals: asStringArray(legacyCollection.minerals),
+    recipes: asStringArray(legacyCollection.recipes),
+    claimed: asStringArray(legacyCollection.claimed),
+  };
   if (!merged.stats || typeof merged.stats !== "object")
     merged.stats = {} as GameState["stats"];
   const defaultStats: GameState["stats"] = {
@@ -359,6 +367,7 @@ export const migrateState = (
     totalWormBaitUsed: 0,
     totalDiamondsMined: 0,
     totalSushiEmasMade: 0,
+    totalPrestiges: 0,
   };
   merged.stats = { ...defaultStats, ...merged.stats };
   merged.sessionActions = merged.sessionActions || {};

@@ -1,4 +1,4 @@
-import type { CropDef, ShopSeed } from '@/types/items';
+import type { CropDef, CropVariantDef, ShopSeed } from '@/types/items';
 
 export const CROP_DATA: Record<string, CropDef> = {
   wortel: {
@@ -13,6 +13,7 @@ export const CROP_DATA: Record<string, CropDef> = {
     usedInRecipes: ["sup_wortel", "kue_wortel"],
     usedAsFeed: ["kuda", "kelinci"],
     seed: { id: "bibit_wortel", buyPrice: 10, unlockLevel: 1 },
+    variantId: "wortel_emas",
   },
   jagung: {
     id: "jagung",
@@ -38,6 +39,7 @@ export const CROP_DATA: Record<string, CropDef> = {
     weatherEffects: { sunny: 1.1, rainy: 1.0, drought: 0.4 },
     usedInRecipes: ["saus_tomat", "sushi_mas", "nasi_goreng"],
     seed: { id: "bibit_tomat", buyPrice: 35, unlockLevel: 2 },
+    variantId: "tomat_mentari",
   },
   stroberi: {
     id: "stroberi",
@@ -50,6 +52,7 @@ export const CROP_DATA: Record<string, CropDef> = {
     weatherEffects: { sunny: 1.2, rainy: 0.8, drought: 0.3 },
     usedInRecipes: ["kue_stroberi"],
     seed: { id: "bibit_stroberi", buyPrice: 75, unlockLevel: 5 },
+    variantId: "stroberi_permata",
   },
   semangka: {
     id: "semangka",
@@ -62,6 +65,7 @@ export const CROP_DATA: Record<string, CropDef> = {
     weatherEffects: { sunny: 1.3, rainy: 0.7, drought: 0.2 },
     usedInRecipes: [],
     seed: { id: "bibit_semangka", buyPrice: 120, unlockLevel: 8 },
+    variantId: "semangka_bintang",
   },
   jamur: {
     id: "jamur",
@@ -171,6 +175,37 @@ export const CROP_DATA: Record<string, CropDef> = {
     weatherEffects: { sunny: 0.9, rainy: 1.2, drought: 0.4 },
     usedInRecipes: ["sup_kubis", "sup_ikan"],
     seed: { id: "bibit_kubis", buyPrice: 80, unlockLevel: 3 },
+  },
+};
+
+export const CROP_VARIANTS: Record<string, CropVariantDef> = {
+  wortel_emas: {
+    id: "wortel_emas",
+    cropId: "wortel",
+    name: "Wortel Emas",
+    emoji: "🥕",
+    sellMult: 2,
+  },
+  tomat_mentari: {
+    id: "tomat_mentari",
+    cropId: "tomat",
+    name: "Tomat Mentari",
+    emoji: "🍅",
+    sellMult: 2,
+  },
+  stroberi_permata: {
+    id: "stroberi_permata",
+    cropId: "stroberi",
+    name: "Stroberi Permata",
+    emoji: "🍓",
+    sellMult: 2,
+  },
+  semangka_bintang: {
+    id: "semangka_bintang",
+    cropId: "semangka",
+    name: "Semangka Bintang",
+    emoji: "🍉",
+    sellMult: 2,
   },
 };
 

@@ -92,6 +92,8 @@ export function useProfile() {
           enqueueNotification(`Terjual seharga ${formatNumber(earned)} 💰`, {
             icon: "💰",
             type: "success",
+            sfx: "sell",
+            rewardCoins: earned,
           });
         }
       },
@@ -109,7 +111,7 @@ export function useProfile() {
             coinMultiplier > 1
               ? `Terjual ${formatNumber(earned)} 💰 (×${coinMultiplier} booster!)`
               : `Terjual semua hasil seharga ${formatNumber(earned)} 💰!`,
-            { type: "success" },
+            { type: "success", sfx: "sell", rewardCoins: earned },
           );
         } else {
           enqueueNotification("Tidak ada hasil yang bisa dijual.", {
@@ -142,7 +144,7 @@ export function useProfile() {
             coinMultiplier > 1
               ? `Terjual ${soldCount} jenis barang seharga ${formatNumber(totalEarned)} 💰 (×${coinMultiplier} booster!)`
               : `Terjual ${soldCount} jenis barang seharga ${formatNumber(totalEarned)} 💰!`,
-            { type: "success" },
+            { type: "success", sfx: "sell", rewardCoins: totalEarned },
           );
         } else {
           enqueueNotification(

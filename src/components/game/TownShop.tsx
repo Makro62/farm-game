@@ -126,7 +126,7 @@ export function TownShop() {
                   <div className="shop-item-info">
                     <span className="shop-item-icon">{item.emoji}</span>
                     <span className="shop-item-name">{item.name}</span>
-                    <span className="text-[9px] text-[var(--text-secondary)] line-clamp-2">
+                    <span className="text-[11px] text-[var(--text-secondary)] line-clamp-2">
                       {item.desc}
                     </span>
                     <span className="shop-item-price mt-1">
@@ -152,7 +152,7 @@ export function TownShop() {
                     className="p-2 rounded-xl bg-[#E8F0FF] border-2 border-[#7EB8E8] flex flex-col items-center gap-1"
                   >
                     <span className="text-2xl">{item.emoji}</span>
-                    <span className="text-[9px] font-bold text-[var(--text-primary)] text-center leading-tight">
+                    <span className="text-[11px] font-bold text-[var(--text-primary)] text-center leading-tight">
                       {item.name}
                     </span>
                   </div>
@@ -164,7 +164,7 @@ export function TownShop() {
       ) : shopTab === "umpan" ? (
         <>
           <ShopSectionTitle icon="🎣">Shop Umpan</ShopSectionTitle>
-          <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
+          <p className="text-[11px] text-[var(--text-secondary)] mb-2 font-medium">
             Pilih umpan sebelum mancing di danau.
           </p>
           <div className="shop-grid mb-6">
@@ -220,7 +220,7 @@ export function TownShop() {
                     >
                       <span className="text-2xl relative">
                         {bait.emoji}
-                        <span className="absolute -bottom-2 -right-2 bg-[var(--gold)] text-[var(--text-primary)] text-[9px] font-black px-1.5 py-0.5 rounded-full border border-[#FFF1B8]">
+                        <span className="absolute -bottom-2 -right-2 bg-[var(--gold)] text-[var(--text-primary)] text-[11px] font-black px-1.5 py-0.5 rounded-full border border-[#FFF1B8]">
                           {inventory[bait.id]}
                         </span>
                       </span>
@@ -234,7 +234,7 @@ export function TownShop() {
       ) : (
         <>
           <ShopSectionTitle icon="☕">Shop Konsumsi</ShopSectionTitle>
-          <p className="text-[10px] text-[var(--text-secondary)] mb-2 font-medium">
+          <p className="text-[11px] text-[var(--text-secondary)] mb-2 font-medium">
             Beli item untuk memulihkan stamina/kebahagiaan pekerja.
           </p>
           <div className="shop-grid mb-6">
@@ -271,7 +271,7 @@ export function TownShop() {
             <div className="font-bold text-[var(--text-primary)] text-sm">
               Pemancing Kota {workers?.fisher ? `(Kebahagiaan: ${workers.fisher.happiness}%)` : ""}
             </div>
-            <div className="text-[10px] text-[var(--text-secondary)]">
+            <div className="text-[11px] text-[var(--text-secondary)]">
               Auto-mancing di danau
             </div>
           </div>
@@ -292,7 +292,7 @@ export function TownShop() {
         </div>
         {workers?.fisher && (
           <div className="flex justify-between items-center border-t border-[var(--primary)]/20 pt-2 mt-1">
-            <p className="text-[10px] text-[var(--text-secondary)] font-medium">
+            <p className="text-[11px] text-[var(--text-secondary)] font-medium">
               {workers?.fisher?.isAutoMode
                 ? "Aktif — mancing otomatis"
                 : "Nyalakan Auto di Pusat Kota"}
@@ -305,7 +305,7 @@ export function TownShop() {
                   if (res?.ok) toast.success(res.message);
                   else toast.error(res?.message || "Gagal memberi kopi.");
                 }}
-                className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] px-2 py-1 rounded-lg font-bold transition-colors shadow-sm flex items-center gap-1"
+                className="bg-orange-500 hover:bg-orange-600 text-white text-[11px] px-2 py-1 rounded-lg font-bold transition-colors shadow-sm flex items-center gap-1"
               >
                 <span>☕</span> Beri Kopi
               </button>

@@ -70,14 +70,14 @@ export function ProcessingPlant() {
               return (
                 <div
                   key={i}
-                  className="aspect-square rounded-xl border-2 border-[var(--wood)] bg-[#4a3219] flex flex-col items-center justify-center gap-2 relative overflow-hidden"
+                  className={`aspect-square rounded-xl border-2 bg-[#4a3219] flex flex-col items-center justify-center gap-2 relative overflow-hidden ${recipe ? "border-pulse" : "border-[var(--wood)]"}`}
                 >
                   {recipe ? (
                     <>
-                      <span className="text-3xl drop-shadow-md animate-pulse">
+                      <span className="text-3xl drop-shadow-md">
                         {recipe.emoji}
                       </span>
-                      <span className="text-[10px] font-bold text-[#FFE08A] z-10">
+                      <span className="text-[11px] font-bold text-[#FFE08A] z-10">
                         {Math.max(
                           0,
                           Math.ceil(
@@ -103,7 +103,6 @@ export function ProcessingPlant() {
                           }}
                         />
                       </div>
-                      <div className="absolute inset-0 bg-black/40 animate-pulse pointer-events-none" />
                     </>
                   ) : (
                     <span className="text-3xl opacity-20">⚙️</span>
@@ -149,7 +148,7 @@ export function ProcessingPlant() {
                         return (
                           <span
                             key={key}
-                            className={`text-[10px] px-1.5 py-0.5 rounded font-black border ${enough ? "bg-green-900/50 text-green-300 border-green-500/30" : "bg-red-900/50 text-red-300 border-red-500/30"}`}
+                            className={`text-[11px] px-1.5 py-0.5 rounded font-black border ${enough ? "bg-green-900/50 text-green-300 border-green-500/30" : "bg-red-900/50 text-red-300 border-red-500/30"}`}
                           >
                             {getCropEmoji(reqId)} {hasQty}/{reqQty}
                           </span>

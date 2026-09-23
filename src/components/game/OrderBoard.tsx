@@ -56,7 +56,7 @@ export function OrderBoard() {
                   <span className="font-black text-[var(--gold-deep)]">
                     Pesanan #{index + 1}
                   </span>
-                  <span className="text-[10px] font-bold bg-[#EF5350]/15 border border-[#EF5350]/40 text-[#C62828] px-2 py-0.5 rounded-full">
+                  <span className="text-[11px] font-bold bg-[#EF5350]/15 border border-[#EF5350]/40 text-[#C62828] px-2 py-0.5 rounded-full">
                     {m}:{s.toString().padStart(2, "0")}
                   </span>
                 </div>
@@ -69,14 +69,16 @@ export function OrderBoard() {
                     return (
                       <div
                         key={item.id}
-                        className="flex justify-between items-center text-sm"
+                        className="flex justify-between items-center text-sm gap-2"
                       >
-                        <span className="text-[var(--text-primary)] flex items-center gap-1 font-bold">
-                          <span>{getCropEmoji(itemName)}</span>{" "}
-                          {itemName.replace("_", " ")}
+                        <span className="text-[var(--text-primary)] flex items-center gap-1 font-bold min-w-0 truncate">
+                          <span className="shrink-0">{getCropEmoji(itemName)}</span>
+                          <span className="truncate">
+                            {itemName.replace(/_/g, " ")}
+                          </span>
                         </span>
                         <span
-                          className={`font-bold px-2 py-0.5 rounded-full text-xs ${
+                          className={`font-bold px-2 py-0.5 rounded-full text-xs shrink-0 ${
                             isEnough
                               ? "bg-[var(--primary-light)]/50 text-[var(--primary-dark)]"
                               : "bg-red-100 text-red-700"

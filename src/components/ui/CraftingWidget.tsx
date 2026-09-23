@@ -57,19 +57,6 @@ export function CraftingWidget({
 
   const readyCount = useMemo(() => recipes.filter(canCook).length, [recipes, canCook]);
 
-  if (queueOnly && activeQueues.length === 0) {
-    return (
-      <div className="mb-6">
-        <div className="shop-section-title">
-          <span>{icon}</span> {title}
-        </div>
-        <p className="text-[10px] font-bold text-[var(--text-secondary)] mb-4">
-          Tidak ada antrean masak. Pilih resep di bawah untuk mulai memasak.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="mb-6">
       <div className="shop-section-title">
@@ -91,7 +78,7 @@ export function CraftingWidget({
         </div>
       )}
 
-      <p className="text-[10px] font-bold text-[var(--text-secondary)] mb-2">
+      <p className="text-[11px] font-bold text-[var(--text-secondary)] mb-2">
         Antrean {slotsLeft}/3 ·{" "}
         {readyCount > 0
           ? `${readyCount} resep siap masak`
@@ -99,6 +86,14 @@ export function CraftingWidget({
       </p>
 
       <AnimatePresence>
+        {queueOnly && activeQueues.length === 0 && (
+          <div className="glass-card rounded-2xl p-3 mb-3 min-h-[4.75rem] flex items-center justify-center">
+            <span className="text-[11px] font-bold text-[var(--text-secondary)] text-center">
+              Tidak ada antrean masak. Pilih resep di bawah untuk mulai
+              memasak.
+            </span>
+          </div>
+        )}
         {activeQueues.map((queue) => {
           const recipe = RECIPES.find((r) => r.id === queue.recipeId);
           if (!recipe) return null;
@@ -140,7 +135,7 @@ export function CraftingWidget({
                     {recipe.emoji}
                   </motion.span>
                   Membuat {recipe.name}
-                  <span className="text-[10px] font-bold text-[var(--text-secondary)] ml-1">
+                  <span className="text-[11px] font-bold text-[var(--text-secondary)] ml-1">
                     {Math.ceil((queue.duration - (currentTime - queue.startTime)) / 1000)}s
                   </span>
                 </span>
@@ -184,7 +179,7 @@ export function CraftingWidget({
                   <span className="truncate">
                     {recipe.name}
                     {ready && (
-                      <span className="ml-1.5 text-[10px] font-black uppercase text-[var(--primary-dark)] bg-[var(--primary-light)]/50 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                      <span className="ml-1.5 text-[11px] font-black uppercase text-[var(--primary-dark)] bg-[var(--primary-light)]/50 px-1.5 py-0.5 rounded-full whitespace-nowrap">
                         Siap
                       </span>
                     )}
@@ -208,7 +203,7 @@ export function CraftingWidget({
                     return (
                       <span
                         key={key}
-                        className={`px-1.5 py-0.5 rounded-lg flex items-center gap-1 border text-[10px] font-bold ${
+                        className={`px-1.5 py-0.5 rounded-lg flex items-center gap-1 border text-[11px] font-bold ${
                           isEnough
                             ? "bg-[var(--primary-light)]/40 text-[var(--primary-dark)] border-[var(--primary)]/40"
                             : "bg-[#FFCDD2]/60 text-[#C62828] border-[#EF9A9A]"

@@ -2,14 +2,13 @@
 
 import { useGameStore } from "@/lib/store";
 import { getCropEmoji } from "@/lib/data/item-helpers";
+import { formatNumber } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
 
 export default function OfflineProgressModal() {
   const offlineReport = useGameStore((state) => state.offlineReport);
   const clearOfflineReport = useGameStore((state) => state.clearOfflineReport);
-
-  if (!offlineReport) return null;
 
   const {
     deltaSeconds = 0,
@@ -20,7 +19,7 @@ export default function OfflineProgressModal() {
     maturedCrops = 0,
     maturedNodes = 0,
     earnedCoins = 0,
-  } = offlineReport;
+  } = offlineReport ?? {};
 
   // Format time (e.g. 1h 30m)
   const hours = Math.floor(deltaSeconds / 3600);
@@ -32,7 +31,13 @@ export default function OfflineProgressModal() {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {offlineReport && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+        >
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -71,7 +76,7 @@ export default function OfflineProgressModal() {
                 <div className="flex items-center gap-2">
                   <span className="text-3xl drop-shadow-md">💰</span>
                   <span className="text-3xl font-black text-yellow-600 drop-shadow-sm">
-                    +{earnedCoins.toLocaleString()}
+                    +{formatNumber(earnedCoins, "id-ID")}
                   </span>
                 </div>
               </motion.div>
@@ -173,7 +178,8 @@ export default function OfflineProgressModal() {
             </Button>
           </div>
         </motion.div>
-      </div>
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 }

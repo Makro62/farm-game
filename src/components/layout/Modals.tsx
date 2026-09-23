@@ -89,7 +89,12 @@ export default function Modals() {
 
       <AnimatePresence>
         {modals.confirm.isOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -111,11 +116,16 @@ export default function Modals() {
                 </Button>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
 
         {modals.prompt.isOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -153,11 +163,16 @@ export default function Modals() {
                 </Button>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
 
         {modals.npcGift.isOpen && targetNpc && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -202,7 +217,7 @@ export default function Modals() {
                         <span className="text-3xl drop-shadow-md">
                           {getCropEmoji(item)}
                         </span>
-                        <span className="absolute -bottom-2 -right-2 bg-[var(--card)] text-[var(--text-primary)] text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm border-2 border-[var(--wood-light)]">
+                        <span className="absolute -bottom-2 -right-2 bg-[var(--card)] text-[var(--text-primary)] text-[11px] font-black px-1.5 py-0.5 rounded-full shadow-sm border-2 border-[var(--wood-light)]">
                           {inventory[item]}
                         </span>
                       </button>
@@ -224,7 +239,7 @@ export default function Modals() {
                 </Button>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

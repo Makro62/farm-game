@@ -179,10 +179,10 @@ export default function TabTown() {  const music = useMusic('town');
                                 <div className="font-bold text-xs text-[var(--text-primary)] truncate">
                                   {npc.name}
                                 </div>
-                                <div className="text-[9px] text-[var(--text-secondary)]">
+                                <div className="text-[11px] text-[var(--text-secondary)]">
                                   {npc.role}
                                 </div>
-                                <div className="text-[10px]">
+                                <div className="text-[11px]">
                                   {"❤️".repeat(Math.min(hearts, 10))}
                                   {"🖤".repeat(
                                     Math.max(0, 10 - Math.min(hearts, 10)),
@@ -193,7 +193,7 @@ export default function TabTown() {  const music = useMusic('town');
                             <button
                               type="button"
                               onClick={() => openNpcGift(npc.id)}
-                              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-[var(--gold)] text-[var(--text-primary)] border border-[var(--gold-deep)] shrink-0"
+                              className="text-[11px] font-bold px-2 py-1 rounded-lg bg-[var(--gold)] text-[var(--text-primary)] border border-[var(--gold-deep)] shrink-0"
                             >
                               🎁
                             </button>

@@ -24,6 +24,15 @@ export interface CropDef {
   usedInRecipes?: string[];
   usedAsFeed?: string[];
   seed: SeedInfo;
+  variantId?: string;
+}
+
+export interface CropVariantDef {
+  id: string;
+  cropId: string;
+  name: string;
+  emoji: string;
+  sellMult: number;
 }
 
 export interface ShopSeed {

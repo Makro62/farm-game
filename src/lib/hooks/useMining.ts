@@ -3,6 +3,7 @@ import { useGameStore } from "@/lib/store";
 import { MINERALS } from "@/lib/data/minerals";
 import { SHOP_MINING, PICKAXE_LABELS } from "@/lib/data/shop";
 import { GAME_CONSTANTS } from "@/lib/constants";
+import { formatNumber } from "@/lib/utils";
 
 export function useMining() {
   const mining = useGameStore((state) => state?.mining);
@@ -10,7 +11,7 @@ export function useMining() {
     (state) => state?.inventoryByCategory?.tools || {},
   );
   const mineNode = useGameStore((state) => state?.mineNode);
-  const useMiningTool = useGameStore((state) => state?.useMiningTool);
+  const applyMiningTool = useGameStore((state) => state?.useMiningTool);
   const setSelectedMiningTool = useGameStore(
     (state) => state?.setSelectedMiningTool,
   );
@@ -45,9 +46,9 @@ export function useMining() {
   const ownedTools = SHOP_MINING.filter((t) => (toolsInv[t.id]?.qty || 0) > 0);
 
    
-  // eslint-disable-next-line react-hooks/rules-of-hooks -- useMiningTool is a store action, not a React hook
+   
   const handleUseTool = (toolId: string, nodeId: number | null = null) => {
-    const result = useMiningTool(toolId, nodeId);
+    const result = applyMiningTool(toolId, nodeId);
     if (result.ok) {
       enqueueNotification(result.message, { type: "success" });
     } else if (result.needTarget) {
@@ -88,7 +89,7 @@ export function useMining() {
     }
     openConfirm(
       "Sewa Kurcaci Tarjo",
-      `Sewa Kurcaci Tarjo seharga ${GAME_CONSTANTS.COSTS.WORKER_MINER.toLocaleString()} 💰?`,
+      `Sewa Kurcaci Tarjo seharga ${formatNumber(GAME_CONSTANTS.COSTS.WORKER_MINER, "id-ID")} 💰?`,
       () => {
         if (hireWorker("miner", GAME_CONSTANTS.COSTS.WORKER_MINER)) {
           enqueueNotification("Kurcaci Penambang berhasil disewa!", {

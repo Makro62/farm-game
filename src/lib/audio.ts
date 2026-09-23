@@ -177,6 +177,60 @@ const SYNTH_SOUNDS: Record<string, (ctx: AudioContext, master: AudioNode) => voi
       createOsc(ctx, master, 600 + i * 50, 'sine', t + delay, 0.04, 0.08);
     }
   },
+
+  rare_harvest: (ctx, master) => {
+    arpeggio(
+      ctx,
+      master,
+      [NOTE.C5, NOTE.E5, NOTE.G5, NOTE.A5, NOTE.C6],
+      'triangle',
+      0.07,
+      0.11,
+    );
+    const t = ctx.currentTime + 0.3;
+    createOsc(ctx, master, NOTE.C6 * Math.pow(2, 4 / 12), 'sine', t, 0.3, 0.08);
+    createOsc(ctx, master, NOTE.C6, 'sine', t + 0.08, 0.35, 0.07);
+  },
+
+  prestige: (ctx, master) => {
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(150, t);
+    osc.frequency.exponentialRampToValueAtTime(900, t + 0.5);
+    gain.gain.setValueAtTime(0.06, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain);
+    gain.connect(master);
+    osc.start(t);
+    osc.stop(t + 0.56);
+    [NOTE.C4, NOTE.E4, NOTE.G4, NOTE.C5].forEach((freq, i) => {
+      createOsc(ctx, master, freq, 'triangle', t + 0.4 + i * 0.05, 0.9, 0.08);
+    });
+  },
+
+  newday: (ctx, master) => {
+    arpeggio(ctx, master, [NOTE.G4, NOTE.C5, NOTE.E5, NOTE.G5], 'sine', 0.12, 0.10);
+    createOsc(ctx, master, NOTE.C4, 'sine', ctx.currentTime + 0.05, 1.0, 0.03, false);
+  },
+
+  fanfare: (ctx, master) => {
+    const t = ctx.currentTime;
+    const seq: Array<[number, number]> = [
+      [NOTE.C5, 0],
+      [NOTE.C5, 0.14],
+      [NOTE.C5, 0.28],
+      [NOTE.G5, 0.42],
+    ];
+    seq.forEach(([freq, offset]) => {
+      createOsc(ctx, master, freq, 'square', t + offset, 0.15, 0.06);
+      createOsc(ctx, master, freq * 0.5, 'triangle', t + offset, 0.15, 0.07);
+    });
+    [NOTE.G4, NOTE.C5, NOTE.E5, NOTE.G5].forEach((freq) => {
+      createOsc(ctx, master, freq, 'triangle', t + 0.6, 0.6, 0.06);
+    });
+  },
 };
 
 // ─── Synthesized Music Engine ─────────────────────────────────────

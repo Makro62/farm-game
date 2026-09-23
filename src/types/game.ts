@@ -1,5 +1,7 @@
 /** Domain + Zustand store types for Farm Tycoon */
 
+import type { CSSProperties } from 'react'
+
 export type SeasonId = 'spring' | 'summer' | 'autumn' | 'winter'
 
 export type PlotStatus = 'empty' | 'growing' | 'ready'
@@ -53,6 +55,8 @@ export interface Animal {
   happiness?: number
   health?: number
   readyToCollect?: boolean
+  gen?: number
+  lastBredAt?: number
 
   [key: string]: unknown
 }
@@ -333,6 +337,10 @@ export interface NotificationOptions {
   icon?: string
   duration?: number
   type?: string
+  style?: CSSProperties
+  sfx?: string
+  tier?: 'common' | 'rare' | 'legendary'
+  rewardCoins?: number
 }
 
 export interface AchievementState {
@@ -340,6 +348,16 @@ export interface AchievementState {
   unlockedAt?: number
 
   [key: string]: unknown
+}
+
+export type CollectionCategory = 'crops' | 'fish' | 'minerals' | 'recipes'
+
+export interface CollectionState {
+  crops: string[]
+  fish: string[]
+  minerals: string[]
+  recipes: string[]
+  claimed: string[]
 }
 
 /** Persisted / base game state (no actions) */
@@ -364,6 +382,9 @@ export interface GameState {
   soundEnabled: boolean
   musicEnabled: boolean
   notificationsEnabled: boolean
+
+  prestigePoints: number
+  prestigeCount: number
 
   todayPrices: Record<string, number>
   marketTrend: Record<string, MarketTrend>
@@ -407,6 +428,7 @@ export interface GameState {
   tutorialStep: number
 
   achievements: Record<string, AchievementState>
+  collection: CollectionState
   sessionActions: Record<string, boolean>
   weatherEffects: WeatherEffects
   stats: GameStats

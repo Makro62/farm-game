@@ -27,6 +27,10 @@ export const useCoinSound = () => useSound('coin');
 export const useLevelUpSound = () => useSound('levelup');
 export const useAchievementSound = () => useSound('achievement');
 export const useComboSound = () => useSound('combo');
+export const useRareHarvestSound = () => useSound('rare_harvest');
+export const usePrestigeSound = () => useSound('prestige');
+export const useNewDaySound = () => useSound('newday');
+export const useFanfareSound = () => useSound('fanfare');
 
 /**
  * Hook to control background music tracks.

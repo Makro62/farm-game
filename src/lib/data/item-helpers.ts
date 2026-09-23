@@ -1,4 +1,4 @@
-import { SHOP_SEEDS, CROP_DATA } from "./crops";
+import { SHOP_SEEDS, CROP_DATA, CROP_VARIANTS } from "./crops";
 import {
   SHOP_ANIMALS,
   SHOP_BAIT,
@@ -23,6 +23,9 @@ export const ITEM_CATEGORY: Record<string, string> = {};
 SHOP_SEEDS.forEach((s) => {
   ITEM_CATEGORY[s.id] = "seeds"; // bibit_wortel -> seeds
   ITEM_CATEGORY[s.cropId] = "crops"; // wortel -> crops
+});
+Object.values(CROP_VARIANTS).forEach((v) => {
+  ITEM_CATEGORY[v.id] = "crops";
 });
 
 // Animal products (animal IDs themselves are NOT inventory items)
@@ -138,6 +141,7 @@ export function getItemEmoji(itemId: string | null | undefined): string {
   }
 
   if (CROP_DATA[itemId]?.emoji) return CROP_DATA[itemId].emoji;
+  if (CROP_VARIANTS[itemId]?.emoji) return CROP_VARIANTS[itemId].emoji;
 
   const animal = SHOP_ANIMALS.find((a) => a.product === itemId);
   if (animal) return animal.productEmoji;
@@ -198,9 +202,10 @@ export function getItemSellPrice(
   if (seedData) return Math.floor(seedData.price * 0.5);
 
   // Crops: use CROP_DATA baseSellPrice with season/quality modifiers
-  const cropData = CROP_DATA[itemId];
+  const variant = CROP_VARIANTS[itemId];
+  const cropData = variant ? CROP_DATA[variant.cropId] : CROP_DATA[itemId];
   if (cropData) {
-    let price = cropData.baseSellPrice;
+    let price = cropData.baseSellPrice * (variant?.sellMult ?? 1);
     // Quality multiplier
     if (quality && QUALITY_MULTIPLIERS[quality]) {
       price *= QUALITY_MULTIPLIERS[quality];
@@ -268,6 +273,8 @@ export function getItemSource(itemId: string | null | undefined): string | null 
 }
 
 export function getItemDisplayName(itemId: string): string {
+  if (CROP_VARIANTS[itemId]) return CROP_VARIANTS[itemId].name;
+
   const seedData = SHOP_SEEDS.find((s) => s.id === itemId);
   if (seedData) return seedData.name;
 

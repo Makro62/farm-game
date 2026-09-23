@@ -2,6 +2,11 @@
 import { useState, useEffect } from "react";
 
 import { useGameStore, useInventory } from "@/lib/store";
+import type { CollectionCategory } from "@/types/game";
+import {
+  COLLECTION_LISTS,
+  COLLECTION_META,
+} from "@/lib/store/slices/createCollectionSlice";
 import { formatNumber } from "@/lib/utils";
 import {
   getItemEmoji,
@@ -15,6 +20,7 @@ import { MINERALS } from "@/lib/data/minerals";
 import { RECIPES } from "@/lib/data/recipes";
 import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES } from "@/lib/data/achievements";
 import { SEASON_META } from "@/lib/nav";
+import { GAME_CONSTANTS } from "@/lib/constants";
 import TabPage from "@/components/ui/TabPage";
 import Button from "@/components/ui/Button";
 import {
@@ -29,6 +35,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useProfile } from "@/lib/hooks/useProfile";
+import { motion, AnimatePresence } from "framer-motion";
 // ===== Widget lintas-sistem: membaca semua slice sekaligus =====
 function ActionWidget() {
   const plots = useGameStore((s) => s.plots || []);
@@ -155,6 +162,191 @@ function ActionWidget() {
   );
 }
 
+function PrestigePanel() {
+  const level = useGameStore((s) => s.level);
+  const prestigeCount = useGameStore((s) => s.prestigeCount || 0);
+  const prestigePoints = useGameStore((s) => s.prestigePoints || 0);
+  const getPrestigeMultiplier = useGameStore((s) => s.getPrestigeMultiplier);
+  const prestigeReset = useGameStore((s) => s.prestigeReset);
+  const openConfirm = useGameStore((s) => s.openConfirm);
+  const enqueueNotification = useGameStore((s) => s.enqueueNotification);
+
+  const multiplier = getPrestigeMultiplier?.() ?? 1;
+  const minLevel = GAME_CONSTANTS.PRESTIGE.MIN_LEVEL;
+  const canP = (level || 0) >= minLevel;
+
+  return (
+    <div className="glass-card p-4 sm:p-5 mb-8 relative overflow-hidden border-2 border-purple-300/60 bg-gradient-to-br from-purple-50 via-indigo-50 to-fuchsia-50">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b-2 border-white/40 pb-2">
+        <h3 className="font-display font-bold text-lg text-[var(--text-primary)] flex items-center gap-2">
+          <span>✨</span> Prestige
+        </h3>
+        <div className="text-sm font-bold bg-purple-100 text-purple-800 px-3 py-1 rounded-full shadow-inner">
+          {prestigeCount}x Prestige
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+        <div className="bg-white/50 p-3 rounded-2xl border-2 border-white/60 text-center">
+          <div className="text-[11px] font-bold text-[var(--text-secondary)] mb-1">
+            Pengali Pendapatan
+          </div>
+          <div className="font-display text-2xl text-purple-700">
+            ×{multiplier.toFixed(1)}
+          </div>
+        </div>
+        <div className="bg-white/50 p-3 rounded-2xl border-2 border-white/60 text-center">
+          <div className="text-[11px] font-bold text-[var(--text-secondary)] mb-1">
+            Poin Prestige
+          </div>
+          <div className="font-display text-2xl text-fuchsia-700">
+            ⭐ {formatNumber(prestigePoints)}
+          </div>
+        </div>
+        <div className="bg-white/50 p-3 rounded-2xl border-2 border-white/60 text-center">
+          <div className="text-[11px] font-bold text-[var(--text-secondary)] mb-1">
+            Syarat
+          </div>
+          <div className="font-display text-2xl text-[var(--text-primary)]">
+            Lv {minLevel}
+          </div>
+        </div>
+      </div>
+
+      <p className="text-xs font-medium text-[var(--text-secondary)] mb-3 leading-relaxed">
+        Reset seluruh progres (koin, level, ternak, bangunan) untuk mendapatkan
+        +10% pengali pendapatan permanen per Prestige (maks ×
+        {GAME_CONSTANTS.PRESTIGE.MAX_MULTIPLIER.toFixed(1)}). Pencapaian,
+        statistik, streak, dan pengaturan tetap tersimpan.
+      </p>
+
+      <Button
+        variant="gold"
+        size="lg"
+        className="w-full"
+        disabled={!canP}
+        onClick={() => {
+          if (!canP) return;
+          openConfirm(
+            "Prestige",
+            `Level ${level} akan direset ke Level 1. Koin, hewan, bangunan, dan inventaris akan hilang. Lanjutkan?`,
+            () => {
+              const result = prestigeReset?.();
+              if (result && !result.ok) {
+                enqueueNotification(result.message, {
+                  type: "error",
+                  icon: "🔒",
+                });
+              }
+            },
+          );
+        }}
+      >
+        {canP ? "Prestige! ✨" : `Butuh Level ${minLevel} (Lv ${level})`}
+      </Button>
+    </div>
+  );
+}
+
+function KoleksiPanel() {
+  const collection = useGameStore((s) => s.collection);
+  const claimCollectionReward = useGameStore((s) => s.claimCollectionReward);
+  const enqueueNotification = useGameStore((s) => s.enqueueNotification);
+
+  const categories: CollectionCategory[] = [
+    "crops",
+    "fish",
+    "minerals",
+    "recipes",
+  ];
+
+  return (
+    <div className="glass-card p-4 sm:p-5 mb-8 border-2 border-emerald-300/60 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b-2 border-white/40 pb-2">
+        <h3 className="font-display font-bold text-lg text-[var(--text-primary)] flex items-center gap-2">
+          <span>📖</span> Koleksi
+        </h3>
+        <div className="text-sm font-bold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full shadow-inner">
+          Hadiah per kategori: {formatNumber(GAME_CONSTANTS.COLLECTION.REWARD_COINS)} 💰
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {categories.map((category) => {
+          const meta = COLLECTION_META[category];
+          const list = COLLECTION_LISTS[category];
+          const ownedSet = new Set(collection?.[category] || []);
+          const owned = list.filter((id) => ownedSet.has(id)).length;
+          const total = list.length;
+          const complete = owned >= total;
+          const claimed = !!collection?.claimed?.includes(category);
+
+          return (
+            <div
+              key={category}
+              className="bg-white/50 p-3 rounded-2xl border-2 border-white/60"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-sm text-[var(--text-primary)] flex items-center gap-1.5">
+                  <span>{meta.emoji}</span> {meta.label}
+                </span>
+                <span className="text-[11px] font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                  {owned}/{total}
+                </span>
+              </div>
+              <div className="h-2 bg-black/10 rounded-full overflow-hidden mb-2">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all"
+                  style={{ width: `${(owned / total) * 100}%` }}
+                />
+              </div>
+              <div className="grid grid-cols-8 gap-1 mb-2">
+                {list.map((id) => {
+                  const found = ownedSet.has(id);
+                  return (
+                    <div
+                      key={id}
+                      title={found ? getItemDisplayName(id) : "Belum ditemukan"}
+                      className={`aspect-square rounded-lg flex items-center justify-center text-sm border ${
+                        found
+                          ? "bg-white border-emerald-300"
+                          : "bg-black/10 border-black/10 opacity-50"
+                      }`}
+                    >
+                      {found ? getItemEmoji(id) : "❔"}
+                    </div>
+                  );
+                })}
+              </div>
+              {complete && (
+                <Button
+                  variant="gold"
+                  size="sm"
+                  className="w-full"
+                  disabled={claimed}
+                  onClick={() => {
+                    const result = claimCollectionReward?.(category);
+                    if (result && !result.ok) {
+                      enqueueNotification?.(result.message, {
+                        type: "error",
+                        icon: "🔒",
+                      });
+                    }
+                  }}
+                >
+                  {claimed
+                    ? "✅ Hadiah Sudah Diambil"
+                    : `Klaim ${formatNumber(GAME_CONSTANTS.COLLECTION.REWARD_COINS)} 💰`}
+                </Button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function TabProfil() {
   const {
     inventory,
@@ -266,9 +458,20 @@ export default function TabProfil() {
         <ActionWidget />
 
         {/* SETTINGS / CHEAT MODAL */}
+        <AnimatePresence>
         {showSettings && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-[#FFFDF7] border-4 border-[var(--wood)] rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-[#FFFDF7] border-4 border-[var(--wood)] rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative"
+            >
               <div className="bg-[var(--wood)] px-4 py-3 flex items-center justify-between">
                 <h3 className="font-display font-bold text-white text-lg flex items-center gap-2">
                   <Settings className="w-5 h-5" /> Pengaturan & Cheat
@@ -387,9 +590,10 @@ export default function TabProfil() {
                   </Button>
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         <div className="glass-card p-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-white/40 p-3 rounded-2xl border-2 border-white/50 flex flex-col items-center justify-center text-center">
@@ -400,7 +604,7 @@ export default function TabProfil() {
               <Star className="w-5 h-5 fill-current text-[var(--gold)]" />
               {level}
             </div>
-            <div className="text-[10px] font-black text-black/40 bg-black/5 px-2 py-0.5 rounded-full mt-1">
+            <div className="text-[11px] font-black text-black/40 bg-black/5 px-2 py-0.5 rounded-full mt-1">
               XP {formatNumber(xp)} / {formatNumber(xpNeeded)}
             </div>
           </div>
@@ -423,7 +627,7 @@ export default function TabProfil() {
               <CalendarDays className="w-5 h-5" />
               Hari {day}
             </div>
-            <div className="text-[10px] font-black text-black/40 bg-black/5 px-2 py-0.5 rounded-full mt-1">
+            <div className="text-[11px] font-black text-black/40 bg-black/5 px-2 py-0.5 rounded-full mt-1">
               {seasonMeta.emoji} {seasonMeta.label}
             </div>
           </div>
@@ -436,11 +640,15 @@ export default function TabProfil() {
               <Trophy className="w-5 h-5 fill-current" />
               {Object.values(inventory).filter((data: any) => data.qty > 0).length}
             </div>
-            <div className="text-[10px] font-black text-black/40 bg-black/5 px-2 py-0.5 rounded-full mt-1">
+            <div className="text-[11px] font-black text-black/40 bg-black/5 px-2 py-0.5 rounded-full mt-1">
               Jenis Item Dimiliki
             </div>
           </div>
         </div>
+
+        <PrestigePanel />
+
+        <KoleksiPanel />
 
         {/* ================= BEST RECORDS (LEADERBOARD) ================= */}
         <div className="glass-card p-4 sm:p-5 mb-8">
@@ -456,7 +664,7 @@ export default function TabProfil() {
                 className="bg-white/40 p-3 rounded-2xl border-2 border-white/50 flex flex-col items-center justify-center text-center"
               >
                 <div className="text-2xl mb-1">{rec.emoji}</div>
-                <div className="text-[10px] font-bold text-[var(--text-secondary)] mb-1">
+                <div className="text-[11px] font-bold text-[var(--text-secondary)] mb-1">
                   {rec.label}
                 </div>
                 <div className="font-display text-lg text-[var(--primary-dark)]">
@@ -500,17 +708,17 @@ export default function TabProfil() {
                         : ach.desc}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1">
-                      <span className="text-[9px] font-black uppercase bg-black/10 text-black/60 px-1.5 py-0.5 rounded-full">
+                      <span className="text-[11px] font-black uppercase bg-black/10 text-black/60 px-1.5 py-0.5 rounded-full">
                         {ACHIEVEMENT_CATEGORIES[ach.category]?.label ||
                           "Spesial"}
                       </span>
                       {ach.rewardXp > 0 && (
-                        <span className="text-[9px] font-black text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full">
+                        <span className="text-[11px] font-black text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full">
                           +{ach.rewardXp} XP
                         </span>
                       )}
                       {(ach.rewardCoins ?? 0) > 0 && (
-                        <span className="text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                        <span className="text-[11px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
                           +{ach.rewardCoins} 💰
                         </span>
                       )}
@@ -566,7 +774,7 @@ export default function TabProfil() {
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-[13px] font-black text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2 drop-shadow-md">
                       {icon} {title}
-                      <span className="text-[10px] bg-white/60 text-[var(--text-secondary)] px-2 py-0.5 rounded-full border border-white">
+                      <span className="text-[11px] bg-white/60 text-[var(--text-secondary)] px-2 py-0.5 rounded-full border border-white">
                         {items.length} Jenis
                       </span>
                     </h4>
@@ -608,19 +816,19 @@ export default function TabProfil() {
                           <div className="text-3xl sm:text-4xl mb-1 drop-shadow-sm group-hover:scale-110 transition-transform">
                             {emoji}
                           </div>
-                          <div className="text-[9px] sm:text-[10px] font-bold text-[var(--text-primary)] leading-tight max-w-full truncate w-full">
+                          <div className="text-[11px] sm:text-[11px] font-bold text-[var(--text-primary)] leading-tight max-w-full truncate w-full">
                             {name}
                           </div>
                           {sellable ? (
-                            <div className="mt-1 text-[9px] font-black text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-1.5 py-0.5 leading-none">
+                            <div className="mt-1 text-[11px] font-black text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-1.5 py-0.5 leading-none">
                               💰 {price}
                             </div>
                           ) : (
-                            <div className="mt-1 text-[9px] font-bold text-black/40 bg-black/5 rounded-full px-1.5 py-0.5 leading-none">
+                            <div className="mt-1 text-[11px] font-bold text-black/40 bg-black/5 rounded-full px-1.5 py-0.5 leading-none">
                               🔒
                             </div>
                           )}
-                          <div className="absolute -top-2 -right-2 bg-gradient-to-b from-[var(--gold)] to-orange-500 text-[var(--text-primary)] text-[10px] font-black px-1.5 py-0.5 min-w-[20px] rounded-full shadow-md border border-white">
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-b from-[var(--gold)] to-orange-500 text-[var(--text-primary)] text-[11px] font-black px-1.5 py-0.5 min-w-[20px] rounded-full shadow-md border border-white">
                             {item.qty}
                           </div>
                           {item.quality && item.quality !== "normal" && (

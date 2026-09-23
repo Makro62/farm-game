@@ -151,6 +151,9 @@ export const initialState: GameState = {
   musicEnabled: true,
   notificationsEnabled: true,
 
+  prestigePoints: 0,
+  prestigeCount: 0,
+
   todayPrices: {},
   marketTrend: {},
 
@@ -265,6 +268,13 @@ export const initialState: GameState = {
   tutorialStep: 0,
 
   achievements: {},
+  collection: {
+    crops: [],
+    fish: [],
+    minerals: [],
+    recipes: [],
+    claimed: [],
+  },
   sessionActions: {},
   weatherEffects: {
     cropGrowth: 1.0,
@@ -290,6 +300,7 @@ export const initialState: GameState = {
     totalWormBaitUsed: 0,
     totalDiamondsMined: 0,
     totalSushiEmasMade: 0,
+    totalPrestiges: 0,
   },
   activeCustomers: [],
   notificationsQueue: [],

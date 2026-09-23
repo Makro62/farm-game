@@ -78,24 +78,24 @@ export default function TabAnimal() {
             </GameAreaHeader>
 
             {/* Building & Worker Status */}
-            <div className="flex flex-wrap gap-1 mb-2 px-2">
+            <div className="flex flex-wrap gap-1 mb-2 px-2 min-h-[1.5rem]">
               {buildings?.coop?.unlocked && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
                   🐔 Kandang Lv{buildings.coop.level || 1}
                 </span>
               )}
               {buildings?.barn?.unlocked && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
                   🐄 Barn Lv{buildings.barn.level || 1}
                 </span>
               )}
               {workers?.rancher && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
                   👩‍🌾 Peternak {autoFarm ? 'Aktif' : 'Istirahat'}
                 </span>
               )}
               {animals.length > 0 && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
                   🐾 {animals.length} ekor
                 </span>
               )}
@@ -104,7 +104,7 @@ export default function TabAnimal() {
             <div
               className={`p-3 sm:p-4 field-frame relative stage-play-frame transition-all bg-cover bg-center ${isEditMode ? 'ring-4 ring-yellow-400 border-dashed' : ''}`}
               style={{
-                backgroundImage: "url('/img/assets_lama/animal_bg_1786351247779.png')",
+                backgroundImage: "url('/img/backgrounds/animal_bg.png')",
               }}
             >
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30 pointer-events-none rounded-[22px]" />
@@ -190,6 +190,9 @@ export default function TabAnimal() {
                       }}
                       whileHover={!isEditMode ? { scale: 1.05 } : {}}
                       whileTap={!isEditMode ? { scale: 0.95 } : {}}
+                      animate={{
+                        scale: isEditMode && editSelected === animal.id ? 1.05 : 1,
+                      }}
                       onClick={handleCellClick}
                       onKeyDown={(e: any) => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -197,9 +200,9 @@ export default function TabAnimal() {
                           handleCellClick(e)
                         }
                       }}
-                      className={`group kandang-animal-cell cursor-pointer relative select-none
+                      className={`group kandang-animal-cell cursor-pointer relative select-none justify-start
                         ${isEditMode ? 'cursor-pointer ring-2 ring-yellow-400' : ''}
-                        ${isEditMode && editSelected === animal.id ? 'ring-4 ring-sky-300 scale-105 z-10' : ''}
+                        ${isEditMode && editSelected === animal.id ? 'ring-4 ring-sky-300 z-10' : ''}
                         ${isReady ? (isHungry ? 'ring-2 ring-red-500/90 animate-pulse' : 'ring-2 ring-yellow-400/80 animate-breathe') : ''}
                         ${(animal.health ?? 100) < 50 ? 'ring-2 ring-red-600/60' : ''}
                       `}
@@ -215,63 +218,67 @@ export default function TabAnimal() {
                           </div>
                         </div>
                       )}
-                      {/* Happiness Indicator */}
-                      {animal.happiness !== undefined &&
-                        animal.happiness < 80 && (
-                          <div className="absolute -top-1 -left-1 text-[8px] z-30">
-                            😟
-                          </div>
+
+                      {/* Gen badge & happiness */}
+                      {(Number(animal.gen) || 0) > 0 && (
+                        <span className="absolute top-1 left-1 text-[11px] font-black bg-purple-500 text-white px-1 rounded-full z-30 border border-white shadow-sm leading-tight">
+                          G{animal.gen}
+                        </span>
+                      )}
+                      {animal.happiness !== undefined && animal.happiness < 80 && (
+                        <div className="absolute top-1 left-7 text-[11px] z-30 leading-tight">
+                          😟
+                        </div>
+                      )}
+
+                      {/* Ikon hewan — area atas, di atas banner & tombol */}
+                      <div className="absolute left-0 right-0 top-0 bottom-[3.75rem] flex items-center justify-center z-10">
+                        <motion.div
+                          animate={isReady ? { y: [0, -5, 0] } : {}}
+                          transition={{ duration: 1, repeat: Infinity }}
+                        >
+                          <AnimalIcon type={animal.type} />
+                        </motion.div>
+                      </div>
+
+                      {/* Slot banner (selalu ada → tidak ada layout shift) */}
+                      <div className="absolute left-0 right-0 bottom-11 h-4 z-20">
+                        {isHungry && (
+                          <button
+                            type="button"
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleFeed(e, animal)
+                            }}
+                            title={`Beri makan (butuh ${feedDef?.feedQty ?? 2}x ${feedDef?.feedItem ?? 'pakan'})`}
+                            className="w-full h-full bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 active:scale-95 flex items-center justify-center cursor-pointer transition-all shadow-md"
+                          >
+                            <span className="text-[11px] leading-none font-black text-white drop-shadow flex items-center gap-0.5">
+                              <span>Beri Makan!</span> 🌽
+                            </span>
+                          </button>
                         )}
-                      <motion.div
-                        animate={isReady ? { y: [0, -5, 0] } : {}}
-                        transition={{ duration: 1, repeat: Infinity }}
-                        className="z-10 w-full h-full flex items-center justify-center"
-                      >
-                        <AnimalIcon type={animal.type} />
-                      </motion.div>
-
-                      {/* Tombol Butuh Makan / Beri Makan jika lapar */}
-                      {isHungry && (
-                        <button
-                          type="button"
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleFeed(e, animal)
-                          }}
-                          title={`Beri makan (butuh ${feedDef?.feedQty ?? 2}x ${feedDef?.feedItem ?? 'pakan'})`}
-                          className="absolute bottom-0 left-0 right-0 h-5 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 active:scale-95 z-20 flex items-center justify-center cursor-pointer transition-all shadow-md"
-                        >
-                          <span className="text-[9px] font-black text-white drop-shadow flex items-center gap-0.5 animate-bounce">
-                            <span>Beri Makan!</span> 🌽
-                          </span>
-                        </button>
-                      )}
-
-                      {/* Banner Siap Panen jika sudah kenyang & siap */}
-                      {isReady && !isHungry && (
-                        <button
-                          type="button"
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleCollect(animal)
-                          }}
-                          className="absolute bottom-0 left-0 right-0 h-5 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 active:scale-95 z-20 flex items-center justify-center cursor-pointer transition-all shadow-md"
-                        >
-                          <span className="text-[9px] font-black text-white drop-shadow flex items-center gap-0.5">
-                            <span>Siap Diambil</span> ✨
-                          </span>
-                        </button>
-                      )}
-
-                      {/* Bar Progress Produksi jika belum siap */}
-                      {!isReady && (
-                        <div className="absolute bottom-0 left-0 right-0 h-4 progress-bar !rounded-none overflow-hidden border-t border-white/10 z-20 flex items-center justify-center">
-                          <div
-                            className="progress-fill absolute left-0 top-0 bottom-0"
-                            style={{ width: `${progress}%` }}
-                          />
-                          <span className="relative z-10 text-[9px] font-black text-white drop-shadow-md tracking-wider">
-                            <span className="text-white drop-shadow-md">
+                        {isReady && !isHungry && (
+                          <button
+                            type="button"
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleCollect(animal)
+                            }}
+                            className="w-full h-full bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 active:scale-95 flex items-center justify-center cursor-pointer transition-all shadow-md"
+                          >
+                            <span className="text-[11px] leading-none font-black text-white drop-shadow flex items-center gap-0.5">
+                              <span>Siap Diambil</span> ✨
+                            </span>
+                          </button>
+                        )}
+                        {!isReady && (
+                          <div className="w-full h-full progress-bar !rounded-none overflow-hidden border-t border-white/10 flex items-center justify-center">
+                            <div
+                              className="progress-fill absolute left-0 top-0 bottom-0"
+                              style={{ width: `${progress}%` }}
+                            />
+                            <span className="relative z-10 text-[11px] leading-none font-black text-white drop-shadow-md tracking-wider">
                               {Math.ceil(
                                 (produceTime -
                                   (currentTime - animal.lastCollected)) /
@@ -279,9 +286,50 @@ export default function TabAnimal() {
                               )}
                               s ⚡
                             </span>
-                          </span>
-                        </div>
-                      )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bar bawah: tombol Jual + Beri Makan (44px, selalu ada → tinggi konstan) */}
+                      <div className="absolute left-0 right-0 bottom-0 h-11 z-20 grid grid-cols-2 gap-0.5 p-0.5">
+                        {!isEditMode && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={e => {
+                                e.stopPropagation()
+                                handleSellAnimal(animal)
+                              }}
+                              title="Jual hewan"
+                              aria-label="Jual hewan"
+                              className="h-full min-h-[44px] rounded-lg bg-[#ff7a6b] text-[#3b120c] flex items-center justify-center text-sm font-black shadow-md cursor-pointer hover:brightness-110 border border-[#ffb3aa] transition-all"
+                            >
+                              ✕
+                            </button>
+                            <button
+                              type="button"
+                              title={
+                                animal.fed
+                                  ? 'Sudah kenyang (Bonus panen aktif)'
+                                  : `Beri makan (butuh ${feedDef?.feedQty ?? '?'}x ${feedDef?.feedItem ?? '?'})`
+                              }
+                              onClick={e => {
+                                e.stopPropagation()
+                                handleFeed(e, animal)
+                              }}
+                              className={`h-full min-h-[44px] rounded-lg flex items-center justify-center text-sm font-black shadow-md border transition-all ${
+                                animal.fed
+                                  ? 'bg-green-400 border-green-200 opacity-80 cursor-default'
+                                  : isHungry
+                                    ? 'bg-amber-400 border-amber-200 cursor-pointer hover:scale-[1.03]'
+                                    : 'bg-yellow-300 border-yellow-100 cursor-pointer hover:scale-[1.03]'
+                              }`}
+                            >
+                              {animal.fed ? '🟢' : '🌽'}
+                            </button>
+                          </>
+                        )}
+                      </div>
 
                       <AnimatePresence mode="popLayout">
                         {isReady && (
@@ -295,52 +343,12 @@ export default function TabAnimal() {
                               filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
                               transition: { duration: 0.6, ease: 'easeOut' },
                             }}
-                            className="absolute -top-2 -right-2 text-xl sm:text-2xl animate-bounce drop-shadow-lg z-20"
+                            className="absolute top-1 right-1 text-xl sm:text-2xl drop-shadow-lg z-40"
                           >
                             {animalData?.productEmoji}
                           </motion.div>
                         )}
                       </AnimatePresence>
-
-                      {!isEditMode && (
-                        <>
-                          {/* Tombol Jual */}
-                          <button
-                            type="button"
-                            onClick={e => {
-                              e.stopPropagation()
-                              handleSellAnimal(animal)
-                            }}
-                            title="Jual hewan"
-                            aria-label="Jual hewan"
-                            className="absolute -top-2 -left-2 bg-[#ff7a6b] text-[#3b120c] rounded-full w-7 h-7 flex items-center justify-center text-xs shadow-md md:opacity-0 md:group-hover:opacity-100 transition-opacity z-30 cursor-pointer hover:brightness-110 border border-[#ffb3aa]"
-                          >
-                            ✕
-                          </button>
-                          {/* Tombol Beri Makan */}
-                          <button
-                            type="button"
-                            title={
-                              animal.fed
-                                ? 'Sudah kenyang (Bonus panen aktif)'
-                                : `Beri makan (butuh ${feedDef?.feedQty ?? '?'}x ${feedDef?.feedItem ?? '?'})`
-                            }
-                            onClick={e => {
-                              e.stopPropagation()
-                              handleFeed(e, animal)
-                            }}
-                            className={`absolute -bottom-2 -right-2 rounded-full w-7 h-7 flex items-center justify-center text-xs shadow-md z-30 border transition-all ${
-                              animal.fed
-                                ? 'bg-green-400 border-green-200 opacity-80 cursor-default'
-                                : isHungry
-                                  ? 'bg-amber-400 border-amber-200 cursor-pointer hover:scale-110 shadow-lg animate-pulse'
-                                  : 'bg-yellow-300 border-yellow-100 cursor-pointer hover:scale-110'
-                            }`}
-                          >
-                            {animal.fed ? '🟢' : '🌽'}
-                          </button>
-                        </>
-                      )}
                     </motion.div>
                   )
                 })}
@@ -405,7 +413,7 @@ export default function TabAnimal() {
                                 <div className="font-bold text-[var(--text-primary)]">
                                   {feed.name}
                                 </div>
-                                <div className="text-[10px] text-amber-500 font-semibold">
+                                <div className="text-[11px] text-amber-500 font-semibold">
                                   Di tas: {owned} buah
                                 </div>
                               </div>
@@ -433,7 +441,7 @@ export default function TabAnimal() {
                               ? `(Kebahagiaan: ${workers.rancher.happiness}%)`
                               : ''}
                           </div>
-                          <div className="text-[10px] text-[var(--text-secondary)]">
+                          <div className="text-[11px] text-[var(--text-secondary)]">
                             Beri pakan & panen ternak
                           </div>
                         </div>
@@ -454,7 +462,7 @@ export default function TabAnimal() {
                       </div>
                       {workers?.rancher && (
                         <div className="flex justify-between items-center border-t border-[var(--primary)]/20 pt-2 mt-1">
-                          <p className="text-[10px] text-[var(--text-secondary)] font-medium">
+                          <p className="text-[11px] text-[var(--text-secondary)] font-medium">
                             {workers?.rancher?.isAutoMode
                               ? 'Kurcaci aktif — otomatis ambil telur/susu dll.'
                               : 'Nyalakan Auto untuk mulai.'}
@@ -472,7 +480,7 @@ export default function TabAnimal() {
                                     res?.message || 'Gagal memberi kopi.'
                                   )
                               }}
-                              className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] px-2 py-1 rounded-lg font-bold transition-colors shadow-sm flex items-center gap-1"
+                              className="bg-orange-500 hover:bg-orange-600 text-white text-[11px] px-2 py-1 rounded-lg font-bold transition-colors shadow-sm flex items-center gap-1"
                             >
                               <span>☕</span> Beri Kopi
                             </button>
@@ -509,11 +517,11 @@ export default function TabAnimal() {
                               >
                                 <span className="text-2xl relative">
                                   <AnimalIcon type={animal.id} />
-                                  <span className="absolute -bottom-1 -right-1 bg-[var(--gold)] text-[var(--text-primary)] text-[9px] font-black px-1.5 rounded-full border border-[#FFF1B8]">
+                                  <span className="absolute -bottom-1 -right-1 bg-[var(--gold)] text-[var(--text-primary)] text-[11px] font-black px-1.5 rounded-full border border-[#FFF1B8]">
                                     {count}
                                   </span>
                                 </span>
-                                <span className="text-[9px] text-[var(--text-secondary)] text-center font-bold">
+                                <span className="text-[11px] text-[var(--text-secondary)] text-center font-bold">
                                   {animal.name}
                                 </span>
                               </div>
@@ -521,6 +529,55 @@ export default function TabAnimal() {
                           })}
                         </div>
                       )}
+                    </div>
+                    <ShopSectionTitle icon="🧬">Penangkaran</ShopSectionTitle>
+                    <div className="glass-card rounded-xl p-3 mb-3">
+                      {(() => {
+                        const byType: Record<string, typeof animals> = {}
+                        animals.forEach(a => {
+                          if (!byType[a.type]) byType[a.type] = []
+                          byType[a.type].push(a)
+                        })
+                        const breedable = Object.entries(byType).filter(
+                          ([, list]) => list.length >= 2
+                        )
+                        if (breedable.length === 0) {
+                          return (
+                            <div className="text-center text-sm text-[var(--text-secondary)] italic font-bold">
+                              Butuh 2 hewan sejenis untuk kawin — biaya{" "}
+                              {GAME_CONSTANTS.BREED.COST} 💰
+                            </div>
+                          )
+                        }
+                        return breedable.map(([type, list]) => (
+                          <div
+                            key={type}
+                            className="flex items-center justify-between gap-2 py-1.5 border-b border-[var(--primary)]/10 last:border-0"
+                          >
+                            <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                              {getAnimalEmoji(type)} {list.length} ekor
+                              {list.some(a => (Number(a.gen) || 0) > 0) && (
+                                <span className="text-[11px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full">
+                                  Gen {Math.max(...list.map(a => Number(a.gen) || 0))}
+                                </span>
+                              )}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const res = useGameStore
+                                  .getState()
+                                  .breedAnimal(list[0].id, list[1].id)
+                                if (res?.ok) toast.success(res.message)
+                                else toast.error(res?.message || 'Gagal kawin.')
+                              }}
+                              className="text-[11px] font-black px-2.5 py-1 rounded-lg bg-purple-500 hover:bg-purple-600 text-white border border-purple-300 transition-colors shadow-sm whitespace-nowrap"
+                            >
+                              🧬 Kawin ({GAME_CONSTANTS.BREED.COST}💰)
+                            </button>
+                          </div>
+                        ))
+                      })()}
                     </div>
                     <MarketBoard />
                     <QuestPanel />

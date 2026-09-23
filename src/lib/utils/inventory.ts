@@ -1,5 +1,5 @@
 import type { GameState, InventoryCategory, InventoryStack } from '@/types/game'
-import { SHOP_SEEDS } from '@/lib/data/crops'
+import { SHOP_SEEDS, CROP_VARIANTS } from '@/lib/data/crops'
 import {
   SHOP_ANIMALS,
   SHOP_BAIT,
@@ -51,6 +51,7 @@ export function getItemCategory(itemId: string): InventoryCategory | null {
   if (!itemId) return null
   if (SHOP_SEEDS.some(s => s.id === itemId)) return 'seeds'
   if (SHOP_SEEDS.some(s => s.cropId === itemId)) return 'crops'
+  if (CROP_VARIANTS[itemId]) return 'crops'
   if (FISHES.some(f => f.id === itemId)) return 'fish'
   if (MINERALS.some(m => m.id === itemId)) return 'minerals'
   if (SHOP_ANIMALS.some(a => a.product === itemId)) return 'animalProducts'

@@ -59,11 +59,35 @@ function RushBanner() {
     return () => clearInterval(interval);
   }, [rushUntil]);
   const left = Math.max(0, Math.ceil((rushUntil - now) / 1000));
-  if (left <= 0) return null;
   return (
-    <div className="flex items-center justify-center gap-2 mb-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-orange-100 border border-orange-400 text-orange-800 animate-pulse">
-      <span>🔥</span>
-      <span>JAM RAMAI! Tip x2 — {left} detik lagi</span>
+    <div className="mb-2 min-h-[1.75rem]">
+      {left > 0 && (
+        <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-orange-100 border border-orange-400 text-orange-800">
+          <span className="animate-pulse">🔥</span>
+          <span>JAM RAMAI! Tip x2 — {left} detik lagi</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DailySpecialBanner() {
+  const dailySpecial = useGameStore((s) => s.restaurant?.dailySpecial);
+  const recipe = RECIPES.find((r) => r.id === dailySpecial);
+  if (!recipe) return null;
+  const multPct = Math.round(
+    (GAME_CONSTANTS.RESTAURANT.SPECIAL_PRICE_MULT - 1) * 100,
+  );
+  const specialPrice = Math.floor(
+    recipe.price * GAME_CONSTANTS.RESTAURANT.SPECIAL_PRICE_MULT,
+  );
+  return (
+    <div className="flex items-center justify-center gap-2 mb-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-yellow-100 border border-yellow-400 text-yellow-900">
+      <span>⭐</span>
+      <span>
+        Menu Spesial Hari Ini: {recipe.emoji} {recipe.name} — +{multPct}% (
+        {recipe.price} → {specialPrice}💰)
+      </span>
     </div>
   );
 }
@@ -117,7 +141,7 @@ function TableGrid() {
               <div className="flex flex-col items-center gap-1 px-1">
                 <div className="text-2xl opacity-40 leading-none">🪑</div>
                 {tableId === totalTables && (
-                  <div className="bg-amber-500 text-white text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-amber-600 whitespace-nowrap shadow-md">
+                  <div className="bg-amber-500 text-white text-[11px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full border-2 border-amber-600 whitespace-nowrap shadow-md">
                     + Meja {totalTables * 1000}💰
                   </div>
                 )}
@@ -153,7 +177,7 @@ function TableGrid() {
                   {RECIPES.find((r) => r.id === customer.recipeId)?.emoji}
                 </span>
                 {dailySpecial === customer.recipeId && (
-                  <span className="text-[8px] leading-none">⭐</span>
+                  <span className="text-[11px] leading-none">⭐</span>
                 )}
               </div>
             )}
@@ -166,7 +190,7 @@ function TableGrid() {
             {!customer && (
               <div className="relative z-10 flex flex-col items-center gap-1 opacity-30">
                 <span className="text-2xl">🍽️</span>
-                <span className="text-[9px] font-bold text-amber-700">Kosong</span>
+                <span className="text-[11px] font-bold text-amber-700">Kosong</span>
               </div>
             )}
 
@@ -213,7 +237,7 @@ function TableGrid() {
                     />
                   </div>
 
-                  <span className="text-[8px] font-bold text-amber-800 mt-0.5 max-w-full truncate px-1">
+                  <span className="text-[11px] font-bold text-amber-800 mt-0.5 max-w-full truncate px-1">
                     {customer.name}
                   </span>
                 </motion.div>
@@ -233,6 +257,10 @@ export default function TabRestaurant() {
   useEffect(() => {
     music.play();
     return () => music.stop();
+  }, []);
+
+  useEffect(() => {
+    useGameStore.getState().rollDailySpecial?.();
   }, []);
 
   const {
@@ -314,13 +342,14 @@ export default function TabRestaurant() {
             </section>
 
             <RushBanner />
+            <DailySpecialBanner />
 
             {/* ── Zona 2: Ruang Makan ── */}
             <section className="rounded-2xl border-2 border-amber-300 bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100 overflow-hidden mb-3 sm:mb-4">
               <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 pt-3 pb-1">
                 <h3 className="font-display font-bold text-base text-amber-900 flex items-center gap-1.5">
                   <span>🍽️</span> Ruang Makan
-                  <span className="text-[10px] font-bold text-amber-700 bg-white/70 border border-amber-200 rounded-full px-2 py-0.5">
+                  <span className="text-[11px] font-bold text-amber-700 bg-white/70 border border-amber-200 rounded-full px-2 py-0.5">
                     {activeCustomers.length}/{totalTables}
                   </span>
                 </h3>
@@ -379,7 +408,7 @@ export default function TabRestaurant() {
                           variant="toggle"
                           active={menuFilter === f.id}
                           onClick={() => setMenuFilter(f.id)}
-                          className="flex-1 !min-h-[2rem] !py-1 !px-2 !text-[10px] whitespace-nowrap"
+                          className="flex-1 !min-h-[2rem] !py-1 !px-2 !text-[11px] whitespace-nowrap"
                         >
                           {f.label}
                         </GameActionButton>
@@ -442,7 +471,7 @@ export default function TabRestaurant() {
 
                                 {!isUnlocked && (
                                   <div className="absolute inset-0 flex items-center justify-center bg-black/45 rounded backdrop-blur-[1px]">
-                                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-md border border-white/50">
+                                    <span className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded shadow-md border border-white/50">
                                       🔒 Lv {recipe.unlockLevel}
                                     </span>
                                   </div>
@@ -475,7 +504,7 @@ export default function TabRestaurant() {
                                       return (
                                         <span
                                           key={ingredient}
-                                          className={`text-[9px] px-1 rounded ${
+                                          className={`text-[11px] px-1 rounded ${
                                             available >= qty
                                               ? "bg-[var(--primary-light)]/40"
                                               : "bg-red-100 text-red-700"
@@ -547,7 +576,7 @@ export default function TabRestaurant() {
                         <div className="font-bold text-[var(--text-primary)] text-sm">
                           Koki Juna
                         </div>
-                        <div className="text-[10px] text-[var(--text-secondary)]">
+                        <div className="text-[11px] text-[var(--text-secondary)]">
                           Auto-Cooking
                         </div>
                       </div>

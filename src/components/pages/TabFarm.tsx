@@ -144,7 +144,7 @@ export default function TabFarm() {
                   {weather?.current || 'Cerah'}
                 </span>
                 <span
-                  className={`px-1.5 py-0.5 rounded-full text-[9px] ${
+                  className={`px-1.5 py-0.5 rounded-full text-[11px] ${
                     growthSpeed > 1.0
                       ? 'bg-green-100 text-green-700'
                       : growthSpeed < 1.0
@@ -174,29 +174,29 @@ export default function TabFarm() {
             </div>
 
             {/* Building & Worker Status */}
-            <div className="flex flex-wrap gap-1 mb-2 px-2">
+            <div className="flex flex-wrap gap-1 mb-2 px-2 min-h-[1.5rem]">
               {buildings?.greenhouse?.unlocked && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                   🏠 Greenhouse
                 </span>
               )}
               {buildings?.silo?.unlocked && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
                   🏚️ Silo Lv{buildings.silo.level || 1}
                 </span>
               )}
               {buildings?.scarecrow?.unlocked && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">
                   🪄 Scarecrow
                 </span>
               )}
               {buildings?.sprinkler?.unlocked && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200">
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200">
                   🚿 Sprinkler
                 </span>
               )}
               {workers?.farmer && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
                   👨‍🌾 Petani {autoFarm ? 'Aktif' : 'Istirahat'}
                 </span>
               )}
@@ -242,7 +242,7 @@ export default function TabFarm() {
                   <>
                     <SeedShop />
                     {buildings?.silo?.unlocked && (
-                      <p className="text-[10px] font-bold text-[var(--text-secondary)] mt-2">
+                      <p className="text-[11px] font-bold text-[var(--text-secondary)] mt-2">
                         Silo +15% jual tanaman (Lv{buildings.silo.level})
                       </p>
                     )}

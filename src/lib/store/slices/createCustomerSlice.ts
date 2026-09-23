@@ -171,7 +171,7 @@ export const createCustomerSlice = (set: StoreSet, get: StoreGet) => ({
 
     const customerType = CUSTOMERS[Math.floor(Math.random() * CUSTOMERS.length)]
     const prefs = customerType.preferences || []
-    let recipeId =
+    const recipeId =
       prefs.length > 0
         ? prefs[Math.floor(Math.random() * prefs.length)]
         : 'sup_wortel'

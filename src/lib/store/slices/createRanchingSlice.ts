@@ -196,4 +196,72 @@ export const createRanchingSlice = (set: StoreSet, get: StoreGet) => ({
       return { animals: newAnimals }
     })
   },
+
+  breedAnimal: (idA, idB) => {
+    const state = get()
+    if (idA === idB)
+      return { ok: false, message: 'Pilih dua hewan yang berbeda.' }
+    const parentA = state.animals.find(a => a.id === idA)
+    const parentB = state.animals.find(a => a.id === idB)
+    if (!parentA || !parentB)
+      return { ok: false, message: 'Hewan tidak ditemukan.' }
+    if (parentA.type !== parentB.type)
+      return { ok: false, message: 'Harus satu jenis hewan.' }
+    if (state.animals.length >= GAME_CONSTANTS.GRID.ANIMAL_SLOTS)
+      return {
+        ok: false,
+        message: 'Kandang penuh! Jual hewan dulu sebelum kawin.',
+      }
+
+    const cost = GAME_CONSTANTS.BREED.COST
+    if (safeCoins(state.coins) < cost)
+      return { ok: false, message: `Koin tidak cukup! Butuh ${cost} 💰.` }
+
+    const now = Date.now()
+    for (const parent of [parentA, parentB]) {
+      const last = Number(parent.lastBredAt) || 0
+      if (last > 0 && now - last < GAME_CONSTANTS.BREED.COOLDOWN_MS) {
+        const wait = Math.ceil(
+          (GAME_CONSTANTS.BREED.COOLDOWN_MS - (now - last)) / 1000
+        )
+        return {
+          ok: false,
+          message: `${parentA.type} masih istirahat kawin (${wait}s lagi).`,
+        }
+      }
+    }
+
+    const gen = Math.max(Number(parentA.gen) || 0, Number(parentB.gen) || 0) + 1
+    const shop = getShopAnimal(parentA.type)
+    const baseTime = shop?.time ? shop.time * 1000 : parentA.produceTime
+    const mult = Math.max(
+      GAME_CONSTANTS.BREED.MIN_PRODUCE_MULT,
+      Math.pow(GAME_CONSTANTS.BREED.PRODUCE_TIME_PER_GEN, gen)
+    )
+    const produceTime = Math.max(1000, Math.round(baseTime * mult))
+
+    set(draft => {
+      draft.coins = safeCoins(draft.coins) - cost
+      draft.animals = draft.animals.map(a =>
+        a.id === idA || a.id === idB ? { ...a, lastBredAt: now } : a
+      )
+      draft.animals.push({
+        id: Date.now() + Math.random().toString(36).substr(2, 5),
+        type: parentA.type,
+        status: 'producing',
+        lastCollected: now,
+        produceTime,
+        fed: false,
+        happiness: 100,
+        gen,
+      })
+      incrementStat(draft, 'totalAnimalsOwned', 1)
+    })
+
+    get().checkAchievements?.()
+    const faster = Math.round((1 - mult) * 100)
+    const message = `🐣 Bayi ${parentA.type} lahir! Gen ${gen} — produksi ${faster}% lebih cepat.`
+    get().enqueueNotification(message, { type: 'success', sfx: 'success' })
+    return { ok: true, message }
+  },
 })

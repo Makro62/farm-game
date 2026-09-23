@@ -138,12 +138,12 @@ export function TownPlaza() {
                         <div className="font-bold text-green-900 text-sm truncate">
                           {npc.name}
                         </div>
-                        <div className="text-[10px] text-green-600 truncate">
+                        <div className="text-[11px] text-green-600 truncate">
                           {npc.role}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between text-[10px] text-green-600 mb-1 font-bold">
+                    <div className="flex items-center justify-between text-[11px] text-green-600 mb-1 font-bold">
                       <span>Lv {data.level}</span>
                       <span className="text-amber-600">🎁 Hadiah</span>
                     </div>
@@ -362,7 +362,7 @@ export function FishCatchBoard() {
       </div>
 
       {bahari && (
-        <p className="text-[10px] font-bold text-blue-700 mb-2 bg-blue-50 rounded-lg px-2 py-1">
+        <p className="text-[11px] font-bold text-blue-700 mb-2 bg-blue-50 rounded-lg px-2 py-1">
           Hari Bahari — harga jual ikan ×2!
         </p>
       )}
@@ -385,14 +385,14 @@ export function FishCatchBoard() {
                   <div className="text-sm font-extrabold text-blue-900 truncate">
                     {fish.emoji} {fish.name} ×{count}
                   </div>
-                  <div className="text-[10px] text-blue-600">
+                  <div className="text-[11px] text-blue-600">
                     {unit}💰 / ekor
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleSell(fish)}
-                  className="bg-amber-400 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg hover:bg-amber-500 transition-colors whitespace-nowrap"
+                  className="bg-amber-400 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg hover:bg-amber-500 transition-colors whitespace-nowrap"
                 >
                   Jual
                 </button>

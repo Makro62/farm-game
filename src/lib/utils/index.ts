@@ -6,15 +6,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatNumber(num: number) {
+export function formatNumber(
+  num: number,
+  format: "compact" | "id-ID" = "compact",
+) {
   if (!Number.isFinite(num)) return "0";
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1)}M`;
-  }
-  if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}K`;
-  }
-  return num.toLocaleString("id-ID");
+  if (format === "id-ID") return num.toLocaleString("id-ID");
+  return num.toLocaleString("id-ID", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  });
 }
 
 export function formatCurrency(num: number) {

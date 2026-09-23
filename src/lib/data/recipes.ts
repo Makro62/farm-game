@@ -418,6 +418,10 @@ export function getItemCategory(itemId: string) {
     sup_kubis: "cooked",
     sup_ikan: "cooked",
     kubis: "crops",
+    wortel_emas: "crops",
+    tomat_mentari: "crops",
+    stroberi_permata: "crops",
+    semangka_bintang: "crops",
   };
   return legacyMap[itemId] || null;
 }

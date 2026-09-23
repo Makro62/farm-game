@@ -397,33 +397,35 @@ export default function GameSidebar({
 
       <AnimatePresence>
         {chrome.mobileOpen && (
-          <>
-            <motion.button
+          <motion.button
+            type="button"
+            aria-label="Tutup menu"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="shell-scrim lg:hidden"
+            onClick={() => chrome.setMobileOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {chrome.mobileOpen && (
+          <motion.aside
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", stiffness: 340, damping: 32 }}
+            className="shell-drawer lg:hidden"
+          >
+            <button
               type="button"
-              aria-label="Tutup menu"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="shell-scrim lg:hidden"
+              className="shell-icon-btn shell-drawer-close"
               onClick={() => chrome.setMobileOpen(false)}
-            />
-            <motion.aside
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", stiffness: 340, damping: 32 }}
-              className="shell-drawer lg:hidden"
             >
-              <button
-                type="button"
-                className="shell-icon-btn shell-drawer-close"
-                onClick={() => chrome.setMobileOpen(false)}
-              >
-                <X className="w-4 h-4" />
-              </button>
-              <ShellPanel collapsed={false} forceExpanded chrome={chrome} />
-            </motion.aside>
-          </>
+              <X className="w-4 h-4" />
+            </button>
+            <ShellPanel collapsed={false} forceExpanded chrome={chrome} />
+          </motion.aside>
         )}
       </AnimatePresence>
     </>

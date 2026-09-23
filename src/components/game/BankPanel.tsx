@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useGameStore } from "@/lib/store";
+import { formatNumber } from "@/lib/utils";
 
 export function BankPanel() {
   const bankSavings = useGameStore((s) => s.town?.bankSavings || 0);
@@ -35,14 +36,14 @@ export function BankPanel() {
       <div className="flex justify-between text-xs mb-2">
         <span className="text-[var(--text-secondary)]">Saldo Bank</span>
         <span className="font-bold text-[var(--gold-deep)]">
-          {bankSavings.toLocaleString()} 💰
+          {formatNumber(bankSavings, "id-ID")} 💰
         </span>
       </div>
       <div className="flex justify-between text-xs mb-3">
         <span className="text-[var(--text-secondary)]">Kantong</span>
-        <span className="font-bold">{coins.toLocaleString()} 💰</span>
+        <span className="font-bold">{formatNumber(coins, "id-ID")} 💰</span>
       </div>
-      <div className="text-[9px] text-[var(--text-secondary)] mb-2">
+      <div className="text-[11px] text-[var(--text-secondary)] mb-2">
         Bunga 2% per hari game. Aman & menguntungkan!
       </div>
       <div className="flex flex-wrap gap-1.5 mb-2">
@@ -51,13 +52,13 @@ export function BankPanel() {
             key={q}
             type="button"
             onClick={() => setAmount(q)}
-            className={`text-[10px] font-bold px-2.5 py-1.5 rounded-lg border min-h-[2rem] ${
+            className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg border min-h-[2rem] ${
               amount === q
                 ? "bg-[var(--gold)] border-[var(--gold-deep)]"
                 : "bg-white/40 border-white/60"
             }`}
           >
-            {q.toLocaleString()}
+            {formatNumber(q, "id-ID")}
           </button>
         ))}
       </div>

@@ -59,7 +59,7 @@ export function MuseumPanel() {
           {totalPoints} pts
         </span>
       </div>
-      <div className="text-[9px] text-[var(--text-secondary)] mb-2">
+      <div className="text-[11px] text-[var(--text-secondary)] mb-2">
         Donasikan temuan langka. Milestone 100/300/600/1000 pts memberi bonus
         koin!
       </div>
@@ -76,12 +76,12 @@ export function MuseumPanel() {
             >
               <span className="text-xs font-bold">
                 {item.emoji} {item.name}{" "}
-                <span className="text-[9px] text-[var(--text-secondary)]">
+                <span className="text-[11px] text-[var(--text-secondary)]">
                   +{item.points} pts
                 </span>
               </span>
               <span className="flex items-center gap-2">
-                <span className="text-[9px] text-[var(--text-secondary)]">
+                <span className="text-[11px] text-[var(--text-secondary)]">
                   {qty} di inventori
                   {donatedCount > 0 && ` · ${donatedCount}x didonasi`}
                 </span>
@@ -89,7 +89,7 @@ export function MuseumPanel() {
                   type="button"
                   disabled={qty <= 0}
                   onClick={() => handleDonate(item.id)}
-                  className="text-[10px] font-bold px-2 py-1 rounded-lg bg-[var(--gold)] border border-[var(--gold-deep)] disabled:opacity-30"
+                  className="text-[11px] font-bold px-2 py-1 rounded-lg bg-[var(--gold)] border border-[var(--gold-deep)] disabled:opacity-30"
                 >
                   Donasi
                 </button>

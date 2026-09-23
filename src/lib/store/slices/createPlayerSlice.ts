@@ -192,7 +192,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     if (get().level > prevLevel) {
       get().enqueueNotification(
         `Level Up! Level ${get().level} 🌟\nEnergy Maksimal naik!`,
-        { icon: "🎉", duration: 4000, type: "success" },
+        { icon: "🎉", duration: 4000, type: "success", sfx: "levelup" },
       );
       return true;
     }
@@ -241,10 +241,12 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
   addCoins: (amount) => {
     const delta = Number(amount);
     if (!Number.isFinite(delta) || delta <= 0) return;
+    const prestigeMult = get().getPrestigeMultiplier?.() ?? 1;
+    const granted = Math.floor(delta * prestigeMult);
     set((draft) => {
-      draft.coins = safeCoins(draft.coins) + Math.floor(delta);
+      draft.coins = safeCoins(draft.coins) + granted;
       if (!draft.stats) draft.stats = {};
-      draft.stats.totalRevenue = (draft.stats.totalRevenue || 0) + Math.floor(delta);
+      draft.stats.totalRevenue = (draft.stats.totalRevenue || 0) + granted;
     });
   },
 
@@ -292,8 +294,9 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
     const comboMult =
       state.combo?.count >= GAME_CONSTANTS.COMBO.THRESHOLD ? state.combo.multiplier || 1 : 1;
+    const prestigeMult = get().getPrestigeMultiplier?.() ?? 1;
     const finalEarned = Math.round(
-      sellPrice * qty * multiplier * comboMult,
+      sellPrice * qty * multiplier * comboMult * prestigeMult,
     );
 
     INV.remove(cat, itemId, qty);
@@ -348,7 +351,8 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     const multiplier = safePositiveNumber(state.coinMultiplier, 1) || 1;
     const comboMult =
       state.combo?.count >= GAME_CONSTANTS.COMBO.THRESHOLD ? state.combo.multiplier || 1 : 1;
-    const finalEarned = Math.round(totalEarned * multiplier * comboMult);
+    const prestigeMult = get().getPrestigeMultiplier?.() ?? 1;
+    const finalEarned = Math.round(totalEarned * multiplier * comboMult * prestigeMult);
 
     set((draft) => {
       for (const key of Object.keys(toSell)) {
@@ -804,6 +808,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     const now = Date.now();
     let changed = false;
     const completed: Array<string | number | undefined> = [];
+    const completedRecipeIds: string[] = [];
     let xpGained = 0;
 
     for (const item of state.craftingQueue) {
@@ -813,6 +818,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
           const cat = recipe.type === "processing" ? "processed" : "cooked";
           INV.add(cat, recipe.id, 1);
           xpGained += recipe.xp || 0;
+          completedRecipeIds.push(recipe.id);
           if (recipe.type === "restaurant")
             get().progressQuest?.("craft", recipe.id, 1);
         }
@@ -828,8 +834,9 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
         );
       });
       if (xpGained > 0) get().addXP(xpGained);
-      let totalCooked = completed.length;
-      let totalSushiEmas = completed.filter((id) => {
+      completedRecipeIds.forEach((id) => get().addToCollection?.("recipes", id));
+      const totalCooked = completed.length;
+      const totalSushiEmas = completed.filter((id) => {
         const item = state.craftingQueue.find((q) => q.id === id);
         return item?.recipeId === "sushi_emas";
       }).length;
@@ -962,6 +969,8 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       {
         icon: "📦",
         type: "success",
+        sfx: "coin",
+        rewardCoins: order.coins ?? order.reward ?? 0,
       },
     );
     return true;
@@ -1025,6 +1034,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     });
     get().markSessionAction?.("fished");
     get().checkAchievements?.();
+    get().addToCollection?.("fish", caughtFish.id);
   },
 
   recordBaitUsage: (bait) => {

@@ -26,7 +26,7 @@ export function SeedShop() {
   const [shopAmounts, setShopAmounts] = useState({});
 
   const availableSeeds = SHOP_SEEDS.filter((s) => {
-    if (buildings?.greenhouse) return true;
+    if (buildings?.greenhouse?.unlocked) return true;
     return s.season === "all" || s.season === currentSeason;
   });
 
@@ -70,8 +70,8 @@ export function SeedShop() {
   return (
     <>
       <ShopSectionTitle icon="🛒">Bibit Toko ({seasonLabel})</ShopSectionTitle>
-      {buildings?.greenhouse && (
-        <p className="text-[10px] text-[var(--primary-dark)] mb-2 font-bold">
+      {buildings?.greenhouse?.unlocked && (
+        <p className="text-[11px] text-[var(--primary-dark)] mb-2 font-bold">
           Greenhouse aktif — semua musim tersedia
         </p>
       )}
@@ -126,7 +126,7 @@ export function SeedShop() {
               >
                 <span className="text-2xl relative drop-shadow-sm">
                   <CropIcon itemId={seed.id} />
-                  <span className="absolute -bottom-2 -right-2 bg-[var(--gold)] text-[var(--text-primary)] text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-[#FFF1B8]">
+                  <span className="absolute -bottom-2 -right-2 bg-[var(--gold)] text-[var(--text-primary)] text-[11px] font-black px-1.5 py-0.5 rounded-full shadow-sm border border-[#FFF1B8]">
                     {seeds[seed.id]?.qty || 0}
                   </span>
                 </span>
@@ -143,7 +143,7 @@ export function SeedShop() {
             <div className="font-bold text-[var(--text-primary)] text-sm">
               Petani Budi {farmer ? `(Kebahagiaan: ${farmer.happiness}%)` : ""}
             </div>
-            <div className="text-[10px] text-[var(--text-secondary)]">
+            <div className="text-[11px] text-[var(--text-secondary)]">
               Auto-Farm & Harvest
             </div>
           </div>
@@ -159,7 +159,7 @@ export function SeedShop() {
         </div>
         {farmer?.hired && (
           <div className="flex justify-between items-center border-t border-[var(--primary)]/20 pt-2 mt-1">
-            <p className="text-[10px] text-[var(--text-secondary)] font-medium">
+            <p className="text-[11px] text-[var(--text-secondary)] font-medium">
               {farmer.isAutoMode
                 ? SHOP_SEEDS.some((s) => (seeds[s.id]?.qty || 0) > 0)
                   ? "Kurcaci aktif — panen & tanam otomatis"

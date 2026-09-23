@@ -1,5 +1,5 @@
 import type { StoreSet, StoreGet } from '@/types/game'
-import { SHOP_SEEDS, CROP_DATA } from '@/lib/data/crops'
+import { SHOP_SEEDS, CROP_DATA, CROP_VARIANTS } from '@/lib/data/crops'
 import { rollCropQuality } from '@/lib/data/item-helpers'
 import { GAME_CONSTANTS } from '@/lib/constants'
 
@@ -61,7 +61,7 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
 
     const state = get()
     const season = state.season?.current
-    const hasGreenhouse = !!state.buildings?.greenhouse
+    const hasGreenhouse = !!state.buildings?.greenhouse?.unlocked
     if (
       !hasGreenhouse &&
       seedData.season !== 'all' &&
@@ -162,6 +162,13 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
       }
       return { ok: false, message: 'Petak tidak kosong.' }
     }
+    if (usedFertilizer) {
+      set(s => ({
+        [listKey]: s[listKey].map(p =>
+          p.id === plotId ? { ...p, fertilizer: 'pupuk_kandang' } : p
+        ),
+      }))
+    }
     return {
       ok: true,
       message: usedFertilizer
@@ -221,14 +228,24 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
       state.weather?.current?.replace(/[^a-zA-Z]/g, '').toLowerCase() || 'sunny'
     const quality = rollCropQuality(weather, plot.fertilizer)
 
+    let grantId = crop
+    let isVariant = false
+    if (
+      CROP_DATA[crop]?.variantId &&
+      Math.random() < GAME_CONSTANTS.CHANCES.VARIANT_DROP
+    ) {
+      grantId = CROP_DATA[crop].variantId!
+      isVariant = true
+    }
+
     set(state => {
       const cat = { ...(state.inventoryByCategory?.crops || {}) }
-      const existing = cat[crop] || {
+      const existing = cat[grantId] || {
         qty: 0,
         quality: null,
         acquiredAt: Date.now(),
       }
-      cat[crop] = { qty: existing.qty + 1, quality, acquiredAt: Date.now() }
+      cat[grantId] = { qty: existing.qty + 1, quality, acquiredAt: Date.now() }
 
       return {
         inventoryByCategory: { ...state.inventoryByCategory, crops: cat },
@@ -258,6 +275,14 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
     }))
     get().markSessionAction?.('harvested')
     get().checkAchievements?.()
+    get().addToCollection?.('crops', grantId)
+    if (isVariant) {
+      const variant = CROP_VARIANTS[grantId]
+      get().enqueueNotification(
+        `✨ Varian langka: ${variant.emoji} ${variant.name}! Harga jual x${variant.sellMult}.`,
+        { sfx: 'rare_harvest', tier: 'rare' }
+      )
+    }
     const combo = get().registerCombo?.()
     if (combo?.count >= 3) get().addCoins?.(Math.floor(3 * combo.multiplier))
 
@@ -274,6 +299,8 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
 
     const newPlots = [...plots]
     const cat = { ...(state.inventoryByCategory?.crops || {}) }
+    const grantedIds = new Set<string>()
+    let variantCount = 0
 
     for (let i = 0; i < newPlots.length; i++) {
       const plot = newPlots[i]
@@ -289,8 +316,19 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
         const crop = plot.crop
         const quality = rollCropQuality(weather, plot.fertilizer)
 
-        const existing = cat[crop] || { qty: 0, quality: null, acquiredAt: now }
-        cat[crop] = { qty: existing.qty + 1, quality, acquiredAt: now }
+        let grantId = crop
+        if (
+          CROP_DATA[crop]?.variantId &&
+          Math.random() < GAME_CONSTANTS.CHANCES.VARIANT_DROP
+        ) {
+          grantId = CROP_DATA[crop].variantId!
+          variantCount++
+        }
+        grantedIds.add(grantId)
+
+        const existing =
+          cat[grantId] || { qty: 0, quality: null, acquiredAt: now }
+        cat[grantId] = { qty: existing.qty + 1, quality, acquiredAt: now }
 
         newPlots[i] = {
           ...plot,
@@ -321,6 +359,13 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
       get().addXP(GAME_CONSTANTS.XP.HARVEST * harvestedCount)
       get().markSessionAction?.('harvested')
       get().checkAchievements?.()
+      grantedIds.forEach(id => get().addToCollection?.('crops', id))
+      if (variantCount > 0) {
+        get().enqueueNotification(
+          `✨ Dapat ${variantCount} varian langka saat panen!`,
+          { sfx: 'rare_harvest', tier: 'rare' }
+        )
+      }
       return {
         ok: true,
         message: `Berhasil memanen ${harvestedCount} tanaman sekaligus!`,
@@ -350,7 +395,7 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
     }
 
     const season = state.season?.current
-    const hasGreenhouse = !!state.buildings?.greenhouse
+    const hasGreenhouse = !!state.buildings?.greenhouse?.unlocked
     if (
       !hasGreenhouse &&
       seedData.season !== 'all' &&

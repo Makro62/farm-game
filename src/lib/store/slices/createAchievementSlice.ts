@@ -77,6 +77,8 @@ export const createAchievementSlice = (set: StoreSet, get: StoreGet) => ({
         },
         icon: '🎉',
         type: 'success',
+        sfx: 'achievement',
+        rewardCoins: ach.rewardCoins,
       }
     )
   },

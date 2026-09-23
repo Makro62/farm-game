@@ -14,8 +14,12 @@ import { createRanchingSlice } from "./store/slices/createRanchingSlice";
 import { createPlayerSlice } from "./store/slices/createPlayerSlice";
 import { createTownSlice } from "./store/slices/createTownSlice";
 import { createSystemSlice } from "./store/slices/createSystemSlice";
+import { createSeasonSlice } from "./store/slices/createSeasonSlice";
+import { createWorkerSlice } from "./store/slices/createWorkerSlice";
 import { createCustomerSlice } from "./store/slices/createCustomerSlice";
 import { createAchievementSlice } from "./store/slices/createAchievementSlice";
+import { createPrestigeSlice } from "./store/slices/createPrestigeSlice";
+import { createCollectionSlice } from "./store/slices/createCollectionSlice";
 
 import { initialState } from "./store/initialState";
 import type { GameStore, StoreGet, StoreSet } from "@/types/game";
@@ -34,8 +38,12 @@ export const useGameStore = create<GameStore>()(
         ...createPlayerSlice(s, g),
         ...createTownSlice(s, g),
         ...createSystemSlice(s, g),
+        ...createSeasonSlice(s, g),
+        ...createWorkerSlice(s, g),
         ...createCustomerSlice(s, g),
         ...createAchievementSlice(s, g),
+        ...createPrestigeSlice(s, g),
+        ...createCollectionSlice(s, g),
 
         resetGame: () => {
           if (typeof window !== "undefined") {
@@ -44,6 +52,10 @@ export const useGameStore = create<GameStore>()(
           s({
             ...initialState,
             plots: initialState.plots.map((p) => ({ ...p })),
+            inventoryByCategory: structuredClone(
+              initialState.inventoryByCategory,
+            ),
+            collection: structuredClone(initialState.collection),
             mining: {
               ...initialState.mining,
               nodes: initialState.mining.nodes.map((n) => ({ ...n })),

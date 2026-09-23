@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
@@ -16,6 +16,8 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
   const [now, setNow] = useState(0);
   // Tap-to-swap untuk touchscreen (drag HTML5 tidak jalan di mobile)
   const [editSelected, setEditSelected] = useState<number | null>(null);
+  const [exitingIds, setExitingIds] = useState<number[]>([]);
+  const prevCropsRef = useRef<Record<number, string | null>>({});
 
   useEffect(() => {
     if (!isEditMode) setEditSelected(null);
@@ -26,6 +28,21 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const removed: number[] = [];
+    const next: Record<number, string | null> = {};
+    for (const p of plots) {
+      next[p.id] = p.crop ?? null;
+      if (prevCropsRef.current[p.id] && !p.crop) removed.push(p.id);
+    }
+    prevCropsRef.current = next;
+    if (removed.length === 0) return;
+    setExitingIds(prev => [...prev, ...removed]);
+    setTimeout(() => {
+      setExitingIds(prev => prev.filter(id => !removed.includes(id)));
+    }, 800);
+  }, [plots]);
 
   const handlePlotAction = (e: React.MouseEvent, plot: any) => {
     if (isEditMode) {
@@ -43,7 +60,7 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
     }
     
     if (farmTool === "panen" && (plot.status === "ready" || (plot.status === "growing" && plot.plantedAt && now - plot.plantedAt >= plot.growTime))) {
-      // eslint-disable-next-line react-hooks/purity -- This is in an event handler, not render
+       
       const id = now + Math.random();
       setFloatingTexts(prev => [...prev, {id, plotId: plot.id, text: "+XP", color: "text-green-300"}]);
       setTimeout(() => {
@@ -57,23 +74,24 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
   return (
     <div
       className={cn(
-        "p-3 sm:p-4 field-frame relative overflow-hidden transition-all bg-cover bg-center",
+        "p-3 sm:p-4 field-frame relative transition-all",
         isEditMode && "ring-4 ring-yellow-400 border-dashed",
       )}
-      style={{ backgroundImage: "url('/img/backgrounds/farm_bg.png')" }}
+      style={{ backgroundColor: "rgba(255, 252, 245, 0.92)" }}
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/30 pointer-events-none rounded-[22px]" />
-
-      <div className="absolute bottom-3 left-3 z-20 text-4xl sm:text-5xl drop-shadow-lg pointer-events-none select-none">
-        👨‍🌾
+      <div className="relative z-10 mb-1.5 flex items-center justify-between gap-2 min-h-[1.75rem]">
+        {isEditMode ? (
+          <p className="flex-1 text-[11px] font-bold text-yellow-100 bg-black/45 rounded-lg px-2 py-1">
+            Mode edit: ketuk 2 petak untuk menukar posisi
+            {editSelected != null ? " · 1 terpilih, ketuk target…" : ""}
+          </p>
+        ) : (
+          <span />
+        )}
+        <span className="text-2xl leading-none drop-shadow-lg select-none pointer-events-none">
+          👨‍🌾
+        </span>
       </div>
-
-      {isEditMode && (
-        <p className="relative z-10 mb-2 text-center text-[11px] font-bold text-yellow-100 bg-black/45 rounded-lg px-2 py-1">
-          Mode edit: ketuk 2 petak untuk menukar posisi
-          {editSelected != null ? " · 1 terpilih, ketuk target…" : ""}
-        </p>
-      )}
 
       <div className="game-plot-grid relative z-10">
         {plots.map((plot) => {
@@ -86,7 +104,6 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
           return (
             <motion.button
               key={plot.id}
-              layout
               draggable={isEditMode}
               onDragStart={(e: any) => {
                 e.dataTransfer.setData("plotId", plot.id);
@@ -109,6 +126,7 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
               }}
               whileHover={!isEditMode ? { scale: 1.05, filter: "brightness(1.1)" } : {}}
               whileTap={!isEditMode ? { scale: 0.95 } : {}}
+              animate={{ scale: editSelected === plot.id ? 1.05 : 1 }}
               onClick={(e) => handlePlotAction(e, plot)}
               data-tutorial={
                 plot.status === "empty"
@@ -118,11 +136,12 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
                     : undefined
               }
               className={cn(
-                "game-plot-cell overflow-hidden",
+                "game-plot-cell",
+                exitingIds.includes(plot.id) && "z-30",
                 isEditMode && "cursor-pointer hover:ring-4 ring-yellow-400",
                 isEditMode &&
                   editSelected === plot.id &&
-                  "ring-4 ring-sky-300 scale-105 z-10",
+                  "ring-4 ring-sky-300 z-10",
                 plot.status === "empty" &&
                   "bg-[#a06a38] border-b-4 border-[#7a4e28] hover:bg-[#b07843]",
                 plot.status === "dead" &&
@@ -138,6 +157,7 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
               {plot.crop && (
                 <AnimatePresence mode="popLayout">
                   <motion.div
+                    key={plot.crop}
                     initial={{ scale: 0, y: 10 }}
                     animate={{ scale: isReady ? 1.5 : 0.8, y: 0 }}
                     exit={{
@@ -147,14 +167,16 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
                       filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
                       transition: { duration: 0.6, ease: "easeOut" },
                     }}
-                    className={cn("z-10", isReady && "animate-breathe")}
+                    className="z-10"
                   >
-                    <CropIcon cropId={plot.crop} />
+                    <div className={cn(isReady && "animate-breathe")}>
+                      <CropIcon cropId={plot.crop} />
+                    </div>
                   </motion.div>
                 </AnimatePresence>
               )}
               {plot.watered && isGrowing && !isReady && (
-                <span className="absolute top-0.5 right-0.5 text-[10px] z-20">
+                <span className="absolute top-0.5 right-0.5 text-[11px] z-20">
                   💧
                 </span>
               )}
@@ -164,7 +186,7 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
                 </span>
               )}
               {plot.level > 1 && (
-                <span className="absolute bottom-1 right-1 z-20 px-1 rounded-md bg-black/50 text-[8px] font-bold text-yellow-300 leading-tight">
+                <span className="absolute bottom-1 right-1 z-20 px-1 rounded-md bg-black/50 text-[11px] font-bold text-yellow-300 leading-tight">
                   ⭐{plot.level}
                 </span>
               )}

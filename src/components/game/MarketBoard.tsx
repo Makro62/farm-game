@@ -37,12 +37,12 @@ export function MarketBoard() {
       </div>
 
       {buildings?.silo && (
-        <p className="text-[10px] font-bold text-[#FFE08A] mb-2 bg-black/20 rounded-lg px-2 py-1">
+        <p className="text-[11px] font-bold text-[#FFE08A] mb-2 bg-black/20 rounded-lg px-2 py-1">
           Silo aktif — jual tanaman +15%
         </p>
       )}
 
-      <p className="text-[10px] text-[#D7E8C8] mb-2 font-medium">
+      <p className="text-[11px] text-[#D7E8C8] mb-2 font-medium">
         Jual hasil lewat Tas · olahan di Restoran
       </p>
 

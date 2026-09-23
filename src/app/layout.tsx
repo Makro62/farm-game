@@ -53,7 +53,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             reverseOrder={false}
             gutter={16}
             containerStyle={{
-              top: 'calc(var(--shell-top) + 1rem + env(safe-area-inset-top))',
+              top: 'calc(var(--shell-top) + 28px + 1rem + env(safe-area-inset-top))',
               left: 0,
               right: 0,
               width: '100%',

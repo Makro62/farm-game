@@ -13,6 +13,7 @@ import TabPage, { GameStage } from "@/components/ui/TabPage";
 import SideDock from "@/components/ui/SideDock";
 import { useMining } from "@/lib/hooks/useMining";
 import { useMusic } from "@/lib/hooks/useSound";
+import { formatNumber } from "@/lib/utils";
 
 const TARGET_TOOLS = new Set(["bom_kecil", "tali"]);
 
@@ -114,7 +115,7 @@ export default function TabMine() {
           <div className="font-bold text-[var(--text-primary)] text-sm">
             {pickaxe.emoji} {pickaxe.name}
           </div>
-          <div className="text-[10px] text-[var(--text-secondary)] font-medium mt-0.5">
+          <div className="text-[11px] text-[var(--text-secondary)] font-medium mt-0.5">
             Regen: {pickaxe.regen}
             {lanternActive ? " (senter aktif)" : ""}
           </div>
@@ -153,7 +154,7 @@ export default function TabMine() {
               <button
                 type="button"
                 onClick={() => handleUseTool(tool.id)}
-                className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold border-2 ${
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold border-2 ${
                   selectedMiningTool === tool.id
                     ? "bg-[var(--gold)] text-[var(--text-primary)] border-[var(--gold-deep)]"
                     : "bg-white text-[var(--text-primary)] border-[var(--wood)]"
@@ -187,14 +188,14 @@ export default function TabMine() {
           <div className="font-bold text-[var(--text-primary)] text-sm">
             Penambang Tarjo
           </div>
-          <div className="text-[10px] text-[var(--text-secondary)]">
+          <div className="text-[11px] text-[var(--text-secondary)]">
             Auto-Mine
           </div>
         </div>
         <span className="font-bold text-[var(--text-primary)] bg-[var(--gold)] px-2 py-0.5 rounded-full text-xs border border-[#FFF1B8]">
           {workers.miner
             ? "Dimiliki"
-            : `${GAME_CONSTANTS.COSTS.WORKER_MINER.toLocaleString()} 💰`}
+            : `${formatNumber(GAME_CONSTANTS.COSTS.WORKER_MINER, "id-ID")} 💰`}
         </span>
       </button>
 
@@ -235,7 +236,7 @@ export default function TabMine() {
                 <span className="font-bold">
                   {mineral.emoji} {mineral.name} → {mineral.smeltRecipe?.output}
                 </span>
-                <span className="text-[9px] text-[var(--text-secondary)]">
+                <span className="text-[11px] text-[var(--text-secondary)]">
                   ⏱️ {mineral.smeltRecipe?.time}s
                 </span>
               </button>
@@ -269,7 +270,47 @@ export default function TabMine() {
     </>
   );
 
-  if (!isMounted) return null;
+  if (!isMounted) {
+    return (
+      <TabPage>
+        <GameStage
+          main={
+            <div className="glass-panel p-3 sm:p-4 stage-play-area">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-black/10" />
+                <div className="h-5 w-40 rounded-lg bg-black/10" />
+              </div>
+              <div className="grid grid-cols-5 gap-1 mb-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="min-h-[3.25rem] rounded-lg bg-black/10" />
+                ))}
+              </div>
+              <div className="p-3 sm:p-4 field-frame relative stage-play-frame">
+                <div className="game-plot-grid relative z-10">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="game-plot-cell bg-black/10 border-b-4 border-black/5"
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          }
+          side={
+            <div className="glass-panel">
+              <div className="h-5 w-28 rounded-lg bg-black/10 mb-3" />
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-16 rounded-xl bg-black/10" />
+                ))}
+              </div>
+            </div>
+          }
+        />
+      </TabPage>
+    );
+  }
 
   return (
     <TabPage>
@@ -297,7 +338,7 @@ export default function TabMine() {
                     key={floor}
                     onClick={() => handleChangeFloor(floor)}
                     disabled={locked}
-                    className={`min-w-0 min-h-[3.25rem] px-1 py-1 rounded-lg text-[9px] sm:text-[10px] font-bold border-2 transition-all flex flex-col items-center justify-center gap-0.5
+                    className={`min-w-0 min-h-[3.25rem] px-1 py-1 rounded-lg text-[11px] sm:text-[11px] font-bold border-2 transition-all flex flex-col items-center justify-center gap-0.5
                       ${
                         isCurrent
                           ? "bg-[var(--gold)] text-[var(--text-primary)] border-[var(--gold-deep)] shadow-sm"
@@ -325,7 +366,7 @@ export default function TabMine() {
 
             {/* Hazard Warning */}
             {FLOOR_META[selectedFloor]?.hazard && (
-              <div className="mb-2 text-center text-[10px] font-bold text-red-400 bg-red-900/30 rounded-xl py-1 px-3 border border-red-500/30">
+              <div className="mb-2 text-center text-[11px] font-bold text-red-400 bg-red-900/30 rounded-xl py-1 px-3 border border-red-500/30">
                 ⚠️ Bahaya:{" "}
                 {FLOOR_META[selectedFloor].hazard === "cave_in"
                   ? "Longsor"
@@ -398,7 +439,7 @@ export default function TabMine() {
                         </div>
                       )}
                       {hasHazard && (
-                        <span className="absolute top-0 right-0 text-[10px]">
+                        <span className="absolute top-0 right-0 text-[11px]">
                           ⚠️
                         </span>
                       )}

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Coins, Flame, Star, Zap, Menu } from "lucide-react";
 import { useGameStore } from "@/lib/store";
 import { SEASON_META } from "@/lib/nav";
+import { formatNumber } from "@/lib/utils";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
 function useHeaderState() {
@@ -92,7 +93,7 @@ export default function GameHeader({
           <div className="relative">
             <div className="absolute inset-0 bg-white/20 rounded-full blur-md group-hover:bg-white/40 transition-all"></div>
             <img 
-              src="/img/assets_lama/logo_1786351159271.png" 
+              src="/img/logo.png" 
               alt="Logo" 
               className="shell-header-logo relative z-10 hover:scale-110 transition-transform duration-300 drop-shadow-md" 
             />
@@ -106,7 +107,15 @@ export default function GameHeader({
           <div className="shell-stat-pill">
             <div className="shell-stat-coins">
               <Coins className="w-4 h-4 text-[var(--gold-deep)]" />
-              <AnimatedCounter value={state.coins} className="tabular-nums" />
+              <AnimatedCounter
+                value={state.coins}
+                className="tabular-nums"
+                format={(val) =>
+                  val >= 1e6
+                    ? formatNumber(val)
+                    : (Number.isFinite(val) ? val : 0).toLocaleString("id-ID")
+                }
+              />
             </div>
             {state.streak > 0 && (
               <div className="shell-stat-streak">
@@ -169,18 +178,16 @@ export default function GameHeader({
         </div>
       </div>
 
-      {state.summary.length > 0 && (
-        <div className="shell-summary">
-          {state.summary.map((item, i) => (
-            <span key={item} className="shell-summary-item">
-              {item}
-              {i < state.summary.length - 1 && (
-                <span className="shell-summary-dot">·</span>
-              )}
-            </span>
-          ))}
-        </div>
-      )}
+      <div className="shell-summary">
+        {state.summary.map((item, i) => (
+          <span key={item} className="shell-summary-item">
+            {item}
+            {i < state.summary.length - 1 && (
+              <span className="shell-summary-dot">·</span>
+            )}
+          </span>
+        ))}
+      </div>
     </header>
   );
 }

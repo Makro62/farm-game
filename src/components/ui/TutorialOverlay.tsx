@@ -67,16 +67,15 @@ export default function TutorialOverlay() {
     return () => clearInterval(interval);
   }, [tutorialStep, currentStep]);  
 
-  if (
-    tutorialStep === undefined ||
-    tutorialStep === null ||
-    tutorialStep === -1 ||
-    !currentStep
-  )
-    return null;
+  const isActive =
+    tutorialStep !== undefined &&
+    tutorialStep !== null &&
+    tutorialStep !== -1 &&
+    !!currentStep;
 
   return (
     <AnimatePresence>
+      {isActive && currentStep && (
       <motion.div
         key={`step-${tutorialStep}`}
         initial={{ opacity: 0 }}
@@ -133,6 +132,7 @@ export default function TutorialOverlay() {
           </div>
         </div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }
