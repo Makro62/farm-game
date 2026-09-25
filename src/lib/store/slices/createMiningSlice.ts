@@ -458,7 +458,18 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
     if (state.mining.smeltery.queue.length >= 3)
       return { ok: false, message: "Antrean Smeltery penuh (maks 3)." };
 
+    // Gabungkan input + bahan bakar dalam SATU peta kebutuhan — dulu dicek
+    // terpisah terhadap stok yang sama (mis. 5 batu = 1 input + 5 fuel = butuh 6,
+    // tapi cek lolos di 5 lalu deduction membawa stok ke −1).
+    const fuelQty = 5;
+    const needed = new Map<string, number>();
     for (const [key, qty] of Object.entries(recipe.input)) {
+      needed.set(key, (needed.get(key) || 0) + (qty as number));
+    }
+    const fuelKey = recipe.fuel || "minerals.batu";
+    needed.set(fuelKey, (needed.get(fuelKey) || 0) + fuelQty);
+
+    for (const [key, qty] of needed) {
       const [cat, itemId] = key.split(".");
       if ((state.inventoryByCategory?.[cat]?.[itemId]?.qty || 0) < qty) {
         return {
@@ -467,25 +478,15 @@ export const createMiningSlice = (set: StoreSet, get: StoreGet) => ({
         };
       }
     }
-    const fuelQty = 5;
-    if ((state.inventoryByCategory?.minerals?.batu?.qty || 0) < fuelQty) {
-      return { ok: false, message: `Butuh ${fuelQty}x batu sebagai bahan bakar.` };
-    }
 
     set((draft) => {
-      for (const [key, qty] of Object.entries(recipe.input)) {
+      for (const [key, qty] of needed) {
         const [cat, itemId] = key.split(".");
         if (draft.inventoryByCategory[cat]?.[itemId]) {
-          draft.inventoryByCategory[cat][itemId].qty -= qty as number;
+          draft.inventoryByCategory[cat][itemId].qty -= qty;
           if (draft.inventoryByCategory[cat][itemId].qty <= 0) {
             delete draft.inventoryByCategory[cat][itemId];
           }
-        }
-      }
-      if (draft.inventoryByCategory.minerals.batu) {
-        draft.inventoryByCategory.minerals.batu.qty -= fuelQty;
-        if (draft.inventoryByCategory.minerals.batu.qty <= 0) {
-          delete draft.inventoryByCategory.minerals.batu;
         }
       }
       draft.mining.smeltery.queue.push({

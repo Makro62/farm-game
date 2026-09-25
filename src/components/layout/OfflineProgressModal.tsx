@@ -72,9 +72,9 @@ export default function OfflineProgressModal() {
                 className="mb-6 w-full bg-gradient-to-r from-yellow-400/20 via-yellow-300/30 to-yellow-400/20 border border-yellow-400/50 rounded-xl p-3 flex flex-col items-center justify-center relative overflow-hidden shadow-inner"
               >
                 <div className="absolute inset-0 bg-yellow-200 opacity-20 mix-blend-overlay animate-pulse" />
-                <span className="text-xs font-bold text-yellow-800 uppercase tracking-wider mb-1">Total Pendapatan</span>
+                <span className="text-xs font-bold text-yellow-800 uppercase tracking-wider mb-1">Nilai Item Dikerjakan</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-3xl drop-shadow-md">💰</span>
+                  <span className="text-3xl drop-shadow-md">📦</span>
                   <span className="text-3xl font-black text-yellow-600 drop-shadow-sm">
                     +{formatNumber(earnedCoins, "id-ID")}
                   </span>

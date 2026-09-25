@@ -28,6 +28,7 @@ import { FISHES } from '@/lib/data/fishes'
 import { RECIPES } from '@/lib/data/recipes'
 import { getItemSellPrice } from '@/lib/data/item-helpers'
 import { GAME_CONSTANTS } from '@/lib/constants'
+import { isPlotReady } from './createFarmingSlice'
 import { PLOT_LEVEL_MULT } from '@/lib/store/slices/createFarmingSlice'
 
 function invGet(
@@ -442,22 +443,9 @@ export const createWorkerSlice = (set: StoreSet, get: StoreGet) => ({
         const pArr = plotData.arr
         for (let i = 0; i < pArr.length; i++) {
           const p = pArr[i]
-          if (p.crop && p.status === 'growing' && p.growTime) {
-            if (
-              p.plantedAt != null &&
-              p.plantedAt + p.growTime <= now
-            ) {
-              offlineItems.push({ cat: 'crops', id: p.crop, qty: 1 })
-              harvestedCrops++
-              pArr[i] = {
-                ...p,
-                status: 'empty',
-                crop: null,
-                plantedAt: null,
-                growTime: null,
-              }
-            }
-          } else if (p.crop && p.status === 'ready') {
+          // isPlotReady memakai waktu tumbuh efektif (hama ×2) — sama dengan
+          // tick online, jadi kurcaci tidak panen sebelum benar-benar matang.
+          if (p.crop && isPlotReady(p, now)) {
             offlineItems.push({ cat: 'crops', id: p.crop, qty: 1 })
             harvestedCrops++
             pArr[i] = {

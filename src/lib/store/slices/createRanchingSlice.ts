@@ -14,6 +14,10 @@ import {
 export const createRanchingSlice = (set: StoreSet, get: StoreGet) => ({
   buyAnimal: (animalType, price, produceTime) => {
     const state = get()
+    // Cap slot kandang — grid UI hanya render ANIMAL_SLOTS sel; lewat itu
+    // hewan jadi invisible/tidak terjangkau
+    if ((state.animals?.length || 0) >= GAME_CONSTANTS.GRID.ANIMAL_SLOTS)
+      return false
     if (safeCoins(state.coins) < price) return false
     set(state => ({
       coins: safeCoins(state.coins) - price,

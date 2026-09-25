@@ -7,6 +7,7 @@ import { useShallow } from "zustand/react/shallow";
 import { CropIcon } from "@/components/ui/CropIcon";
 import { cn } from "@/lib/utils";
 import { useFarming } from "@/lib/hooks/useFarming";
+import { effectiveGrowTime, isPlotReady } from "@/lib/store/slices/createFarmingSlice";
 
 export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots" }) {
   const plots = useGameStore(useShallow((state) => state[plotListKey] || state.plots));
@@ -59,7 +60,7 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
       return;
     }
     
-    if (farmTool === "panen" && (plot.status === "ready" || (plot.status === "growing" && plot.plantedAt && now - plot.plantedAt >= plot.growTime))) {
+    if (farmTool === "panen" && isPlotReady(plot, now)) {
        
       const id = now + Math.random();
       setFloatingTexts(prev => [...prev, {id, plotId: plot.id, text: "+XP", color: "text-green-300"}]);
@@ -97,6 +98,7 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
         {plots.map((plot) => {
           const isGrowing = plot.status === "growing";
           const isReady = plot.status === "ready";
+          const effGrow = effectiveGrowTime(plot);
           const timeElapsed = plot.plantedAt
             ? Math.max(0, now - plot.plantedAt)
             : 0;
@@ -201,7 +203,7 @@ export function PlotGrid({ isEditMode, farmTool = "tanam", plotListKey = "plots"
                     className="h-full bg-gradient-to-r from-[#6fbf55] to-[#9fd67f] origin-left"
                     style={{
                       animationName: "grow-progress",
-                      animationDuration: `${plot.growTime}ms`,
+                      animationDuration: `${effGrow ?? plot.growTime ?? 0}ms`,
                       animationTimingFunction: "linear",
                       animationFillMode: "forwards",
                       animationDelay: `-${timeElapsed}ms`,

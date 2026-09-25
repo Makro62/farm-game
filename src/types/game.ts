@@ -317,6 +317,8 @@ export interface DailyQuest {
   claimed: boolean
   completed?: boolean
   chain?: DailyQuestChain[]
+  /** Progres di dalam langkah rantai saat ini (0..step.amount-1). */
+  stepProgress?: number
 }
 
 export interface DecorationItem {

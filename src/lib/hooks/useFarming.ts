@@ -1,5 +1,6 @@
 import { useGameStore } from "@/lib/store";
 import { getItemEmoji } from "@/lib/data/item-helpers";
+import { isPlotReady } from "@/lib/store/slices/createFarmingSlice";
 
 export function useFarming() {
   const workers = useGameStore((state) => state?.workers);
@@ -66,12 +67,7 @@ export function useFarming() {
     }
 
     if (farmTool === "panen") {
-      if (
-        plot.status === "ready" ||
-        (plot.status === "growing" &&
-          plot.plantedAt &&
-          Date.now() - plot.plantedAt >= plot.growTime)
-      ) {
+      if (isPlotReady(plot)) {
         const crop = harvest(plot.id);
         if (crop)
           enqueueNotification(`Panen ${getItemEmoji(crop)}!`, {

@@ -19,6 +19,7 @@ import { FISHES } from "@/lib/data/fishes";
 import { MINERALS } from "@/lib/data/minerals";
 import { RECIPES } from "@/lib/data/recipes";
 import { ACHIEVEMENTS, ACHIEVEMENT_CATEGORIES } from "@/lib/data/achievements";
+import { isPlotReady } from "@/lib/store/slices/createFarmingSlice";
 import { SEASON_META } from "@/lib/nav";
 import { GAME_CONSTANTS } from "@/lib/constants";
 import TabPage from "@/components/ui/TabPage";
@@ -54,16 +55,8 @@ function ActionWidget() {
 
   const hints: any[] = [];
 
-  // 1. Tanaman siap panen?
-  const readyPlots = plots.filter(
-    (p) =>
-      p.crop &&
-      (p.status === "ready" ||
-        (p.status === "growing" &&
-          p.plantedAt &&
-          p.growTime &&
-          now - p.plantedAt >= p.growTime)),
-  );
+  // 1. Tanaman siap panen? (isPlotReady sudah memperhitungkan hama ×2)
+  const readyPlots = plots.filter((p) => p.crop && isPlotReady(p, now));
   if (readyPlots.length > 0) {
     hints.push({
       emoji: "🌾",

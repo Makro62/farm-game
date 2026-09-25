@@ -15,6 +15,7 @@ import {
   getItemCategory,
   getItemSellPrice,
   isSellableProduce,
+  QUALITY_MULTIPLIERS,
 } from "@/lib/data/item-helpers";
 
 // Bound when createPlayerSlice runs (INV helpers close over these)
@@ -82,6 +83,38 @@ const INV = {
   },
 };
 
+/**
+ * Majukan quest rantai HANYA jika aksi cocok dengan langkah BERIKUTNYA.
+ * count = jumlah langkah selesai (0..chain.length); stepProgress = progres
+ * di dalam langkah yang sedang berjalan (butuh `amount` aksi per langkah).
+ * Tanpa ini quest chain required:1 bisa diklaim setelah 1 aksi pertama.
+ */
+function advanceChainQuest(
+  q: DailyQuest,
+  type: string,
+  targetId: string,
+  amount = 1,
+): DailyQuest {
+  if (!q.chain || q.count >= q.chain.length) return q;
+  let stepIdx = q.count;
+  let stepProgress = q.stepProgress || 0;
+  let remaining = Math.max(1, amount);
+  while (remaining > 0 && stepIdx < q.chain.length) {
+    const step = q.chain[stepIdx];
+    if (step.type !== type || step.targetId !== targetId) break;
+    const need = Math.max(1, step.amount || 1) - stepProgress;
+    const use = Math.min(need, remaining);
+    stepProgress += use;
+    remaining -= use;
+    if (stepProgress >= Math.max(1, step.amount || 1)) {
+      stepIdx++;
+      stepProgress = 0;
+    }
+  }
+  if (stepIdx === q.count && stepProgress === (q.stepProgress || 0)) return q;
+  return { ...q, count: stepIdx, stepProgress };
+}
+
 export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
   set = s;
   get = g;
@@ -113,12 +146,19 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
     const state = get();
     const qty = safePositiveNumber(amount, 0);
     const price = safePositiveNumber(unitPrice, 0);
-    const totalCost = price * qty;
-    if (qty <= 0 || totalCost <= 0) return false;
+    if (qty <= 0 || price <= 0) return false;
+    // Cap slot kandang — potong batch agar tidak melebihi grid
+    const freeSlots = Math.max(
+      0,
+      GAME_CONSTANTS.GRID.ANIMAL_SLOTS - (state.animals?.length || 0),
+    );
+    const actualQty = Math.min(qty, freeSlots);
+    if (actualQty <= 0) return false;
+    const totalCost = price * actualQty;
     const currentCoins = safeCoins(state.coins);
     if (currentCoins < totalCost) return false;
 
-    const newAnimals = Array.from({ length: qty }, () => ({
+    const newAnimals = Array.from({ length: actualQty }, () => ({
       id: Date.now() + Math.random().toString(36).substr(2, 5),
       type: animalType,
       status: "producing",
@@ -276,7 +316,12 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
 
     const todayPrices = state.todayPrices || {};
     const activeEvent = state.activeEvent;
-    if (todayPrices[itemId]) sellPrice = todayPrices[itemId];
+    // Harga pasar menimpa harga dasar — quality premium HARUS dibawa serta,
+    // kalau tidak silver/gold/iridium jual rugi di harga pasar
+    if (todayPrices[itemId]) {
+      const qualityMult = QUALITY_MULTIPLIERS[quality] || 1;
+      sellPrice = todayPrices[itemId] * qualityMult;
+    }
     if (
       activeEvent?.id === "panen" &&
       SHOP_SEEDS.some((s) => s.cropId === itemId)
@@ -325,7 +370,11 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
           quality: data.quality || "normal",
         });
         if (sellPrice == null) continue;
-        if (todayPrices[itemId]) sellPrice = todayPrices[itemId];
+        if (todayPrices[itemId]) {
+          const qualityMult =
+            QUALITY_MULTIPLIERS[data.quality || "normal"] || 1;
+          sellPrice = todayPrices[itemId] * qualityMult;
+        }
         if (
           activeEvent?.id === "panen" &&
           SHOP_SEEDS.some((s) => s.cropId === itemId)
@@ -662,9 +711,7 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
         const q = quests[i];
         if (q.claimed) continue;
         if (q.type === "chain" && q.chain) {
-          if (q.chain.some((c) => c.type === type && c.targetId === targetId)) {
-            quests[i] = { ...q, count: q.count + (amount || 1) };
-          }
+          quests[i] = advanceChainQuest(q, type, targetId, amount);
         } else if (
           q.type === type &&
           q.targetId === targetId &&
@@ -684,12 +731,14 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
       for (const { type, targetId, amount = 1 } of entries) {
         for (let i = 0; i < quests.length; i++) {
           const q = quests[i];
-          if (q.claimed || q.count >= q.required) continue;
+          if (q.claimed) continue;
           if (q.type === "chain" && q.chain) {
-            if (q.chain.some((c) => c.type === type && c.targetId === targetId)) {
-              quests[i] = { ...q, count: q.count + (amount || 1) };
-            }
-          } else if (q.type === type && q.targetId === targetId) {
+            quests[i] = advanceChainQuest(q, type, targetId, amount);
+          } else if (
+            q.type === type &&
+            q.targetId === targetId &&
+            q.count < q.required
+          ) {
             quests[i] = {
               ...q,
               count: Math.min(q.required, q.count + amount),
@@ -703,7 +752,13 @@ export const createPlayerSlice = (s: StoreSet, g: StoreGet) => {
   claimQuestReward: (questId) => {
     const state = get();
     const quest = state.dailyQuests.find((q) => q.id === questId);
-    if (!quest || quest.claimed || quest.count < quest.required) return false;
+    if (!quest || quest.claimed) return false;
+    // Chain: selesai hanya setelah SEMUA langkah rantai (bukan 1 langkah pertama)
+    const required =
+      quest.type === "chain" && quest.chain?.length
+        ? quest.chain.length
+        : quest.required;
+    if (quest.count < required) return false;
     const rewardCoins = safePositiveNumber(quest.rewardCoins, 0);
     set((draft) => {
       for (let i = 0; i < draft.dailyQuests.length; i++) {

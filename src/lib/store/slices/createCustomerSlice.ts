@@ -207,7 +207,9 @@ export const createCustomerSlice = (set: StoreSet, get: StoreGet) => ({
 
   rollDailySpecial: () => {
     const state = get()
-    const day = state.day || 0
+    // state.day tidak pernah di-increment (hanya season.day yang naik/reset per musim).
+    // Pakai nomor hari kalender nyata → menu spesial berganti tiap hari.
+    const day = Math.floor(Date.now() / 86400000)
     if ((state.restaurant?.lastSpecialDay ?? -1) >= day) return
     const pool = RECIPES.filter(r => r.type === 'restaurant')
     const fallback = RECIPES.filter(r => r.type !== 'processing')

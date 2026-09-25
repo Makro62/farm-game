@@ -2,11 +2,51 @@ import type { StoreSet, StoreGet } from '@/types/game'
 import { SHOP_SEEDS, CROP_DATA, CROP_VARIANTS } from '@/lib/data/crops'
 import { rollCropQuality } from '@/lib/data/item-helpers'
 import { GAME_CONSTANTS } from '@/lib/constants'
+import { getCropGrowthSpeed } from '@/lib/utils/economy'
 
 export const PLOT_LEVEL_MULT: Record<number, number> = {
   1: 1.0,
   2: 0.85,
   3: 0.7,
+}
+
+const MAX_ACTIVE_PLANTS = 5
+
+/** Waktu tumbuh efektif — hama (pestInfestation) menggandakan growTime ×2. */
+export function effectiveGrowTime(plot: {
+  growTime?: number | null
+  pestInfestation?: boolean
+}): number | null {
+  const base = plot.growTime ?? 0
+  if (base <= 0) return null
+  return plot.pestInfestation ? base * 2 : base
+}
+
+/** Siap panen? (status ready ATAU growing yang sudah melewati waktu tumbuh efektif) */
+export function isPlotReady(
+  plot: { status: string; plantedAt?: number | null; growTime?: number | null; pestInfestation?: boolean },
+  now = Date.now()
+): boolean {
+  if (plot.status === 'ready') return true
+  if (plot.status !== 'growing' || !plot.plantedAt) return false
+  const eff = effectiveGrowTime(plot)
+  return eff != null && now - plot.plantedAt >= eff
+}
+
+/** Jumlah tanaman aktif (growing/ready) di SEMUA daftar petak — cap global max 5. */
+function countActivePlots(state: {
+  plots: unknown[]
+  feedPlots?: unknown[]
+  kitchenPlots?: unknown[]
+}): number {
+  const lists = [state.plots, state.feedPlots || [], state.kitchenPlots || []]
+  let n = 0
+  for (const list of lists) {
+    for (const p of list as Array<{ status?: string }>) {
+      if (p.status === 'growing' || p.status === 'ready') n++
+    }
+  }
+  return n
 }
 
 const PLOT_UPGRADE_COST: Record<
@@ -78,11 +118,9 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
       return { ok: false, message: `Kehabisan ${seedData.name}!` }
     }
 
-    // Max 5 active plants — harvest dulu sebelum tanam baru
-    const activePlots = (state.plots || []).filter(
-      (p: any) => p.status === 'growing' || p.status === 'ready'
-    ).length
-    if (activePlots >= 5) {
+    // Max 5 active plants (GLOBAL plots + feedPlots + kitchenPlots)
+    const activePlots = countActivePlots(state)
+    if (activePlots >= MAX_ACTIVE_PLANTS) {
       return {
         ok: false,
         message: 'Max 5 tanaman! Panen dulu sebelum tanam baru.',
@@ -104,7 +142,17 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
 
     const growthMultiplier =
       state.growthMultiplier > 0 ? state.growthMultiplier : 1
-    let baseGrowTime = (seedData.time * 1000) / growthMultiplier
+    // Samakan dengan banner & worker: cuaca/greenhouse ikut mempercepat tumbuh
+    const envSpeed = Math.max(
+      0.1,
+      getCropGrowthSpeed(
+        state.season?.current,
+        state.weather?.current,
+        state.buildings,
+        state.workers
+      )
+    )
+    let baseGrowTime = (seedData.time * 1000) / growthMultiplier / envSpeed
     const listKey = getPlotArrayKey(plotId)
     const plotLevel = state[listKey].find(p => p.id === plotId)?.level || 1
     baseGrowTime = Math.floor(baseGrowTime * PLOT_LEVEL_MULT[plotLevel])
@@ -215,11 +263,7 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
     const plot = state[listKey].find(p => p.id === plotId)
     if (!plot || !plot.crop) return null
 
-    const isReady =
-      plot.status === 'ready' ||
-      (plot.status === 'growing' &&
-        plot.plantedAt &&
-        Date.now() - plot.plantedAt! >= (plot.growTime ?? 0))
+    const isReady = isPlotReady(plot)
     if (!isReady) return null
     if (!get().consumeEnergy(1)) return null
 
@@ -304,11 +348,7 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
 
     for (let i = 0; i < newPlots.length; i++) {
       const plot = newPlots[i]
-      const isReady =
-        plot.status === 'ready' ||
-        (plot.status === 'growing' &&
-          plot.plantedAt &&
-          now - plot.plantedAt >= (plot.growTime ?? 0))
+      const isReady = isPlotReady(plot, now)
 
       if (isReady && plot.crop) {
         if (!get().consumeEnergy(1)) break // Stop if no energy
@@ -383,11 +423,10 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
     const seedData = SHOP_SEEDS.find(s => s.id === seedId)
     if (!seedData) return { ok: false, message: 'Pilih bibit terlebih dahulu!' }
 
-    // Max 5 active plants
-    const activePlots = (state.plots || []).filter(
-      (p: any) => p.status === 'growing' || p.status === 'ready'
-    ).length
-    if (activePlots >= 5) {
+    // Max 5 active plants — cek global + stop loop saat cap tercapai
+    // (dulu cap dicek sekali di awal lalu loop menanam semua petak kosong)
+    let activePlots = countActivePlots(state)
+    if (activePlots >= MAX_ACTIVE_PLANTS) {
       return {
         ok: false,
         message: 'Max 5 tanaman! Panen dulu sebelum tanam baru.',
@@ -416,6 +455,15 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
     const now = Date.now()
     const growthMultiplier =
       state.growthMultiplier > 0 ? state.growthMultiplier : 1
+    const envSpeed = Math.max(
+      0.1,
+      getCropGrowthSpeed(
+        state.season?.current,
+        state.weather?.current,
+        state.buildings,
+        state.workers
+      )
+    )
 
     // Pupuk logic
     let availablePupuk =
@@ -426,11 +474,13 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
       const plot = newPlots[i]
       if (
         (plot.status === 'empty' || plot.status === 'dead') &&
-        availableSeeds > 0
+        availableSeeds > 0 &&
+        activePlots < MAX_ACTIVE_PLANTS
       ) {
         if (!get().consumeEnergy(1)) break
 
-        let baseGrowTime = (seedData.time * 1000) / growthMultiplier
+        let baseGrowTime =
+          (seedData.time * 1000) / growthMultiplier / envSpeed
         baseGrowTime = Math.floor(
           baseGrowTime * PLOT_LEVEL_MULT[plot.level || 1]
         )
@@ -457,6 +507,7 @@ export const createFarmingSlice = (set: StoreSet, get: StoreGet) => ({
 
         availableSeeds--
         plantedCount++
+        activePlots++
       }
     }
 

@@ -15,8 +15,14 @@ export function QuestPanel() {
 
       {dailyQuests && dailyQuests.length > 0 ? (
         dailyQuests.map((quest) => {
-          const percent = Math.min(100, (quest.count / quest.required) * 100);
-          const isComplete = quest.count >= quest.required;
+          // Chain quest: count = langkah selesai, required asli = panjang rantai
+          // (field required masih 1 untuk kompatibilitas save lama)
+          const required =
+            quest.type === "chain" && quest.chain?.length
+              ? quest.chain.length
+              : quest.required;
+          const percent = Math.min(100, required > 0 ? (quest.count / required) * 100 : 0);
+          const isComplete = quest.count >= required;
 
           return (
             <div
@@ -25,10 +31,12 @@ export function QuestPanel() {
             >
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="font-bold text-[var(--text-primary)] line-clamp-1 pr-2">
-                  {quest.action} {quest.required} {quest.targetName}
+                  {quest.type === "chain"
+                    ? quest.targetName || quest.action
+                    : `${quest.action} ${quest.required} ${quest.targetName}`}
                 </span>
                 <span className="text-[var(--wood-dark)] font-black whitespace-nowrap">
-                  {quest.count}/{quest.required}
+                  {quest.count}/{required}
                 </span>
               </div>
 

@@ -97,13 +97,20 @@ export default function NotificationManager() {
       timerRef.current = null;
     }, finalDuration + 200);
 
-    return () => {
+    // JANGAN cleanup timer saat queue berubah — itu membatalkan dequeue tanpa
+    // reset busy.current → efek berikutnya early-return → toast beku selamanya.
+    // Timer hanya dibersihkan saat unmount.
+  }, [notificationsQueue, dequeueNotification]);
+
+  useEffect(
+    () => () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
-    };
-  }, [notificationsQueue, dequeueNotification]);
+    },
+    [],
+  );
 
   return null;
 }
